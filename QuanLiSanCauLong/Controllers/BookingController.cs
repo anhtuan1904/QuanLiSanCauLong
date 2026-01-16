@@ -487,7 +487,7 @@ namespace QuanLiSanCauLong.Controllers
             var bookingDateTime = booking.BookingDate.Add(booking.StartTime);
             var cancelHours = GetSystemSetting("BookingCancellationHours", 2).Result;
 
-            return bookingDateTime > DateTime.Now.AddHours(cancelHours);
+            return bookingDateTime > DateTime.Now.AddHours((double)cancelHours);
         }
 
         private async Task CreateProductOrder(Booking booking, int userId, List<OrderItemViewModel> items)
