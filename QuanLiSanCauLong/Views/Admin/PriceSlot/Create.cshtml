@@ -1,5 +1,118 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model QuanLiSanCauLong.Models.PriceSlot
+
 @{
+    ViewData["Title"] = "Thêm bảng giá";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="mb-4">
+        <h3><i class="bi bi-cash-stack"></i> Thêm bảng giá mới</h3>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-action="PriceSlots">Bảng giá</a></li>
+                <li class="breadcrumb-item active">Thêm mới</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">Thông tin bảng giá</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreatePriceSlot" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="FacilityId" class="form-label">Cơ sở <span class="text-danger">*</span></label>
+                            <select asp-for="FacilityId" class="form-select">
+                                <option value="">-- Chọn cơ sở --</option>
+                                @foreach (var facility in ViewBag.Facilities as IEnumerable<QuanLiSanCauLong.Models.Facility>)
+                                {
+                                    <option value="@facility.FacilityId">@facility.FacilityName</option>
+                                }
+                            </select>
+                            <span asp-validation-for="FacilityId" class="text-danger"></span>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="StartTime" class="form-label">Giờ bắt đầu <span class="text-danger">*</span></label>
+                                <input asp-for="StartTime" class="form-control" type="time" />
+                                <span asp-validation-for="StartTime" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="EndTime" class="form-label">Giờ kết thúc <span class="text-danger">*</span></label>
+                                <input asp-for="EndTime" class="form-control" type="time" />
+                                <span asp-validation-for="EndTime" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="CourtType" class="form-label">Loại sân <span class="text-danger">*</span></label>
+                                <select asp-for="CourtType" class="form-select">
+                                    <option value="">-- Chọn loại --</option>
+                                    <option value="Standard">Standard</option>
+                                    <option value="VIP">VIP</option>
+                                    <option value="Premium">Premium</option>
+                                </select>
+                                <span asp-validation-for="CourtType" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Price" class="form-label">Giá (VNĐ) <span class="text-danger">*</span></label>
+                                <input asp-for="Price" class="form-control" type="number" step="1000" placeholder="100000" />
+                                <span asp-validation-for="Price" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input asp-for="IsPeakHour" class="form-check-input" type="checkbox" />
+                            <label asp-for="IsPeakHour" class="form-check-label">
+                                Giờ vàng (peak hour)
+                            </label>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Lưu
+                            </button>
+                            <a asp-action="PriceSlots" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Gợi ý</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Khung giờ vàng thông thường:</h6>
+                    <ul class="small">
+                        <li>Sáng: 6:00 - 9:00</li>
+                        <li>Chiều: 17:00 - 22:00</li>
+                    </ul>
+                    <hr />
+                    <h6>Mức giá tham khảo:</h6>
+                    <ul class="small">
+                        <li>Standard: 80.000 - 120.000đ</li>
+                        <li>VIP: 150.000 - 200.000đ</li>
+                        <li>Premium: 200.000 - 300.000đ</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

@@ -1,5 +1,492 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model QuanLiSanCauLong.ViewModels.AdminDashboardViewModel
+
 @{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h3><i class="bi bi-speedometer2"></i> Admin Dashboard</h3>
+            <p class="text-muted">Tổng quan hệ thống</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <form asp-action="Index" method="get" class="d-inline-block">
+                <div class="input-group">
+                    <input type="date" name="fromDate" class="form-control"
+                           value="@Model.FromDate.ToString("yyyy-MM-dd")" />
+                    <input type="date" name="toDate" class="form-control"
+                           value="@Model.ToDate.ToString("yyyy-MM-dd")" />
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Tổng doanh thu
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.TotalRevenue.ToString("N0")đ
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-currency-dollar fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Tổng đơn đặt
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.TotalBookings
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-calendar-check fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Khách hàng
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.TotalCustomers
+                                <small class="text-success">(+@Model.NewCustomers)</small>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-people fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Hoàn thành
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.CompletedBookings / @Model.TotalBookings
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-check-circle fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Revenue Chart -->
+        <div class="col-xl-8 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-graph-up"></i> Biểu đồ doanh thu
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Breakdown -->
+        <div class="col-xl-4 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-pie-chart"></i> Phân loại doanh thu
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueBreakdownChart"></canvas>
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Đặt sân:</span>
+                            <strong>@Model.BookingRevenue.ToString("N0")đ</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Sản phẩm:</span>
+                            <strong>@Model.ProductRevenue.ToString("N0")đ</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tables Row -->
+    <div class="row">
+        <!-- Top Products -->
+        <div class="col-xl-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-star"></i> Sản phẩm bán chạy
+                    </h6>
+                    <a asp-action="Products" class="btn btn-sm btn-primary">Xem tất cả</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th>Loại</th>
+                                    <th class="text-end">Đã bán</th>
+                                    <th class="text-end">Doanh thu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var product in Model.TopProducts.Take(5))
+                                {
+                                    <tr>
+                                        <td>@product.ProductName</td>
+                                        <td><span class="badge bg-secondary">@product.CategoryType</span></td>
+                                        <td class="text-end">@product.QuantitySold</td>
+                                        <td class="text-end text-success fw-bold">@product.Revenue.ToString("N0")đ</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Customers -->
+        <div class="col-xl-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-trophy"></i> Khách hàng thân thiết
+                    </h6>
+                    <a asp-action="Users" class="btn btn-sm btn-primary">Xem tất cả</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Khách hàng</th>
+                                    <th>Liên hệ</th>
+                                    <th class="text-end">Đơn đặt</th>
+                                    <th class="text-end">Chi tiêu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var customer in Model.TopCustomers.Take(5))
+                                {
+                                    <tr>
+                                        <td>@customer.CustomerName</td>
+                                        <td><small class="text-muted">@customer.Phone</small></td>
+                                        <td class="text-end">@customer.BookingCount</td>
+                                        <td class="text-end text-success fw-bold">@customer.TotalSpent.ToString("N0")đ</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Facility Performance & Time Slots -->
+    <div class="row">
+        <!-- Revenue by Facility -->
+        <div class="col-xl-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-building"></i> Doanh thu theo cơ sở
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Cơ sở</th>
+                                    <th class="text-end">Đơn đặt</th>
+                                    <th class="text-end">Doanh thu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var facility in Model.RevenueByFacility)
+                                {
+                                    <tr>
+                                        <td>@facility.FacilityName</td>
+                                        <td class="text-end">@facility.BookingCount</td>
+                                        <td class="text-end text-success fw-bold">@facility.TotalRevenue.ToString("N0")đ</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Popular Time Slots -->
+        <div class="col-xl-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-clock"></i> Khung giờ phổ biến
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Khung giờ</th>
+                                    <th class="text-end">Lượt đặt</th>
+                                    <th class="text-end">Doanh thu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var slot in Model.PopularTimeSlots.Take(5))
+                                {
+                                    <tr>
+                                        <td>@slot.TimeSlot</td>
+                                        <td class="text-end">@slot.BookingCount</td>
+                                        <td class="text-end text-success fw-bold">@slot.Revenue.ToString("N0")đ</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Revenue Chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        const revenueData = @Html.Raw(Json.Serialize(Model.RevenueByDate));
+
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: revenueData.map(d => new Date(d.date).toLocaleDateString('vi-VN')),
+                datasets: [{
+                    label: 'Đặt sân',
+                    data: revenueData.map(d => d.bookingRevenue),
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1
+                }, {
+                    label: 'Sản phẩm',
+                    data: revenueData.map(d => d.productRevenue),
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' +
+                                       new Intl.NumberFormat('vi-VN').format(context.parsed.y) + 'đ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return new Intl.NumberFormat('vi-VN', {
+                                    notation: 'compact',
+                                    compactDisplay: 'short'
+                                }).format(value) + 'đ';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Revenue Breakdown Chart
+        const breakdownCtx = document.getElementById('revenueBreakdownChart').getContext('2d');
+        new Chart(breakdownCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Đặt sân', 'Sản phẩm'],
+                datasets: [{
+                    data: [@Model.BookingRevenue, @Model.ProductRevenue],
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(255, 99, 132, 0.8)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = @Model.TotalRevenue;
+                                const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                return context.label + ': ' +
+                                       new Intl.NumberFormat('vi-VN').format(context.parsed) + 'đ (' +
+                                       percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}
+
+@* <style>
+    /* Tổng thể Dashboard */
+    :root {
+        --admin-primary: #4e73df;
+        --admin-success: #1cc88a;
+        --admin-info: #36b9cc;
+        --admin-warning: #f6c23e;
+        --admin-gray-bg: #f8f9fc;
+    }
+
+    /* Hiệu ứng Card Thống kê */
+    .card {
+        border: none;
+        border-radius: 12px;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1) !important;
+        }
+
+    /* Border màu cho các card thống kê */
+    .border-left-primary {
+        border-left: 5px solid var(--admin-primary) !important;
+    }
+
+    .border-left-success {
+        border-left: 5px solid var(--admin-success) !important;
+    }
+
+    .border-left-info {
+        border-left: 5px solid var(--admin-info) !important;
+    }
+
+    .border-left-warning {
+        border-left: 5px solid var(--admin-warning) !important;
+    }
+
+    /* Định dạng Text */
+    .text-xs {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.05rem;
+    }
+
+    .text-gray-300 {
+        color: #dddfeb !important;
+    }
+
+    .text-gray-800 {
+        color: #5a5c69 !important;
+    }
+
+    /* Tối ưu Table trong Dashboard */
+    .card-header {
+        background-color: #fff;
+        border-bottom: 1px solid #e3e6f0;
+        font-weight: bold;
+    }
+
+    .table thead th {
+        background-color: var(--admin-gray-bg);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        color: #858796;
+        border-top: none;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(78, 115, 223, 0.05);
+    }
+
+    /* Badge tùy chỉnh */
+    .badge {
+        padding: 0.5em 0.8em;
+        border-radius: 6px;
+    }
+
+    /* Định dạng Form lọc ngày */
+    .input-group .form-control {
+        border-radius: 8px 0 0 8px;
+    }
+
+    .input-group .btn {
+        border-radius: 0 8px 8px 0;
+    }
+
+    /* Tối ưu cho biểu đồ */
+    canvas {
+        max-width: 100% !important;
+    }
+</style> *@

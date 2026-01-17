@@ -1,5 +1,204 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model QuanLiSanCauLong.ViewModels.CourtSearchViewModel
+
 @{
+    ViewData["Title"] = "Tìm kiếm sân";
+}
+
+<div class="container my-4">
+    <!-- Search Filter -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-search"></i> Tìm kiếm sân cầu lông</h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="Search" method="get" id="searchForm">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Cơ sở</label>
+                        <select name="facilityId" class="form-select" id="facilitySelect">
+                            <option value="">Tất cả cơ sở</option>
+                            @if (ViewBag.Facilities != null)
+                            {
+                                @foreach (var facility in ViewBag.Facilities)
+                                {
+                                    <option value="@facility.FacilityId"
+                                            selected="@(Model.FacilityId == facility.FacilityId)">
+                                        @facility.FacilityName
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Thành phố</label>
+                        <select name="city" class="form-select" id="citySelect">
+                            <option value="">Tất cả</option>
+                            @if (ViewBag.Cities != null)
+                            {
+                                @foreach (var city in ViewBag.Cities)
+                                {
+                                    <option value="@city" selected="@(Model.City == city)">@city</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Ngày chơi</label>
+                        <input type="date" name="bookingDate" class="form-control"
+                               value="@Model.BookingDate.ToString("yyyy-MM-dd")"
+                               min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                               max="@DateTime.Today.AddDays(30).ToString("yyyy-MM-dd")" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-search"></i> Tìm kiếm
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    @if (Model.AvailableFacilities == null || !Model.AvailableFacilities.Any())
+    {
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle fs-1 d-block mb-3"></i>
+            <h5>Không tìm thấy sân trống</h5>
+            <p class="mb-0">Vui lòng thử tìm kiếm với ngày khác hoặc cơ sở khác</p>
+        </div>
+    }
+    else
+    {
+        <div class="mb-3">
+            <h5>Tìm thấy <span class="text-success">@Model.AvailableFacilities.Count</span> cơ sở có sân trống</h5>
+            <p class="text-muted">Ngày: <strong>@Model.BookingDate.ToString("dd/MM/yyyy")</strong></p>
+        </div>
+
+        @foreach (var facility in Model.AvailableFacilities)
+        {
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-light">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="mb-0">
+                                <i class="bi bi-building text-success"></i>
+                                @facility.FacilityName
+                            </h5>
+                            <small class="text-muted">
+                                <i class="bi bi-geo-alt"></i> @facility.Address, @facility.District, @facility.City
+                            </small>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <span class="badge bg-success">@facility.TotalCourts sân</span>
+                            @if (facility.OpenTime.HasValue && facility.CloseTime.HasValue)
+                            {
+                                <small class="d-block text-muted">
+                                    <i class="bi bi-clock"></i>
+                                    @facility.OpenTime.Value.ToString(@"hh\:mm") -
+                                    @facility.CloseTime.Value.ToString(@"hh\:mm")
+                                </small>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @foreach (var court in facility.AvailableCourts)
+                    {
+                        <div class="court-section mb-4">
+                            <h6 class="mb-3">
+                                <i class="bi bi-grid-3x3"></i>
+                                Sân @court.CourtNumber
+                                <span class="badge bg-secondary">@court.CourtType</span>
+                            </h6>
+
+                            <div class="row g-2">
+                                @foreach (var slot in court.AvailableTimeSlots)
+                                {
+                                    <div class="col-6 col-md-4 col-lg-3">
+                                        @if (slot.IsAvailable)
+                                        {
+                                            <div class="time-slot available @(slot.IsPeakHour ? "peak-hour" : "")"
+                                                 onclick="selectTimeSlot(@court.CourtId, '@slot.StartTime', '@slot.EndTime', @slot.Price)">
+                                                <div class="fw-bold">
+                                                    @slot.StartTime.ToString(@"hh\:mm") - @slot.EndTime.ToString(@"hh\:mm")
+                                                </div>
+                                                <div class="text-success fw-bold">
+                                                    @slot.Price.ToString("N0")đ
+                                                </div>
+                                                @if (slot.IsPeakHour)
+                                                {
+                                                    <small class="text-warning">
+                                                        <i class="bi bi-star-fill"></i> Giờ cao điểm
+                                                    </small>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="time-slot booked">
+                                                <div class="fw-bold">
+                                                    @slot.StartTime.ToString(@"hh\:mm") - @slot.EndTime.ToString(@"hh\:mm")
+                                                </div>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-lock"></i> Đã đặt
+                                                </small>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <hr />
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function selectTimeSlot(courtId, startTime, endTime, price) {
+            const bookingDate = $('input[name="bookingDate"]').val();
+
+            if (!bookingDate) {
+                showError('Vui lòng chọn ngày chơi');
+                return;
+            }
+
+            const url = '@Url.Action("Create", "Booking")' +
+                        '?courtId=' + courtId +
+                        '&bookingDate=' + bookingDate +
+                        '&startTime=' + startTime +
+                        '&endTime=' + endTime;
+
+            window.location.href = url;
+        }
+
+        $(document).ready(function() {
+            // Auto-submit on date change
+            $('input[name="bookingDate"]').on('change', function() {
+                $('#searchForm').submit();
+            });
+
+            // Highlight selected time slots on hover
+            $('.time-slot.available').hover(
+                function() {
+                    $(this).addClass('shadow-sm');
+                },
+                function() {
+                    $(this).removeClass('shadow-sm');
+                }
+            );
+
+            // Set min date to today
+            const today = new Date().toISOString().split('T')[0];
+            $('input[name="bookingDate"]').attr('min', today);
+        });
+    </script>
 }

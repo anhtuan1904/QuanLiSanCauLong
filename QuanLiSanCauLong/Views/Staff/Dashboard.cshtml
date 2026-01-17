@@ -1,5 +1,389 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model QuanLiSanCauLong.ViewModels.StaffDashboardViewModel
+
 @{
+    ViewData["Title"] = "Staff Dashboard";
+    Layout = "~/Views/Shared/_LayoutStaff.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h3><i class="bi bi-speedometer2"></i> Dashboard Nhân viên</h3>
+            <p class="text-muted mb-0">
+                <i class="bi bi-building"></i> @Model.FacilityName
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <form asp-action="Dashboard" method="get" class="d-inline-block">
+                <div class="input-group">
+                    <input type="date" name="selectedDate" class="form-control"
+                           value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-primary shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Tổng đơn hôm nay</h6>
+                            <h3 class="mb-0 text-primary">@Model.Statistics.TodayBookings</h3>
+                        </div>
+                        <i class="bi bi-calendar-check text-primary" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-warning shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Chờ xác nhận</h6>
+                            <h3 class="mb-0 text-warning">@Model.Statistics.PendingBookings</h3>
+                        </div>
+                        <i class="bi bi-hourglass-split text-warning" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-info shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Đang chơi</h6>
+                            <h3 class="mb-0 text-info">@Model.Statistics.PlayingBookings</h3>
+                        </div>
+                        <i class="bi bi-play-circle text-info" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-success shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Doanh thu</h6>
+                            <h3 class="mb-0 text-success">@Model.Statistics.TodayRevenue.ToString("N0")đ</h3>
+                        </div>
+                        <i class="bi bi-currency-dollar text-success" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Court Status Grid -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-grid-3x3"></i> Trạng thái sân</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var court in Model.CourtSchedules)
+                        {
+                            <div class="col-md-6 col-lg-4 col-xl-3 mb-3">
+                                <div class="court-status-card border rounded p-3
+                                        @(court.CurrentStatus == "Playing" ? "border-info bg-info bg-opacity-10" :
+                                                                           court.CurrentStatus == "Upcoming" ? "border-warning bg-warning bg-opacity-10" :
+                                                                           court.CurrentStatus == "Maintenance" ? "border-danger bg-danger bg-opacity-10" : "")">
+
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-grid"></i> Sân @court.CourtNumber
+                                        </h6>
+                                        <span class="badge
+                                                @(court.CurrentStatus == "Playing" ? "bg-info" :
+                                                                                            court.CurrentStatus == "Upcoming" ? "bg-warning" :
+                                                                                            court.CurrentStatus == "Maintenance" ? "bg-danger" : "bg-secondary")">
+                                            @court.CourtType
+                                        </span>
+                                    </div>
+
+                                    @if (court.CurrentBooking != null)
+                                    {
+                                        <div class="border-top pt-2 mt-2">
+                                            <small class="text-muted d-block">Đang chơi:</small>
+                                            <div class="fw-bold">@court.CurrentBooking.CustomerName</div>
+                                            <small>
+                                                <i class="bi bi-clock"></i>
+                                                @court.CurrentBooking.StartTime.ToString(@"hh\:mm") -
+                                                @court.CurrentBooking.EndTime.ToString(@"hh\:mm")
+                                            </small>
+                                        </div>
+
+                                        <div class="d-grid gap-2 mt-2">
+                                            <button class="btn btn-sm btn-success"
+                                                    onclick="checkOut(@court.CurrentBooking.BookingId)">
+                                                <i class="bi bi-check-circle"></i> Check-out
+                                            </button>
+                                        </div>
+                                    }
+                                    else if (court.NextBooking != null)
+                                    {
+                                        <div class="border-top pt-2 mt-2">
+                                            <small class="text-muted d-block">Sắp tới:</small>
+                                            <div class="fw-bold">@court.NextBooking.CustomerName</div>
+                                            <small>
+                                                <i class="bi bi-clock"></i>
+                                                @court.NextBooking.StartTime.ToString(@"hh\:mm") -
+                                                @court.NextBooking.EndTime.ToString(@"hh\:mm")
+                                            </small>
+                                        </div>
+
+                                        <div class="d-grid gap-2 mt-2">
+                                            <button class="btn btn-sm btn-primary"
+                                                    onclick="checkIn(@court.NextBooking.BookingId)">
+                                                <i class="bi bi-box-arrow-in-right"></i> Check-in
+                                            </button>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-center text-muted py-3">
+                                            <i class="bi bi-inbox fs-3"></i>
+                                            <div class="small">Trống</div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bookings Lists -->
+    <div class="row">
+        <!-- Pending Bookings -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="bi bi-hourglass-split"></i>
+                        Chờ xác nhận (@Model.PendingBookings.Count)
+                    </h6>
+                </div>
+                <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                    @if (!Model.PendingBookings.Any())
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-check-circle fs-3"></i>
+                            <div class="small">Không có đơn chờ</div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var booking in Model.PendingBookings)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">@booking.CustomerName</h6>
+                                            <small class="text-muted">@booking.CustomerPhone</small>
+                                        </div>
+                                        <span class="badge bg-secondary">@booking.CourtNumber</span>
+                                    </div>
+                                    <div class="small mb-2">
+                                        <i class="bi bi-clock"></i>
+                                        @booking.StartTime.ToString(@"hh\:mm") - @booking.EndTime.ToString(@"hh\:mm")
+                                    </div>
+                                    <div class="btn-group w-100" role="group">
+                                        <button class="btn btn-sm btn-success"
+                                                onclick="confirmBooking(@booking.BookingId)">
+                                            <i class="bi bi-check"></i> Xác nhận
+                                        </button>
+                                        <button class="btn btn-sm btn-danger"
+                                                onclick="rejectBooking(@booking.BookingId)">
+                                            <i class="bi bi-x"></i> Từ chối
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Bookings -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-calendar-event"></i>
+                        Sắp tới (@Model.UpcomingBookings.Count)
+                    </h6>
+                </div>
+                <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                    @if (!Model.UpcomingBookings.Any())
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-calendar-x fs-3"></i>
+                            <div class="small">Không có đơn sắp tới</div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var booking in Model.UpcomingBookings)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">@booking.CustomerName</h6>
+                                            <small class="text-muted">@booking.CustomerPhone</small>
+                                        </div>
+                                        <span class="badge bg-secondary">@booking.CourtNumber</span>
+                                    </div>
+                                    <div class="small mb-2">
+                                        <i class="bi bi-clock"></i>
+                                        @booking.StartTime.ToString(@"hh\:mm") - @booking.EndTime.ToString(@"hh\:mm")
+                                    </div>
+                                    <div class="d-grid">
+                                        <button class="btn btn-sm btn-primary"
+                                                onclick="checkIn(@booking.BookingId)">
+                                            <i class="bi bi-box-arrow-in-right"></i> Check-in
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Playing Bookings -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-play-circle"></i>
+                        Đang chơi (@Model.PlayingBookings.Count)
+                    </h6>
+                </div>
+                <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                    @if (!Model.PlayingBookings.Any())
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-pause-circle fs-3"></i>
+                            <div class="small">Không có sân đang chơi</div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var booking in Model.PlayingBookings)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">@booking.CustomerName</h6>
+                                            <small class="text-muted">@booking.CustomerPhone</small>
+                                        </div>
+                                        <span class="badge bg-secondary">@booking.CourtNumber</span>
+                                    </div>
+                                    <div class="small mb-2">
+                                        <i class="bi bi-clock"></i>
+                                        @booking.StartTime.ToString(@"hh\:mm") - @booking.EndTime.ToString(@"hh\:mm")
+                                    </div>
+                                    <div class="btn-group w-100" role="group">
+                                        <button class="btn btn-sm btn-success"
+                                                onclick="checkOut(@booking.BookingId)">
+                                            <i class="bi bi-check-circle"></i> Check-out
+                                        </button>
+                                        <a asp-action="Sales" asp-route-bookingId="@booking.BookingId"
+                                           class="btn btn-sm btn-primary">
+                                            <i class="bi bi-cart"></i> Bán hàng
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function checkIn(bookingId) {
+            confirmDialog('Xác nhận check-in khách hàng?', function() {
+                ajaxPost('@Url.Action("CheckIn")', { bookingId: bookingId }, function(response) {
+                    if (response.success) {
+                        showSuccess(response.message);
+                        location.reload();
+                    } else {
+                        showError(response.message);
+                    }
+                });
+            });
+        }
+
+        function checkOut(bookingId) {
+            confirmDialog('Xác nhận check-out?', function() {
+                ajaxPost('@Url.Action("CheckOut")', { bookingId: bookingId }, function(response) {
+                    if (response.success) {
+                        showSuccess(response.message);
+                        location.reload();
+                    } else {
+                        showError(response.message);
+                    }
+                });
+            });
+        }
+
+        function confirmBooking(bookingId) {
+            confirmDialog('Xác nhận đơn đặt sân này?', function() {
+                ajaxPost('@Url.Action("ConfirmBooking")', { bookingId: bookingId }, function(response) {
+                    if (response.success) {
+                        showSuccess(response.message);
+                        location.reload();
+                    } else {
+                        showError(response.message);
+                    }
+                });
+            });
+        }
+
+        function rejectBooking(bookingId) {
+            const reason = prompt('Nhập lý do từ chối:');
+            if (reason) {
+                ajaxPost('@Url.Action("RejectBooking")', { bookingId: bookingId, reason: reason },
+                    function(response) {
+                        if (response.success) {
+                            showSuccess(response.message);
+                            location.reload();
+                        } else {
+                            showError(response.message);
+                        }
+                    });
+            }
+        }
+
+        // Auto refresh every 30 seconds
+        setInterval(function() {
+            location.reload();
+        }, 30000);
+    </script>
 }

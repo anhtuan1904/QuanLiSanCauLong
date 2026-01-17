@@ -1,5 +1,84 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model QuanLiSanCauLong.Models.Court
+
 @{
+    ViewData["Title"] = "Thêm sân mới";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="mb-4">
+        <h3><i class="bi bi-grid-3x3"></i> Thêm sân mới</h3>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-action="Courts">Sân</a></li>
+                <li class="breadcrumb-item active">Thêm mới</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">Thông tin sân</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateCourt" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="FacilityId" class="form-label">Cơ sở <span class="text-danger">*</span></label>
+                            <select asp-for="FacilityId" class="form-select">
+                                <option value="">-- Chọn cơ sở --</option>
+                                @foreach (var facility in ViewBag.Facilities as IEnumerable<QuanLiSanCauLong.Models.Facility>)
+                                {
+                                    <option value="@facility.FacilityId">@facility.FacilityName</option>
+                                }
+                            </select>
+                            <span asp-validation-for="FacilityId" class="text-danger"></span>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="CourtNumber" class="form-label">Số sân <span class="text-danger">*</span></label>
+                                <input asp-for="CourtNumber" class="form-control" placeholder="VD: 01, 02, A1..." />
+                                <span asp-validation-for="CourtNumber" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="CourtType" class="form-label">Loại sân <span class="text-danger">*</span></label>
+                                <select asp-for="CourtType" class="form-select">
+                                    <option value="">-- Chọn loại --</option>
+                                    <option value="Standard">Standard</option>
+                                    <option value="VIP">VIP</option>
+                                    <option value="Premium">Premium</option>
+                                </select>
+                                <span asp-validation-for="CourtType" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Mô tả</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"
+                                      placeholder="Mô tả về sân, tiện ích đi kèm..."></textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Lưu
+                            </button>
+                            <a asp-action="Courts" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

@@ -148,7 +148,7 @@ namespace QuanLiSanCauLong.Controllers
                 .Take(10)
                 .ToList();
 
-            return View(model);
+            return View("Dashboard/Index", model);
         }
 
         // ===================================

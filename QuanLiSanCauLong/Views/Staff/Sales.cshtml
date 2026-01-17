@@ -1,5 +1,342 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model QuanLiSanCauLong.ViewModels.SalesViewModel
+
 @{
+    ViewData["Title"] = "Bán hàng";
+    Layout = "~/Views/Shared/_LayoutStaff.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Products Section -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-shop"></i> Danh sách sản phẩm
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.BookingId.HasValue && ViewBag.Booking != null)
+                    {
+                        var booking = ViewBag.Booking;
+                        <div class="alert alert-info mb-3">
+                            <h6 class="alert-heading">
+                                <i class="bi bi-info-circle"></i> Đơn đặt sân: @booking.BookingCode
+                            </h6>
+                            <div class="row small">
+                                <div class="col-md-6">
+                                    <strong>Khách hàng:</strong> @booking.User.FullName<br />
+                                    <strong>Sân:</strong> @booking.Court.CourtNumber
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Giờ chơi:</strong>
+                                    @booking.StartTime.ToString(@"hh\:mm") - @booking.EndTime.ToString(@"hh\:mm")<br />
+                                    <strong>Ngày:</strong> @booking.BookingDate.ToString("dd/MM/yyyy")
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Product Categories Tabs -->
+                    <ul class="nav nav-pills mb-3" id="categoryTabs" role="tablist">
+                        @for (int i = 0; i < Model.ProductCategories.Count; i++)
+                        {
+                            var category = Model.ProductCategories[i];
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link @(i == 0 ? "active" : "")"
+                                        id="tab-@category.CategoryType"
+                                        data-bs-toggle="pill"
+                                        data-bs-target="#content-@category.CategoryType"
+                                        type="button">
+                                    @if (category.CategoryType == "Food")
+                                    {
+                                        <i class="bi bi-cup-straw"></i>
+                                    }
+                                    else if (category.CategoryType == "Beverage")
+                                    {
+                                        <i class="bi bi-droplet"></i>
+                                    }
+                                    else if (category.CategoryType == "Equipment")
+                                    {
+                                        <i class="bi bi-trophy"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-box"></i>
+                                    }
+                                    @category.CategoryName
+                                </button>
+                            </li>
+                        }
+                    </ul>
+
+                    <!-- Product Grids -->
+                    <div class="tab-content" id="categoryTabsContent">
+                        @for (int i = 0; i < Model.ProductCategories.Count; i++)
+                        {
+                            var category = Model.ProductCategories[i];
+                            <div class="tab-pane fade @(i == 0 ? "show active" : "")"
+                                 id="content-@category.CategoryType"
+                                 role="tabpanel">
+                                <div class="row">
+                                    @foreach (var product in category.Products)
+                                    {
+                                        <div class="col-md-4 col-lg-3 mb-3">
+                                            <div class="product-card card h-100 @(!product.IsAvailable ? "opacity-50" : "")"
+                                                 onclick="@(product.IsAvailable ? $"addToCart({product.ProductId}, '{product.ProductName}', {product.Price}, '{product.Unit}')" : "")">
+                                                <div class="card-body text-center">
+                                                    @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                                    {
+                                                        <img src="@product.ImageUrl" class="img-fluid mb-2"
+                                                             style="max-height: 80px;" alt="@product.ProductName" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="bi bi-box fs-1 text-muted"></i>
+                                                    }
+                                                    <h6 class="card-title mt-2 mb-1">@product.ProductName</h6>
+                                                    <p class="text-success fw-bold mb-1">@product.Price.ToString("N0")đ</p>
+                                                    <small class="text-muted">
+                                                        @if (product.IsAvailable)
+                                                        {
+                                                            <span class="text-success">
+                                                                <i class="bi bi-check-circle"></i> Còn @product.StockQuantity
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-danger">
+                                                                <i class="bi bi-x-circle"></i> Hết hàng
+                                                            </span>
+                                                        }
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cart Section -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-cart"></i> Giỏ hàng
+                        <span class="badge bg-light text-dark" id="cartCount">0</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="salesForm" asp-action="CreateOrder" method="post">
+                        <input type="hidden" name="BookingId" value="@Model.BookingId" />
+                        <input type="hidden" name="FacilityId" value="@Model.FacilityId" />
+                        <input type="hidden" name="UserId" value="@Model.UserId" />
+
+                        <div id="cartItems" class="mb-3" style="max-height: 400px; overflow-y: auto;">
+                            <div class="text-center text-muted py-5" id="emptyCart">
+                                <i class="bi bi-cart-x fs-1"></i>
+                                <p class="mt-2">Giỏ hàng trống</p>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Tạm tính:</span>
+                                <strong id="subTotal">0đ</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2" id="discountRow" style="display: none !important;">
+                                <span>Giảm giá:</span>
+                                <strong class="text-danger" id="discount">0đ</strong>
+                            </div>
+                            <hr />
+                            <div class="d-flex justify-content-between">
+                                <h5>Tổng cộng:</h5>
+                                <h5 class="text-success" id="totalAmount">0đ</h5>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg" id="submitBtn" disabled>
+                                <i class="bi bi-check-circle"></i> Thanh toán
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" onclick="clearCart()">
+                                <i class="bi bi-trash"></i> Xóa giỏ hàng
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let cart = [];
+
+        function addToCart(productId, productName, price, unit) {
+            const existingItem = cart.find(item => item.ProductId === productId);
+
+            if (existingItem) {
+                existingItem.Quantity++;
+            } else {
+                cart.push({
+                    ProductId: productId,
+                    ProductName: productName,
+                    Price: price,
+                    Unit: unit,
+                    Quantity: 1
+                });
+            }
+
+            updateCart();
+            showSuccess('Đã thêm ' + productName + ' vào giỏ hàng');
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.ProductId !== productId);
+            updateCart();
+        }
+
+        function updateQuantity(productId, quantity) {
+            const item = cart.find(item => item.ProductId === productId);
+            if (item) {
+                item.Quantity = Math.max(1, parseInt(quantity));
+                updateCart();
+            }
+        }
+
+        function updateCart() {
+            const cartItemsDiv = $('#cartItems');
+            const emptyCart = $('#emptyCart');
+
+            if (cart.length === 0) {
+                emptyCart.show();
+                cartItemsDiv.find('.cart-item').remove();
+                $('#submitBtn').prop('disabled', true);
+            } else {
+                emptyCart.hide();
+                $('#submitBtn').prop('disabled', false);
+
+                // Clear existing items
+                cartItemsDiv.find('.cart-item').remove();
+
+                // Add items
+                cart.forEach(item => {
+                    const itemHtml = `
+                        <div class="cart-item border-bottom pb-2 mb-2">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">${item.ProductName}</h6>
+                                    <small class="text-muted">${formatCurrency(item.Price)} / ${item.Unit}</small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="removeFromCart(${item.ProductId})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="input-group input-group-sm" style="max-width: 120px;">
+                                    <button class="btn btn-outline-secondary" type="button"
+                                            onclick="updateQuantity(${item.ProductId}, ${item.Quantity - 1})">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="number" class="form-control text-center"
+                                           value="${item.Quantity}" min="1"
+                                           onchange="updateQuantity(${item.ProductId}, this.value)">
+                                    <button class="btn btn-outline-secondary" type="button"
+                                            onclick="updateQuantity(${item.ProductId}, ${item.Quantity + 1})">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                                <strong class="text-success">${formatCurrency(item.Price * item.Quantity)}</strong>
+                            </div>
+                            <input type="hidden" name="CartItems[${item.ProductId}].ProductId" value="${item.ProductId}" />
+                            <input type="hidden" name="CartItems[${item.ProductId}].Quantity" value="${item.Quantity}" />
+                            <input type="hidden" name="CartItems[${item.ProductId}].Price" value="${item.Price}" />
+                        </div>
+                    `;
+                    cartItemsDiv.append(itemHtml);
+                });
+            }
+
+            // Update totals
+            const subTotal = cart.reduce((sum, item) => sum + (item.Price * item.Quantity), 0);
+            $('#cartCount').text(cart.length);
+            $('#subTotal').text(formatCurrency(subTotal));
+            $('#totalAmount').text(formatCurrency(subTotal));
+        }
+
+        function clearCart() {
+            if (cart.length === 0) return;
+
+            confirmDialog('Bạn có chắc chắn muốn xóa toàn bộ giỏ hàng?', function() {
+                cart = [];
+                updateCart();
+                showInfo('Đã xóa giỏ hàng');
+            });
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
+        }
+
+        $(document).ready(function() {
+            // Handle form submit
+            $('#salesForm').on('submit', function(e) {
+                e.preventDefault();
+
+                if (cart.length === 0) {
+                    showError('Giỏ hàng trống!');
+                    return false;
+                }
+
+                const formData = {
+                    BookingId: $('input[name="BookingId"]').val(),
+                    FacilityId: $('input[name="FacilityId"]').val(),
+                    UserId: $('input[name="UserId"]').val(),
+                    CartItems: cart.map(item => ({
+                        ProductId: item.ProductId,
+                        ProductName: item.ProductName,
+                        Quantity: item.Quantity,
+                        Price: item.Price
+                    }))
+                };
+
+                ajaxPostJson('@Url.Action("CreateOrder")', formData, function(response) {
+                    if (response.success) {
+                        showSuccess(response.message);
+                        cart = [];
+                        updateCart();
+
+                        // Redirect after 1 second
+                        setTimeout(function() {
+                            window.location.href = '@Url.Action("Dashboard")';
+                        }, 1000);
+                    } else {
+                        showError(response.message);
+                    }
+                });
+            });
+
+            // Product card hover effect
+            $('.product-card').hover(
+                function() {
+                    if (!$(this).hasClass('opacity-50')) {
+                        $(this).addClass('shadow-lg').css('transform', 'scale(1.05)');
+                    }
+                },
+                function() {
+                    $(this).removeClass('shadow-lg').css('transform', 'scale(1)');
+                }
+            );
+        });
+    </script>
 }

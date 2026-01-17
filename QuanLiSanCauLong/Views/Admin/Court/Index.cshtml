@@ -1,5 +1,123 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<QuanLiSanCauLong.Models.Court>
+
 @{
+    ViewData["Title"] = "Quản lý sân";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3><i class="bi bi-grid-3x3"></i> Quản lý sân</h3>
+            <p class="text-muted">Danh sách các sân cầu lông</p>
+        </div>
+        <div class="d-flex gap-2">
+            <select class="form-select" style="width: auto;" onchange="filterByFacility(this.value)">
+                <option value="">Tất cả cơ sở</option>
+                @foreach (var facility in ViewBag.Facilities as IEnumerable<QuanLiSanCauLong.Models.Facility>)
+                {
+                    <option value="@facility.FacilityId"
+                            selected="@(ViewBag.SelectedFacilityId == facility.FacilityId)">
+                        @facility.FacilityName
+                    </option>
+                }
+            </select>
+            <a asp-action="CreateCourt" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Thêm sân
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        @foreach (var court in Model)
+        {
+            <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-grid-3x3-gap text-primary"></i>
+                                Sân @court.CourtNumber
+                            </h5>
+                            @if (court.Status == "Available")
+                            {
+                                <span class="badge bg-success">Sẵn sàng</span>
+                            }
+                            else if (court.Status == "Maintenance")
+                            {
+                                <span class="badge bg-warning">Bảo trì</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Không khả dụng</span>
+                            }
+                        </div>
+
+                        <p class="text-muted mb-2">
+                            <i class="bi bi-building"></i> @court.Facility.FacilityName
+                        </p>
+
+                        <div class="mb-2">
+                            <small class="text-muted">Loại sân:</small>
+                            <span class="badge bg-info">@court.CourtType</span>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(court.Description))
+                        {
+                            <p class="small text-muted mb-2">@court.Description</p>
+                        }
+                    </div>
+                    <div class="card-footer bg-transparent border-top">
+                        <div class="d-flex gap-2">
+                            <a asp-action="EditCourt" asp-route-id="@court.CourtId"
+                               class="btn btn-sm btn-outline-primary flex-fill">
+                                <i class="bi bi-pencil"></i> Sửa
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger"
+                                    onclick="deleteCourt(@court.CourtId)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <p class="text-muted mt-3">Chưa có sân nào. Hãy thêm sân mới!</p>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function filterByFacility(facilityId) {
+            window.location.href = facilityId ?
+                `/Admin/Courts?facilityId=${facilityId}` :
+                '/Admin/Courts';
+        }
+
+        function deleteCourt(id) {
+            if (confirm('Bạn có chắc muốn xóa sân này?')) {
+                fetch(`/Admin/DeleteCourt/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra!');
+                    }
+                });
+            }
+        }
+    </script>
 }

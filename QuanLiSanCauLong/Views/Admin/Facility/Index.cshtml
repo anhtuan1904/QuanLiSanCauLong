@@ -1,5 +1,112 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<QuanLiSanCauLong.Models.Facility>
+
 @{
+    ViewData["Title"] = "Quản lý cơ sở";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3><i class="bi bi-building"></i> Quản lý cơ sở</h3>
+            <p class="text-muted">Danh sách các cơ sở cầu lông</p>
+        </div>
+        <a asp-action="CreateFacility" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Thêm cơ sở
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Tên cơ sở</th>
+                            <th>Địa chỉ</th>
+                            <th>Quận/Huyện</th>
+                            <th>Điện thoại</th>
+                            <th>Giờ mở cửa</th>
+                            <th>Trạng thái</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var facility in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@facility.FacilityName</strong>
+                                </td>
+                                <td>@facility.Address</td>
+                                <td>@facility.District, @facility.City</td>
+                                <td>
+                                    <i class="bi bi-telephone"></i> @facility.Phone
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">
+                                        @facility.OpenTime?.ToString(@"hh\:mm") - @facility.CloseTime?.ToString(@"hh\:mm")
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (facility.IsActive)
+                                    {
+                                        <span class="badge bg-success">Hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Tạm đóng</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Courts" asp-route-facilityId="@facility.FacilityId"
+                                           class="btn btn-outline-info" title="Xem sân">
+                                            <i class="bi bi-grid-3x3"></i>
+                                        </a>
+                                        <a asp-action="PriceSlots" asp-route-facilityId="@facility.FacilityId"
+                                           class="btn btn-outline-secondary" title="Bảng giá">
+                                            <i class="bi bi-cash"></i>
+                                        </a>
+                                        <a asp-action="EditFacility" asp-route-id="@facility.FacilityId"
+                                           class="btn btn-outline-primary" title="Sửa">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button class="btn btn-outline-danger"
+                                                onclick="deleteFacility(@facility.FacilityId)" title="Xóa">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function deleteFacility(id) {
+            if (confirm('Bạn có chắc muốn xóa cơ sở này? Tất cả sân và dữ liệu liên quan sẽ bị xóa!')) {
+                fetch(`/Admin/DeleteFacility/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra!');
+                    }
+                });
+            }
+        }
+    </script>
 }

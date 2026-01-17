@@ -1,5 +1,327 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model QuanLiSanCauLong.ViewModels.InventoryListViewModel
+
 @{
+    ViewData["Title"] = "Quản lý kho";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3><i class="bi bi-boxes"></i> Quản lý kho hàng</h3>
+            <p class="text-muted">Theo dõi tồn kho các cơ sở</p>
+        </div>
+        <div class="d-flex gap-2">
+            <select class="form-select" style="width: auto;" onchange="filterByFacility(this.value)">
+                <option value="">Tất cả cơ sở</option>
+                @foreach (var facility in ViewBag.Facilities as IEnumerable<QuanLiSanCauLong.Models.Facility>)
+                {
+                    <option value="@facility.FacilityId"
+                            selected="@(Model.FacilityId == facility.FacilityId)">
+                        @facility.FacilityName
+                    </option>
+                }
+            </select>
+            <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#stockAlertModal">
+                <i class="bi bi-exclamation-triangle"></i>
+                Cảnh báo (@Model.LowStockCount)
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="bi bi-box-arrow-in-down"></i> Nhập kho
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Tổng sản phẩm
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.Items.Count()
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-box-seam fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Sắp hết hàng
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.LowStockCount
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-exclamation-triangle fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Tổng giá trị
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.Items.Sum(i => i.Quantity * i.Price).ToString("N0")đ
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-currency-dollar fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Danh mục
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.Items.Select(i => i.CategoryName).Distinct().Count()
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-tags fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="card shadow">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Chi tiết tồn kho</h5>
+            <div class="input-group" style="width: 300px;">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" id="searchInput"
+                       placeholder="Tìm sản phẩm..." onkeyup="searchTable()">
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="inventoryTable">
+                    <thead>
+                        <tr>
+                            <th>Mã SP</th>
+                            <th>Sản phẩm</th>
+                            <th>Danh mục</th>
+                            <th>Loại</th>
+                            <th class="text-end">Tồn kho</th>
+                            <th class="text-end">Tối thiểu</th>
+                            <th class="text-end">Tối đa</th>
+                            <th class="text-end">Đơn giá</th>
+                            <th class="text-end">Thành tiền</th>
+                            <th>Trạng thái</th>
+                            <th>Cập nhật</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items.OrderBy(i => i.CategoryType).ThenBy(i => i.ProductName))
+                        {
+                            <tr class="@(item.IsLowStock ? "table-warning" : "")">
+                                <td><code>@item.ProductCode</code></td>
+                                <td><strong>@item.ProductName</strong></td>
+                                <td>@item.CategoryName</td>
+                                <td>
+                                    @if (item.CategoryType == "Food")
+                                    {
+                                        <span class="badge bg-warning"><i class="bi bi-cup-straw"></i> Food</span>
+                                    }
+                                    else if (item.CategoryType == "Equipment")
+                                    {
+                                        <span class="badge bg-info"><i class="bi bi-tools"></i> Equipment</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary"><i class="bi bi-star"></i> Service</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <strong class="@(item.IsLowStock ? "text-danger" : "text-primary")">
+                                        @item.Quantity @item.Unit
+                                    </strong>
+                                </td>
+                                <td class="text-end text-muted">@item.MinQuantity @item.Unit</td>
+                                <td class="text-end text-muted">@item.MaxQuantity @item.Unit</td>
+                                <td class="text-end">@item.Price.ToString("N0")đ</td>
+                                <td class="text-end">
+                                    <strong class="text-success">
+                                        @((item.Quantity * item.Price).ToString("N0"))đ
+                                    </strong>
+                                </td>
+                                <td>
+                                    @if (item.IsLowStock)
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-exclamation-circle"></i> Thấp
+                                        </span>
+                                    }
+                                    else if (item.Quantity >= item.MaxQuantity * 0.8)
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Đầy
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">
+                                            <i class="bi bi-info-circle"></i> Bình thường
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    <small class="text-muted">@item.LastUpdated.ToString("dd/MM/yyyy HH:mm")</small>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Low Stock Alert Modal -->
+<div class="modal fade" id="stockAlertModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle"></i> Cảnh báo tồn kho thấp
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th class="text-end">Tồn kho</th>
+                                <th class="text-end">Tối thiểu</th>
+                                <th class="text-end">Cần nhập</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items.Where(i => i.IsLowStock))
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@item.ProductName</strong><br />
+                                        <small class="text-muted">@item.CategoryName</small>
+                                    </td>
+                                    <td class="text-end text-danger">
+                                        <strong>@item.Quantity @item.Unit</strong>
+                                    </td>
+                                    <td class="text-end">@item.MinQuantity @item.Unit</td>
+                                    <td class="text-end text-success">
+                                        <strong>@((item.MaxQuantity - item.Quantity)) @item.Unit</strong>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+                        data-bs-toggle="modal" data-bs-target="#importModal">
+                    <i class="bi bi-box-arrow-in-down"></i> Nhập hàng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Stock Modal -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-box-arrow-in-down"></i> Nhập kho</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="importForm">
+                    <div class="mb-3">
+                        <label class="form-label">Cơ sở <span class="text-danger">*</span></label>
+                        <select class="form-select" required>
+                            <option value="">-- Chọn cơ sở --</option>
+                            @foreach (var facility in ViewBag.Facilities as IEnumerable<QuanLiSanCauLong.Models.Facility>)
+                            {
+                                <option value="@facility.FacilityId">@facility.FacilityName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ghi chú</label>
+                        <textarea class="form-control" rows="2" placeholder="Nhập từ nhà cung cấp..."></textarea>
+                    </div>
+                    <hr />
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        Tính năng nhập kho chi tiết đang được phát triển. Vui lòng cập nhật trực tiếp trong database.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Lưu phiếu nhập
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterByFacility(facilityId) {
+            window.location.href = facilityId ?
+                `/Admin/Inventory?facilityId=${facilityId}` :
+                '/Admin/Inventory';
+        }
+
+        function searchTable() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById('inventoryTable');
+            const rows = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(filter) ? '' : 'none';
+            }
+        }
+    </script>
 }

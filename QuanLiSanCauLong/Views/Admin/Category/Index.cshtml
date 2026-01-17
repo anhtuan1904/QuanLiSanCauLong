@@ -1,5 +1,150 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<QuanLiSanCauLong.Models.ProductCategory>
+
 @{
+    ViewData["Title"] = "Quản lý danh mục";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3><i class="bi bi-tags"></i> Quản lý danh mục</h3>
+            <p class="text-muted">Danh mục sản phẩm/dịch vụ</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
+            <i class="bi bi-plus-circle"></i> Thêm danh mục
+        </button>
+    </div>
+
+    <div class="row">
+        @foreach (var category in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">
+                                @if (category.CategoryType == "Food")
+                                {
+                                    <i class="bi bi-cup-straw text-warning"></i>
+                                }
+                                else if (category.CategoryType == "Equipment")
+                                {
+                                    <i class="bi bi-tools text-info"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-star text-secondary"></i>
+                                }
+                                @category.CategoryName
+                            </h5>
+                            @if (category.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </div>
+
+                        <p class="text-muted small mb-2">
+                            <strong>Loại:</strong>
+                            @if (category.CategoryType == "Food")
+                            {
+                                <span>Đồ ăn/uống</span>
+                            }
+                            else if (category.CategoryType == "Equipment")
+                            {
+                                <span>Dụng cụ</span>
+                            }
+                            else
+                            {
+                                <span>Dịch vụ</span>
+                            }
+                        </p>
+
+                        @if (!string.IsNullOrEmpty(category.Description))
+                        {
+                            <p class="small text-muted">@category.Description</p>
+                        }
+                    </div>
+                    <div class="card-footer bg-transparent border-top">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-primary flex-fill"
+                                    onclick="editCategory(@category.CategoryId, '@category.CategoryName', '@category.CategoryType', '@category.Description')">
+                                <i class="bi bi-pencil"></i> Sửa
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger"
+                                    onclick="deleteCategory(@category.CategoryId)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Create Category Modal -->
+<div class="modal fade" id="createCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="CreateCategory" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Thêm danh mục mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tên danh mục <span class="text-danger">*</span></label>
+                        <input name="CategoryName" class="form-control" required placeholder="VD: Vợt cầu lông" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Loại <span class="text-danger">*</span></label>
+                        <select name="CategoryType" class="form-select" required>
+                            <option value="">-- Chọn loại --</option>
+                            <option value="Food">Đồ ăn/uống</option>
+                            <option value="Equipment">Dụng cụ</option>
+                            <option value="Service">Dịch vụ</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mô tả</label>
+                        <textarea name="Description" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Lưu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function deleteCategory(id) {
+            if (confirm('Bạn có chắc muốn xóa danh mục này? Tất cả sản phẩm trong danh mục sẽ bị ảnh hưởng!')) {
+                fetch(`/Admin/DeleteCategory/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra!');
+                    }
+                });
+            }
+        }
+    </script>
 }

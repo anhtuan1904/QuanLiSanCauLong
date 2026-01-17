@@ -1,8 +1,209 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model QuanLiSanCauLong.ViewModels.HomeViewModel
+
+@{
+    ViewData["Title"] = "Trang chủ";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="hero-section bg-success text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-3">Đặt sân cầu lông dễ dàng</h1>
+                <p class="lead mb-4">Hệ thống đặt sân trực tuyến hiện đại, nhanh chóng với nhiều cơ sở chất lượng cao</p>
+                <div class="d-grid gap-2 d-md-flex">
+                    <a asp-controller="Booking" asp-action="Search" class="btn btn-light btn-lg px-4">
+                        <i class="bi bi-calendar-check"></i> Đặt sân ngay
+                    </a>
+                    <a asp-controller="Facility" asp-action="Index" class="btn btn-outline-light btn-lg px-4">
+                        <i class="bi bi-building"></i> Xem cơ sở
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                @* Đảm bảo bạn có ảnh này trong thư mục wwwroot/images *@
+                <img src="/images/hero-badminton.png" alt="Badminton" class="img-fluid" style="max-height: 400px; filter: drop-shadow(5px 5px 15px rgba(0,0,0,0.3));">
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="stats-section py-5 bg-light">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 mb-4">
+                <div class="stat-card p-4 bg-white rounded shadow-sm border-0">
+                    <i class="bi bi-building text-success fs-1"></i>
+                    <h3 class="mt-3 fw-bold">@Model.Stats.TotalFacilities</h3>
+                    <p class="text-muted mb-0">Cơ sở hoạt động</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="stat-card p-4 bg-white rounded shadow-sm border-0">
+                    <i class="bi bi-grid-3x3 text-success fs-1"></i>
+                    <h3 class="mt-3 fw-bold">@Model.Stats.TotalCourts</h3>
+                    <p class="text-muted mb-0">Sân trống sẵn sàng</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="stat-card p-4 bg-white rounded shadow-sm border-0">
+                    <i class="bi bi-people text-success fs-1"></i>
+                    <h3 class="mt-3 fw-bold">@Model.Stats.TotalCustomers</h3>
+                    <p class="text-muted mb-0">Khách hàng tin dùng</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="stat-card p-4 bg-white rounded shadow-sm border-0">
+                    <i class="bi bi-calendar-check text-success fs-1"></i>
+                    <h3 class="mt-3 fw-bold">@Model.Stats.TotalBookingsToday</h3>
+                    <p class="text-muted mb-0">Lượt đặt hôm nay</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="facilities-section py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Cơ sở nổi bật</h2>
+            <p class="text-muted">Các cơ sở sân chất lượng cao, được yêu thích nhất vừa gia nhập hệ thống</p>
+        </div>
+
+        <div class="row">
+            @if (Model.FeaturedFacilities != null && Model.FeaturedFacilities.Any())
+            {
+                foreach (var facility in Model.FeaturedFacilities)
+                {
+                    <div class="col-md-4 mb-4">
+                        <div class="card facility-card h-100 shadow-sm border-0 transition-all">
+                            <div class="position-relative">
+                                <img src="@facility.ImageUrl" class="card-img-top" alt="@facility.FacilityName" style="height: 220px; object-fit: cover;">
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    <span class="badge bg-success shadow">@facility.TotalCourts sân trống</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold text-dark">@facility.FacilityName</h5>
+                                <p class="card-text text-muted small mb-3">
+                                    <i class="bi bi-geo-alt-fill text-danger"></i> @facility.Address, @facility.District, @facility.City
+                                </p>
+
+                                <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded">
+                                    @if (facility.OpenTime.HasValue && facility.CloseTime.HasValue)
+                                    {
+                                        <span class="small fw-bold text-secondary">
+                                            <i class="bi bi-clock-history text-success"></i>
+                                            @facility.OpenTime.Value.ToString(@"hh\:mm") - @facility.CloseTime.Value.ToString(@"hh\:mm")
+                                        </span>
+                                    }
+                                </div>
+
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <a asp-controller="Facility" asp-action="Details" asp-route-id="@facility.FacilityId"
+                                           class="btn btn-outline-success w-100">
+                                            <i class="bi bi-info-circle"></i> Chi tiết
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
+                                        @* Thay đổi action Search thành Create nếu bạn muốn dẫn thẳng vào trang đặt sân *@
+                                        <a asp-controller="Booking" asp-action="Search" asp-route-facilityId="@facility.FacilityId"
+                                           class="btn btn-success w-100">
+                                            <i class="bi bi-plus-lg"></i> Đặt ngay
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center py-5">
+                    <div class="alert alert-info border-0 shadow-sm">
+                        <i class="bi bi-info-circle fs-4"></i> Hiện chưa có cơ sở nào khả dụng trong khu vực này.
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="text-center mt-4">
+            <a asp-controller="Facility" asp-action="Index" class="btn btn-lg btn-outline-success px-5 rounded-pill">
+                Xem tất cả cơ sở <i class="bi bi-arrow-right ms-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="features-section py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Tại sao nên chọn chúng tôi?</h2>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="text-center p-4 h-100 bg-white rounded shadow-sm border-bottom border-success border-4">
+                    <i class="bi bi-lightning-charge-fill text-warning fs-1"></i>
+                    <h4 class="mt-3 fw-bold">Đặt sân cực nhanh</h4>
+                    <p class="text-muted">Chỉ mất chưa đầy 1 phút để giữ chỗ khung giờ bạn muốn chơi.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="text-center p-4 h-100 bg-white rounded shadow-sm border-bottom border-success border-4">
+                    <i class="bi bi-shield-check text-success fs-1"></i>
+                    <h4 class="mt-3 fw-bold">Thông tin minh bạch</h4>
+                    <p class="text-muted">Giá cả và trạng thái sân luôn được cập nhật theo thời gian thực.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="text-center p-4 h-100 bg-white rounded shadow-sm border-bottom border-success border-4">
+                    <i class="bi bi-credit-card text-primary fs-1"></i>
+                    <h4 class="mt-3 fw-bold">Đa dạng thanh toán</h4>
+                    <p class="text-muted">Hỗ trợ từ tiền mặt tại quầy đến chuyển khoản, Ví điện tử Momo, VNPay.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section py-5 bg-success text-white position-relative overflow-hidden">
+    <div class="container text-center py-4">
+        <h2 class="fw-bold display-6 mb-3">Bạn là chủ sân cầu lông?</h2>
+        <p class="lead mb-4">Hợp tác cùng chúng tôi để quản lý và gia tăng doanh thu cơ sở của bạn hiệu quả hơn.</p>
+        @if (!User.Identity.IsAuthenticated)
+        {
+            <a asp-controller="Account" asp-action="Register" class="btn btn-light btn-lg px-5 rounded-pill fw-bold text-success shadow">
+                <i class="bi bi-person-plus-fill"></i> Đăng ký thành viên ngay
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Booking" asp-action="Search" class="btn btn-light btn-lg px-5 rounded-pill fw-bold text-success shadow">
+                <i class="bi bi-calendar-check"></i> Đặt thêm trận đấu mới
+            </a>
+        }
+    </div>
+</section>
+
+<style>
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+
+    .facility-card:hover {
+        transform: translateY(-10px);
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Hiệu ứng hover cho card (bổ sung cho CSS)
+            $('.facility-card').hover(
+                function() { $(this).addClass('shadow-lg'); },
+                function() { $(this).removeClass('shadow-lg'); }
+            );
+        });
+    </script>
+}

@@ -1,5 +1,130 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<QuanLiSanCauLong.Models.Product>
+
 @{
+    ViewData["Title"] = "Quản lý sản phẩm";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3><i class="bi bi-box-seam"></i> Quản lý sản phẩm</h3>
+            <p class="text-muted">Danh sách sản phẩm/dịch vụ</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Categories" class="btn btn-outline-secondary">
+                <i class="bi bi-tags"></i> Danh mục
+            </a>
+            <a asp-action="CreateProduct" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Thêm sản phẩm
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;"></th>
+                            <th>Mã SP</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Danh mục</th>
+                            <th>Loại</th>
+                            <th>Giá</th>
+                            <th>Đơn vị</th>
+                            <th>Trạng thái</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var product in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                    {
+                                        <img src="@product.ImageUrl" alt="@product.ProductName"
+                                             class="rounded" style="width: 50px; height: 50px; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                             style="width: 50px; height: 50px;">
+                                            <i class="bi bi-image text-muted"></i>
+                                        </div>
+                                    }
+                                </td>
+                                <td><code>@product.ProductCode</code></td>
+                                <td><strong>@product.ProductName</strong></td>
+                                <td>@product.Category.CategoryName</td>
+                                <td>
+                                    @if (product.Category.CategoryType == "Food")
+                                    {
+                                        <span class="badge bg-warning"><i class="bi bi-cup-straw"></i> Đồ ăn/uống</span>
+                                    }
+                                    else if (product.Category.CategoryType == "Equipment")
+                                    {
+                                        <span class="badge bg-info"><i class="bi bi-tools"></i> Dụng cụ</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary"><i class="bi bi-star"></i> Dịch vụ</span>
+                                    }
+                                </td>
+                                <td><strong class="text-success">@product.Price.ToString("N0")đ</strong></td>
+                                <td>@product.Unit</td>
+                                <td>
+                                    @if (product.IsActive)
+                                    {
+                                        <span class="badge bg-success">Hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Tạm ngưng</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="EditProduct" asp-route-id="@product.ProductId"
+                                           class="btn btn-outline-primary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button class="btn btn-outline-danger"
+                                                onclick="deleteProduct(@product.ProductId)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function deleteProduct(id) {
+            if (confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
+                fetch(`/Admin/DeleteProduct/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra!');
+                    }
+                });
+            }
+        }
+    </script>
 }
