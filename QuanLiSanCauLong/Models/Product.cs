@@ -34,6 +34,9 @@ namespace QuanLiSanCauLong.Models
         [StringLength(20)]
         public string Unit { get; set; }
 
+        // Thêm thuộc tính này để khớp với View
+        public string Status { get; set; } = "InStock";
+
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
@@ -43,5 +46,4 @@ namespace QuanLiSanCauLong.Models
         public virtual ICollection<Inventory> Inventories { get; set; }
         public virtual ICollection<OrderDetail> OrderDetails { get; set; }
     }
-
 }

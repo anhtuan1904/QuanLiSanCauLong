@@ -3,6 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace QuanLiSanCauLong.ViewModels
 {
+    /// <summary>
+    /// ViewModel cho chức năng đăng ký tài khoản
+    /// </summary>
     public class RegisterViewModel
     {
         [Required(ErrorMessage = "Họ tên không được để trống")]

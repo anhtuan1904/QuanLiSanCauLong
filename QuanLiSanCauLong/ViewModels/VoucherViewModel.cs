@@ -3,6 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace QuanLiSanCauLong.ViewModels
 {
+    /// <summary>
+    /// ViewModel cho quản lý voucher/mã giảm giá
+    /// </summary>
     public class VoucherViewModel
     {
         public int VoucherId { get; set; }
@@ -20,7 +23,7 @@ namespace QuanLiSanCauLong.ViewModels
 
         [Required]
         [Display(Name = "Loại giảm giá")]
-        public string DiscountType { get; set; }
+        public string DiscountType { get; set; } // Percentage, FixedAmount
 
         [Required]
         [Display(Name = "Giá trị giảm")]
@@ -33,7 +36,7 @@ namespace QuanLiSanCauLong.ViewModels
         public decimal? MaxDiscount { get; set; }
 
         [Display(Name = "Áp dụng cho")]
-        public string ApplicableFor { get; set; }
+        public string ApplicableFor { get; set; } // Booking, Product, All
 
         [Required]
         [Display(Name = "Ngày bắt đầu")]

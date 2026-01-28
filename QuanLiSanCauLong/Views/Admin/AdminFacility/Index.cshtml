@@ -1,0 +1,158 @@
+﻿@model IEnumerable<QuanLiSanCauLong.Models.Facility>
+
+@{
+    ViewData["Title"] = "Quản lý cơ sở";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">
+        <i class="bi bi-building text-primary me-2"></i>
+        Quản lý cơ sở
+    </h2>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Thêm cơ sở mới
+    </a>
+</div>
+
+<!-- Search & Filter -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="search"
+                       placeholder="Tìm theo tên, địa chỉ..." value="@ViewBag.Search">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="city">
+                    <option value="">Tất cả thành phố</option>
+                    <option value="Hồ Chí Minh">Hồ Chí Minh</option>
+                    <option value="Hà Nội">Hà Nội</option>
+                    <option value="Đà Nẵng">Đà Nẵng</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="status">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Active">Hoạt động</option>
+                    <option value="Inactive">Ngừng hoạt động</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Tìm
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Facilities Grid -->
+<div class="row g-4">
+    @if (Model != null && Model.Any())
+    {
+        foreach (var facility in Model)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm border-0">
+                    @if (!string.IsNullOrEmpty(facility.ImageUrl))
+                    {
+                        <img src="@facility.ImageUrl" class="card-img-top" alt="@facility.FacilityName"
+                             style="height: 200px; object-fit: cover;">
+                    }
+                    else
+                    {
+                        <div class="bg-light d-flex align-items-center justify-content-center"
+                             style="height: 200px;">
+                            <i class="bi bi-building text-muted" style="font-size: 4rem;"></i>
+                        </div>
+                    }
+
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title fw-bold mb-0">@facility.FacilityName</h5>
+                            @if (facility.Status == "Active")
+                            {
+                                <span class="badge bg-success">Hoạt động</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Ngừng</span>
+                            }
+                        </div>
+
+                        <p class="text-muted small mb-2">
+                            <i class="bi bi-geo-alt me-1"></i>
+                            @facility.Address, @facility.District, @facility.City
+                        </p>
+
+                        <p class="text-muted small mb-2">
+                            <i class="bi bi-telephone me-1"></i>
+                            @facility.Phone
+                        </p>
+
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div>
+                                <small class="text-muted">
+                                    <i class="bi bi-clock me-1"></i>
+                                    @facility.OpenTime?.ToString(@"hh\:mm") - @facility.CloseTime?.ToString(@"hh\:mm")
+                                </small>
+                            </div>
+                            <div>
+                                <span class="badge bg-info">@facility.Courts?.Count ?? 0 sân</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-white border-top">
+                        <div class="btn-group w-100" role="group">
+                            <a asp-action="Details" asp-route-id="@facility.FacilityId"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Xem
+                            </a>
+                            <a asp-action="Edit" asp-route-id="@facility.FacilityId"
+                               class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i> Sửa
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                    onclick="deleteFacility(@facility.FacilityId)">
+                                <i class="bi bi-trash"></i> Xóa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="bi bi-info-circle me-2"></i>
+                Chưa có cơ sở nào. Nhấn "Thêm cơ sở mới" để bắt đầu.
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function deleteFacility(id) {
+            if (confirm('Bạn có chắc muốn xóa cơ sở này?')) {
+                fetch(`/Admin/Facility/Delete/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Không thể xóa cơ sở này!');
+                    }
+                });
+            }
+        }
+    </script>
+}

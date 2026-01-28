@@ -1,0 +1,185 @@
+﻿@model IEnumerable<QuanLiSanCauLong.Models.User>
+
+@{
+    ViewData["Title"] = "Quản lý người dùng";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">
+        <i class="bi bi-people text-primary me-2"></i>
+        Quản lý người dùng
+    </h2>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-person-plus me-2"></i>Thêm người dùng
+    </a>
+</div>
+
+<!-- Filter -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="search"
+                       placeholder="Tìm theo tên, email..." value="@ViewBag.Search">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="role">
+                    <option value="">Tất cả vai trò</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Staff">Staff</option>
+                    <option value="Customer">Customer</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="status">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Active">Hoạt động</option>
+                    <option value="Inactive">Khóa</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Tìm
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Người dùng</th>
+                        <th>Email</th>
+                        <th>Điện thoại</th>
+                        <th>Vai trò</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày tạo</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var user in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
+                                            <i class="bi bi-person text-primary"></i>
+                                        </div>
+                                        <strong>@user.FullName</strong>
+                                    </div>
+                                </td>
+                                <td>
+                                    <i class="bi bi-envelope text-muted me-2"></i>
+                                    @user.Email
+                                </td>
+                                <td>@(user.Phone ?? "-")</td>
+                                <td>
+                                    @if (user.Role == "Admin")
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-shield-fill me-1"></i>Admin
+                                        </span>
+                                    }
+                                    else if (user.Role == "Staff")
+                                    {
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-person-badge me-1"></i>Staff
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">
+                                            <i class="bi bi-person me-1"></i>Customer
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (user.Status == "Active")
+                                    {
+                                        <span class="badge bg-success">Hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Khóa</span>
+                                    }
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        @user.CreatedAt.ToString("dd/MM/yyyy")
+                                    </small>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Details" asp-route-id="@user.UserId"
+                                           class="btn btn-outline-primary" title="Xem chi tiết">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@user.UserId"
+                                           class="btn btn-outline-warning" title="Chỉnh sửa">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        @if (user.Status == "Active")
+                                        {
+                                            <button class="btn btn-outline-secondary"
+                                                    onclick="toggleStatus(@user.UserId, 'Inactive')"
+                                                    title="Khóa tài khoản">
+                                                <i class="bi bi-lock"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-outline-success"
+                                                    onclick="toggleStatus(@user.UserId, 'Active')"
+                                                    title="Mở khóa">
+                                                <i class="bi bi-unlock"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                Chưa có người dùng
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleStatus(userId, newStatus) {
+            const message = newStatus === 'Inactive'
+                ? 'Bạn có chắc muốn khóa tài khoản này?'
+                : 'Bạn có chắc muốn mở khóa tài khoản này?';
+
+            if (confirm(message)) {
+                fetch(`/Admin/User/ToggleStatus/${userId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                }).then(response => {
+                    if (response.ok) location.reload();
+                    else alert('Có lỗi xảy ra!');
+                });
+            }
+        }
+    </script>
+}

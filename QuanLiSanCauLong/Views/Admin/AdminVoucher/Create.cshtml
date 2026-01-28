@@ -1,0 +1,191 @@
+﻿@* @model QuanLiSanCauLong.ViewModels.VoucherViewModel
+
+@{
+    ViewData["Title"] = "Tạo voucher";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="mb-0">
+                    <i class="bi bi-ticket-perforated me-2"></i>Tạo voucher mới
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                    <!-- Basic Info -->
+                    <h5 class="border-bottom pb-2 mb-3">Thông tin cơ bản</h5>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="VoucherCode" class="form-label fw-semibold required">
+                                Mã voucher
+                            </label>
+                            <input asp-for="VoucherCode" class="form-control text-uppercase"
+                                   placeholder="NEWYEAR2024" />
+                            <span asp-validation-for="VoucherCode" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="VoucherName" class="form-label fw-semibold required">
+                                Tên voucher
+                            </label>
+                            <input asp-for="VoucherName" class="form-control"
+                                   placeholder="Giảm giá năm mới" />
+                            <span asp-validation-for="VoucherName" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label fw-semibold">
+                            Mô tả
+                        </label>
+                        <textarea asp-for="Description" class="form-control" rows="2"
+                                  placeholder="Mô tả chi tiết về voucher..."></textarea>
+                    </div>
+
+                    <!-- Discount Settings -->
+                    <h5 class="border-bottom pb-2 mb-3 mt-4">Cài đặt giảm giá</h5>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="DiscountType" class="form-label fw-semibold required">
+                                Loại giảm giá
+                            </label>
+                            <select asp-for="DiscountType" class="form-select" id="discountType">
+                                <option value="">-- Chọn loại --</option>
+                                <option value="Percentage">Phần trăm (%)</option>
+                                <option value="FixedAmount">Số tiền cố định (đ)</option>
+                            </select>
+                            <span asp-validation-for="DiscountType" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="DiscountValue" class="form-label fw-semibold required">
+                                Giá trị giảm
+                            </label>
+                            <input asp-for="DiscountValue" type="number" class="form-control"
+                                   min="0" step="1" id="discountValue" />
+                            <span asp-validation-for="DiscountValue" class="text-danger small"></span>
+                            <small class="text-muted" id="discountHint"></small>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="MinOrderAmount" class="form-label fw-semibold">
+                                Đơn hàng tối thiểu (đ)
+                            </label>
+                            <input asp-for="MinOrderAmount" type="number" class="form-control"
+                                   min="0" step="10000" placeholder="0" />
+                            <small class="text-muted">Để trống nếu không giới hạn</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="MaxDiscount" class="form-label fw-semibold">
+                                Giảm tối đa (đ)
+                            </label>
+                            <input asp-for="MaxDiscount" type="number" class="form-control"
+                                   min="0" step="10000" placeholder="0" />
+                            <small class="text-muted">Chỉ áp dụng cho % giảm</small>
+                        </div>
+                    </div>
+
+                    <!-- Applicability -->
+                    <h5 class="border-bottom pb-2 mb-3 mt-4">Phạm vi áp dụng</h5>
+
+                    <div class="mb-3">
+                        <label asp-for="ApplicableFor" class="form-label fw-semibold">
+                            Áp dụng cho
+                        </label>
+                        <select asp-for="ApplicableFor" class="form-select">
+                            <option value="All">Tất cả đơn hàng</option>
+                            <option value="Booking">Chỉ đặt sân</option>
+                            <option value="Order">Chỉ đơn hàng sản phẩm</option>
+                        </select>
+                    </div>
+
+                    <!-- Time & Usage -->
+                    <h5 class="border-bottom pb-2 mb-3 mt-4">Thời gian & giới hạn</h5>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="StartDate" class="form-label fw-semibold required">
+                                Ngày bắt đầu
+                            </label>
+                            <input asp-for="StartDate" type="datetime-local" class="form-control" />
+                            <span asp-validation-for="StartDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="EndDate" class="form-label fw-semibold required">
+                                Ngày kết thúc
+                            </label>
+                            <input asp-for="EndDate" type="datetime-local" class="form-control" />
+                            <span asp-validation-for="EndDate" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="UsageLimit" class="form-label fw-semibold">
+                                Giới hạn tổng số lượt dùng
+                            </label>
+                            <input asp-for="UsageLimit" type="number" class="form-control"
+                                   min="1" placeholder="Không giới hạn" />
+                            <small class="text-muted">Để trống nếu không giới hạn</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="UsageLimitPerUser" class="form-label fw-semibold required">
+                                Giới hạn mỗi người dùng
+                            </label>
+                            <input asp-for="UsageLimitPerUser" type="number" class="form-control"
+                                   min="1" value="1" />
+                            <span asp-validation-for="UsageLimitPerUser" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input asp-for="IsActive" class="form-check-input" type="checkbox" checked />
+                            <label asp-for="IsActive" class="form-check-label">
+                                Kích hoạt voucher ngay
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-4">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Hủy
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Tạo voucher
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        document.getElementById('discountType').addEventListener('change', function() {
+            const hint = document.getElementById('discountHint');
+            const valueInput = document.getElementById('discountValue');
+
+            if (this.value === 'Percentage') {
+                hint.textContent = 'Nhập % (0-100)';
+                valueInput.max = 100;
+                valueInput.step = 1;
+            } else if (this.value === 'FixedAmount') {
+                hint.textContent = 'Nhập số tiền giảm';
+                valueInput.max = '';
+                valueInput.step = 10000;
+            }
+        });
+    </script>
+} *@

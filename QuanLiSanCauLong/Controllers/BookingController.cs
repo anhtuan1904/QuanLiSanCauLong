@@ -422,24 +422,30 @@ namespace QuanLiSanCauLong.Controllers
         private async Task<List<TimeSlotViewModel>> GetAvailableTimeSlots(Court court, DateTime bookingDate)
         {
             var timeSlots = new List<TimeSlotViewModel>();
-            int dayOfWeek = (int)bookingDate.DayOfWeek;
+
+            // Sử dụng trực tiếp kiểu DayOfWeek để so sánh với Model
+            DayOfWeek dayOfWeekEnum = bookingDate.DayOfWeek;
 
             var priceSlots = await _context.PriceSlots
                 .Where(p => p.FacilityId == court.FacilityId
-                       && p.CourtType == court.CourtType
-                       && p.IsActive
-                       && (p.DayOfWeek == null || p.DayOfWeek == dayOfWeek))
+                            && p.CourtType == court.CourtType
+                            && p.IsActive
+                            // Ép kiểu hoặc so sánh Enum trực tiếp tùy thuộc vào định nghĩa trong DB của bạn
+                            && (p.DayOfWeek == null || p.DayOfWeek == dayOfWeekEnum))
                 .OrderBy(p => p.StartTime)
                 .ToListAsync();
 
+            // Tối ưu hóa: Chỉ lấy các bản ghi có cùng ngày (tránh lệch múi giờ nếu có)
             var bookedSlots = await _context.Bookings
                 .Where(b => b.CourtId == court.CourtId
-                       && b.BookingDate == bookingDate
-                       && b.Status != "Cancelled")
+                            && b.BookingDate.Date == bookingDate.Date
+                            && b.Status != "Cancelled")
                 .ToListAsync();
 
             foreach (var slot in priceSlots)
             {
+                // Thuật toán kiểm tra chồng lấn thời gian (Overlap detection)
+                // 
                 bool isBooked = bookedSlots.Any(b =>
                     b.StartTime < slot.EndTime && b.EndTime > slot.StartTime);
 

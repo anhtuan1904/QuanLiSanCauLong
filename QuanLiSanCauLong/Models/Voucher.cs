@@ -51,6 +51,7 @@ namespace QuanLiSanCauLong.Models
         [ForeignKey("CreatedBy")]
         public virtual User Creator { get; set; }
 
+        public DateTime? UpdatedAt { get; set; } = DateTime.Now;
         public virtual ICollection<VoucherUsage> VoucherUsages { get; set; }
     }
 }

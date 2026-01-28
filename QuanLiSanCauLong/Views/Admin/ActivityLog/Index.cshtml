@@ -1,5 +1,233 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@{
+    ViewData["Title"] = "Nhật ký hoạt động";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">
+        <i class="bi bi-clock-history text-primary me-2"></i>
+        Nhật ký hoạt động hệ thống
+    </h2>
+    <button class="btn btn-danger" onclick="clearOldLogs()">
+        <i class="bi bi-trash me-2"></i>Xóa log cũ
+    </button>
+</div>
+
+<!-- Filter -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Từ ngày</label>
+                <input type="date" class="form-control" name="fromDate" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Đến ngày</label>
+                <input type="date" class="form-control" name="toDate" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Loại</label>
+                <select class="form-select" name="action">
+                    <option value="">Tất cả</option>
+                    <option value="Create">Tạo mới</option>
+                    <option value="Update">Cập nhật</option>
+                    <option value="Delete">Xóa</option>
+                    <option value="Login">Đăng nhập</option>
+                    <option value="Logout">Đăng xuất</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Người dùng</label>
+                <select class="form-select" name="userId">
+                    <option value="">Tất cả</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Tìm
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Activity Timeline -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 180px;">Thời gian</th>
+                        <th>Người dùng</th>
+                        <th>Hành động</th>
+                        <th>Mô tả</th>
+                        <th>IP Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Sample data -->
+                    <tr>
+                        <td>
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>
+                                18/01/2026 14:30:25
+                            </small>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
+                                    <i class="bi bi-person text-primary"></i>
+                                </div>
+                                <div>
+                                    <strong>Admin User</strong>
+                                    <br>
+                                    <small class="text-muted">admin@system.com</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">
+                                <i class="bi bi-plus-circle me-1"></i>Create
+                            </span>
+                        </td>
+                        <td>
+                            Tạo cơ sở mới: <strong>Sân cầu lông ABC</strong>
+                        </td>
+                        <td>
+                            <small class="text-muted font-monospace">192.168.1.100</small>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>
+                                18/01/2026 14:25:10
+                            </small>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-warning bg-opacity-10 rounded-circle p-2 me-2">
+                                    <i class="bi bi-person-badge text-warning"></i>
+                                </div>
+                                <div>
+                                    <strong>Staff User</strong>
+                                    <br>
+                                    <small class="text-muted">staff@facility.com</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-warning">
+                                <i class="bi bi-pencil me-1"></i>Update
+                            </span>
+                        </td>
+                        <td>
+                            Cập nhật trạng thái booking: <strong>#BK00123</strong> → Confirmed
+                        </td>
+                        <td>
+                            <small class="text-muted font-monospace">192.168.1.105</small>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>
+                                18/01/2026 14:20:45
+                            </small>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-info bg-opacity-10 rounded-circle p-2 me-2">
+                                    <i class="bi bi-person text-info"></i>
+                                </div>
+                                <div>
+                                    <strong>Customer User</strong>
+                                    <br>
+                                    <small class="text-muted">customer@email.com</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>Login
+                            </span>
+                        </td>
+                        <td>
+                            Đăng nhập thành công vào hệ thống
+                        </td>
+                        <td>
+                            <small class="text-muted font-monospace">14.231.52.10</small>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>
+                                18/01/2026 14:15:30
+                            </small>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
+                                    <i class="bi bi-person text-primary"></i>
+                                </div>
+                                <div>
+                                    <strong>Admin User</strong>
+                                    <br>
+                                    <small class="text-muted">admin@system.com</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-danger">
+                                <i class="bi bi-trash me-1"></i>Delete
+                            </span>
+                        </td>
+                        <td>
+                            Xóa voucher: <strong>SUMMER2024</strong>
+                        </td>
+                        <td>
+                            <small class="text-muted font-monospace">192.168.1.100</small>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item disabled">
+                    <a class="page-link">«</a>
+                </li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item">
+                    <a class="page-link" href="#">»</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function clearOldLogs() {
+            if (confirm('Bạn có chắc muốn xóa các log cũ hơn 30 ngày?')) {
+                fetch('/Admin/ActivityLog/ClearOld', {
+                    method: 'POST'
+                }).then(response => {
+                    if (response.ok) {
+                        alert('Đã xóa thành công!');
+                        location.reload();
+                    }
+                });
+            }
+        }
+    </script>
 }

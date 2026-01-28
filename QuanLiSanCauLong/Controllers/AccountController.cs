@@ -47,13 +47,13 @@ namespace QuanLiSanCauLong.Controllers
                     FullName = model.FullName,
                     Email = model.Email,
                     Phone = model.Phone,
+                    Password = model.Password,
                     PasswordHash = PasswordHelper.HashPassword(model.Password),
                     Role = "Customer",
                     IsActive = true,
                     CreatedAt = DateTime.Now,
                     UpdatedAt = DateTime.Now
                 };
-
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
 
@@ -122,8 +122,13 @@ namespace QuanLiSanCauLong.Controllers
 
                     return user.Role switch
                     {
-                        "Admin" => RedirectToAction("Index", "Admin"),
-                        "Staff" => RedirectToAction("Dashboard", "Staff"),
+                        // Chạy vào AdminDashboardController, Action Index
+                        "Admin" => RedirectToAction("Index", "AdminDashboard"),
+
+                        // Nếu có AdminStaffController thì sửa tương tự, không thì để Dashboard tạm
+                        "Staff" => RedirectToAction("Index", "AdminDashboard"),
+
+                        // Khách hàng về trang chủ
                         _ => RedirectToAction("Index", "Home")
                     };
                 }
@@ -239,6 +244,75 @@ namespace QuanLiSanCauLong.Controllers
             }
             // Fallback to session
             return HttpContext.Session.GetInt32("UserId") ?? 0;
+        }
+
+
+        // GET: Account/ForgotPassword
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+
+                if (user != null)
+                {
+                    // Thay vì gửi mail, chuyển hướng thẳng sang trang đặt lại mật khẩu
+                    // Gửi kèm Email để trang sau biết cần cập nhật cho ai
+                    return RedirectToAction("ResetPassword", new { email = model.Email });
+                }
+
+                ModelState.AddModelError("", "Email không tồn tại trong hệ thống.");
+            }
+            return View(model);
+        }        // GET: Account/ResetPassword
+        [HttpGet]
+        public IActionResult ResetPassword(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction("ForgotPassword");
+            }
+
+            // Khởi tạo model với email đã có sẵn
+            var model = new ResetPasswordViewModel { Email = email, Token = "DUMMY_TOKEN" };
+            return View(model);
+        }
+
+        // POST: Account/ResetPassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+
+                if (user != null)
+                {
+                    // Sử dụng PasswordHelper để hash mật khẩu mới
+                    user.PasswordHash = PasswordHelper.HashPassword(model.Password);
+                    user.UpdatedAt = DateTime.Now;
+
+                    _context.Update(user);
+                    await _context.SaveChangesAsync();
+
+                    TempData["SuccessMessage"] = "Mật khẩu đã được thay đổi thành công!";
+                    return RedirectToAction("Login");
+                }
+
+                ModelState.AddModelError("", "Không tìm thấy người dùng.");
+            }
+            return View(model);
         }
     }
 }

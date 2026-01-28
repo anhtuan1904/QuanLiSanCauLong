@@ -1,0 +1,159 @@
+﻿@model QuanLiSanCauLong.ViewModels.InventoryListViewModel
+
+@{
+    ViewData["Title"] = "Quản lý kho";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">
+        <i class="bi bi-box-seam text-primary me-2"></i>
+        Quản lý kho hàng
+    </h2>
+    <div class="btn-group">
+        <a asp-action="StockIn" class="btn btn-success">
+            <i class="bi bi-box-arrow-in-down me-2"></i>Nhập kho
+        </a>
+        <a asp-action="StockOut" class="btn btn-warning">
+            <i class="bi bi-box-arrow-up me-2"></i>Xuất kho
+        </a>
+    </div>
+</div>
+
+<!-- Alerts -->
+@if (Model.LowStockCount > 0)
+{
+    <div class="alert alert-warning alert-dismissible fade show">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <strong>Cảnh báo!</strong> Có @Model.LowStockCount sản phẩm sắp hết hàng.
+        <a asp-action="LowStock" class="alert-link">Xem ngay</a>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Filter -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <select class="form-select" name="facilityId">
+                    <option value="">Tất cả cơ sở</option>
+                    @foreach (var facility in ViewBag.Facilities)
+                    {
+                        <option value="@facility.FacilityId"
+                                selected="@(facility.FacilityId == Model.FacilityId)">
+                            @facility.FacilityName
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="categoryId">
+                    <option value="">Tất cả danh mục</option>
+                    @foreach (var cat in ViewBag.Categories)
+                    {
+                        <option value="@cat.CategoryId">@cat.CategoryName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="stockStatus">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="low">Sắp hết</option>
+                    <option value="normal">Bình thường</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Lọc
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Inventory Table -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th>Danh mục</th>
+                        <th class="text-center">Tồn kho</th>
+                        <th class="text-center">Tối thiểu</th>
+                        <th class="text-center">Tối đa</th>
+                        <th>Trạng thái</th>
+                        <th>Cập nhật</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items != null && Model.Items.Any())
+                    {
+                        foreach (var item in Model.Items)
+                        {
+                            <tr class="@(item.IsLowStock ? "table-warning" : "")">
+                                <td>
+                                    <strong>@item.ProductName</strong>
+                                    <br>
+                                    <small class="text-muted">@item.ProductCode</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">@item.CategoryName</span>
+                                </td>
+                                <td class="text-center">
+                                    <strong class="@(item.IsLowStock ? "text-danger" : "text-success")">
+                                        @item.Quantity
+                                    </strong>
+                                    <small class="text-muted">@item.Unit</small>
+                                </td>
+                                <td class="text-center text-muted">@item.MinQuantity</td>
+                                <td class="text-center text-muted">@item.MaxQuantity</td>
+                                <td>
+                                    @if (item.IsLowStock)
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>Sắp hết
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Đủ hàng</span>
+                                    }
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        @item.LastUpdated.ToString("dd/MM/yyyy HH:mm")
+                                    </small>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Adjustment" asp-route-inventoryId="@item.InventoryId"
+                                           class="btn btn-outline-warning" title="Điều chỉnh">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a asp-action="History" asp-route-productId="@item.ProductId"
+                                           class="btn btn-outline-info" title="Lịch sử">
+                                            <i class="bi bi-clock-history"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                Chưa có dữ liệu tồn kho
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

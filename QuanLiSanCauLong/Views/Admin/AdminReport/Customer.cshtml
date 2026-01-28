@@ -1,0 +1,322 @@
+﻿@* @{
+    ViewData["Title"] = "Báo cáo khách hàng";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">
+        <i class="bi bi-people text-primary me-2"></i>
+        Báo cáo khách hàng
+    </h2>
+    <button class="btn btn-success" onclick="exportReport()">
+        <i class="bi bi-file-excel me-2"></i>Xuất Excel
+    </button>
+</div>
+
+<!-- Filter -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Từ ngày</label>
+                <input type="date" class="form-control" name="fromDate" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Đến ngày</label>
+                <input type="date" class="form-control" name="toDate" />
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-2"></i>Xem báo cáo
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-body text-white">
+                <h6 class="text-white-50">Tổng khách hàng</h6>
+                <h2 class="mb-0 fw-bold">@ViewBag.TotalCustomers</h2>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-gradient" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="card-body text-white">
+                <h6 class="text-white-50">Khách hàng mới</h6>
+                <h2 class="mb-0 fw-bold">@ViewBag.NewCustomers</h2>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-gradient" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <div class="card-body text-white">
+                <h6 class="text-white-50">Khách VIP</h6>
+                <h2 class="mb-0 fw-bold">@ViewBag.VIPCustomers</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Growth Chart -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0 fw-bold">Xu hướng tăng trưởng khách hàng</h5>
+    </div>
+    <div class="card-body">
+        <canvas id="customerGrowthChart" height="80"></canvas>
+    </div>
+</div>
+
+<!-- Top Customers -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0 fw-bold">
+            <i class="bi bi-trophy text-warning me-2"></i>
+            Top 20 khách hàng VIP
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Khách hàng</th>
+                        <th>Email</th>
+                        <th>Điện thoại</th>
+                        <th class="text-center">Số lượt đặt</th>
+                        <th class="text-end">Tổng chi tiêu</th>
+                        <th class="text-center">Lần cuối</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Top customers data -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Segmentation -->
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold">Phân loại khách hàng</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="segmentChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold">Tần suất đặt sân</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="frequencyChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+==============================================
+ADMIN/SETTINGS/INDEX.CSHTML
+==============================================
+@{
+    ViewData["Title"] = "Cài đặt hệ thống";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">
+        <i class="bi bi-gear text-primary me-2"></i>
+        Cài đặt hệ thống
+    </h2>
+</div>
+
+<div class="row">
+    <div class="col-lg-3 mb-4">
+        <!-- Settings Menu -->
+        <div class="card shadow-sm">
+            <div class="list-group list-group-flush">
+                <a href="#general" class="list-group-item list-group-item-action active" data-bs-toggle="list">
+                    <i class="bi bi-gear me-2"></i>Cài đặt chung
+                </a>
+                <a href="#booking" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="bi bi-calendar-check me-2"></i>Đặt sân
+                </a>
+                <a href="#payment" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="bi bi-credit-card me-2"></i>Thanh toán
+                </a>
+                <a href="#notification" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="bi bi-bell me-2"></i>Thông báo
+                </a>
+                <a href="#email" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="bi bi-envelope me-2"></i>Email
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-9">
+        <div class="tab-content">
+            <!-- General Settings -->
+            <div class="tab-pane fade show active" id="general">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-bold">Cài đặt chung</h5>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Tên hệ thống</label>
+                                <input type="text" class="form-control" value="Badminton Booking System" />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Hotline</label>
+                                <input type="text" class="form-control" value="1900xxxx" />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Email hỗ trợ</label>
+                                <input type="email" class="form-control" value="support@badminton.com" />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Múi giờ</label>
+                                <select class="form-select">
+                                    <option selected>GMT+7 (Vietnam)</option>
+                                </select>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Lưu thay đổi
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Booking Settings -->
+            <div class="tab-pane fade" id="booking">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-bold">Cài đặt đặt sân</h5>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Đặt trước tối đa (ngày)</label>
+                                <input type="number" class="form-control" value="30" min="1" />
+                                <small class="text-muted">Khách hàng có thể đặt sân trước tối đa bao nhiêu ngày</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Thời gian tối thiểu mỗi lượt (phút)</label>
+                                <input type="number" class="form-control" value="60" min="30" step="30" />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Thời hạn hủy đơn (giờ)</label>
+                                <input type="number" class="form-control" value="24" min="1" />
+                                <small class="text-muted">Khách có thể hủy đơn trước bao nhiêu giờ</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="autoConfirm" checked />
+                                    <label class="form-check-label" for="autoConfirm">
+                                        Tự động xác nhận đơn đặt sân
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="allowOnlinePayment" checked />
+                                    <label class="form-check-label" for="allowOnlinePayment">
+                                        Cho phép thanh toán online
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Lưu thay đổi
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Payment Settings -->
+            <div class="tab-pane fade" id="payment">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-bold">Cài đặt thanh toán</h5>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <h6 class="border-bottom pb-2 mb-3">Phương thức thanh toán</h6>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableCash" checked />
+                                    <label class="form-check-label" for="enableCash">
+                                        <strong>Tiền mặt</strong>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableBankTransfer" checked />
+                                    <label class="form-check-label" for="enableBankTransfer">
+                                        <strong>Chuyển khoản ngân hàng</strong>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableVNPay" />
+                                    <label class="form-check-label" for="enableVNPay">
+                                        <strong>VNPay</strong>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableMomo" />
+                                    <label class="form-check-label" for="enableMomo">
+                                        <strong>Momo</strong>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <h6 class="border-bottom pb-2 mb-3 mt-4">Thông tin chuyển khoản</h6>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Ngân hàng</label>
+                                <input type="text" class="form-control" placeholder="VD: Vietcombank" />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Số tài khoản</label>
+                                <input type="text" class="form-control" />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Chủ tài khoản</label>
+                                <input type *@

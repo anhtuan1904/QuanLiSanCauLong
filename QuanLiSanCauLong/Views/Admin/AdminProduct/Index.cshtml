@@ -1,0 +1,146 @@
+﻿@model IEnumerable<QuanLiSanCauLong.Models.Product>
+
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">
+        <i class="bi bi-box-seam text-primary me-2"></i>
+        Quản lý sản phẩm
+    </h2>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Thêm sản phẩm
+    </a>
+</div>
+
+<!-- Filter -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="search"
+                       placeholder="Tìm theo tên sản phẩm..." value="@ViewBag.Search">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="categoryId">
+                    <option value="">Tất cả danh mục</option>
+                    @foreach (var cat in ViewBag.Categories)
+                    {
+                        <option value="@cat.CategoryId">@cat.CategoryName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="status">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Available">Còn hàng</option>
+                    <option value="OutOfStock">Hết hàng</option>
+                    <option value="Discontinued">Ngừng bán</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Tìm
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Products Grid -->
+<div class="row g-4">
+    @if (Model != null && Model.Any())
+    {
+        foreach (var product in Model)
+        {
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 shadow-sm border-0">
+                    @if (!string.IsNullOrEmpty(product.ImageUrl))
+                    {
+                        <img src="@product.ImageUrl" class="card-img-top" alt="@product.ProductName"
+                             style="height: 180px; object-fit: cover;">
+                    }
+                    else
+                    {
+                        <div class="bg-light d-flex align-items-center justify-content-center"
+                             style="height: 180px;">
+                            <i class="bi bi-box text-muted" style="font-size: 3rem;"></i>
+                        </div>
+                    }
+
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title fw-bold mb-0">@product.ProductName</h6>
+                            @if (product.Status == "Available")
+                            {
+                                <span class="badge bg-success">Còn</span>
+                            }
+                            else if (product.Status == "OutOfStock")
+                            {
+                                <span class="badge bg-danger">Hết</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Ngừng</span>
+                            }
+                        </div>
+
+                        <p class="text-muted small mb-2">
+                            <i class="bi bi-tag me-1"></i>@product.Category?.CategoryName
+                        </p>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-success fw-bold fs-5">
+                                @product.Price.ToString("N0")đ
+                            </span>
+                            <small class="text-muted">/@product.Unit</small>
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-white border-top">
+                        <div class="btn-group w-100" role="group">
+                            <a asp-action="Edit" asp-route-id="@product.ProductId"
+                               class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a asp-action="Details" asp-route-id="@product.ProductId"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger"
+                                    onclick="deleteProduct(@product.ProductId)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="bi bi-info-circle me-2"></i>
+                Chưa có sản phẩm nào
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function deleteProduct(id) {
+            if (confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
+                fetch(`/Admin/Product/Delete/${id}`, {
+                    method: 'POST'
+                }).then(response => {
+                    if (response.ok) location.reload();
+                    else alert('Không thể xóa!');
+                });
+            }
+        }
+    </script>
+}

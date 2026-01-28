@@ -3,6 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace QuanLiSanCauLong.ViewModels
 {
+    /// <summary>
+    /// ViewModel cho chức năng đăng nhập
+    /// </summary>
     public class LoginViewModel
     {
         [Required(ErrorMessage = "Email không được để trống")]

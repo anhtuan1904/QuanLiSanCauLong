@@ -35,10 +35,15 @@ namespace QuanLiSanCauLong.Models
 
         public TimeSpan? OpenTime { get; set; }
         public TimeSpan? CloseTime { get; set; }
+
+        // Thêm thuộc tính này để khớp với View
+        public string Status { get; set; } = "Active";
+
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
+        public virtual ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
         public virtual ICollection<Court> Courts { get; set; }
         public virtual ICollection<PriceSlot> PriceSlots { get; set; }
     }

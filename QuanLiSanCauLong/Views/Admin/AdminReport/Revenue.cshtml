@@ -1,0 +1,189 @@
+﻿@* @model QuanLiSanCauLong.Models.ReportViewModel
+@{
+    ViewData["Title"] = "Báo cáo doanh thu";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">
+        <i class="bi bi-graph-up text-primary me-2"></i>
+        Báo cáo doanh thu
+    </h2>
+    <button class="btn btn-success" onclick="exportReport()">
+        <i class="bi bi-file-excel me-2"></i>Xuất Excel
+    </button>
+</div>
+
+<!-- Date Range -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Từ ngày</label>
+                <input type="date" class="form-control" name="fromDate"
+                       value="@ViewBag.FromDate" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Đến ngày</label>
+                <input type="date" class="form-control" name="toDate"
+                       value="@ViewBag.ToDate" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Cơ sở</label>
+                <select class="form-select" name="facilityId">
+                    <option value="">Tất cả cơ sở</option>
+                    @foreach (var facility in ViewBag.Facilities)
+                    {
+                        <option value="@facility.FacilityId">@facility.FacilityName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-2"></i>Xem báo cáo
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted mb-1">Tổng doanh thu</p>
+                        <h3 class="mb-0 text-primary fw-bold">@ViewBag.TotalRevenue?.ToString("N0")đ</h3>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 p-3 rounded">
+                        <i class="bi bi-cash-stack text-primary fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted mb-1">Doanh thu booking</p>
+                        <h3 class="mb-0 text-success fw-bold">@ViewBag.BookingRevenue?.ToString("N0")đ</h3>
+                    </div>
+                    <div class="bg-success bg-opacity-10 p-3 rounded">
+                        <i class="bi bi-calendar-check text-success fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted mb-1">Doanh thu sản phẩm</p>
+                        <h3 class="mb-0 text-info fw-bold">@ViewBag.ProductRevenue?.ToString("N0")đ</h3>
+                    </div>
+                    <div class="bg-info bg-opacity-10 p-3 rounded">
+                        <i class="bi bi-box-seam text-info fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted mb-1">TB/ngày</p>
+                        <h3 class="mb-0 text-warning fw-bold">@ViewBag.DailyAverage?.ToString("N0")đ</h3>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 p-3 rounded">
+                        <i class="bi bi-graph-up-arrow text-warning fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revenue Chart -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold">Biểu đồ doanh thu theo ngày</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revenue by Facility -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold">Doanh thu theo cơ sở</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="facilityChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold">Phân loại doanh thu</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detail Table -->
+<div class="card shadow-sm">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0 fw-bold">Chi tiết doanh thu</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Ngày</th>
+                        <th class="text-end">Booking</th>
+                        <th class="text-end">Sản phẩm</th>
+                        <th class="text-end">Tổng</th>
+                        <th class="text-center">Số đơn</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Data will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Charts implementation here
+        function exportReport() {
+            window.location.href = '/Admin/Report/ExportRevenue?' + new URLSearchParams(location.search);
+        }
+    </script>
+} *@

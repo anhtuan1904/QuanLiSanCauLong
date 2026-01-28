@@ -1,0 +1,164 @@
+﻿@model IEnumerable<QuanLiSanCauLong.Models.Court>
+
+@{
+    ViewData["Title"] = "Quản lý sân";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">
+        <i class="bi bi-grid-3x3 text-primary me-2"></i>
+        Quản lý sân
+    </h2>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Thêm sân mới
+    </a>
+</div>
+
+<!-- Filter -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <select class="form-select" name="facilityId">
+                    <option value="">Tất cả cơ sở</option>
+                    @foreach (var facility in ViewBag.Facilities)
+                    {
+                        <option value="@facility.FacilityId">@facility.FacilityName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="courtType">
+                    <option value="">Tất cả loại sân</option>
+                    <option value="Standard">Tiêu chuẩn</option>
+                    <option value="VIP">VIP</option>
+                    <option value="Premium">Premium</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="status">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Available">Sẵn sàng</option>
+                    <option value="Occupied">Đang sử dụng</option>
+                    <option value="Maintenance">Bảo trì</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Lọc
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Courts Table -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Số sân</th>
+                        <th>Cơ sở</th>
+                        <th>Loại sân</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var court in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <strong class="text-primary">@court.CourtNumber</strong>
+                                </td>
+                                <td>
+                                    <i class="bi bi-building text-muted me-2"></i>
+                                    @court.Facility?.FacilityName
+                                </td>
+                                <td>
+                                    @if (court.CourtType == "VIP")
+                                    {
+                                        <span class="badge bg-warning">@court.CourtType</span>
+                                    }
+                                    else if (court.CourtType == "Premium")
+                                    {
+                                        <span class="badge bg-danger">@court.CourtType</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">@court.CourtType</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (court.Status == "Available")
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle me-1"></i>Sẵn sàng
+                                        </span>
+                                    }
+                                    else if (court.Status == "Occupied")
+                                    {
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-exclamation-circle me-1"></i>Đang sử dụng
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-tools me-1"></i>Bảo trì
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Details" asp-route-id="@court.CourtId"
+                                           class="btn btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@court.CourtId"
+                                           class="btn btn-outline-warning">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button class="btn btn-outline-danger"
+                                                onclick="deleteCourt(@court.CourtId)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                Chưa có sân nào
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function deleteCourt(id) {
+            if (confirm('Bạn có chắc muốn xóa sân này?')) {
+                fetch(`/Admin/Court/Delete/${id}`, {
+                    method: 'POST'
+                }).then(response => {
+                    if (response.ok) location.reload();
+                    else alert('Không thể xóa!');
+                });
+            }
+        }
+    </script>
+}

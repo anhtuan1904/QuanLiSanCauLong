@@ -1,0 +1,151 @@
+﻿@model IEnumerable<QuanLiSanCauLong.Models.PriceSlot>
+
+@{
+    ViewData["Title"] = "Quản lý giá sân";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">
+        <i class="bi bi-cash-stack text-primary me-2"></i>
+        Quản lý giá sân
+    </h2>
+    <div class="btn-group">
+        <a asp-action="BulkCreate" class="btn btn-success">
+            <i class="bi bi-lightning-fill me-2"></i>Tạo hàng loạt
+        </a>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Thêm khung giờ
+        </a>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <select class="form-select" name="facilityId">
+                    <option value="">Tất cả cơ sở</option>
+                    @foreach (var facility in ViewBag.Facilities)
+                    {
+                        <option value="@facility.FacilityId">@facility.FacilityName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" name="courtId">
+                    <option value="">Tất cả sân</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="peakHour">
+                    <option value="">Tất cả</option>
+                    <option value="true">Giờ cao điểm</option>
+                    <option value="false">Giờ thường</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Lọc
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Price Slots Table -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Cơ sở</th>
+                        <th>Sân</th>
+                        <th>Khung giờ</th>
+                        <th>Giá</th>
+                        <th>Loại</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var slot in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <i class="bi bi-building text-muted me-2"></i>
+                                    @slot.Court?.Facility?.FacilityName
+                                </td>
+                                <td>
+                                    <strong class="text-primary">@slot.Court?.CourtNumber</strong>
+                                    <br>
+                                    <small class="text-muted">@slot.Court?.CourtType</small>
+                                </td>
+                                <td>
+                                    <i class="bi bi-clock me-2"></i>
+                                    <strong>@slot.StartTime.ToString(@"hh\:mm") - @slot.EndTime.ToString(@"hh\:mm")</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success fs-6">
+                                        @slot.Price.ToString("N0")đ
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (slot.IsPeakHour)
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-star-fill me-1"></i>Cao điểm
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">Giờ thường</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Edit" asp-route-id="@slot.PriceSlotId"
+                                           class="btn btn-outline-warning">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button class="btn btn-outline-danger"
+                                                onclick="deleteSlot(@slot.PriceSlotId)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                Chưa có khung giờ nào
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function deleteSlot(id) {
+            if (confirm('Bạn có chắc muốn xóa khung giờ này?')) {
+                fetch(`/Admin/PriceSlot/Delete/${id}`, {
+                    method: 'POST'
+                }).then(response => {
+                    if (response.ok) location.reload();
+                    else alert('Không thể xóa!');
+                });
+            }
+        }
+    </script>
+}

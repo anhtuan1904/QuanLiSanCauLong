@@ -175,18 +175,19 @@ namespace QuanLiSanCauLong.Services
                 .Include(c => c.Facility)
                 .FirstOrDefaultAsync(c => c.CourtId == courtId);
 
-            if (court == null)
-                return 0;
+            if (court == null) return 0;
 
-            int dayOfWeek = (int)bookingDate.DayOfWeek;
+            // Lấy DayOfWeek gốc của C#
+            DayOfWeek dayOfWeekEnum = bookingDate.DayOfWeek;
 
             var priceSlots = await _context.PriceSlots
                 .Where(p => p.FacilityId == court.FacilityId
-                       && p.CourtType == courtType
-                       && p.IsActive
-                       && (p.DayOfWeek == null || p.DayOfWeek == dayOfWeek)
-                       && p.StartTime >= start
-                       && p.EndTime <= end)
+                        && p.CourtType == courtType
+                        && p.IsActive
+                        // Sửa lỗi so sánh tại đây
+                        && (p.DayOfWeek == null || p.DayOfWeek == dayOfWeekEnum)
+                        && p.StartTime >= start
+                        && p.EndTime <= end)
                 .ToListAsync();
 
             return priceSlots.Sum(p => p.Price);
@@ -198,45 +199,33 @@ namespace QuanLiSanCauLong.Services
                 .Include(c => c.Facility)
                 .FirstOrDefaultAsync(c => c.CourtId == courtId);
 
-            if (court == null)
-                return new List<TimeSlotViewModel>();
+            if (court == null) return new List<TimeSlotViewModel>();
 
-            int dayOfWeek = (int)date.DayOfWeek;
+            DayOfWeek dayOfWeekEnum = date.DayOfWeek;
 
             var priceSlots = await _context.PriceSlots
                 .Where(p => p.FacilityId == court.FacilityId
-                       && p.CourtType == court.CourtType
-                       && p.IsActive
-                       && (p.DayOfWeek == null || p.DayOfWeek == dayOfWeek))
+                        && p.CourtType == court.CourtType
+                        && p.IsActive
+                        && (p.DayOfWeek == null || p.DayOfWeek == dayOfWeekEnum)) // Sửa lỗi ở đây
                 .OrderBy(p => p.StartTime)
                 .ToListAsync();
 
             var bookedSlots = await _context.Bookings
                 .Where(b => b.CourtId == courtId
-                       && b.BookingDate == date
-                       && b.Status != "Cancelled")
+                        && b.BookingDate.Date == date.Date // Đảm bảo so sánh chỉ phần ngày
+                        && b.Status != "Cancelled")
                 .ToListAsync();
 
-            var timeSlots = new List<TimeSlotViewModel>();
-
-            foreach (var slot in priceSlots)
+            return priceSlots.Select(slot => new TimeSlotViewModel
             {
-                bool isBooked = bookedSlots.Any(b =>
-                    b.StartTime < slot.EndTime && b.EndTime > slot.StartTime);
-
-                timeSlots.Add(new TimeSlotViewModel
-                {
-                    StartTime = slot.StartTime,
-                    EndTime = slot.EndTime,
-                    Price = slot.Price,
-                    IsPeakHour = slot.IsPeakHour,
-                    IsAvailable = !isBooked
-                });
-            }
-
-            return timeSlots;
+                StartTime = slot.StartTime,
+                EndTime = slot.EndTime,
+                Price = slot.Price,
+                IsPeakHour = slot.IsPeakHour,
+                IsAvailable = !bookedSlots.Any(b => b.StartTime < slot.EndTime && b.EndTime > slot.StartTime)
+            }).ToList();
         }
-
         public async Task<bool> CanCancelBookingAsync(Booking booking)
         {
             if (booking.Status != "Confirmed" && booking.Status != "Pending")

@@ -1,0 +1,172 @@
+﻿@* @model QuanLiSanCauLong.ViewModels.VoucherViewModel
+
+@{
+    ViewData["Title"] = "Quản lý voucher";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">
+        <i class="bi bi-ticket-perforated text-primary me-2"></i>
+        Quản lý voucher
+    </h2>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Tạo voucher mới
+    </a>
+</div>
+
+<!-- Filter -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="search"
+                       placeholder="Tìm theo mã, tên voucher..." value="@ViewBag.Search">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="status">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="active">Đang hoạt động</option>
+                    <option value="expired">Hết hạn</option>
+                    <option value="inactive">Tạm ngừng</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="type">
+                    <option value="">Tất cả loại</option>
+                    <option value="Percentage">Phần trăm</option>
+                    <option value="FixedAmount">Số tiền cố định</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Tìm
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Vouchers Grid -->
+<div class="row g-4">
+    @if (Model != null && Model.Any())
+    {
+        foreach (var voucher in Model)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="card-title fw-bold mb-1">@voucher.VoucherName</h5>
+                                <span class="badge bg-primary">@voucher.VoucherCode</span>
+                            </div>
+                            @if (voucher.IsValid)
+                            {
+                                <span class="badge bg-success">Hoạt động</span>
+                            }
+                            else if (voucher.IsExpired)
+                            {
+                                <span class="badge bg-danger">Hết hạn</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Tạm ngừng</span>
+                            }
+                        </div>
+
+                        <p class="text-muted small mb-3">
+                            @(voucher.Description ?? "Không có mô tả")
+                        </p>
+
+                        <!-- Discount Info -->
+                        <div class="bg-light rounded p-3 mb-3">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Giảm giá:</small>
+                                    <strong class="text-success">
+                                        @if (voucher.DiscountType == "Percentage")
+                                        {
+                                            <span>@voucher.DiscountValue%</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@voucher.DiscountValue.ToString("N0")đ</span>
+                                        }
+                                    </strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Đơn tối thiểu:</small>
+                                    <strong>@(voucher.MinOrderAmount?.ToString("N0") ?? "0")đ</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Usage Info -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <small class="text-muted">
+                                <i class="bi bi-calendar me-1"></i>
+                                Đến @voucher.EndDate.ToString("dd/MM/yyyy")
+                            </small>
+                            <small class="text-muted">
+                                <i class="bi bi-people me-1"></i>
+                                Đã dùng: @voucher.UsedCount/@(voucher.UsageLimit?.ToString() ?? "∞")
+                            </small>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        @if (voucher.UsageLimit.HasValue)
+                        {
+                            var percentage = (voucher.UsedCount * 100.0 / voucher.UsageLimit.Value);
+                            <div class="progress mb-3" style="height: 5px;">
+                                <div class="progress-bar @(percentage >= 80 ? "bg-danger" : "bg-success")"
+                                     style="width: @percentage%"></div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="card-footer bg-white border-top">
+                        <div class="btn-group w-100" role="group">
+                            <a asp-action="Edit" asp-route-id="@voucher.VoucherId"
+                               class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i> Sửa
+                            </a>
+                            <a asp-action="Usage" asp-route-id="@voucher.VoucherId"
+                               class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-clock-history"></i> Lịch sử
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger"
+                                    onclick="deleteVoucher(@voucher.VoucherId)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="bi bi-info-circle me-2"></i>
+                Chưa có voucher nào
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function deleteVoucher(id) {
+            if (confirm('Bạn có chắc muốn xóa voucher này?')) {
+                fetch(`/Admin/Voucher/Delete/${id}`, {
+                    method: 'POST'
+                }).then(response => {
+                    if (response.ok) location.reload();
+                    else alert('Không thể xóa!');
+                });
+            }
+        }
+    </script>
+} *@

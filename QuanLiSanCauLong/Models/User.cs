@@ -22,11 +22,19 @@ namespace QuanLiSanCauLong.Models
         [StringLength(20)]
         public string Phone { get; set; }
 
+        // CẦN THIÊT: Thuộc tính Password để khớp với View Create/Register (Sửa lỗi image_45c11e.png)
+        [Required(ErrorMessage = "Mật khẩu không được để trống")]
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
+
         [Required]
         public string PasswordHash { get; set; }
 
         [Required]
         public string Role { get; set; } // Customer, Staff, Admin
+
+        // CẦN THIẾT: Thuộc tính Status để khớp với View Index/Create (Sửa lỗi image_55b353.png)
+        public string Status { get; set; } = "Active"; // Active, Locked
 
         public int? FacilityId { get; set; }
         public bool IsActive { get; set; } = true;
@@ -34,8 +42,8 @@ namespace QuanLiSanCauLong.Models
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
         [ForeignKey("FacilityId")]
-        public virtual Facility Facility { get; set; }
-        public virtual ICollection<Booking> Bookings { get; set; }
-        public virtual ICollection<Order> Orders { get; set; }
+        public virtual Facility? Facility { get; set; }
+        public virtual ICollection<Booking>? Bookings { get; set; }
+        public virtual ICollection<Order>? Orders { get; set; }
     }
 }

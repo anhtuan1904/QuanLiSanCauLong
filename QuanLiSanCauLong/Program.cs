@@ -4,6 +4,7 @@ using QuanLiSanCauLong.Data;
 using QuanLiSanCauLong.Helpers;
 using QuanLiSanCauLong.Services;
 using QuanLiSanCauLong.Services.Interfaces;
+using QuanLiSanCauLong.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,13 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions =>
-        {
-            sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(30),
-                errorNumbersToAdd: null);
-        }
+        sqlOptions => sqlOptions.EnableRetryOnFailure()
     ));
 
 // ===================================
@@ -32,159 +27,77 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LogoutPath = "/Account/Logout";
         options.AccessDeniedPath = "/Account/AccessDenied";
         options.ExpireTimeSpan = TimeSpan.FromHours(2);
-        options.SlidingExpiration = true;
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        options.Cookie.SameSite = SameSiteMode.Strict;
     });
 
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("StaffOnly", policy => policy.RequireRole("Staff", "Admin"));
-    options.AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer", "Staff", "Admin"));
 });
 
 // ===================================
-// 3. SESSION CONFIGURATION
+// 3. SERVICES REGISTRATION
 // ===================================
 builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options =>
-{
+builder.Services.AddSession(options => {
     options.IdleTimeout = TimeSpan.FromHours(2);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
-// ===================================
-// 4. SERVICES REGISTRATION
-// ===================================
-
-// Application Services
+// Đăng ký các Interface và Service
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IVoucherService, VoucherService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
-
-// Notification Services
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ISmsService, SmsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
-// Helper Services
 builder.Services.AddSingleton<IFileHelper, FileHelper>();
 builder.Services.AddSingleton<IExcelHelper, ExcelHelper>();
 builder.Services.AddSingleton<IPdfHelper, PdfHelper>();
 builder.Services.AddSingleton<IQRCodeHelper, QRCodeHelper>();
 
-// ===================================
-// 5. MVC & ROUTING
-// ===================================
-builder.Services.AddControllersWithViews(options =>
-{
-    // Add global filters
-    options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute());
-})
-.AddJsonOptions(options =>
-{
-    options.JsonSerializerOptions.PropertyNamingPolicy = null;
-    options.JsonSerializerOptions.WriteIndented = true;
-});
+// CẤU HÌNH VIEW ENGINE ĐỂ TÌM TRONG THƯ MỤC VIEWS/ADMIN/
+builder.Services.AddControllersWithViews()
+    .AddRazorOptions(options =>
+    {
+        // {1} là Controller Name, {0} là Action Name
+        options.ViewLocationFormats.Add("/Views/Admin/{1}/{0}.cshtml");
+        options.ViewLocationFormats.Add("/Views/{1}/{0}.cshtml");
+        options.ViewLocationFormats.Add("/Views/Shared/{0}.cshtml");
+    })
+    .AddJsonOptions(options => {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    });
 
 builder.Services.AddRazorPages();
 
-// ===================================
-// 6. CORS (if needed for API)
-// ===================================
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowSpecificOrigin",
-        builder => builder
-            .WithOrigins("https://yourdomain.com")
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials());
-});
-
-// ===================================
-// 7. CACHING
-// ===================================
-builder.Services.AddMemoryCache();
-builder.Services.AddResponseCaching();
-
-// ===================================
-// 8. HTTP CLIENT (for external APIs)
-// ===================================
-builder.Services.AddHttpClient();
-
-// ===================================
-// 9. LOGGING
-// ===================================
-builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
-builder.Logging.AddDebug();
-builder.Logging.AddEventSourceLogger();
-
-if (builder.Environment.IsProduction())
-{
-    builder.Logging.AddAzureWebAppDiagnostics();
-}
-
-// ===================================
-// BUILD APPLICATION
-// ===================================
 var app = builder.Build();
 
 // ===================================
-// 10. MIDDLEWARE PIPELINE
+// 4. MIDDLEWARE PIPELINE
 // ===================================
-
-// Error Handling
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-    app.UseMigrationsEndPoint();
 }
 else
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
-    app.UseHttpsRedirection();
 }
 
-// Static Files
+app.UseHttpsRedirection();
 app.UseStaticFiles();
-
-// Routing
 app.UseRouting();
-
-// CORS
-app.UseCors("AllowSpecificOrigin");
-
-// Caching
-app.UseResponseCaching();
-
-// Session (must be before Authentication)
 app.UseSession();
-
-// Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Custom Middleware (if any)
-// app.UseMiddleware<RequestLoggingMiddleware>();
-// app.UseMiddleware<ExceptionHandlingMiddleware>();
-
-// ===================================
-// 11. ENDPOINT ROUTING
-// ===================================
-app.MapControllerRoute(
-    name: "areas",
-    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
-
+// Routing mặc định
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
@@ -192,7 +105,7 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 // ===================================
-// 12. DATABASE INITIALIZATION
+// 5. DATABASE INITIALIZATION & SEEDING
 // ===================================
 using (var scope = app.Services.CreateScope())
 {
@@ -200,163 +113,59 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
-
-        // Apply migrations
-        if (app.Environment.IsDevelopment())
-        {
-            context.Database.EnsureCreated();
-            // context.Database.Migrate();
-        }
-
-        // Seed initial data
+        await context.Database.MigrateAsync();
         await DbInitializer.Initialize(context);
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while initializing the database.");
+        logger.LogError(ex, "Lỗi khi khởi tạo dữ liệu Database.");
     }
 }
 
-// ===================================
-// 13. RUN APPLICATION
-// ===================================
 app.Run();
 
 // ===================================
-// DATABASE INITIALIZER
+// 6. DB INITIALIZER
 // ===================================
 public static class DbInitializer
 {
     public static async Task Initialize(ApplicationDbContext context)
     {
-        // Check if database has been seeded
-        if (context.Users.Any())
+        if (!await context.SystemSettings.AnyAsync())
         {
-            return; // Database has been seeded
+            context.SystemSettings.AddRange(
+                new SystemSetting { SettingKey = "SiteName", SettingValue = "Hệ thống cầu lông", Category = "General", IsActive = true, UpdatedAt = DateTime.Now },
+                new SystemSetting { SettingKey = "SupportEmail", SettingValue = "admin@badminton.com", Category = "General", IsActive = true, UpdatedAt = DateTime.Now }
+            );
+            await context.SaveChangesAsync();
         }
 
-        // Seed System Settings
-        var settings = new[]
+        if (!await context.Users.AnyAsync(u => u.Email == "admin@badminton.com"))
         {
-            new QuanLiSanCauLong.Models.SystemSetting
+            var admin = new User
             {
-                SettingKey = "BookingCancellationHours",
-                SettingValue = "2",
-                SettingType = "Number",
-                Description = "Số giờ tối thiểu trước khi có thể hủy đặt sân",
-                Category = "Booking",
+                FullName = "Administrator",
+                Email = "admin@badminton.com",
+                Phone = "0123456789",
+                PasswordHash = PasswordHelper.HashPassword("Admin@123"),
+                Role = "Admin",
                 IsActive = true,
+                CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
-            },
-            new QuanLiSanCauLong.Models.SystemSetting
-            {
-                SettingKey = "MaxBookingDaysInAdvance",
-                SettingValue = "30",
-                SettingType = "Number",
-                Description = "Số ngày tối đa có thể đặt sân trước",
-                Category = "Booking",
-                IsActive = true,
-                UpdatedAt = DateTime.Now
-            },
-            new QuanLiSanCauLong.Models.SystemSetting
-            {
-                SettingKey = "DefaultServiceFee",
-                SettingValue = "0",
-                SettingType = "Number",
-                Description = "Phí dịch vụ mặc định (%)",
-                Category = "Booking",
-                IsActive = true,
-                UpdatedAt = DateTime.Now
-            },
-            new QuanLiSanCauLong.Models.SystemSetting
-            {
-                SettingKey = "SiteName",
-                SettingValue = "Hệ thống đặt sân cầu lông",
-                SettingType = "String",
-                Description = "Tên website",
-                Category = "General",
-                IsActive = true,
-                UpdatedAt = DateTime.Now
-            },
-            new QuanLiSanCauLong.Models.SystemSetting
-            {
-                SettingKey = "SupportEmail",
-                SettingValue = "support@badminton.com",
-                SettingType = "String",
-                Description = "Email hỗ trợ",
-                Category = "General",
-                IsActive = true,
-                UpdatedAt = DateTime.Now
-            },
-            new QuanLiSanCauLong.Models.SystemSetting
-            {
-                SettingKey = "SupportPhone",
-                SettingValue = "1900xxxx",
-                SettingType = "String",
-                Description = "Hotline hỗ trợ",
-                Category = "General",
-                IsActive = true,
-                UpdatedAt = DateTime.Now
-            }
-        };
+            };
+            context.Users.Add(admin);
+            await context.SaveChangesAsync();
+        }
 
-        context.SystemSettings.AddRange(settings);
-
-        // Seed Admin User
-        var adminUser = new QuanLiSanCauLong.Models.User
+        if (!await context.ProductCategories.AnyAsync())
         {
-            FullName = "Administrator",
-            Email = "admin@badminton.com",
-            Phone = "0123456789",
-            PasswordHash = QuanLiSanCauLong.Helpers.PasswordHelper.HashPassword("Admin@123"),
-            Role = "Admin",
-            IsActive = true,
-            CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
-        };
-
-        context.Users.Add(adminUser);
-
-        // Seed Product Categories
-        var categories = new[]
-        {
-            new QuanLiSanCauLong.Models.ProductCategory
-            {
-                CategoryName = "Đồ ăn",
-                CategoryType = "Food",
-                Description = "Các món ăn nhẹ",
-                DisplayOrder = 1,
-                IsActive = true
-            },
-            new QuanLiSanCauLong.Models.ProductCategory
-            {
-                CategoryName = "Nước uống",
-                CategoryType = "Beverage",
-                Description = "Nước ngọt, nước suối",
-                DisplayOrder = 2,
-                IsActive = true
-            },
-            new QuanLiSanCauLong.Models.ProductCategory
-            {
-                CategoryName = "Dụng cụ",
-                CategoryType = "Equipment",
-                Description = "Vợt, cầu, phụ kiện",
-                DisplayOrder = 3,
-                IsActive = true
-            },
-            new QuanLiSanCauLong.Models.ProductCategory
-            {
-                CategoryName = "Quần áo",
-                CategoryType = "Apparel",
-                Description = "Áo, quần thể thao",
-                DisplayOrder = 4,
-                IsActive = true
-            }
-        };
-
-        context.ProductCategories.AddRange(categories);
-
-        await context.SaveChangesAsync();
+            context.ProductCategories.AddRange(
+                new ProductCategory { CategoryName = "Đồ ăn", CategoryType = "Food", IsActive = true },
+                new ProductCategory { CategoryName = "Nước uống", CategoryType = "Beverage", IsActive = true },
+                new ProductCategory { CategoryName = "Dụng cụ", CategoryType = "Equipment", IsActive = true }
+            );
+            await context.SaveChangesAsync();
+        }
     }
 }

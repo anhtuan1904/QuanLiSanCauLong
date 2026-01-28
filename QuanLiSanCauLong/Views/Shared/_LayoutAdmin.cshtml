@@ -6,8 +6,19 @@
     <title>@ViewData["Title"] - Admin Panel</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/css/admin.css" />
     <style>
-        /* CSS FIX LỖI GIAO DIỆN LỆCH */
+        :root {
+            --sidebar-bg: #1a1d29;
+            --sidebar-hover: #2d3142;
+            --sidebar-active: #4e73df;
+            --primary-color: #4e73df;
+            --success-color: #1cc88a;
+            --danger-color: #e74a3b;
+            --warning-color: #f6c23e;
+            --info-color: #36b9cc;
+        }
+
         body {
             background: #f8f9fc;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -16,85 +27,205 @@
         .wrapper {
             display: flex;
             width: 100%;
-            align-items: stretch;
-        }
-
-        /* Sidebar */
-        #sidebar {
-            min-width: 250px;
-            max-width: 250px;
-            background: #2c3e50;
-            color: #fff;
-            transition: all 0.3s;
             min-height: 100vh;
         }
 
+        /* Sidebar Styles */
+        #sidebar {
+            min-width: 260px;
+            max-width: 260px;
+            background: var(--sidebar-bg);
+            color: #fff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            position: fixed;
+            height: 100vh;
+            z-index: 999;
+        }
+
             #sidebar.active {
-                margin-left: -250px;
+                margin-left: -260px;
             }
 
-            #sidebar .sidebar-header {
-                padding: 20px;
-                background: #1a252f;
-                text-align: center;
+        .sidebar-header {
+            padding: 25px 20px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #224abe 100%);
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+            .sidebar-header h3 {
+                font-size: 1.3rem;
+                margin: 0;
+                font-weight: 700;
+                color: #fff;
+                text-transform: uppercase;
+                letter-spacing: 1px;
             }
 
-                #sidebar .sidebar-header h3 {
-                    font-size: 1.2rem;
-                    margin: 0;
-                    font-weight: bold;
-                    color: #3498db;
-                }
-
-            #sidebar ul.components {
-                padding: 20px 0;
+            .sidebar-header .subtitle {
+                font-size: 0.75rem;
+                color: rgba(255,255,255,0.8);
+                margin-top: 5px;
             }
+
+        /* Navigation Styles */
+        .components {
+            padding: 10px 0;
+        }
+
+        .nav-section {
+            padding: 20px 20px 8px 20px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #6c757d;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            margin-top: 10px;
+        }
+
+            .nav-section:first-child {
+                border-top: none;
+                margin-top: 0;
+            }
+
+        #sidebar ul li {
+            position: relative;
+        }
 
             #sidebar ul li a {
                 padding: 12px 20px;
-                display: block;
+                display: flex;
+                align-items: center;
                 color: rgba(255,255,255,0.7);
                 text-decoration: none;
-                transition: 0.2s;
                 font-size: 0.9rem;
+                transition: all 0.2s;
+                border-left: 3px solid transparent;
             }
+
+                #sidebar ul li a i {
+                    width: 25px;
+                    margin-right: 12px;
+                    font-size: 1.1rem;
+                }
 
                 #sidebar ul li a:hover {
                     color: #fff;
-                    background: rgba(255,255,255,0.1);
+                    background: var(--sidebar-hover);
+                    border-left-color: var(--primary-color);
                 }
 
             #sidebar ul li.active > a {
                 color: #fff;
-                background: #3498db;
+                background: var(--sidebar-hover);
+                border-left-color: var(--primary-color);
+                font-weight: 600;
             }
 
-            #sidebar ul li a i {
-                margin-right: 10px;
-                width: 20px;
-                text-align: center;
-            }
-
-        .nav-section {
-            padding: 15px 20px 5px 20px;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            color: #7f8c8d;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-
-        /* Content */
+        /* Content Area */
         #content {
             width: 100%;
-            transition: all 0.3s;
+            margin-left: 260px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .navbar {
-            padding: 15px 20px;
-            background: #fff !important;
-            border: none;
+        #sidebar.active ~ #content {
+            margin-left: 0;
+        }
+
+        /* Top Navbar */
+        .top-navbar {
+            padding: 15px 30px;
+            background: #fff;
             border-bottom: 1px solid #e3e6f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            position: sticky;
+            top: 0;
+            z-index: 998;
+        }
+
+        #sidebarCollapse {
+            background: var(--primary-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+            #sidebarCollapse:hover {
+                background: #224abe;
+                transform: scale(1.05);
+            }
+
+        /* User Dropdown */
+        .user-dropdown {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--info-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        main {
+            padding: 30px;
+            min-height: calc(100vh - 70px);
+        }
+
+        /* Scrollbar Styles */
+        #sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }
+
+            #sidebar::-webkit-scrollbar-thumb:hover {
+                background: rgba(255,255,255,0.3);
+            }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            #sidebar {
+                margin-left: -260px;
+            }
+
+                #sidebar.active {
+                    margin-left: 0;
+                }
+
+            #content {
+                margin-left: 0;
+            }
+        }
+
+        /* Badge Counts */
+        .badge-count {
+            background: var(--danger-color);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-left: auto;
         }
     </style>
 </head>
@@ -102,79 +233,165 @@
     <div class="wrapper">
         <nav id="sidebar">
             <div class="sidebar-header">
-                <h3><i class="bi bi-shield-check"></i> BADMINTON ADMIN</h3>
+                <h3><i class="bi bi-shield-fill"></i> BADMINTON</h3>
+                <div class="subtitle">Admin Panel</div>
             </div>
 
             <ul class="list-unstyled components">
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
-                    <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
-                        <i class="bi bi-speedometer2"></i> Dashboard
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminDashboard" ? "active" : "")">
+                    <a asp-controller="AdminDashboard" asp-action="Index">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
                     </a>
                 </li>
 
                 <li class="nav-section">Quản lý cơ sở</li>
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Facility" ? "active" : "")">
-                    <a asp-area="Admin" asp-controller="Facility" asp-action="Index">
-                        <i class="bi bi-building"></i> Cơ sở
+
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminFacility" ? "active" : "")">
+                    <a asp-controller="AdminFacility" asp-action="Index">
+                        <i class="bi bi-building"></i>
+                        <span>Cơ sở</span>
                     </a>
                 </li>
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Court" ? "active" : "")">
-                    <a asp-area="Admin" asp-controller="Court" asp-action="Index">
-                        <i class="bi bi-grid-3x3"></i> Sân cầu
+
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminCourt" ? "active" : "")">
+                    <a asp-controller="AdminCourt" asp-action="Index">
+                        <i class="bi bi-grid-3x3"></i>
+                        <span>Sân cầu lông</span>
                     </a>
                 </li>
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "PriceSlot" ? "active" : "")">
-                    <a asp-area="Admin" asp-controller="PriceSlot" asp-action="Index">
-                        <i class="bi bi-cash-stack"></i> Bảng giá & Khung giờ
+
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminPriceSlot" ? "active" : "")">
+                    <a asp-controller="AdminPriceSlot" asp-action="Index">
+                        <i class="bi bi-cash-stack"></i>
+                        <span>Khung giờ & Giá</span>
+                    </a>
+                </li>
+
+                <li class="nav-section">Quản lý đặt sân</li>
+
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminBooking" ? "active" : "")">
+                    <a asp-controller="AdminBooking" asp-action="Index">
+                        <i class="bi bi-calendar-check"></i>
+                        <span>Tất cả đơn đặt</span>
+                    </a>
+                </li>
+
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminOrder" ? "active" : "")">
+                    <a asp-controller="AdminOrder" asp-action="Index">
+                        <i class="bi bi-receipt"></i>
+                        <span>Đơn hàng</span>
                     </a>
                 </li>
 
                 <li class="nav-section">Quản lý hàng hóa</li>
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")">
-                    <a asp-area="Admin" asp-controller="Product" asp-action="Index">
-                        <i class="bi bi-box-seam"></i> Sản phẩm
+
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminCategory" ? "active" : "")">
+                    <a asp-controller="AdminCategory" asp-action="Index">
+                        <i class="bi bi-tags"></i>
+                        <span>Danh mục</span>
                     </a>
                 </li>
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Inventory" ? "active" : "")">
-                    <a asp-area="Admin" asp-controller="Inventory" asp-action="Index">
-                        <i class="bi bi-boxes"></i> Kho hàng
+
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminProduct" ? "active" : "")">
+                    <a asp-controller="AdminProduct" asp-action="Index">
+                        <i class="bi bi-box-seam"></i>
+                        <span>Sản phẩm</span>
+                    </a>
+                </li>
+
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminInventory" ? "active" : "")">
+                    <a asp-controller="AdminInventory" asp-action="Index">
+                        <i class="bi bi-boxes"></i>
+                        <span>Kho hàng</span>
+                    </a>
+                </li>
+
+                <li class="nav-section">Marketing</li>
+
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminVoucher" ? "active" : "")">
+                    <a asp-controller="AdminVoucher" asp-action="Index">
+                        <i class="bi bi-ticket-perforated"></i>
+                        <span>Voucher</span>
+                    </a>
+                </li>
+
+                <li class="nav-section">Báo cáo & Thống kê</li>
+
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminReport" && ViewContext.RouteData.Values["action"]?.ToString() == "Revenue" ? "active" : "")">
+                    <a asp-controller="AdminReport" asp-action="Revenue">
+                        <i class="bi bi-graph-up"></i>
+                        <span>Doanh thu</span>
+                    </a>
+                </li>
+
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminReport" && ViewContext.RouteData.Values["action"]?.ToString() == "Booking" ? "active" : "")">
+                    <a asp-controller="AdminReport" asp-action="Booking">
+                        <i class="bi bi-calendar-event"></i>
+                        <span>Đặt sân</span>
                     </a>
                 </li>
 
                 <li class="nav-section">Hệ thống</li>
-                <li>
-                    <a asp-area="Admin" asp-controller="User" asp-action="Index">
-                        <i class="bi bi-people"></i> Người dùng
-                    </a>
-                </li>
-                <li>
-                    <a asp-area="Admin" asp-controller="Report" asp-action="Revenue">
-                        <i class="bi bi-graph-up"></i> Báo cáo doanh thu
+
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminUser" ? "active" : "")">
+                    <a asp-controller="AdminUser" asp-action="Index">
+                        <i class="bi bi-person-badge"></i>
+                        <span>Người dùng</span>
                     </a>
                 </li>
 
-                <li class="nav-section mt-4"></li>
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminSettings" ? "active" : "")">
+                    <a asp-controller="AdminSettings" asp-action="Index">
+                        <i class="bi bi-gear"></i>
+                        <span>Cài đặt</span>
+                    </a>
+                </li>
+
+                <li class="nav-section"></li>
                 <li>
-                    <a asp-area="" asp-controller="Home" asp-action="Index">
-                        <i class="bi bi-house"></i> Về trang chủ
+                    <a asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-house-door"></i>
+                        <span>Về trang chủ</span>
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="Account" asp-action="Logout">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Đăng xuất</span>
                     </a>
                 </li>
             </ul>
         </nav>
-
+        <!-- Content Area -->
         <div id="content">
-            <nav class="navbar navbar-expand-lg navbar-light">
-                <div class="container-fluid">
-                    <button type="button" id="sidebarCollapse" class="btn btn-primary">
-                        <i class="bi bi-list"></i>
-                    </button>
-                    <div class="ms-auto">
-                        <span class="text-muted"><i class="bi bi-person-circle"></i> @User.Identity.Name</span>
+            <!-- Top Navbar -->
+            <nav class="top-navbar">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <button type="button" id="sidebarCollapse" class="btn btn-primary">
+                            <i class="bi bi-list"></i>
+                        </button>
+                        <span class="text-muted fw-bold">@ViewData["Title"]</span>
+                    </div>
+
+                    <div class="user-dropdown">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <div class="text-end">
+                                <div class="fw-bold text-dark" style="font-size: 0.9rem;">@User.Identity.Name</div>
+                                <small class="text-muted">Administrator</small>
+                            </div>
+                            <div class="user-avatar">
+                                @User.Identity.Name?.Substring(0, 1).ToUpper()
+                            </div>
+                        }
                     </div>
                 </div>
             </nav>
 
-            <main role="main" class="p-4">
+            <!-- Main Content -->
+            <main>
                 @RenderBody()
             </main>
         </div>
@@ -184,8 +401,18 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         $(document).ready(function () {
+            // Toggle Sidebar
             $('#sidebarCollapse').on('click', function () {
                 $('#sidebar').toggleClass('active');
+            });
+
+            // Close sidebar on mobile when clicking outside
+            $(document).on('click', function(e) {
+                if ($(window).width() <= 768) {
+                    if (!$(e.target).closest('#sidebar, #sidebarCollapse').length) {
+                        $('#sidebar').addClass('active');
+                    }
+                }
             });
         });
     </script>

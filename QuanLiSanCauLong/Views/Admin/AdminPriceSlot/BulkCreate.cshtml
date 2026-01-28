@@ -1,0 +1,248 @@
+﻿@model QuanLiSanCauLong.Models.PriceSlot
+@{
+    ViewData["Title"] = "Tạo giá hàng loạt";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white py-3">
+                <h4 class="mb-0">
+                    <i class="bi bi-lightning-fill me-2"></i>
+                    Tạo khung giờ hàng loạt
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="BulkCreate" method="post" id="bulkForm">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Hướng dẫn:</strong> Chọn cơ sở và các sân, sau đó thêm các khung giờ.
+                        Hệ thống sẽ tự động tạo giá cho tất cả các sân đã chọn.
+                    </div>
+
+                    <!-- Step 1: Select Facility & Courts -->
+                    <h5 class="border-bottom pb-2 mb-3">Bước 1: Chọn cơ sở và sân</h5>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold required">Cơ sở</label>
+                            <select id="facilitySelect" class="form-select" name="FacilityId" required>
+                                <option value="">-- Chọn cơ sở --</option>
+                                @foreach (var facility in ViewBag.Facilities)
+                                {
+                                    <option value="@facility.FacilityId">@facility.FacilityName</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold required">Chọn sân áp dụng</label>
+                        <div id="courtList" class="border rounded p-3 bg-light">
+                            <p class="text-muted mb-0">Vui lòng chọn cơ sở trước</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Add Time Slots -->
+                    <h5 class="border-bottom pb-2 mb-3">Bước 2: Thêm khung giờ</h5>
+
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-3">
+                                    <label class="form-label small">Giờ bắt đầu</label>
+                                    <input type="time" class="form-control" id="newStartTime" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small">Giờ kết thúc</label>
+                                    <input type="time" class="form-control" id="newEndTime" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small">Giá (đ)</label>
+                                    <input type="number" class="form-control" id="newPrice" min="0" step="10000" />
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="newIsPeakHour" />
+                                        <label class="form-check-label small" for="newIsPeakHour">
+                                            Cao điểm
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-primary w-100" onclick="addTimeSlot()">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="timeSlotsList" class="mb-4">
+                        <!-- Time slots will be added here -->
+                    </div>
+
+                    <!-- Preview -->
+                    <div class="card border-primary mb-4">
+                        <div class="card-header bg-primary bg-opacity-10">
+                            <h6 class="mb-0 text-primary">
+                                <i class="bi bi-eye me-2"></i>Xem trước
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="preview">
+                                <p class="text-muted mb-0">Chưa có dữ liệu để xem trước</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Hủy
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-2"></i>Tạo tất cả
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let timeSlots = [];
+        let selectedCourts = [];
+
+        // Load courts when facility changes
+        document.getElementById('facilitySelect').addEventListener('change', function() {
+            const facilityId = this.value;
+            if (!facilityId) {
+                document.getElementById('courtList').innerHTML = '<p class="text-muted mb-0">Vui lòng chọn cơ sở trước</p>';
+                return;
+            }
+
+            fetch(`/Admin/Court/GetByFacility?facilityId=${facilityId}`)
+                .then(r => r.json())
+                .then(courts => {
+                    let html = '';
+                    courts.forEach(court => {
+                        html += `
+                            <div class="form-check">
+                                <input class="form-check-input court-checkbox" type="checkbox"
+                                       value="${court.courtId}" id="court_${court.courtId}">
+                                <label class="form-check-label" for="court_${court.courtId}">
+                                    <strong>${court.courtNumber}</strong> - ${court.courtType}
+                                </label>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('courtList').innerHTML = html;
+
+                    // Add event listeners
+                    document.querySelectorAll('.court-checkbox').forEach(cb => {
+                        cb.addEventListener('change', updatePreview);
+                    });
+                });
+        });
+
+        function addTimeSlot() {
+            const startTime = document.getElementById('newStartTime').value;
+            const endTime = document.getElementById('newEndTime').value;
+            const price = document.getElementById('newPrice').value;
+            const isPeakHour = document.getElementById('newIsPeakHour').checked;
+
+            if (!startTime || !endTime || !price) {
+                alert('Vui lòng điền đầy đủ thông tin!');
+                return;
+            }
+
+            timeSlots.push({ startTime, endTime, price, isPeakHour });
+            renderTimeSlots();
+            updatePreview();
+
+            // Clear form
+            document.getElementById('newStartTime').value = '';
+            document.getElementById('newEndTime').value = '';
+            document.getElementById('newPrice').value = '';
+            document.getElementById('newIsPeakHour').checked = false;
+        }
+
+        function renderTimeSlots() {
+            let html = '<div class="table-responsive"><table class="table table-sm table-bordered">';
+            html += '<thead class="table-light"><tr><th>Khung giờ</th><th>Giá</th><th>Loại</th><th></th></tr></thead><tbody>';
+
+            timeSlots.forEach((slot, index) => {
+                html += `
+                    <tr>
+                        <td><strong>${slot.startTime} - ${slot.endTime}</strong></td>
+                        <td class="text-success fw-bold">${parseInt(slot.price).toLocaleString()}đ</td>
+                        <td>${slot.isPeakHour ? '<span class="badge bg-danger">Cao điểm</span>' : '<span class="badge bg-info">Giờ thường</span>'}</td>
+                        <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeTimeSlot(${index})"><i class="bi bi-trash"></i></button></td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table></div>';
+            document.getElementById('timeSlotsList').innerHTML = html;
+        }
+
+        function removeTimeSlot(index) {
+            timeSlots.splice(index, 1);
+            renderTimeSlots();
+            updatePreview();
+        }
+
+        function updatePreview() {
+            selectedCourts = Array.from(document.querySelectorAll('.court-checkbox:checked')).map(cb => ({
+                id: cb.value,
+                name: cb.nextElementSibling.textContent.trim()
+            }));
+
+            if (selectedCourts.length === 0 || timeSlots.length === 0) {
+                document.getElementById('preview').innerHTML = '<p class="text-muted mb-0">Chưa có dữ liệu để xem trước</p>';
+                return;
+            }
+
+            let html = `<p><strong>Sẽ tạo ${selectedCourts.length * timeSlots.length} khung giờ</strong></p>`;
+            html += `<ul class="mb-0">`;
+            html += `<li>${selectedCourts.length} sân: ${selectedCourts.map(c => c.name).join(', ')}</li>`;
+            html += `<li>${timeSlots.length} khung giờ</li>`;
+            html += `</ul>`;
+
+            document.getElementById('preview').innerHTML = html;
+        }
+
+        // Submit form
+        document.getElementById('bulkForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            if (selectedCourts.length === 0 || timeSlots.length === 0) {
+                alert('Vui lòng chọn sân và thêm khung giờ!');
+                return;
+            }
+
+            const data = {
+                courtIds: selectedCourts.map(c => c.id),
+                timeSlots: timeSlots
+            };
+
+            fetch('/Admin/PriceSlot/BulkCreate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    alert('Tạo thành công!');
+                    window.location.href = '/Admin/PriceSlot';
+                } else {
+                    alert('Có lỗi xảy ra!');
+                }
+            });
+        });
+    </script>
+}

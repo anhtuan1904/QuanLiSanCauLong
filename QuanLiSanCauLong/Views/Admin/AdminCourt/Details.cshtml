@@ -1,0 +1,216 @@
+﻿@model QuanLiSanCauLong.Models.Court
+
+@{
+    ViewData["Title"] = "Chi tiết sân";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">
+                <i class="bi bi-grid-3x3 text-primary me-2"></i>
+                @Model.CourtNumber
+            </h2>
+            <div class="btn-group">
+                <a asp-action="Edit" asp-route-id="@Model.CourtId" class="btn btn-warning">
+                    <i class="bi bi-pencil me-2"></i>Chỉnh sửa
+                </a>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Quay lại
+                </a>
+            </div>
+        </div>
+
+        <!-- Court Info Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold">Thông tin sân</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4 text-muted">Số sân:</div>
+                    <div class="col-md-8">
+                        <strong class="text-primary fs-5">@Model.CourtNumber</strong>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4 text-muted">Cơ sở:</div>
+                    <div class="col-md-8 fw-semibold">
+                        <i class="bi bi-building me-2"></i>
+                        @Model.Facility?.FacilityName
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4 text-muted">Loại sân:</div>
+                    <div class="col-md-8">
+                        @if (Model.CourtType == "VIP")
+                        {
+                            <span class="badge bg-warning fs-6">VIP</span>
+                        }
+                        else if (Model.CourtType == "Premium")
+                        {
+                            <span class="badge bg-danger fs-6">Premium</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-info fs-6">Tiêu chuẩn</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4 text-muted">Trạng thái:</div>
+                    <div class="col-md-8">
+                        @if (Model.Status == "Available")
+                        {
+                            <span class="badge bg-success fs-6">
+                                <i class="bi bi-check-circle me-1"></i>Sẵn sàng
+                            </span>
+                        }
+                        else if (Model.Status == "Occupied")
+                        {
+                            <span class="badge bg-warning fs-6">
+                                <i class="bi bi-exclamation-circle me-1"></i>Đang sử dụng
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary fs-6">
+                                <i class="bi bi-tools me-1"></i>Bảo trì
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Price Slots -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-cash text-success me-2"></i>
+                    Bảng giá theo khung giờ
+                </h5>
+                <a asp-controller="PriceSlot" asp-action="Create" asp-route-courtId="@Model.CourtId"
+                   class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Thêm khung giờ
+                </a>
+            </div>
+            <div class="card-body">
+                @if (Model.PriceSlots != null && Model.PriceSlots.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Khung giờ</th>
+                                    <th>Giá</th>
+                                    <th>Loại</th>
+                                    <th class="text-end">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var slot in Model.PriceSlots.OrderBy(p => p.StartTime))
+                                {
+                                    <tr>
+                                        <td>
+                                            <i class="bi bi-clock me-2 text-muted"></i>
+                                            <strong>@slot.StartTime.ToString(@"hh\:mm") - @slot.EndTime.ToString(@"hh\:mm")</strong>
+                                        </td>
+                                        <td class="fw-bold text-success">
+                                            @slot.Price.ToString("N0")đ
+                                        </td>
+                                        <td>
+                                            @if (slot.IsPeakHour)
+                                            {
+                                                <span class="badge bg-danger">Giờ cao điểm</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-info">Giờ thường</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            <a asp-controller="PriceSlot" asp-action="Edit"
+                                               asp-route-id="@slot.PriceSlotId"
+                                               class="btn btn-sm btn-outline-warning">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Chưa có khung giờ nào. Vui lòng thêm khung giờ để bắt đầu nhận đặt sân.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Booking History -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-calendar-check text-primary me-2"></i>
+                    Lịch sử đặt sân (7 ngày gần nhất)
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Bookings != null && Model.Bookings.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Giờ</th>
+                                    <th>Khách hàng</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var booking in Model.Bookings.OrderByDescending(b => b.BookingDate).Take(10))
+                                {
+                                    <tr>
+                                        <td>@booking.BookingDate.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            <small>@booking.StartTime.ToString(@"hh\:mm") - @booking.EndTime.ToString(@"hh\:mm")</small>
+                                        </td>
+                                        <td>@booking.User?.FullName</td>
+                                        <td>
+                                            @if (booking.Status == "Confirmed")
+                                            {
+                                                <span class="badge bg-success">Đã xác nhận</span>
+                                            }
+                                            else if (booking.Status == "Completed")
+                                            {
+                                                <span class="badge bg-primary">Hoàn thành</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">@booking.Status</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">Chưa có lượt đặt sân nào</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
