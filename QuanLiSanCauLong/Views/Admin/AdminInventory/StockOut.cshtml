@@ -1,5 +1,69 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model QuanLiSanCauLong.ViewModels.StockTransactionViewModel
+
 @{
+    ViewData["Title"] = "Xuất kho sản phẩm";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
+
+<div class="container-fluid">
+    <div class="card shadow mb-4 border-left-warning">
+        <div class="card-header py-3 bg-warning text-dark">
+            <h5 class="m-0 fw-bold"><i class="bi bi-box-arrow-up me-2"></i>Tạo phiếu xuất kho</h5>
+        </div>
+        <div class="card-body">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    <div asp-validation-summary="All"></div>
+                </div>
+            }
+
+            <form asp-action="StockOut" method="post">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Cơ sở xuất hàng</label>
+                        <select asp-for="FacilityId" class="form-select border-warning" asp-items="@(new SelectList(ViewBag.Facilities, "FacilityId", "FacilityName"))" required id="FacilityId">
+                            <option value="">-- Chọn cơ sở --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Ngày xuất</label>
+                        <input asp-for="TransactionDate" type="date" class="form-control" />
+                    </div>
+                </div>
+
+                <table class="table table-hover border">
+                    <thead class="table-warning">
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th style="width: 25%">Số lượng xuất</th>
+                            <th style="width: 10%"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsContainer">
+                        <tr>
+                            <td>
+                                <select name="Items[0].ProductId" class="form-select" required>
+                                    <option value="">-- Chọn sản phẩm --</option>
+                                    @foreach (var p in ViewBag.Products)
+                                    {
+                                        <option value="@p.ProductId">@p.ProductName</option>
+                                    }
+                                </select>
+                            </td>
+                            <td>
+                                <input type="number" name="Items[0].Quantity" class="form-control" min="1" required />
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="mt-4 text-end">
+                    <a asp-action="Index" class="btn btn-light me-2">Quay lại</a>
+                    <button type="submit" class="btn btn-warning px-5 fw-bold">Xác nhận xuất kho</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

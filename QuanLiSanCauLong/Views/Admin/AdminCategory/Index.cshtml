@@ -2,181 +2,273 @@
 
 @{
     ViewData["Title"] = "Quản lý danh mục";
+    // Sửa từ _Layout thành _LayoutAdmin
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold">
-        <i class="bi bi-tags text-primary me-2"></i>
-        Quản lý danh mục sản phẩm
-    </h2>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
-        <i class="bi bi-plus-circle me-2"></i>Thêm danh mục
-    </button>
-</div>
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-tags text-primary me-2"></i>
+                Quản lý danh mục sản phẩm
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Danh mục</li>
+                </ol>
+            </nav>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Thêm danh mục
+        </a>
+    </div>
 
-<!-- Categories Grid -->
-<div class="row g-4">
-    @if (Model != null && Model.Any())
+    <!-- Success/Error Messages -->
+    @if (TempData["SuccessMessage"] != null)
     {
-        foreach (var category in Model)
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-tags text-primary fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Tổng danh mục</h6>
+                            <h3 class="fw-bold mb-0">@Model.Count()</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-egg-fried text-warning fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Đồ ăn</h6>
+                            <h3 class="fw-bold mb-0">@Model.Count(c => c.CategoryType == "Food")</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-cup-straw text-info fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Thức uống</h6>
+                            <h3 class="fw-bold mb-0">@Model.Count(c => c.CategoryType == "Beverage")</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-box text-success fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Dụng cụ</h6>
+                            <h3 class="fw-bold mb-0">@Model.Count(c => c.CategoryType == "Equipment")</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Grid -->
+    <div class="row g-4">
+        @if (Model != null && Model.Any())
         {
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 shadow-sm border-0">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div>
-                                <h5 class="card-title fw-bold mb-1">@category.CategoryName</h5>
-                                @if (category.CategoryType == "Food")
-                                {
-                                    <span class="badge bg-warning">
-                                        <i class="bi bi-egg-fried me-1"></i>Đồ ăn
-                                    </span>
-                                }
-                                else if (category.CategoryType == "Beverage")
-                                {
-                                    <span class="badge bg-info">
-                                        <i class="bi bi-cup-straw me-1"></i>Thức uống
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-success">
-                                        <i class="bi bi-box me-1"></i>Dụng cụ
-                                    </span>
-                                }
+            foreach (var category in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm hover-shadow-lg transition">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h5 class="card-title fw-bold mb-2">@category.CategoryName</h5>
+                                    @if (category.CategoryType == "Food")
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-egg-fried me-1"></i>Đồ ăn
+                                        </span>
+                                    }
+                                    else if (category.CategoryType == "Beverage")
+                                    {
+                                        <span class="badge bg-info">
+                                            <i class="bi bi-cup-straw me-1"></i>Thức uống
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-box me-1"></i>Dụng cụ
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+
+                            <p class="text-muted small mb-3" style="min-height: 40px;">
+                                @(string.IsNullOrEmpty(category.Description) ? "Chưa có mô tả" : category.Description)
+                            </p>
+
+                            <hr class="my-3">
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted d-block">
+                                        <i class="bi bi-box-seam me-1"></i>
+                                        <strong>@(category.Products?.Count ?? 0)</strong> sản phẩm
+                                    </small>
+                                </div>
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="Details" asp-route-id="@category.CategoryId"
+                                       class="btn btn-outline-info" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@category.CategoryId"
+                                       class="btn btn-outline-warning" title="Chỉnh sửa">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button class="btn btn-outline-danger"
+                                            onclick="deleteCategory(@category.CategoryId, '@category.CategoryName')"
+                                            title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-
-                        <p class="text-muted small mb-3">
-                            @(category.Description ?? "Chưa có mô tả")
-                        </p>
-
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">
-                                <i class="bi bi-box me-1"></i>
-                                @(category.Products?.Count ?? 0) sản phẩm
-                            </small>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-warning"
-                                        onclick="editCategory(@category.CategoryId, '@category.CategoryName', '@category.CategoryType', '@category.Description')">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-outline-danger"
-                                        onclick="deleteCategory(@category.CategoryId)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+                        <h5 class="text-muted">Chưa có danh mục nào</h5>
+                        <p class="text-muted mb-3">Hãy thêm danh mục đầu tiên để bắt đầu quản lý sản phẩm</p>
+                        <a asp-action="Create" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-2"></i>Thêm danh mục đầu tiên
+                        </a>
                     </div>
                 </div>
             </div>
         }
-    }
-    else
-    {
-        <div class="col-12">
-            <div class="alert alert-info text-center">
-                <i class="bi bi-info-circle me-2"></i>
-                Chưa có danh mục nào. Nhấn "Thêm danh mục" để bắt đầu.
-            </div>
-        </div>
-    }
-</div>
-
-<!-- Create Modal -->
-<div class="modal fade" id="createModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Thêm danh mục mới</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form asp-action="Create" method="post">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold required">Tên danh mục</label>
-                        <input type="text" class="form-control" name="CategoryName" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold required">Loại</label>
-                        <select class="form-select" name="CategoryType" required>
-                            <option value="">-- Chọn loại --</option>
-                            <option value="Food">Đồ ăn</option>
-                            <option value="Beverage">Thức uống</option>
-                            <option value="Equipment">Dụng cụ</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Mô tả</label>
-                        <textarea class="form-control" name="Description" rows="3"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-primary">Lưu</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Modal -->
-<div class="modal fade" id="editModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-warning">
-                <h5 class="modal-title">Chỉnh sửa danh mục</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form asp-action="Edit" method="post">
-                <input type="hidden" id="editId" name="CategoryId" />
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold required">Tên danh mục</label>
-                        <input type="text" class="form-control" id="editName" name="CategoryName" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold required">Loại</label>
-                        <select class="form-select" id="editType" name="CategoryType" required>
-                            <option value="Food">Đồ ăn</option>
-                            <option value="Beverage">Thức uống</option>
-                            <option value="Equipment">Dụng cụ</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Mô tả</label>
-                        <textarea class="form-control" id="editDesc" name="Description" rows="3"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-warning">Cập nhật</button>
-                </div>
-            </form>
-        </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        function editCategory(id, name, type, desc) {
-            document.getElementById('editId').value = id;
-            document.getElementById('editName').value = name;
-            document.getElementById('editType').value = type;
-            document.getElementById('editDesc').value = desc || '';
-            new bootstrap.Modal(document.getElementById('editModal')).show();
-        }
-
-        function deleteCategory(id) {
-            if (confirm('Bạn có chắc muốn xóa danh mục này?')) {
-                fetch(`/Admin/Category/Delete/${id}`, {
-                    method: 'POST'
-                }).then(response => {
-                    if (response.ok) location.reload();
-                    else alert('Không thể xóa danh mục có sản phẩm!');
-                });
-            }
+        function deleteCategory(id, name) {
+            Swal.fire({
+                title: 'Xác nhận xóa?',
+                text: `Bạn có chắc muốn xóa danh mục "${name}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/Admin/Category/Delete/${id}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Thành công!',
+                                text: data.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Lỗi!',
+                                text: data.message
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi!',
+                            text: 'Có lỗi xảy ra khi xóa danh mục'
+                        });
+                    });
+                }
+            });
         }
     </script>
+
+    <style>
+        .hover-shadow-lg {
+            transition: all 0.3s ease;
+        }
+
+            .hover-shadow-lg:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+            }
+
+        .transition {
+            transition: all 0.3s ease;
+        }
+    </style>
 }

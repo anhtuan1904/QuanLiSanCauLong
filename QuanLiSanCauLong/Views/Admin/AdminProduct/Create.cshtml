@@ -14,40 +14,34 @@
                 </h4>
             </div>
             <div class="card-body p-4">
+                @* Cần enctype="multipart/form-data" để gửi file *@
                 <form asp-action="Create" method="post" enctype="multipart/form-data">
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
                     <div class="row mb-3">
                         <div class="col-md-8">
-                            <label asp-for="ProductName" class="form-label fw-semibold required">
-                                Tên sản phẩm
-                            </label>
-                            <input asp-for="ProductName" class="form-control"
-                                   placeholder="VD: Nước suối Aquafina..." />
+                            <label asp-for="ProductName" class="form-label fw-semibold">Tên sản phẩm</label>
+                            <input asp-for="ProductName" class="form-control" placeholder="VD: Vợt Yonex Astrox..." />
                             <span asp-validation-for="ProductName" class="text-danger small"></span>
                         </div>
                         <div class="col-md-4">
-                            <label asp-for="ProductCode" class="form-label fw-semibold">
-                                Mã sản phẩm
-                            </label>
+                            <label asp-for="ProductCode" class="form-label fw-semibold">Mã sản phẩm</label>
                             <input asp-for="ProductCode" class="form-control" placeholder="SP001" />
+                            <span asp-validation-for="ProductCode" class="text-danger small"></span>
                         </div>
                     </div>
 
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label asp-for="CategoryId" class="form-label fw-semibold required">
-                                Danh mục
-                            </label>
-                            <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.CategoryId">
+                            <label asp-for="CategoryId" class="form-label fw-semibold">Danh mục</label>
+                            <select asp-for="CategoryId" class="form-select"
+                                    asp-items="@(new SelectList(ViewBag.Categories, "CategoryId", "CategoryName"))">
                                 <option value="">-- Chọn danh mục --</option>
                             </select>
                             <span asp-validation-for="CategoryId" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="Status" class="form-label fw-semibold">
-                                Trạng thái
-                            </label>
+                            <label asp-for="Status" class="form-label fw-semibold">Trạng thái</label>
                             <select asp-for="Status" class="form-select">
                                 <option value="Available">Còn hàng</option>
                                 <option value="OutOfStock">Hết hàng</option>
@@ -58,43 +52,36 @@
 
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label asp-for="Price" class="form-label fw-semibold required">
-                                Giá (đ)
-                            </label>
-                            <input asp-for="Price" type="number" class="form-control"
-                                   min="0" step="1000" placeholder="50000" />
+                            <label asp-for="Price" class="form-label fw-semibold">Giá (đ)</label>
+                            <input asp-for="Price" type="number" class="form-control" min="0" step="1000" placeholder="50000" />
                             <span asp-validation-for="Price" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="Unit" class="form-label fw-semibold required">
-                                Đơn vị
-                            </label>
-                            <input asp-for="Unit" class="form-control"
-                                   placeholder="chai, ly, cái..." />
+                            <label asp-for="Unit" class="form-label fw-semibold">Đơn vị</label>
+                            <input asp-for="Unit" class="form-control" placeholder="cái, bộ, lon..." />
                             <span asp-validation-for="Unit" class="text-danger small"></span>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Hình ảnh</label>
-                        <input type="file" class="form-control" name="ImageFile" accept="image/*" />
-                        <small class="text-muted">Hoặc nhập URL:</small>
-                        <input asp-for="ImageUrl" class="form-control mt-2" placeholder="https://..." />
+                        <label class="form-label fw-semibold">Hình ảnh sản phẩm</label>
+                        @* Tên name="ImageFile" phải khớp với tham số trong Controller *@
+                        <input type="file" id="imageInput" name="ImageFile" class="form-control" accept="image/*" required />
+                        <div class="mt-3 text-center">
+                            <img id="preview" src="#" alt="Ảnh xem trước" class="img-thumbnail d-none" style="max-height: 200px;" />
+                        </div>
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Description" class="form-label fw-semibold">
-                            Mô tả
-                        </label>
-                        <textarea asp-for="Description" class="form-control" rows="3"
-                                  placeholder="Mô tả sản phẩm..."></textarea>
+                        <label asp-for="Description" class="form-label fw-semibold">Mô tả</label>
+                        <textarea asp-for="Description" class="form-control" rows="3" placeholder="Mô tả chi tiết sản phẩm..."></textarea>
                     </div>
 
                     <div class="d-flex gap-2 justify-content-end mt-4">
                         <a asp-action="Index" class="btn btn-secondary">
                             <i class="bi bi-x-circle me-2"></i>Hủy
                         </a>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary px-4">
                             <i class="bi bi-check-circle me-2"></i>Lưu sản phẩm
                         </button>
                     </div>
@@ -108,4 +95,16 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        // JS để hiển thị ảnh xem trước ngay lập tức khi chọn file
+        document.getElementById('imageInput').onchange = function (evt) {
+            const [file] = this.files;
+            const preview = document.getElementById('preview');
+            if (file) {
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove('d-none');
+            }
+        };
+    </script>
 }

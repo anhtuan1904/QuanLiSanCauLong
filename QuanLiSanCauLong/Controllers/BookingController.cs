@@ -18,7 +18,19 @@ namespace QuanLiSanCauLong.Controllers
         {
             _context = context;
         }
+        private bool CanCancelBooking(Booking booking, decimal cancelHours)
+        {
+            // 1. Chỉ cho phép hủy nếu đơn hàng đang ở trạng thái Chờ hoặc Đã xác nhận
+            if (booking.Status != "Confirmed" && booking.Status != "Pending")
+                return false;
 
+            // 2. Kết hợp ngày đặt và giờ bắt đầu để tạo mốc thời gian chơi
+            var bookingDateTime = booking.BookingDate.Date.Add(booking.StartTime);
+
+            // 3. Kiểm tra: Thời gian bắt đầu chơi phải sau (Thời điểm hiện tại + số giờ quy định hủy)
+            // Ví dụ: Giờ chơi là 14:00, quy định hủy trước 2 tiếng -> Phải hủy trước 12:00
+            return bookingDateTime > DateTime.Now.AddHours((double)cancelHours);
+        }
         // GET: Booking/Search
         [HttpGet]
         public async Task<IActionResult> Search(int? facilityId, DateTime? bookingDate, string city, string district)
@@ -148,72 +160,68 @@ namespace QuanLiSanCauLong.Controllers
             return View(model);
         }
 
-        // POST: Booking/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateBookingViewModel model)
         {
+            // 1. Kiểm tra tính hợp lệ của Model
             if (!ModelState.IsValid)
             {
-                var court = await _context.Courts
-                    .Include(c => c.Facility)
+                var courtInfo = await _context.Courts.Include(c => c.Facility)
                     .FirstOrDefaultAsync(c => c.CourtId == model.CourtId);
-
-                if (court != null)
-                {
-                    await LoadProductsForBooking(court.FacilityId);
-                }
+                if (courtInfo != null) await LoadProductsForBooking(courtInfo.FacilityId);
                 return View(model);
             }
 
-            // Kiểm tra sân còn trống
+            // 2. Kiểm tra sân còn trống (Double Check)
             if (!await IsCourtAvailable(model.CourtId, model.BookingDate, model.StartTime, model.EndTime))
             {
-                TempData["ErrorMessage"] = "Sân đã được đặt trong khung giờ này!";
+                TempData["ErrorMessage"] = "Rất tiếc, sân vừa mới được người khác đặt trong khung giờ này!";
                 return RedirectToAction(nameof(Search));
             }
 
             int userId = GetCurrentUserId();
 
+            // 3. Tính toán lại giá trị thực tế tại Server (Anti-Cheat)
+            var court = await _context.Courts.FindAsync(model.CourtId);
+            decimal serverCourtPrice = await CalculateCourtPrice(court.FacilityId, court.CourtType, model.StartTime, model.EndTime);
+            decimal serverServiceFee = serverCourtPrice * (await GetSystemSetting("DefaultServiceFee", 0)) / 100;
+            decimal baseTotal = serverCourtPrice + serverServiceFee;
+
             using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 try
                 {
-                    // Xử lý voucher nếu có
+                    // 4. Xử lý Voucher dựa trên giá Server tính toán
                     decimal voucherDiscount = 0;
                     int? voucherId = null;
-
                     if (!string.IsNullOrEmpty(model.VoucherCode))
                     {
-                        var voucherResult = await ApplyVoucher(model.VoucherCode, userId, model.TotalPrice, "Booking");
-                        if (voucherResult.IsValid)
+                        var vRes = await ApplyVoucher(model.VoucherCode, userId, baseTotal, "Booking");
+                        if (vRes.IsValid)
                         {
-                            voucherDiscount = voucherResult.DiscountAmount;
-                            voucherId = voucherResult.VoucherId;
+                            voucherDiscount = vRes.DiscountAmount;
+                            voucherId = vRes.VoucherId;
                         }
                     }
 
-                    // Tạo mã booking
-                    string bookingCode = await GenerateBookingCode();
-
-                    // Tạo booking
+                    // 5. Lưu Booking
                     var booking = new Booking
                     {
-                        BookingCode = bookingCode,
+                        BookingCode = await GenerateBookingCode(),
                         UserId = userId,
                         CourtId = model.CourtId,
                         BookingDate = model.BookingDate,
                         StartTime = model.StartTime,
                         EndTime = model.EndTime,
                         Duration = model.Duration,
-                        CourtPrice = model.CourtPrice,
-                        ServiceFee = model.ServiceFee,
+                        CourtPrice = serverCourtPrice,
+                        ServiceFee = serverServiceFee,
                         DiscountAmount = voucherDiscount,
-                        TotalPrice = model.TotalPrice - voucherDiscount,
+                        TotalPrice = baseTotal - voucherDiscount,
                         Status = "Confirmed",
                         PaymentMethod = model.PaymentMethod ?? "Cash",
-                        PaymentStatus = "Paid",
-                        Note = model.Note,
+                        PaymentStatus = (model.PaymentMethod == "Cash") ? "Unpaid" : "Paid", // Tùy logic doanh nghiệp
                         CreatedAt = DateTime.Now,
                         UpdatedAt = DateTime.Now
                     };
@@ -221,40 +229,34 @@ namespace QuanLiSanCauLong.Controllers
                     _context.Bookings.Add(booking);
                     await _context.SaveChangesAsync();
 
-                    // Lưu voucher usage
+                    // 6. Xử lý Voucher và Order đi kèm
                     if (voucherId.HasValue)
-                    {
                         await SaveVoucherUsage(voucherId.Value, userId, booking.BookingId, null, voucherDiscount);
-                    }
 
-                    // Tạo đơn hàng sản phẩm nếu có
                     if (model.OrderItems != null && model.OrderItems.Any(i => i.Quantity > 0))
-                    {
                         await CreateProductOrder(booking, userId, model.OrderItems);
-                    }
 
-                    // Log activity
-                    await LogActivity(userId, "Create", "Bookings", booking.BookingId,
-                        null, $"Đặt sân {bookingCode}");
+                    await LogActivity(userId, "Create", "Bookings", booking.BookingId, null, $"Mã: {booking.BookingCode}");
 
                     await transaction.CommitAsync();
-                    TempData["SuccessMessage"] = $"Đặt sân thành công! Mã đơn: {bookingCode}";
+                    TempData["SuccessMessage"] = "Đặt sân thành công!";
                     return RedirectToAction(nameof(Details), new { id = booking.BookingId });
                 }
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
-                    TempData["ErrorMessage"] = "Có lỗi xảy ra: " + ex.Message;
+                    TempData["ErrorMessage"] = "Lỗi hệ thống: " + ex.Message;
                     return RedirectToAction(nameof(Search));
                 }
             }
         }
-
-        // GET: Booking/MyBookings
         [HttpGet]
         public async Task<IActionResult> MyBookings(string status, DateTime? fromDate, DateTime? toDate)
         {
             int userId = GetCurrentUserId();
+
+            // 1. Lấy giá trị cấu hình thời gian hủy 1 lần duy nhất bên ngoài vòng lặp
+            var cancelHoursSetting = await GetSystemSetting("BookingCancellationHours", 2);
 
             var query = _context.Bookings
                 .Include(b => b.Court.Facility)
@@ -263,6 +265,7 @@ namespace QuanLiSanCauLong.Controllers
                         .ThenInclude(od => od.Product)
                 .Where(b => b.UserId == userId);
 
+            // 2. Các bộ lọc tìm kiếm
             if (!string.IsNullOrEmpty(status))
                 query = query.Where(b => b.Status == status);
 
@@ -274,13 +277,14 @@ namespace QuanLiSanCauLong.Controllers
 
             var bookings = await query.OrderByDescending(b => b.CreatedAt).ToListAsync();
 
+            // 3. Mapping dữ liệu sang ViewModel
             var model = bookings.Select(b => new BookingHistoryViewModel
             {
                 BookingId = b.BookingId,
                 BookingCode = b.BookingCode,
-                FacilityName = b.Court.Facility.FacilityName,
-                CourtNumber = b.Court.CourtNumber,
-                CourtType = b.Court.CourtType,
+                FacilityName = b.Court?.Facility?.FacilityName ?? "N/A",
+                CourtNumber = b.Court != null ? b.Court.CourtNumber.ToString() : "N/A",
+                CourtType = b.Court?.CourtType ?? "N/A",
                 BookingDate = b.BookingDate,
                 StartTime = b.StartTime,
                 EndTime = b.EndTime,
@@ -291,7 +295,10 @@ namespace QuanLiSanCauLong.Controllers
                 PaymentMethod = b.PaymentMethod,
                 CreatedAt = b.CreatedAt,
                 Note = b.Note,
-                CanCancel = CanCancelBooking(b),
+
+                // Truyền thêm biến cấu hình vào hàm kiểm tra
+                CanCancel = CanCancelBooking(b, cancelHoursSetting),
+
                 RelatedOrders = b.Orders.Select(o => new OrderViewModel
                 {
                     OrderId = o.OrderId,
@@ -301,9 +308,9 @@ namespace QuanLiSanCauLong.Controllers
                     OrderStatus = o.OrderStatus,
                     OrderDetails = o.OrderDetails.Select(od => new OrderDetailViewModel
                     {
-                        ProductName = od.Product.ProductName,
+                        ProductName = od.Product?.ProductName ?? "Sản phẩm không xác định",
                         Quantity = od.Quantity,
-                        Unit = od.Product.Unit,
+                        Unit = od.Product?.Unit ?? "",
                         UnitPrice = od.UnitPrice,
                         TotalPrice = od.TotalPrice
                     }).ToList()
@@ -313,7 +320,6 @@ namespace QuanLiSanCauLong.Controllers
             ViewBag.Statuses = new[] { "Pending", "Confirmed", "Playing", "Completed", "Cancelled" };
             return View(model);
         }
-
         // GET: Booking/Details
         [HttpGet]
         public async Task<IActionResult> Details(int id)
@@ -359,7 +365,7 @@ namespace QuanLiSanCauLong.Controllers
                 PaymentMethod = booking.PaymentMethod,
                 CreatedAt = booking.CreatedAt,
                 Note = booking.Note,
-                CanCancel = CanCancelBooking(booking),
+                CanCancel = await CanCancelBooking(booking),
                 RelatedOrders = booking.Orders.Select(o => new OrderViewModel
                 {
                     OrderId = o.OrderId,
@@ -380,6 +386,7 @@ namespace QuanLiSanCauLong.Controllers
             return View(model);
         }
 
+
         // POST: Booking/Cancel
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -397,9 +404,9 @@ namespace QuanLiSanCauLong.Controllers
                 return Forbid();
             }
 
-            if (!CanCancelBooking(booking))
+            if (!await CanCancelBooking(booking))
             {
-                TempData["ErrorMessage"] = "Không thể hủy đơn này!";
+                TempData["ErrorMessage"] = "Không thể hủy đơn này do đã quá thời gian quy định!";
                 return RedirectToAction(nameof(MyBookings));
             }
 
@@ -478,21 +485,28 @@ namespace QuanLiSanCauLong.Controllers
                 .Where(p => p.FacilityId == facilityId
                        && p.CourtType == courtType
                        && p.IsActive
-                       && p.StartTime >= start
-                       && p.EndTime <= end)
+                       // Tìm các slot có giao thoa với thời gian khách đặt
+                       && p.StartTime < end
+                       && p.EndTime > start)
                 .ToListAsync();
 
             return priceSlots.Sum(p => p.Price);
         }
 
-        private bool CanCancelBooking(Booking booking)
+        private async Task<bool> CanCancelBooking(Booking booking)
         {
+            // 1. Kiểm tra trạng thái đơn hàng
             if (booking.Status != "Confirmed" && booking.Status != "Pending")
                 return false;
 
-            var bookingDateTime = booking.BookingDate.Add(booking.StartTime);
-            var cancelHours = GetSystemSetting("BookingCancellationHours", 2).Result;
+            // 2. Tính toán thời gian bắt đầu chơi
+            var bookingDateTime = booking.BookingDate.Date.Add(booking.StartTime);
 
+            // 3. Lấy cấu hình giờ hủy (Sử dụng await thay vì .Result)
+            var cancelHours = await GetSystemSetting("BookingCancellationHours", 2);
+
+            // 4. Kiểm tra xem hiện tại đã quá hạn hủy chưa
+            // Ví dụ: Đặt lúc 14:00, quy định hủy trước 2 tiếng -> Phải hủy trước 12:00
             return bookingDateTime > DateTime.Now.AddHours((double)cancelHours);
         }
 

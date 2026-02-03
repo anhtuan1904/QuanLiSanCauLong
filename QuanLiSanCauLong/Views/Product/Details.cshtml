@@ -1,0 +1,64 @@
+﻿@model QuanLiSanCauLong.ViewModels.ProductDetailsViewModel
+
+<div class="container py-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Menu</a></li>
+            <li class="breadcrumb-item active">@Model.ProductName</li>
+        </ol>
+    </nav>
+
+    <div class="row g-5">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <img src="@Model.ImageUrls.FirstOrDefault()" id="mainImage" class="img-fluid" alt="@Model.ProductName">
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <span class="badge bg-info-subtle text-info mb-2 px-3">@Model.CategoryName</span>
+            <h1 class="fw-bold mb-3">@Model.ProductName</h1>
+            <div class="d-flex align-items-center mb-4">
+                <h2 class="text-primary fw-bold me-3 mb-0">@Model.Price.ToString("N0")đ</h2>
+                <span class="text-muted">/ @Model.Unit</span>
+            </div>
+
+            <div class="mb-4 pb-4 border-bottom">
+                <h5>Mô tả sản phẩm</h5>
+                <p class="text-secondary leading-relaxed">@Model.Description</p>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-6">
+                    <small class="d-block text-muted">Trạng thái</small>
+                    <span class="fw-bold @(Model.IsAvailable ? "text-success" : "text-danger")">
+                        <i class="bi bi-circle-fill small me-1"></i> @(Model.IsAvailable ? "Còn hàng" : "Hết hàng")
+                    </span>
+                </div>
+                <div class="col-6">
+                    <small class="d-block text-muted">Mã sản phẩm</small>
+                    <span class="fw-bold text-dark">@Model.ProductCode</span>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button class="btn btn-primary btn-lg rounded-pill @(Model.IsAvailable ? "" : "disabled") shadow">
+                    <i class="bi bi-bag-plus me-2"></i> Thêm vào giỏ hàng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.RelatedProducts != null && Model.RelatedProducts.Any())
+    {
+        <div class="mt-5 pt-5">
+            <h4 class="fw-bold mb-4">Sản phẩm liên quan</h4>
+            <div class="row g-4">
+                @foreach (var related in Model.RelatedProducts)
+                {
+                    @await Html.PartialAsync("_ProductCard", related)
+                }
+            </div>
+        </div>
+    }
+</div>

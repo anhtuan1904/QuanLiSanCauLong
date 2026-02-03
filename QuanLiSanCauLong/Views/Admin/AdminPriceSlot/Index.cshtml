@@ -1,72 +1,73 @@
 ﻿@model IEnumerable<QuanLiSanCauLong.Models.PriceSlot>
 
 @{
-    ViewData["Title"] = "Quản lý giá sân";
+    ViewData["Title"] = "Quản lý bảng giá";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold">
-        <i class="bi bi-cash-stack text-primary me-2"></i>
-        Quản lý giá sân
-    </h2>
-    <div class="btn-group">
-        <a asp-action="BulkCreate" class="btn btn-success">
-            <i class="bi bi-lightning-fill me-2"></i>Tạo hàng loạt
-        </a>
-        <a asp-action="Create" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-2"></i>Thêm khung giờ
-        </a>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-currency-exchange text-primary me-2"></i>Quản lý bảng giá</h2>
+            <p class="text-muted small mb-0">Thiết lập và điều chỉnh đơn giá thuê sân theo khung giờ</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="BulkCreate" class="btn btn-outline-success shadow-sm">
+                <i class="bi bi-lightning-charge-fill me-1"></i> Tạo hàng loạt
+            </a>
+            <a asp-action="Create" class="btn btn-primary shadow-sm px-4">
+                <i class="bi bi-plus-lg me-1"></i> Thêm khung giờ
+            </a>
+        </div>
     </div>
-</div>
 
-<!-- Filter -->
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-4">
-                <select class="form-select" name="facilityId">
-                    <option value="">Tất cả cơ sở</option>
-                    @foreach (var facility in ViewBag.Facilities)
-                    {
-                        <option value="@facility.FacilityId">@facility.FacilityName</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-4">
-                <select class="form-select" name="courtId">
-                    <option value="">Tất cả sân</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <select class="form-select" name="peakHour">
-                    <option value="">Tất cả</option>
-                    <option value="true">Giờ cao điểm</option>
-                    <option value="false">Giờ thường</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search"></i> Lọc
-                </button>
-            </div>
-        </form>
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+        <div class="card-body p-3">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-uppercase text-muted">Cơ sở</label>
+                    <select class="form-select shadow-none" name="facilityId" id="FacilityFilter">
+                        <option value="">-- Tất cả cơ sở --</option>
+                        @foreach (var facility in ViewBag.Facilities)
+                        {
+                            <option value="@facility.FacilityId">@facility.FacilityName</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-uppercase text-muted">Sân cụ thể</label>
+                    <select class="form-select shadow-none" name="courtId" id="CourtFilter">
+                        <option value="">-- Tất cả sân --</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-uppercase text-muted">Phân loại giờ</label>
+                    <select class="form-select shadow-none" name="peakHour">
+                        <option value="">Tất cả khung giờ</option>
+                        <option value="true">Giờ cao điểm (Peak)</option>
+                        <option value="false">Giờ thường</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-dark w-100 shadow-none">
+                        <i class="bi bi-funnel me-1"></i> Áp dụng bộ lọc
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
-<!-- Price Slots Table -->
-<div class="card shadow-sm">
-    <div class="card-body">
+    <div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
                     <tr>
-                        <th>Cơ sở</th>
-                        <th>Sân</th>
-                        <th>Khung giờ</th>
-                        <th>Giá</th>
-                        <th>Loại</th>
-                        <th class="text-end">Thao tác</th>
+                        <th class="ps-4 py-3 border-0 text-muted small text-uppercase">Thông tin sân</th>
+                        <th class="py-3 border-0 text-muted small text-uppercase text-center">Ngày áp dụng</th>
+                        <th class="py-3 border-0 text-muted small text-uppercase">Khung giờ</th>
+                        <th class="py-3 border-0 text-muted small text-uppercase">Đơn giá</th>
+                        <th class="py-3 border-0 text-muted small text-uppercase">Trạng thái</th>
+                        <th class="pe-4 py-3 border-0 text-muted small text-uppercase text-end">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -75,46 +76,63 @@
                         foreach (var slot in Model)
                         {
                             <tr>
-                                <td>
-                                    <i class="bi bi-building text-muted me-2"></i>
-                                    @slot.Court?.Facility?.FacilityName
+                                <td class="ps-4 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-2 me-3">
+                                            <i class="bi bi-grid-3x3-gap-fill fs-5"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">Sân số @slot.Court?.CourtNumber</div>
+                                            <div class="text-muted small">@slot.Court?.Facility?.FacilityName</div>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td>
-                                    <strong class="text-primary">@slot.Court?.CourtNumber</strong>
-                                    <br>
-                                    <small class="text-muted">@slot.Court?.CourtType</small>
-                                </td>
-                                <td>
-                                    <i class="bi bi-clock me-2"></i>
-                                    <strong>@slot.StartTime.ToString(@"hh\:mm") - @slot.EndTime.ToString(@"hh\:mm")</strong>
-                                </td>
-                                <td>
-                                    <span class="badge bg-success fs-6">
-                                        @slot.Price.ToString("N0")đ
+                                <td class="text-center">
+                                    <span class="badge rounded-pill bg-light text-dark border fw-normal px-3">
+                                        Thứ @((int)slot.DayOfWeek + 1 == 1 ? "Nhật" : (int)slot.DayOfWeek + 1)
                                     </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-clock-history me-2 text-primary"></i>
+                                        <span class="fw-semibold">@slot.StartTime.ToString(@"hh\:mm") - @slot.EndTime.ToString(@"hh\:mm")</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="text-success fw-bold fs-5">@slot.Price.ToString("N0")</span><span class="text-success small">₫</span>
                                 </td>
                                 <td>
                                     @if (slot.IsPeakHour)
                                     {
-                                        <span class="badge bg-danger">
-                                            <i class="bi bi-star-fill me-1"></i>Cao điểm
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2">
+                                            <i class="bi bi-fire me-1"></i> Cao điểm
                                         </span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-info">Giờ thường</span>
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-2">
+                                            <i class="bi bi-brightness-high me-1"></i> Giờ thường
+                                        </span>
                                     }
                                 </td>
-                                <td class="text-end">
-                                    <div class="btn-group btn-group-sm">
-                                        <a asp-action="Edit" asp-route-id="@slot.PriceSlotId"
-                                           class="btn btn-outline-warning">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <button class="btn btn-outline-danger"
-                                                onclick="deleteSlot(@slot.PriceSlotId)">
-                                            <i class="bi bi-trash"></i>
+                                <td class="pe-4 text-end">
+                                    <div class="dropdown">
+                                        <button class="btn btn-light btn-sm rounded-circle shadow-none" type="button" data-bs-toggle="dropdown">
+                                            <i class="bi bi-three-dots-vertical"></i>
                                         </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                            <li>
+                                                <a class="dropdown-item py-2" asp-action="Edit" asp-route-id="@slot.PriceSlotId text-warning">
+                                                    <i class="bi bi-pencil-square me-2"></i> Chỉnh sửa
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider opacity-50"></li>
+                                            <li>
+                                                <button class="dropdown-item py-2 text-danger" onclick="deleteSlot(@slot.PriceSlotId)">
+                                                    <i class="bi bi-trash3 me-2"></i> Xóa khung giờ
+                                                </button>
+                                            </li>
+                                        </ul>
                                     </div>
                                 </td>
                             </tr>
@@ -123,9 +141,10 @@
                     else
                     {
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">
-                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                Chưa có khung giờ nào
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="80" class="opacity-25 mb-3 d-block mx-auto">
+                                <p class="mb-0">Chưa có dữ liệu bảng giá nào được thiết lập.</p>
+                                <a asp-action="Create" class="btn btn-link text-decoration-none small mt-2">Bắt đầu tạo ngay</a>
                             </td>
                         </tr>
                     }
@@ -136,16 +155,40 @@
 </div>
 
 @section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        // Logic Delete với SweetAlert hoặc confirm cơ bản
         function deleteSlot(id) {
-            if (confirm('Bạn có chắc muốn xóa khung giờ này?')) {
+            if (confirm('Dữ liệu bảng giá này sẽ bị xóa vĩnh viễn. Bạn có chắc chắn không?')) {
                 fetch(`/Admin/PriceSlot/Delete/${id}`, {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
                 }).then(response => {
-                    if (response.ok) location.reload();
-                    else alert('Không thể xóa!');
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Đã xảy ra lỗi khi xóa!');
+                    }
                 });
             }
         }
+
+        // Logic Filter Sân theo Cơ sở
+        $('#FacilityFilter').on('change', function () {
+            var fId = $(this).val();
+            var $courtDropdown = $('#CourtFilter');
+            $courtDropdown.empty().append('<option value="">-- Đang tải... --</option>');
+
+            if (fId) {
+                $.getJSON('/AdminPriceSlot/GetCourtsByFacility', { facilityId: fId }, function (data) {
+                    $courtDropdown.empty().append('<option value="">-- Tất cả sân --</option>');
+                    $.each(data, function (i, item) {
+                        $courtDropdown.append($('<option>', { value: item.courtId, text: "Sân " + item.courtNumber }));
+                    });
+                });
+            } else {
+                $courtDropdown.empty().append('<option value="">-- Tất cả sân --</option>');
+            }
+        });
     </script>
 }

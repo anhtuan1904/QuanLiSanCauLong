@@ -4,161 +4,264 @@
     ViewData["Title"] = "Quản lý sân";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
+<style>
+    /* Giữ nguyên style cũ của bạn */
+    .court-card {
+        border: none;
+        border-radius: 16px;
+        transition: all 0.3s ease;
+        background: #fff;
+        margin-bottom: 1rem;
+    }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold">
-        <i class="bi bi-grid-3x3 text-primary me-2"></i>
-        Quản lý sân
-    </h2>
-    <a asp-action="Create" class="btn btn-primary">
-        <i class="bi bi-plus-circle me-2"></i>Thêm sân mới
-    </a>
-</div>
+        .court-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+        }
 
-<!-- Filter -->
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3">
+    .badge-status {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .badge-type {
+        background-color: #f8fafc;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+
+    .icon-box {
+        width: 45px;
+        height: 45px;
+        background: #f1f5f9;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #0f172a;
+        font-size: 1.2rem;
+    }
+
+    .filter-section {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+    }
+
+    /* BỔ SUNG THÊM STYLE CHO ẢNH VÀ GIÁ */
+    .court-thumb {
+        width: 100px;
+        height: 70px;
+        border-radius: 10px;
+        object-fit: cover;
+        background: #eee;
+    }
+
+    .price-text {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 1.1rem;
+    }
+
+    .feature-active {
+        color: #10b981 !important;
+    }
+    /* Xanh khi có tiện ích */
+    .feature-inactive {
+        color: #cbd5e1 !important;
+    }
+    /* Xám khi không có */
+</style>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Quản lý danh sách sân</h2>
+            <p class="text-muted mb-0">Hệ thống có tổng cộng @(Model?.Count() ?? 0) sân đang hoạt động</p>
+        </div>
+        <a asp-action="Create" class="btn btn-dark px-4 py-2" style="border-radius: 10px;">
+            <i class="bi bi-plus-lg me-2"></i>Thêm sân mới
+        </a>
+    </div>
+
+    <div class="filter-section shadow-sm mb-4 border">
+        <form method="get" class="row g-3 align-items-end">
             <div class="col-md-4">
-                <select class="form-select" name="facilityId">
+                <label class="form-label fw-semibold small text-uppercase">Cơ sở chi nhánh</label>
+                <select class="form-select border-0 bg-light" name="facilityId" style="border-radius: 8px;">
                     <option value="">Tất cả cơ sở</option>
                     @foreach (var facility in ViewBag.Facilities)
                     {
-                        <option value="@facility.FacilityId">@facility.FacilityName</option>
+                        <option value="@facility.FacilityId" selected="@(ViewBag.SelectedFacility == facility.FacilityId)">
+                            @facility.FacilityName
+                        </option>
                     }
                 </select>
             </div>
             <div class="col-md-3">
-                <select class="form-select" name="courtType">
-                    <option value="">Tất cả loại sân</option>
-                    <option value="Standard">Tiêu chuẩn</option>
-                    <option value="VIP">VIP</option>
-                    <option value="Premium">Premium</option>
+                <label class="form-label fw-semibold small text-uppercase">Loại sân</label>
+                <select class="form-select border-0 bg-light" name="courtType" style="border-radius: 8px;">
+                    <option value="">Tất cả loại</option>
+                    <option value="Standard" selected="@(ViewBag.SelectedType == "Standard")">Tiêu chuẩn</option>
+                    <option value="VIP" selected="@(ViewBag.SelectedType == "VIP")">Sân VIP</option>
+                    <option value="Premium" selected="@(ViewBag.SelectedType == "Premium")">Premium</option>
                 </select>
             </div>
             <div class="col-md-3">
-                <select class="form-select" name="status">
+                <label class="form-label fw-semibold small text-uppercase">Trạng thái</label>
+                <select class="form-select border-0 bg-light" name="status" style="border-radius: 8px;">
                     <option value="">Tất cả trạng thái</option>
-                    <option value="Available">Sẵn sàng</option>
-                    <option value="Occupied">Đang sử dụng</option>
-                    <option value="Maintenance">Bảo trì</option>
+                    <option value="Available" selected="@(ViewBag.SelectedStatus == "Available")">Sẵn sàng</option>
+                    <option value="Maintenance" selected="@(ViewBag.SelectedStatus == "Maintenance")">Bảo trì</option>
                 </select>
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search"></i> Lọc
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" style="border-radius: 8px;">
+                    <i class="bi bi-funnel me-2"></i>Lọc dữ liệu
                 </button>
             </div>
         </form>
     </div>
-</div>
 
-<!-- Courts Table -->
-<div class="card shadow-sm">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Số sân</th>
-                        <th>Cơ sở</th>
-                        <th>Loại sân</th>
-                        <th>Trạng thái</th>
-                        <th class="text-end">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model != null && Model.Any())
-                    {
-                        foreach (var court in Model)
-                        {
-                            <tr>
-                                <td>
-                                    <strong class="text-primary">@court.CourtNumber</strong>
-                                </td>
-                                <td>
-                                    <i class="bi bi-building text-muted me-2"></i>
-                                    @court.Facility?.FacilityName
-                                </td>
-                                <td>
-                                    @if (court.CourtType == "VIP")
-                                    {
-                                        <span class="badge bg-warning">@court.CourtType</span>
-                                    }
-                                    else if (court.CourtType == "Premium")
-                                    {
-                                        <span class="badge bg-danger">@court.CourtType</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-info">@court.CourtType</span>
-                                    }
-                                </td>
-                                <td>
-                                    @if (court.Status == "Available")
-                                    {
-                                        <span class="badge bg-success">
-                                            <i class="bi bi-check-circle me-1"></i>Sẵn sàng
-                                        </span>
-                                    }
-                                    else if (court.Status == "Occupied")
-                                    {
-                                        <span class="badge bg-warning">
-                                            <i class="bi bi-exclamation-circle me-1"></i>Đang sử dụng
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary">
-                                            <i class="bi bi-tools me-1"></i>Bảo trì
-                                        </span>
-                                    }
-                                </td>
-                                <td class="text-end">
-                                    <div class="btn-group btn-group-sm">
-                                        <a asp-action="Details" asp-route-id="@court.CourtId"
-                                           class="btn btn-outline-primary">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <a asp-action="Edit" asp-route-id="@court.CourtId"
-                                           class="btn btn-outline-warning">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <button class="btn btn-outline-danger"
-                                                onclick="deleteCourt(@court.CourtId)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
+    <div class="row">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var court in Model)
+            {
+                <div class="col-12">
+                    <div class="court-card shadow-sm border p-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3 position-relative">
+                                        @if (!string.IsNullOrEmpty(court.ImagePath))
+                                        {
+                                            <img src="@court.ImagePath" class="court-thumb border" alt="court" />
+                                        }
+                                        else
+                                        {
+                                            <div class="icon-box">
+                                                <i class="bi bi-image text-muted"></i>
+                                            </div>
+                                        }
                                     </div>
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="5" class="text-center text-muted py-4">
-                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                Chưa có sân nào
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <h5 class="mb-0 fw-bold">@court.CourtNumber</h5>
+                                            <span class="badge-type">@court.CourtType</span>
+                                        </div>
+                                        <div class="text-muted small">
+                                            <i class="bi bi-geo-alt me-1"></i> @court.Facility?.FacilityName
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="d-flex gap-4">
+                                    <div class="text-center">
+                                        <div class="small fw-bold text-dark">
+                                            <i class="bi bi-lightbulb-fill me-1 @(court.HasLighting ? "feature-active" : "feature-inactive")"></i> Đèn
+                                        </div>
+                                        <div class="small text-muted">@(court.HasLighting ? "Đạt chuẩn" : "Không")</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="small fw-bold text-dark">
+                                            <i class="bi bi-wind me-1 @(court.HasAC ? "feature-active" : "feature-inactive")"></i> AC
+                                        </div>
+                                        <div class="small text-muted">@(court.HasAC ? "Có sẵn" : "Không")</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="small fw-bold text-dark"><i class="bi bi-calendar-check me-1"></i> Lịch đặt</div>
+                                        <div class="text-primary small">@court.Bookings?.Count() lượt</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-2 text-center">
+                                <div class="price-text mb-1">@court.HourlyRate.ToString("N0") <small class="fw-normal text-muted">đ/h</small></div>
+
+                                @if (court.Status == "Available")
+                                {
+                                    <span class="badge-status bg-success-subtle text-success border border-success-subtle">
+                                        <i class="bi bi-check-circle-fill me-1"></i>Hoạt động
+                                    </span>
+                                }
+                                else if (court.Status == "Maintenance")
+                                {
+                                    <span class="badge-status bg-danger-subtle text-danger border border-danger-subtle">
+                                        <i class="bi bi-tools me-1"></i>Bảo trì
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge-status bg-warning-subtle text-warning border border-warning-subtle">
+                                        <i class="bi bi-clock-history me-1"></i>Đang bận
+                                    </span>
+                                }
+                            </div>
+
+                            <div class="col-md-2 text-end">
+                                <div class="dropdown">
+                                    <button class="btn btn-light btn-sm rounded-circle" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
+                                        <li><a class="dropdown-item" asp-action="Details" asp-route-id="@court.CourtId"><i class="bi bi-eye me-2"></i>Chi tiết</a></li>
+                                        <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@court.CourtId"><i class="bi bi-pencil me-2"></i>Chỉnh sửa</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteCourt(@court.CourtId)"><i class="bi bi-trash me-2"></i>Xóa sân</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5">
+                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="100" class="mb-3 opacity-25" />
+                <h5 class="text-muted">Không tìm thấy sân nào phù hợp với bộ lọc</h5>
+            </div>
+        }
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         function deleteCourt(id) {
-            if (confirm('Bạn có chắc muốn xóa sân này?')) {
-                fetch(`/Admin/Court/Delete/${id}`, {
-                    method: 'POST'
-                }).then(response => {
-                    if (response.ok) location.reload();
-                    else alert('Không thể xóa!');
-                });
-            }
+            Swal.fire({
+                title: 'Xác nhận xóa sân?',
+                text: "Dữ liệu lịch đặt liên quan sẽ bị ảnh hưởng!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#000',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Đồng ý xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `/Admin/AdminCourt/Delete/${id}`,
+                        type: 'POST',
+                        success: function (response) {
+                            if (response.success) {
+                                Swal.fire('Đã xóa!', response.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Lỗi!', response.message, 'error');
+                            }
+                        }
+                    });
+                }
+            })
         }
     </script>
 }

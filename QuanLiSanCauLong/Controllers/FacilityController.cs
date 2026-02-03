@@ -118,7 +118,7 @@ namespace QuanLiSanCauLong.Controllers
                 City = facility.City,
                 Phone = facility.Phone,
                 Email = facility.Email,
-                ImageUrl = new List<string> { facility.ImageUrl ?? "/images/default-facility.jpg" },
+                ImageUrls = new List<string> { facility.ImageUrl ?? "/images/default-facility.jpg" },
                 OpenTime = facility.OpenTime,
                 CloseTime = facility.CloseTime,
 

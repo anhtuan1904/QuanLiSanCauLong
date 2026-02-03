@@ -16,12 +16,10 @@ namespace QuanLiSanCauLong.Controllers
             _context = context;
         }
 
-        [HttpGet]
+        // 1. DANH SÁCH SẢN PHẨM
         public async Task<IActionResult> Index(int? categoryId, string search, string status)
         {
-            var query = _context.Products
-                .Include(p => p.Category)
-                .AsQueryable();
+            var query = _context.Products.Include(p => p.Category).AsQueryable();
 
             if (categoryId.HasValue)
                 query = query.Where(p => p.CategoryId == categoryId.Value);
@@ -32,157 +30,166 @@ namespace QuanLiSanCauLong.Controllers
             if (!string.IsNullOrEmpty(status))
                 query = query.Where(p => p.Status == status);
 
-            var products = await query.OrderBy(p => p.ProductName).ToListAsync();
-
+            var products = await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
             ViewBag.Categories = await _context.ProductCategories.ToListAsync();
             return View(products);
         }
 
+        // 2. CHI TIẾT SẢN PHẨM
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(m => m.ProductId == id);
+
+            if (product == null) return NotFound();
+
+            return View(product);
+        }
+
+        // 3. THÊM MỚI SẢN PHẨM (SỬA LẠI MODEL Ở ĐÂY)
         [HttpGet]
         public async Task<IActionResult> Create()
         {
-            ViewBag.Categories = await _context.ProductCategories.ToListAsync();
+            await LoadCategoriesToViewBag();
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Product model)
+        public async Task<IActionResult> Create(Product model, IFormFile? ImageFile)
         {
+            // Bỏ qua các thuộc tính không nhập từ Form để tránh lỗi Validation
+            ModelState.Remove("Category");
+            ModelState.Remove("Inventories");
+            ModelState.Remove("OrderDetails");
+            ModelState.Remove("ImageUrl"); // Vì ImageUrl sẽ được gán sau khi lưu file
+
             if (ModelState.IsValid)
             {
                 // Kiểm tra mã sản phẩm trùng
                 if (await _context.Products.AnyAsync(p => p.ProductCode == model.ProductCode))
                 {
                     ModelState.AddModelError("ProductCode", "Mã sản phẩm đã tồn tại!");
-                    ViewBag.Categories = await _context.ProductCategories.ToListAsync();
-                    return View(model);
                 }
+                else
+                {
+                    // Xử lý lưu ảnh
+                    if (ImageFile != null)
+                    {
+                        model.ImageUrl = await SaveImage(ImageFile);
+                    }
+                    else
+                    {
+                        // Bạn có thể gán ảnh mặc định nếu không chọn ảnh
+                        model.ImageUrl = "/images/no-image.png";
+                    }
 
-                model.CreatedAt = DateTime.Now;
-                model.UpdatedAt = DateTime.Now;
-                model.IsActive = true;
+                    model.CreatedAt = DateTime.Now;
+                    model.UpdatedAt = DateTime.Now;
+                    model.IsActive = true;
 
-                _context.Products.Add(model);
-                await _context.SaveChangesAsync();
+                    _context.Products.Add(model);
+                    await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = "Tạo sản phẩm thành công!";
-                return RedirectToAction(nameof(Index));
+                    TempData["SuccessMessage"] = "Thêm sản phẩm thành công!";
+                    return RedirectToAction(nameof(Index));
+                }
             }
 
-            ViewBag.Categories = await _context.ProductCategories.ToListAsync();
+            // Nếu dữ liệu không hợp lệ, nạp lại danh mục và trả về View
+            await LoadCategoriesToViewBag();
             return View(model);
         }
-
-        [HttpGet]
-        public async Task<IActionResult> Details(int id)
-        {
-            var product = await _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.Inventories)
-                    .ThenInclude(i => i.Facility)
-                .Include(p => p.OrderDetails)
-                    .ThenInclude(od => od.Order)
-                .FirstOrDefaultAsync(p => p.ProductId == id);
-
-            if (product == null)
-                return NotFound();
-
-            return View(product);
-        }
-
+        // 4. CHỈNH SỬA SẢN PHẨM
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
             var product = await _context.Products.FindAsync(id);
-            if (product == null)
-                return NotFound();
+            if (product == null) return NotFound();
 
-            ViewBag.Categories = await _context.ProductCategories.ToListAsync();
+            await LoadCategoriesToViewBag();
             return View(product);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Product model)
+        public async Task<IActionResult> Edit(int id, Product model, IFormFile? ImageFile)
         {
+            if (id != model.ProductId) return NotFound();
+
+            ModelState.Remove("Category");
+
             if (ModelState.IsValid)
             {
-                var product = await _context.Products.FindAsync(model.ProductId);
-                if (product != null)
+                try
                 {
-                    // Kiểm tra mã sản phẩm trùng (ngoại trừ chính nó)
-                    if (await _context.Products.AnyAsync(p => p.ProductCode == model.ProductCode && p.ProductId != model.ProductId))
+                    if (await _context.Products.AnyAsync(p => p.ProductCode == model.ProductCode && p.ProductId != id))
                     {
                         ModelState.AddModelError("ProductCode", "Mã sản phẩm đã tồn tại!");
-                        ViewBag.Categories = await _context.ProductCategories.ToListAsync();
+                        await LoadCategoriesToViewBag();
                         return View(model);
                     }
 
-                    product.CategoryId = model.CategoryId;
-                    product.ProductCode = model.ProductCode;
-                    product.ProductName = model.ProductName;
-                    product.Description = model.Description;
-                    product.Price = model.Price;
-                    product.Unit = model.Unit;
-                    product.ImageUrl = model.ImageUrl;
-                    product.Status = model.Status;
-                    product.IsActive = model.IsActive;
-                    product.UpdatedAt = DateTime.Now;
+                    if (ImageFile != null)
+                        model.ImageUrl = await SaveImage(ImageFile);
 
+                    model.UpdatedAt = DateTime.Now;
+                    _context.Update(model);
                     await _context.SaveChangesAsync();
 
                     TempData["SuccessMessage"] = "Cập nhật sản phẩm thành công!";
                     return RedirectToAction(nameof(Index));
                 }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!ProductExists(model.ProductId)) return NotFound();
+                    throw;
+                }
             }
-
-            ViewBag.Categories = await _context.ProductCategories.ToListAsync();
+            await LoadCategoriesToViewBag();
             return View(model);
         }
 
+        // 5. XÓA SẢN PHẨM
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
-            if (id <= 0)
-                return Json(new { success = false, message = "ID không hợp lệ!" });
-
             var product = await _context.Products
                 .Include(p => p.OrderDetails)
-                .Include(p => p.Inventories)
                 .FirstOrDefaultAsync(p => p.ProductId == id);
 
-            if (product == null)
-                return Json(new { success = false, message = "Không tìm thấy sản phẩm!" });
-
-            if (product.OrderDetails.Any())
-                return Json(new { success = false, message = "Không thể xóa sản phẩm đã có trong đơn hàng!" });
+            if (product == null) return Json(new { success = false, message = "Không tìm thấy!" });
+            if (product.OrderDetails != null && product.OrderDetails.Any())
+                return Json(new { success = false, message = "Sản phẩm đã có đơn hàng, không thể xóa!" });
 
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "Xóa sản phẩm thành công!" });
+            return Json(new { success = true, message = "Xóa thành công!" });
         }
 
-        [HttpPost]
-        public async Task<IActionResult> ToggleStatus(int productId, bool isActive)
+        private async Task LoadCategoriesToViewBag()
         {
-            if (productId <= 0)
-                return Json(new { success = false, message = "ID không hợp lệ!" });
-
-            var product = await _context.Products.FindAsync(productId);
-            if (product == null)
-                return Json(new { success = false, message = "Không tìm thấy sản phẩm!" });
-
-            product.IsActive = isActive;
-            product.UpdatedAt = DateTime.Now;
-            await _context.SaveChangesAsync();
-
-            return Json(new
-            {
-                success = true,
-                message = isActive ? "Kích hoạt sản phẩm thành công!" : "Vô hiệu hóa sản phẩm thành công!"
-            });
+            ViewBag.Categories = await _context.ProductCategories.ToListAsync();
         }
+
+        private async Task<string> SaveImage(IFormFile file)
+        {
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "products");
+
+            if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+
+            var filePath = Path.Combine(folderPath, fileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+            return "/images/products/" + fileName;
+        }
+
+        private bool ProductExists(int id) => _context.Products.Any(e => e.ProductId == id);
     }
 }

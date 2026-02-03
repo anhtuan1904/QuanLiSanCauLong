@@ -1,5 +1,256 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model QuanLiSanCauLong.ViewModels.FacilityDetailsViewModel
 @{
+    ViewData["Title"] = "Đặt Sân Cầu Lông";
+    Layout = "_Layout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/booking.css" asp-append-version="true" />
+}
+
+<div class="container">
+    <div class="booking-wrapper">
+        <div class="court-details-section">
+            <div class="court-gallery">
+                <div class="main-image">
+                    @* Sử dụng ImageUrl đầu tiên trong danh sách hoặc ảnh mặc định *@
+                    <img src="@(Model.ImageUrls.Any() ? Model.ImageUrls.First() : "/images/default-court.jpg")" alt="@Model.FacilityName" id="mainImage">
+                </div>
+                <div class="thumbnail-grid">
+                    @foreach (var imgUrl in Model.ImageUrls)
+                    {
+                        <img src="@imgUrl"
+                             alt="Thumbnail"
+                             class="thumbnail @(imgUrl == Model.ImageUrls.First() ? "active" : "")"
+                             onclick="changeImage(this)">
+                    }
+                </div>
+            </div>
+
+            <div class="court-info">
+                <h1 class="court-name">@Model.FacilityName</h1>
+                <div class="court-location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>@Model.Address, @Model.District, @Model.City</span>
+                </div>
+                <div class="court-hours">
+                    <i class="far fa-clock"></i>
+                    <span>@Model.OpenTime?.ToString(@"hh\:mm") - @Model.CloseTime?.ToString(@"hh\:mm")</span>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="scrollToBooking()">
+                        <i class="far fa-calendar-check"></i>
+                        Đặt sân ngay
+                    </button>
+                    <button class="btn btn-outline" id="favoriteBtn">
+                        <i class="far fa-heart"></i>
+                        Thêm vào yêu thích
+                    </button>
+                    <button class="btn btn-outline">
+                        <i class="fas fa-directions"></i>
+                        Toàn cảnh của khách
+                    </button>
+                    @* Sử dụng Latitude/Longitude để tạo link Google Maps nếu có *@
+                    <a href="https://www.google.com/maps/search/?api=1&query=@Model.Latitude,@Model.Longitude" target="_blank" class="btn btn-link">Chỉ đường</a>
+                </div>
+
+                <div class="pricing-info">
+                    <h3 class="section-title">THÔNG TIN CHI TIẾT</h3>
+                    <div class="price-list">
+                        <div class="price-item">
+                            <span class="price-label">Giá thấp nhất</span>
+                            <span class="price-value">@Model.MinPrice.ToString("N0")đ/giờ</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">Giá cao nhất</span>
+                            <span class="price-value">@Model.MaxPrice.ToString("N0")đ/giờ</span>
+                        </div>
+                    </div>
+
+                    <div class="amenities">
+                        @foreach (var amenity in Model.Amenities.Where(a => a.IsAvailable))
+                        {
+                            <div class="amenity-item">
+                                <i class="@(amenity.Icon ?? "fas fa-check-circle")"></i>
+                                <span>@amenity.AmenityName</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="additional-info">
+                    <p>@Model.Description</p>
+                    <a href="@Model.Website" target="_blank" class="info-link">Website chính thức</a>
+                    <a asp-controller="Home" asp-action="Policy" class="info-link">Chính sách</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="reviews-booking-section">
+            <div class="reviews-card">
+                <h3 class="section-title">LỊCH TRỐNG & NGƯỜI DÙNG</h3>
+
+                <div class="rating-overview">
+                    <div class="rating-score">
+                        <span class="score">@(Model.AverageRating?.ToString("0.0") ?? "0.0")</span>
+                        <span class="max-score">/5</span>
+                    </div>
+                    <div class="rating-details">
+                        <div class="stars">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                @if (i <= Math.Floor(Model.AverageRating ?? 0))
+                                {
+                                    <i class="fas fa-star"></i>
+                                }
+                                else if (i - 0.5 <= (Model.AverageRating ?? 0))
+                                {
+                                    <i class="fas fa-star-half-alt"></i>
+                                }
+                                else
+                                {
+                                    <i class="far fa-star"></i>
+                                }
+                            }
+                        </div>
+                        <span class="review-count">(@Model.TotalReviews đánh giá)</span>
+                    </div>
+                </div>
+
+                <div class="rating-bars">
+                    @* Sửa thành RatingDistribution để khớp với ViewModel mới *@
+                    @foreach (var rating in Model.RatingDistribution.OrderByDescending(r => r.StarLevel))
+                    {
+                        <div class="rating-bar-item">
+                            <span class="star-label">@rating.StarLevel <i class="fas fa-star"></i></span>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: @rating.Percentage%"></div>
+                            </div>
+                            <span class="bar-percentage">@((int)rating.Percentage)%</span>
+                        </div>
+                    }
+                </div>
+
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <div class="user-reviews">
+                        <h4>Đánh giá sân</h4>
+                        <form id="reviewForm" asp-controller="Booking" asp-action="SubmitReview" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="FacilityId" value="@Model.FacilityId" />
+
+                            <div class="rating-input">
+                                <label>Số sao:</label>
+                                <div class="star-rating">
+                                    @for (int i = 5; i >= 1; i--)
+                                    {
+                                        <input type="radio" id="star@(i)" name="Rating" value="@i" required />
+                                        <label for="star@(i)"><i class="fas fa-star"></i></label>
+                                    }
+                                </div>
+                            </div>
+
+                            <textarea name="Comment" class="review-input" placeholder="Để lại lời đánh giá..." required></textarea>
+                            <button type="submit" class="btn btn-submit">Gửi đánh giá</button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <div class="user-reviews">
+                        <p class="login-prompt">
+                            <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path">
+                                Đăng nhập
+                            </a> để đánh giá sân
+                        </p>
+                    </div>
+                }
+
+                <a asp-controller="Booking" asp-action="AllReviews" asp-route-facilityId="@Model.FacilityId" class="btn btn-view-all">
+                    Xem tất cả đánh giá
+                </a>
+            </div>
+
+            <div class="social-links">
+                <a href="#" target="_blank"><i class="fab fa-facebook"></i></a>
+                <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="booking-container" id="bookingSection">
+        <div class="booking-tabs-container">
+            <div class="booking-tabs">
+                <button class="tab-btn active" data-tab="book">Đặt sân ngay</button>
+                <button class="tab-btn" data-tab="mybookings">Lịch đặt của tôi</button>
+            </div>
+        </div>
+
+        <div class="booking-grid">
+            <aside class="date-sidebar">
+                <div class="card-simple">
+                    <div class="card-header">
+                        <i class="far fa-calendar-alt"></i>
+                        <h3>Chọn ngày đặt</h3>
+                    </div>
+                    <p class="text-secondary">Vui lòng chọn ngày bạn muốn đến sân</p>
+
+                    <div class="calendar-mini-wrapper">
+                        <div id="inline-datepicker"></div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="courts-main">
+                <div class="card-simple">
+                    <div class="card-header-flex">
+                        <h3>Sân đang trống</h3>
+                        <span class="date-badge">Ngày: <span id="displayDate">@Model.SelectedDate.ToString("dd/MM/yyyy")</span></span>
+                    </div>
+
+                    <div class="courts-list-grid">
+                        @foreach (var court in Model.Courts)
+                        {
+                            <div class="court-modern-card">
+                                <div class="court-header">
+                                    <h4>@court.CourtNumber</h4>
+                                    <span class="badge-status @(court.Status.ToLower())">
+                                        @(court.Status == "Available" ? "Còn trống" : "Đã đặt")
+                                    </span>
+                                </div>
+
+                                <div class="court-body">
+                                    <div class="court-location-info">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span>@Model.FacilityName - @court.Description</span>
+                                    </div>
+                                    <div class="court-type-info">
+                                        <strong>Loại sân:</strong> @court.CourtType
+                                    </div>
+                                </div>
+
+                                @if (court.Status == "Available")
+                                {
+                                    <div class="court-footer">
+                                        <button class="btn-select-modern" onclick="openBookingModal(@court.CourtId, '@court.CourtNumber')">
+                                            Chọn sân này
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/booking.js" asp-append-version="true"></script>
+    <script>
+        var selectedDate = new Date('@Model.SelectedDate.ToString("yyyy-MM-dd")');
+        var facilityId = @Model.FacilityId;
+    </script>
 }

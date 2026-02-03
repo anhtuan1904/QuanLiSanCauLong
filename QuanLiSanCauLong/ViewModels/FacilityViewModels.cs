@@ -46,6 +46,9 @@ namespace QuanLiSanCauLong.ViewModels
     /// <summary>
     /// ViewModel cho chi tiết cơ sở
     /// </summary>
+    /// <summary>
+    /// ViewModel cho chi tiết cơ sở
+    /// </summary>
     public class FacilityDetailsViewModel
     {
         public int FacilityId { get; set; }
@@ -57,9 +60,14 @@ namespace QuanLiSanCauLong.ViewModels
         public string Phone { get; set; }
         public string Email { get; set; }
         public string Website { get; set; }
-        public List<string> ImageUrl { get; set; }
+        public List<string> ImageUrls { get; set; } = new List<string>();
         public TimeSpan? OpenTime { get; set; }
         public TimeSpan? CloseTime { get; set; }
+
+        // --- CẬP NHẬT THÊM ---
+        public DateTime SelectedDate { get; set; } = DateTime.Now; // Để chọn ngày đặt sân
+        public List<RatingDistributionItem> RatingDistribution { get; set; } = new List<RatingDistributionItem>(); // Cho biểu đồ sao
+        // ---------------------
 
         // Thông tin sân
         public List<FacilityCourtViewModel> Courts { get; set; }
@@ -82,6 +90,15 @@ namespace QuanLiSanCauLong.ViewModels
         public decimal? Longitude { get; set; }
     }
 
+    /// <summary>
+    /// Class hỗ trợ hiển thị biểu đồ phân bổ đánh giá (5 sao, 4 sao...)
+    /// </summary>
+    public class RatingDistributionItem
+    {
+        public int StarLevel { get; set; } // 5, 4, 3, 2, 1
+        public int Count { get; set; }     // Số lượng đánh giá cho mức sao này
+        public double Percentage { get; set; } // Tỷ lệ phần trăm để vẽ thanh bar
+    }
     /// <summary>
     /// ViewModel cho sân trong cơ sở
     /// </summary>

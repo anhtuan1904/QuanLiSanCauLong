@@ -17,12 +17,20 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(int? facilityId)
+        // Thêm tham số lọc vào Index
+        [HttpGet]
+        public async Task<IActionResult> Index(int? facilityId, string courtType, string status)
         {
             var query = _context.Courts.Include(c => c.Facility).AsQueryable();
 
             if (facilityId.HasValue)
                 query = query.Where(c => c.FacilityId == facilityId.Value);
+
+            if (!string.IsNullOrEmpty(courtType))
+                query = query.Where(c => c.CourtType == courtType);
+
+            if (!string.IsNullOrEmpty(status))
+                query = query.Where(c => c.Status == status);
 
             var courts = await query
                 .OrderBy(c => c.Facility.FacilityName)
@@ -30,6 +38,12 @@ namespace QuanLiSanCauLong.Controllers
                 .ToListAsync();
 
             ViewBag.Facilities = await _context.Facilities.ToListAsync();
+
+            // Lưu lại giá trị lọc để hiển thị trên UI
+            ViewBag.SelectedFacility = facilityId;
+            ViewBag.SelectedType = courtType;
+            ViewBag.SelectedStatus = status;
+
             return View(courts);
         }
 
@@ -42,24 +56,67 @@ namespace QuanLiSanCauLong.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Court model)
+        public async Task<IActionResult> Create(Court model, IFormFile? ImageFile) // Thêm ImageFile
         {
+            // Bước 1: Xóa các lỗi xác thực tự động của các bảng liên quan
+            ModelState.Remove("Facility");
+            ModelState.Remove("PriceSlots");
+            ModelState.Remove("Bookings");
+
             if (ModelState.IsValid)
             {
-                model.CreatedAt = DateTime.Now;
-                model.Status = "Available";
+                try
+                {
+                    // Bước 2: Kiểm tra trùng tên sân trong cùng 1 chi nhánh
+                    var isExist = await _context.Courts.AnyAsync(c =>
+                        c.FacilityId == model.FacilityId && c.CourtNumber == model.CourtNumber);
 
-                _context.Courts.Add(model);
-                await _context.SaveChangesAsync();
+                    if (isExist)
+                    {
+                        ModelState.AddModelError("CourtNumber", "Số sân này đã tồn tại ở cơ sở này rồi!");
+                    }
+                    else
+                    {
+                        // --- PHẦN CẬP NHẬT MỚI: XỬ LÝ UPLOAD ẢNH ---
+                        if (ImageFile != null && ImageFile.Length > 0)
+                        {
+                            // Tạo thư mục nếu chưa có
+                            string wwwRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                            string folderPath = Path.Combine(wwwRootPath, "images", "courts");
+                            if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
 
-                TempData["SuccessMessage"] = "Tạo sân thành công!";
-                return RedirectToAction(nameof(Index), new { facilityId = model.FacilityId });
+                            // Tạo tên file duy nhất
+                            string fileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
+                            string fullPath = Path.Combine(folderPath, fileName);
+
+                            // Lưu file vào thư mục wwwroot/images/courts
+                            using (var fileStream = new FileStream(fullPath, FileMode.Create))
+                            {
+                                await ImageFile.CopyToAsync(fileStream);
+                            }
+
+                            // Lưu đường dẫn vào Model để lưu vào Database
+                            model.ImagePath = "/images/courts/" + fileName;
+                        }
+                        // ------------------------------------------
+
+                        model.CreatedAt = DateTime.Now;
+                        _context.Courts.Add(model);
+                        await _context.SaveChangesAsync();
+
+                        TempData["SuccessMessage"] = "Thêm sân mới thành công!";
+                        return RedirectToAction(nameof(Index), new { facilityId = model.FacilityId });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Lỗi hệ thống: " + ex.Message);
+                }
             }
 
             ViewBag.Facilities = await _context.Facilities.Where(f => f.IsActive).ToListAsync();
             return View(model);
         }
-
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
@@ -91,27 +148,41 @@ namespace QuanLiSanCauLong.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Court model)
         {
+            ModelState.Remove("Facility");
+            ModelState.Remove("PriceSlots");
+            ModelState.Remove("Bookings");
+
             if (ModelState.IsValid)
             {
                 var court = await _context.Courts.FindAsync(model.CourtId);
                 if (court != null)
                 {
-                    court.FacilityId = model.FacilityId;
-                    court.CourtNumber = model.CourtNumber;
-                    court.CourtType = model.CourtType;
-                    court.Status = model.Status;
+                    // Kiểm tra trùng tên (trừ chính nó)
+                    var isExist = await _context.Courts.AnyAsync(c =>
+                        c.FacilityId == model.FacilityId &&
+                        c.CourtNumber == model.CourtNumber &&
+                        c.CourtId != model.CourtId);
 
-                    await _context.SaveChangesAsync();
+                    if (isExist)
+                    {
+                        ModelState.AddModelError("CourtNumber", "Số sân này đã tồn tại ở cơ sở này!");
+                    }
+                    else
+                    {
+                        court.FacilityId = model.FacilityId;
+                        court.CourtNumber = model.CourtNumber;
+                        court.CourtType = model.CourtType;
+                        court.Status = model.Status;
 
-                    TempData["SuccessMessage"] = "Cập nhật sân thành công!";
-                    return RedirectToAction(nameof(Index), new { facilityId = court.FacilityId });
+                        await _context.SaveChangesAsync();
+                        TempData["SuccessMessage"] = "Cập nhật sân thành công!";
+                        return RedirectToAction(nameof(Index));
+                    }
                 }
             }
-
             ViewBag.Facilities = await _context.Facilities.Where(f => f.IsActive).ToListAsync();
             return View(model);
         }
-
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {

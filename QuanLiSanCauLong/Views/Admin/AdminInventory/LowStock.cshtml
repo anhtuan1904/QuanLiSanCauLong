@@ -1,5 +1,61 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<QuanLiSanCauLong.Models.Inventory>
+
 @{
+    ViewData["Title"] = "Cảnh báo hết hàng";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
+
+<div class="card shadow border-0">
+    <div class="card-header bg-danger text-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="m-0 fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Sản phẩm sắp hết hàng</h5>
+        <span class="badge bg-light text-danger fs-6">@Model.Count() sản phẩm</span>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Cơ sở</th>
+                        <th>Sản phẩm</th>
+                        <th class="text-center">Tồn hiện tại</th>
+                        <th class="text-center">Mức tối thiểu</th>
+                        <th>Tình trạng</th>
+                        <th class="text-end">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><span class="fw-bold">@item.Facility.FacilityName</span></td>
+                            <td>
+                                <strong>@item.Product.ProductName</strong><br />
+                                <small class="text-muted">@item.Product.ProductCode</small>
+                            </td>
+                            <td class="text-center">
+                                <span class="text-danger fw-bold fs-5">@item.Quantity</span>
+                                <small class="text-muted">@item.Product.Unit</small>
+                            </td>
+                            <td class="text-center text-muted">@item.MinQuantity</td>
+                            <td>
+                                @if (item.Quantity == 0)
+                                {
+                                    <span class="badge bg-dark">Hết sạch hàng</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Sắp hết</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="StockIn" asp-route-facilityId="@item.FacilityId" class="btn btn-sm btn-success">
+                                    <i class="bi bi-plus-circle"></i> Nhập thêm
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

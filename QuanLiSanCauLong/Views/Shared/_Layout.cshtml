@@ -3,130 +3,233 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Hệ thống Đặt sân Cầu lông</title>
+    <title>@ViewData["Title"] - Badminton Booking System</title>
 
-    <!-- CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-
-    <!-- Toastr for notifications -->
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+    <style>
+        :root {
+            --primary-green: #10b981;
+            --dark-green: #064e3b;
+            --nav-font-size: 0.925rem; /* Giảm cỡ chữ menu xuống dưới 1rem */
+        }
+
+        body {
+            font-family: 'Lexend', sans-serif;
+            background-color: #fcfdfd;
+        }
+
+        /* Navbar Customization */
+        .navbar {
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid #f1f5f9;
+            padding-top: 0.6rem !important; /* Thu nhỏ chiều cao navbar */
+            padding-bottom: 0.6rem !important;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.25rem; /* Logo vừa phải */
+            letter-spacing: -0.5px;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            font-size: var(--nav-font-size);
+            color: #4b5563 !important; /* Màu xám đậm giúp dịu mắt hơn màu đen */
+            padding: 0.5rem 0.8rem !important; /* Thu hẹp khoảng cách giữa các mục */
+            transition: all 0.2s ease;
+        }
+
+            .nav-link:hover {
+                color: var(--primary-green) !important;
+            }
+
+        /* Tối ưu Dropdown */
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08);
+            border-radius: 10px;
+            font-size: var(--nav-font-size); /* Cỡ chữ dropdown đồng bộ */
+        }
+
+        .dropdown-item {
+            padding: 0.6rem 1.2rem;
+            color: #4b5563;
+        }
+
+        /* Nút Admin Panel nhỏ gọn lại */
+        .btn-admin-custom {
+            font-size: 0.85rem;
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            font-weight: 600;
+            text-transform: none;
+        }
+
+        /* Giảm cỡ chữ Footer để cân đối */
+        .footer-main h5 {
+            font-size: 1.1rem;
+        }
+
+        .footer-link, .footer-main p {
+            font-size: 0.875rem;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <nav class="navbar navbar-expand-lg sticky-top py-3">
             <div class="container">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-trophy"></i> Badminton Booking
+                <a class="navbar-brand fs-4" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-shuttlecock-fill"></i> BADMINTON<span class="text-dark">PRO</span>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
+
+                <div class="collapse navbar-collapse" id="mainNav">
+                    <ul class="navbar-nav mx-auto">
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">
-                                <i class="bi bi-house"></i> Trang chủ
-                            </a>
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Trang chủ</a>
                         </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Sân Cầu Lông</a>
+                            <ul class="dropdown-menu shadow-sm">
+                                <li><a class="dropdown-item" asp-controller="Facility" asp-action="Index">Tất cả cơ sở</a></li>
+                                <li><a class="dropdown-item" asp-controller="Booking" asp-action="Search">Tìm sân trống</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#">Sân VIP (Hạng thương gia)</a></li>
+                            </ul>
+                        </li>
+
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Facility" asp-action="Index">
-                                <i class="bi bi-building"></i> Cơ sở sân
-                            </a>
+                            <a class="nav-link" asp-controller="Product" asp-action="Index">Cửa hàng đồ thể thao</a>
                         </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Dịch vụ</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/Service/Training">Khóa học cầu lông</a></li>
+                                <li><a class="dropdown-item" href="/Service/Stringing">Dịch vụ căng vợt</a></li>
+                                <li><a class="dropdown-item" href="/Service/Tournament">Giải đấu nội bộ</a></li>
+                            </ul>
+                        </li>
+
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Booking" asp-action="Search">
-                                <i class="bi bi-calendar-check"></i> Đặt sân
-                            </a>
+                            <a class="nav-link" asp-controller="Blog" asp-action="Index">Tin tức & Kinh nghiệm</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Product" asp-action="Index">
-                                <i class="bi bi-shop"></i> Sản phẩm
-                            </a>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Về chúng tôi</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="Home" asp-action="About">Giới thiệu hệ thống</a></li>
+                                <li><a class="dropdown-item" asp-controller="Home" asp-action="Contact">Liên hệ hỗ trợ</a></li>
+                                <li><a class="dropdown-item" asp-controller="Home" asp-action="FAQ">Hỏi đáp (FAQ)</a></li>
+                                <li><a class="dropdown-item" asp-controller="Home" asp-action="Recruitment">Tuyển dụng</a></li>
+                            </ul>
                         </li>
+
+                        @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item ms-lg-2">
+                                <a class="btn btn-warning btn-sm fw-bold px-3 rounded-pill" asp-controller="AdminDashboard" asp-action="Index">
+                                    <i class="bi bi-layout-text-window-reverse"></i> Admin Panel
+                                </a>
+                            </li>
+                        }
                     </ul>
 
-                    <partial name="_LoginPartial" />
+                    <div class="d-flex align-items-center gap-2">
+                        <partial name="_LoginPartial" />
+                    </div>
                 </div>
             </div>
         </nav>
     </header>
 
-    <main role="main" class="pb-3">
-        @if (TempData["SuccessMessage"] != null)
+    <main role="main">
+        @if (TempData["SuccessMessage"] != null || TempData["ErrorMessage"] != null)
         {
-            <div class="alert alert-success alert-dismissible fade show mt-3 container" role="alert">
-                <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        }
-
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert alert-danger alert-dismissible fade show mt-3 container" role="alert">
-                <i class="bi bi-exclamation-circle"></i> @TempData["ErrorMessage"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <text>toastr.success('@TempData["SuccessMessage"]');</text>
+                    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <text>toastr.error('@TempData["ErrorMessage"]');</text>
+                    }
+                });
+            </script>
         }
 
         @RenderBody()
     </main>
 
-    <footer class="border-top footer text-muted bg-light mt-5">
-        <div class="container py-4">
-            <div class="row">
-                <div class="col-md-4">
-                    <h5><i class="bi bi-trophy"></i> Badminton Booking</h5>
-                    <p class="text-muted">Hệ thống đặt sân cầu lông trực tuyến hàng đầu Việt Nam</p>
-                    <div class="social-links">
-                        <a href="#" class="text-decoration-none me-3"><i class="bi bi-facebook fs-4"></i></a>
-                        <a href="#" class="text-decoration-none me-3"><i class="bi bi-instagram fs-4"></i></a>
-                        <a href="#" class="text-decoration-none me-3"><i class="bi bi-youtube fs-4"></i></a>
+    <footer class="footer-main">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h5 class="text-success fw-bold"><i class="bi bi-shuttlecock"></i> BADMINTON PRO</h5>
+                    <p class="small">Hệ thống quản lý và đặt sân cầu lông hiện đại nhất. Chúng tôi cung cấp trải nghiệm thể thao chuyên nghiệp cho mọi lứa tuổi.</p>
+                    <div class="d-flex gap-3 mt-4">
+                        <a href="#" class="text-white fs-5"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-white fs-5"><i class="bi bi-youtube"></i></a>
+                        <a href="#" class="text-white fs-5"><i class="bi bi-tiktok"></i></a>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <h6>Liên kết</h6>
-                    <ul class="list-unstyled">
-                        <li><a asp-controller="Home" asp-action="About" class="text-decoration-none">Giới thiệu</a></li>
-                        <li><a asp-controller="Home" asp-action="Contact" class="text-decoration-none">Liên hệ</a></li>
-                        <li><a asp-controller="Home" asp-action="FAQ" class="text-decoration-none">Câu hỏi thường gặp</a></li>
-                        <li><a asp-controller="Home" asp-action="Terms" class="text-decoration-none">Điều khoản</a></li>
-                        <li><a asp-controller="Home" asp-action="Privacy" class="text-decoration-none">Chính sách</a></li>
-                    </ul>
+                <div class="col-6 col-lg-2">
+                    <h5>Hệ thống</h5>
+                    <a class="footer-link" asp-controller="Facility" asp-action="Index">Cơ sở sân</a>
+                    <a class="footer-link" asp-controller="Booking" asp-action="Search">Đặt lịch ngay</a>
+                    <a class="footer-link" asp-controller="Product" asp-action="Index">Mua sắm</a>
+                    <a class="footer-link" href="#">Chính sách giá</a>
                 </div>
-                <div class="col-md-4">
-                    <h6>Liên hệ</h6>
-                    <ul class="list-unstyled">
-                        <li><i class="bi bi-telephone"></i> Hotline: 1900xxxx</li>
-                        <li><i class="bi bi-envelope"></i> support@badminton.com</li>
-                        <li><i class="bi bi-clock"></i> 8:00 - 22:00 (Tất cả các ngày)</li>
-                    </ul>
+                <div class="col-6 col-lg-2">
+                    <h5>Hỗ trợ</h5>
+                    <a class="footer-link" asp-controller="Home" asp-action="FAQ">Hỏi đáp</a>
+                    <a class="footer-link" asp-controller="Home" asp-action="Contact">Liên hệ</a>
+                    <a class="footer-link" asp-controller="Home" asp-action="Privacy">Bảo mật</a>
+                    <a class="footer-link" asp-controller="Home" asp-action="Terms">Điều khoản</a>
+                </div>
+                <div class="col-lg-4">
+                    <h5>Đăng ký nhận tin</h5>
+                    <p class="small">Nhận thông báo về khuyến mãi và giải đấu sớm nhất.</p>
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Email của bạn">
+                        <button class="btn btn-success">Gửi</button>
+                    </div>
+                    <div class="mt-3">
+                        <p class="mb-1 small"><i class="bi bi-telephone text-success me-2"></i> Hotline: 1900 8888</p>
+                        <p class="small"><i class="bi bi-envelope text-success me-2"></i> support@badmintonpro.vn</p>
+                    </div>
                 </div>
             </div>
-            <hr />
-            <div class="text-center">
-                <small>&copy; 2025 - Badminton Booking System. All rights reserved.</small>
+            <hr class="my-5 border-secondary">
+            <div class="text-center small">
+                <p>&copy; 2026 - Badminton Pro System. Developed for a Better Sports Community.</p>
             </div>
         </div>
     </footer>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script>
-        // Configure Toastr
-        toastr.options = {
-            "closeButton": true,
-            "progressBar": true,
-            "positionClass": "toast-top-right",
-            "timeOut": "3000"
-        };
+        toastr.options = { "closeButton": true, "progressBar": true, "positionClass": "toast-top-right", "timeOut": "3000" };
     </script>
-
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

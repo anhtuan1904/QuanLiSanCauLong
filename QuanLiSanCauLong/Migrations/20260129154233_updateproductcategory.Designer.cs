@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QuanLiSanCauLong.Data;
 
@@ -11,9 +12,11 @@ using QuanLiSanCauLong.Data;
 namespace QuanLiSanCauLong.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260129154233_updateproductcategory")]
+    partial class updateproductcategory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -185,8 +188,8 @@ namespace QuanLiSanCauLong.Migrations
 
                     b.Property<string>("CourtNumber")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<string>("CourtType")
                         .IsRequired()
@@ -196,32 +199,15 @@ namespace QuanLiSanCauLong.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<int>("FacilityId")
                         .HasColumnType("int");
 
-                    b.Property<string>("FloorNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("HasAC")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("HasLighting")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal>("HourlyRate")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("ImagePath")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SurfaceType")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("CourtId");
@@ -282,12 +268,6 @@ namespace QuanLiSanCauLong.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<decimal?>("Latitude")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("Longitude")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<TimeSpan?>("OpenTime")
                         .HasColumnType("time");
 
@@ -302,11 +282,6 @@ namespace QuanLiSanCauLong.Migrations
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Website")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("FacilityId");
 

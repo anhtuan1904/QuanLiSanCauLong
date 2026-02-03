@@ -8,6 +8,8 @@ using QuanLiSanCauLong.ViewModels;
 namespace QuanLiSanCauLong.Controllers
 {
     [Authorize(Roles = "Admin")]
+    // Thêm Route để khớp với đường dẫn /Admin/PriceSlot trong View
+    [Route("Admin/PriceSlot/[action]/{id?}")]
     public class AdminPriceSlotController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -30,6 +32,7 @@ namespace QuanLiSanCauLong.Controllers
 
             var priceSlots = await query
                 .OrderBy(p => p.Court.Facility.FacilityName)
+                .ThenBy(p => p.Court.CourtNumber) // Thêm sắp xếp theo sân cho đẹp
                 .ThenBy(p => p.StartTime)
                 .ToListAsync();
 
@@ -40,8 +43,13 @@ namespace QuanLiSanCauLong.Controllers
         [HttpGet]
         public async Task<IActionResult> Create()
         {
-            ViewBag.Facilities = await _context.Facilities.Where(f => f.IsActive).ToListAsync();
-            ViewBag.Courts = new List<Court>();
+            var courts = await _context.Courts
+                .Include(c => c.Facility)
+                .ToListAsync();
+
+            ViewBag.CourtsList = courts;
+            ViewBag.Facilities = await _context.Facilities.ToListAsync();
+
             return View();
         }
 
@@ -49,9 +57,12 @@ namespace QuanLiSanCauLong.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(PriceSlot model)
         {
+            // Loại bỏ các trường liên quan đến navigation để tránh lỗi IsValid giả
+            ModelState.Remove("Court");
+            ModelState.Remove("FacilityId");
+
             if (ModelState.IsValid)
             {
-                // Kiểm tra trùng lặp khung giờ
                 var existingSlot = await _context.PriceSlots
                     .AnyAsync(p => p.CourtId == model.CourtId &&
                                    p.StartTime == model.StartTime &&
@@ -60,11 +71,9 @@ namespace QuanLiSanCauLong.Controllers
                 if (existingSlot)
                 {
                     ModelState.AddModelError("", "Khung giờ này đã tồn tại cho sân này!");
-                    var court = await _context.Courts.FindAsync(model.CourtId);
-                    ViewBag.Facilities = await _context.Facilities.Where(f => f.IsActive).ToListAsync();
-                    ViewBag.Courts = await _context.Courts
-                        .Where(c => c.FacilityId == (court != null ? court.FacilityId : 0))
-                        .ToListAsync();
+                    // Nạp lại dữ liệu cần thiết cho View
+                    ViewBag.Facilities = await _context.Facilities.ToListAsync();
+                    ViewBag.CourtsList = await _context.Courts.ToListAsync(); // Thêm dòng này
                     return View(model);
                 }
 
@@ -76,8 +85,9 @@ namespace QuanLiSanCauLong.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewBag.Facilities = await _context.Facilities.Where(f => f.IsActive).ToListAsync();
-            ViewBag.Courts = new List<Court>();
+            // NẾU LỖI: Cần nạp lại cả hai danh sách để giao diện hiển thị đúng
+            ViewBag.Facilities = await _context.Facilities.ToListAsync();
+            ViewBag.CourtsList = await _context.Courts.ToListAsync(); // Đảm bảo nạp lại danh sách sân
             return View(model);
         }
 
@@ -86,12 +96,16 @@ namespace QuanLiSanCauLong.Controllers
         {
             var priceSlot = await _context.PriceSlots
                 .Include(p => p.Court)
+                    .ThenInclude(c => c.Facility)
                 .FirstOrDefaultAsync(p => p.PriceSlotId == id);
 
             if (priceSlot == null)
                 return NotFound();
 
+            // Nạp danh sách cơ sở đang hoạt động
             ViewBag.Facilities = await _context.Facilities.Where(f => f.IsActive).ToListAsync();
+
+            // Nạp danh sách sân thuộc cơ sở của PriceSlot này
             ViewBag.Courts = await _context.Courts
                 .Where(c => c.FacilityId == priceSlot.Court.FacilityId)
                 .ToListAsync();
@@ -103,34 +117,50 @@ namespace QuanLiSanCauLong.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(PriceSlot model)
         {
+            // Loại bỏ validation object Court để tránh lỗi ModelState false vô lý
+            ModelState.Remove("Court");
+
             if (ModelState.IsValid)
             {
                 var priceSlot = await _context.PriceSlots.FindAsync(model.PriceSlotId);
                 if (priceSlot != null)
                 {
-                    priceSlot.CourtId = model.CourtId;
-                    priceSlot.StartTime = model.StartTime;
-                    priceSlot.EndTime = model.EndTime;
-                    priceSlot.Price = model.Price;
-                    priceSlot.IsPeakHour = model.IsPeakHour;
-                    priceSlot.IsActive = model.IsActive;
+                    // Kiểm tra trùng lặp (trừ chính nó)
+                    var isDuplicate = await _context.PriceSlots.AnyAsync(p =>
+                        p.PriceSlotId != model.PriceSlotId &&
+                        p.CourtId == model.CourtId &&
+                        p.StartTime == model.StartTime &&
+                        p.EndTime == model.EndTime);
 
-                    await _context.SaveChangesAsync();
+                    if (isDuplicate)
+                    {
+                        ModelState.AddModelError("", "Khung giờ này đã tồn tại cho sân này!");
+                    }
+                    else
+                    {
+                        priceSlot.CourtId = model.CourtId;
+                        priceSlot.StartTime = model.StartTime;
+                        priceSlot.EndTime = model.EndTime;
+                        priceSlot.Price = model.Price;
+                        priceSlot.IsPeakHour = model.IsPeakHour;
+                        priceSlot.IsActive = model.IsActive;
 
-                    TempData["SuccessMessage"] = "Cập nhật khung giờ thành công!";
-                    return RedirectToAction(nameof(Index));
+                        await _context.SaveChangesAsync();
+                        TempData["SuccessMessage"] = "Cập nhật khung giờ thành công!";
+                        return RedirectToAction(nameof(Index));
+                    }
                 }
             }
 
-            var court = await _context.Courts.FindAsync(model.CourtId);
-            ViewBag.Facilities = await _context.Facilities.Where(f => f.IsActive).ToListAsync();
+            // Nếu có lỗi, nạp lại dữ liệu để người dùng sửa tiếp
+            var currentCourt = await _context.Courts.Include(c => c.Facility).FirstOrDefaultAsync(c => c.CourtId == model.CourtId);
+            ViewBag.Facilities = await _context.Facilities.ToListAsync();
             ViewBag.Courts = await _context.Courts
-                .Where(c => c.FacilityId == (court != null ? court.FacilityId : 0))
+                .Where(c => c.FacilityId == (currentCourt != null ? currentCourt.FacilityId : 0))
                 .ToListAsync();
 
             return View(model);
         }
-
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
@@ -155,31 +185,31 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> BulkCreate([FromBody] BulkPriceSlotRequest request)
         {
-            if (request.CourtIds == null || !request.CourtIds.Any() ||
-                request.TimeSlots == null || !request.TimeSlots.Any())
+            if (request?.CourtIds == null || !request.CourtIds.Any() || request.TimeSlots == null || !request.TimeSlots.Any())
             {
-                return Json(new { success = false, message = "Dữ liệu không hợp lệ!" });
+                return Json(new { success = false, message = "Vui lòng chọn ít nhất một sân và một khung giờ!" });
             }
 
             try
             {
-                int created = 0;
+                int createdCount = 0;
+                int skippedCount = 0;
+
                 foreach (var courtId in request.CourtIds)
                 {
                     foreach (var slot in request.TimeSlots)
                     {
-                        // Kiểm tra trùng lặp
-                        var exists = await _context.PriceSlots
-                            .AnyAsync(p => p.CourtId == courtId &&
-                                           p.StartTime == slot.StartTime &&
-                                           p.EndTime == slot.EndTime);
+                        // Kiểm tra trùng lặp trước khi thêm
+                        bool exists = await _context.PriceSlots.AnyAsync(p =>
+                            p.CourtId == courtId &&
+                            p.StartTime == slot.StartTime &&
+                            p.EndTime == slot.EndTime);
 
                         if (!exists)
                         {
-                            var priceSlot = new PriceSlot
+                            _context.PriceSlots.Add(new PriceSlot
                             {
                                 CourtId = courtId,
                                 StartTime = slot.StartTime,
@@ -187,26 +217,44 @@ namespace QuanLiSanCauLong.Controllers
                                 Price = slot.Price,
                                 IsPeakHour = slot.IsPeakHour,
                                 IsActive = true
-                            };
-
-                            _context.PriceSlots.Add(priceSlot);
-                            created++;
+                            });
+                            createdCount++;
+                        }
+                        else
+                        {
+                            skippedCount++;
                         }
                     }
                 }
 
-                await _context.SaveChangesAsync();
+                if (createdCount > 0)
+                {
+                    await _context.SaveChangesAsync();
+                }
 
                 return Json(new
                 {
                     success = true,
-                    message = $"Đã tạo {created} khung giờ thành công!"
+                    message = $"Thành công: {createdCount} khung giờ. Bỏ qua: {skippedCount} (đã tồn tại)."
                 });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
+                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
             }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetCourtsByFacility(int facilityId)
+        {
+            var courts = await _context.Courts
+                .Where(c => c.FacilityId == facilityId)
+                .Select(c => new {
+                    courtId = c.CourtId,
+                    courtNumber = c.CourtNumber,
+                    courtType = c.CourtType
+                })
+                .ToListAsync();
+            return Json(courts);
         }
     }
 }

@@ -160,10 +160,11 @@ public static class DbInitializer
 
         if (!await context.ProductCategories.AnyAsync())
         {
+            // Sửa lại thành như này
             context.ProductCategories.AddRange(
-                new ProductCategory { CategoryName = "Đồ ăn", CategoryType = "Food", IsActive = true },
-                new ProductCategory { CategoryName = "Nước uống", CategoryType = "Beverage", IsActive = true },
-                new ProductCategory { CategoryName = "Dụng cụ", CategoryType = "Equipment", IsActive = true }
+                new ProductCategory { CategoryName = "Đồ ăn", CategoryType = "Food" },
+                new ProductCategory { CategoryName = "Nước uống", CategoryType = "Beverage" },
+                new ProductCategory { CategoryName = "Dụng cụ", CategoryType = "Equipment" }
             );
             await context.SaveChangesAsync();
         }

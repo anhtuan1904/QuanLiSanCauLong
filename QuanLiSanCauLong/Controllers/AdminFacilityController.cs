@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLiSanCauLong.Data;
 using QuanLiSanCauLong.Models;
+using QuanLiSanCauLong.ViewModels;
 
 namespace QuanLiSanCauLong.Controllers
 {
@@ -17,9 +18,9 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(string search, string city, string status)
+        public async Task<IActionResult> Index(string search, string city)
         {
-            var query = _context.Facilities.AsQueryable();
+            var query = _context.Facilities.Where(f => f.IsActive).AsQueryable();
 
             if (!string.IsNullOrEmpty(search))
                 query = query.Where(f => f.FacilityName.Contains(search) || f.Address.Contains(search));
@@ -27,11 +28,10 @@ namespace QuanLiSanCauLong.Controllers
             if (!string.IsNullOrEmpty(city))
                 query = query.Where(f => f.City == city);
 
-            if (!string.IsNullOrEmpty(status))
-                query = query.Where(f => f.Status == status);
+            var facilities = await query.OrderByDescending(f => f.CreatedAt).ToListAsync();
 
-            var facilities = await query.OrderBy(f => f.FacilityName).ToListAsync();
-            ViewBag.Search = search;
+            // Lấy danh sách thành phố để lọc (ViewBag)
+            ViewBag.Cities = await _context.Facilities.Select(f => f.City).Distinct().ToListAsync();
 
             return View(facilities);
         }
@@ -44,21 +44,61 @@ namespace QuanLiSanCauLong.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Facility model)
+        public async Task<IActionResult> Create(Facility model, IFormFile? ImageFile)
         {
+            // 1. Loại bỏ các trường không nhập từ form để tránh lỗi Validation ảo
+            ModelState.Remove("ImageUrl");
+            ModelState.Remove("Courts");
+            ModelState.Remove("PriceSlots");
+            ModelState.Remove("Inventories");
+
             if (ModelState.IsValid)
             {
-                model.CreatedAt = DateTime.Now;
-                model.UpdatedAt = DateTime.Now;
-                model.IsActive = true;
+                try
+                {
+                    if (ImageFile != null && ImageFile.Length > 0)
+                    {
+                        // Xử lý đường dẫn thư mục
+                        string wwwRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                        string folderPath = Path.Combine(wwwRootPath, "images", "facilities");
 
-                _context.Facilities.Add(model);
-                await _context.SaveChangesAsync();
+                        // Tạo thư mục nếu chưa tồn tại
+                        if (!Directory.Exists(folderPath))
+                        {
+                            Directory.CreateDirectory(folderPath);
+                        }
 
-                TempData["SuccessMessage"] = "Tạo cơ sở thành công!";
-                return RedirectToAction(nameof(Index));
+                        // Tạo tên file duy nhất
+                        string fileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
+                        string filePath = Path.Combine(folderPath, fileName);
+
+                        // Lưu file vào thư mục vật lý
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImageFile.CopyToAsync(stream);
+                        }
+
+                        // Lưu đường dẫn vào database
+                        model.ImageUrl = "/images/facilities/" + fileName;
+                    }
+
+                    model.CreatedAt = DateTime.Now;
+                    model.UpdatedAt = DateTime.Now;
+
+                    _context.Facilities.Add(model);
+                    await _context.SaveChangesAsync();
+
+                    TempData["SuccessMessage"] = "Thêm mới cơ sở thành công!";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Có lỗi xảy ra khi lưu dữ liệu: " + ex.Message);
+                }
             }
 
+            // Nếu code chạy đến đây nghĩa là có lỗi (Validation hoặc Exception)
+            // Trả về View cùng với model để người dùng không phải nhập lại các ô khác
             return View(model);
         }
 
@@ -74,50 +114,82 @@ namespace QuanLiSanCauLong.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Facility model)
+        public async Task<IActionResult> Edit(Facility model, IFormFile? ImageFile)
         {
+            ModelState.Remove("ImageUrl");
+            ModelState.Remove("Courts");
+            ModelState.Remove("PriceSlots");
+            ModelState.Remove("Inventories");
+
             if (ModelState.IsValid)
             {
-                var facility = await _context.Facilities.FindAsync(model.FacilityId);
-                if (facility != null)
+                try
                 {
-                    facility.FacilityName = model.FacilityName;
-                    facility.Address = model.Address;
-                    facility.District = model.District;
-                    facility.City = model.City;
-                    facility.Phone = model.Phone;
-                    facility.Email = model.Email;
-                    facility.Description = model.Description;
-                    facility.OpenTime = model.OpenTime;
-                    facility.CloseTime = model.CloseTime;
-                    facility.Status = model.Status;
-                    facility.ImageUrl = model.ImageUrl;
-                    facility.UpdatedAt = DateTime.Now;
+                    var facilityInDb = await _context.Facilities.AsNoTracking()
+                        .FirstOrDefaultAsync(f => f.FacilityId == model.FacilityId);
 
+                    if (facilityInDb == null) return NotFound();
+
+                    if (ImageFile != null && ImageFile.Length > 0)
+                    {
+                        // Xử lý ảnh mới
+                        string folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "facilities");
+                        if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+
+                        string fileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
+                        string filePath = Path.Combine(folderPath, fileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImageFile.CopyToAsync(stream);
+                        }
+
+                        model.ImageUrl = "/images/facilities/" + fileName;
+
+                        // (Tùy chọn) Xóa ảnh cũ trên server để tiết kiệm bộ nhớ
+                        if (!string.IsNullOrEmpty(facilityInDb.ImageUrl))
+                        {
+                            var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", facilityInDb.ImageUrl.TrimStart('/'));
+                            if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+                        }
+                    }
+                    else
+                    {
+                        // Nếu không chọn ảnh mới, giữ lại đường dẫn ảnh cũ
+                        model.ImageUrl = facilityInDb.ImageUrl;
+                    }
+
+                    model.UpdatedAt = DateTime.Now;
+                    _context.Update(model);
                     await _context.SaveChangesAsync();
 
-                    TempData["SuccessMessage"] = "Cập nhật cơ sở thành công!";
+                    TempData["SuccessMessage"] = "Cập nhật thành công!";
                     return RedirectToAction(nameof(Index));
                 }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Lỗi cập nhật: " + ex.Message);
+                }
             }
-
             return View(model);
         }
-
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            var facility = await _context.Facilities
-                .Include(f => f.Courts)
-                    .ThenInclude(c => c.PriceSlots)
-                .Include(f => f.Courts)
-                    .ThenInclude(c => c.Bookings)
-                .FirstOrDefaultAsync(f => f.FacilityId == id);
+            var facility = await _context.Facilities.FindAsync(id);
+            if (facility == null) return NotFound();
 
-            if (facility == null)
-                return NotFound();
+            var model = new FacilityDetailsViewModel
+            {
+                FacilityId = facility.FacilityId,
+                FacilityName = facility.FacilityName,
+                // ... các trường khác ...
 
-            return View(facility);
+                // CÁCH SỬA: Tạo một List mới chứa 1 phần tử ảnh từ DB
+                ImageUrls = new List<string> { facility.ImageUrl ?? "/images/default-facility.jpg" }
+            };
+
+            return View(model);
         }
 
         [HttpPost]
