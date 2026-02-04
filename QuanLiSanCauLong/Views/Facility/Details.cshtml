@@ -1,256 +1,186 @@
 ﻿@model QuanLiSanCauLong.ViewModels.FacilityDetailsViewModel
-@{
-    ViewData["Title"] = "Đặt Sân Cầu Lông";
-    Layout = "_Layout";
-}
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/booking.css" asp-append-version="true" />
-}
-
-<div class="container">
-    <div class="booking-wrapper">
-        <div class="court-details-section">
-            <div class="court-gallery">
-                <div class="main-image">
-                    @* Sử dụng ImageUrl đầu tiên trong danh sách hoặc ảnh mặc định *@
-                    <img src="@(Model.ImageUrls.Any() ? Model.ImageUrls.First() : "/images/default-court.jpg")" alt="@Model.FacilityName" id="mainImage">
-                </div>
-                <div class="thumbnail-grid">
-                    @foreach (var imgUrl in Model.ImageUrls)
+<div class="container py-4">
+    <div class="row mb-5">
+        <div class="col-lg-7">
+            <div id="courtCarousel" class="carousel slide rounded-4 overflow-hidden shadow" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    @for (int i = 0; i < Model.ImageUrls.Count; i++)
                     {
-                        <img src="@imgUrl"
-                             alt="Thumbnail"
-                             class="thumbnail @(imgUrl == Model.ImageUrls.First() ? "active" : "")"
-                             onclick="changeImage(this)">
+                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                            <img src="@Model.ImageUrls[i]" class="d-block w-100" style="height: 400px; object-fit: cover;">
+                        </div>
                     }
-                </div>
-            </div>
-
-            <div class="court-info">
-                <h1 class="court-name">@Model.FacilityName</h1>
-                <div class="court-location">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span>@Model.Address, @Model.District, @Model.City</span>
-                </div>
-                <div class="court-hours">
-                    <i class="far fa-clock"></i>
-                    <span>@Model.OpenTime?.ToString(@"hh\:mm") - @Model.CloseTime?.ToString(@"hh\:mm")</span>
-                </div>
-
-                <div class="action-buttons">
-                    <button class="btn btn-primary" onclick="scrollToBooking()">
-                        <i class="far fa-calendar-check"></i>
-                        Đặt sân ngay
-                    </button>
-                    <button class="btn btn-outline" id="favoriteBtn">
-                        <i class="far fa-heart"></i>
-                        Thêm vào yêu thích
-                    </button>
-                    <button class="btn btn-outline">
-                        <i class="fas fa-directions"></i>
-                        Toàn cảnh của khách
-                    </button>
-                    @* Sử dụng Latitude/Longitude để tạo link Google Maps nếu có *@
-                    <a href="https://www.google.com/maps/search/?api=1&query=@Model.Latitude,@Model.Longitude" target="_blank" class="btn btn-link">Chỉ đường</a>
-                </div>
-
-                <div class="pricing-info">
-                    <h3 class="section-title">THÔNG TIN CHI TIẾT</h3>
-                    <div class="price-list">
-                        <div class="price-item">
-                            <span class="price-label">Giá thấp nhất</span>
-                            <span class="price-value">@Model.MinPrice.ToString("N0")đ/giờ</span>
-                        </div>
-                        <div class="price-item">
-                            <span class="price-label">Giá cao nhất</span>
-                            <span class="price-value">@Model.MaxPrice.ToString("N0")đ/giờ</span>
-                        </div>
-                    </div>
-
-                    <div class="amenities">
-                        @foreach (var amenity in Model.Amenities.Where(a => a.IsAvailable))
-                        {
-                            <div class="amenity-item">
-                                <i class="@(amenity.Icon ?? "fas fa-check-circle")"></i>
-                                <span>@amenity.AmenityName</span>
-                            </div>
-                        }
-                    </div>
-                </div>
-
-                <div class="additional-info">
-                    <p>@Model.Description</p>
-                    <a href="@Model.Website" target="_blank" class="info-link">Website chính thức</a>
-                    <a asp-controller="Home" asp-action="Policy" class="info-link">Chính sách</a>
                 </div>
             </div>
         </div>
-
-        <div class="reviews-booking-section">
-            <div class="reviews-card">
-                <h3 class="section-title">LỊCH TRỐNG & NGƯỜI DÙNG</h3>
-
-                <div class="rating-overview">
-                    <div class="rating-score">
-                        <span class="score">@(Model.AverageRating?.ToString("0.0") ?? "0.0")</span>
-                        <span class="max-score">/5</span>
-                    </div>
-                    <div class="rating-details">
-                        <div class="stars">
-                            @for (int i = 1; i <= 5; i++)
-                            {
-                                @if (i <= Math.Floor(Model.AverageRating ?? 0))
-                                {
-                                    <i class="fas fa-star"></i>
-                                }
-                                else if (i - 0.5 <= (Model.AverageRating ?? 0))
-                                {
-                                    <i class="fas fa-star-half-alt"></i>
-                                }
-                                else
-                                {
-                                    <i class="far fa-star"></i>
-                                }
-                            }
-                        </div>
-                        <span class="review-count">(@Model.TotalReviews đánh giá)</span>
-                    </div>
+        <div class="col-lg-5">
+            <h1 class="fw-bold text-dark">@Model.FacilityName</h1>
+            <p class="text-muted"><i class="bi bi-geo-alt-fill text-danger"></i> @Model.Address</p>
+            <hr>
+            <div class="d-flex gap-3 mb-4">
+                <div class="p-3 bg-light rounded-3 text-center flex-fill">
+                    <span class="small text-muted d-block">Giá từ</span>
+                    <strong class="text-success fs-5">80.000đ</strong>
                 </div>
-
-                <div class="rating-bars">
-                    @* Sửa thành RatingDistribution để khớp với ViewModel mới *@
-                    @foreach (var rating in Model.RatingDistribution.OrderByDescending(r => r.StarLevel))
-                    {
-                        <div class="rating-bar-item">
-                            <span class="star-label">@rating.StarLevel <i class="fas fa-star"></i></span>
-                            <div class="bar-container">
-                                <div class="bar-fill" style="width: @rating.Percentage%"></div>
-                            </div>
-                            <span class="bar-percentage">@((int)rating.Percentage)%</span>
-                        </div>
-                    }
+                <div class="p-3 bg-light rounded-3 text-center flex-fill">
+                    <span class="small text-muted d-block">Trạng thái</span>
+                    <strong class="text-primary fs-5">Đang mở cửa</strong>
                 </div>
-
-                @if (User.Identity.IsAuthenticated)
-                {
-                    <div class="user-reviews">
-                        <h4>Đánh giá sân</h4>
-                        <form id="reviewForm" asp-controller="Booking" asp-action="SubmitReview" method="post">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="FacilityId" value="@Model.FacilityId" />
-
-                            <div class="rating-input">
-                                <label>Số sao:</label>
-                                <div class="star-rating">
-                                    @for (int i = 5; i >= 1; i--)
-                                    {
-                                        <input type="radio" id="star@(i)" name="Rating" value="@i" required />
-                                        <label for="star@(i)"><i class="fas fa-star"></i></label>
-                                    }
-                                </div>
-                            </div>
-
-                            <textarea name="Comment" class="review-input" placeholder="Để lại lời đánh giá..." required></textarea>
-                            <button type="submit" class="btn btn-submit">Gửi đánh giá</button>
-                        </form>
-                    </div>
-                }
-                else
-                {
-                    <div class="user-reviews">
-                        <p class="login-prompt">
-                            <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path">
-                                Đăng nhập
-                            </a> để đánh giá sân
-                        </p>
-                    </div>
-                }
-
-                <a asp-controller="Booking" asp-action="AllReviews" asp-route-facilityId="@Model.FacilityId" class="btn btn-view-all">
-                    Xem tất cả đánh giá
-                </a>
             </div>
-
-            <div class="social-links">
-                <a href="#" target="_blank"><i class="fab fa-facebook"></i></a>
-                <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
-            </div>
+            <p>@Model.Description</p>
         </div>
     </div>
 
-    <div class="booking-container" id="bookingSection">
-        <div class="booking-tabs-container">
-            <div class="booking-tabs">
-                <button class="tab-btn active" data-tab="book">Đặt sân ngay</button>
-                <button class="tab-btn" data-tab="mybookings">Lịch đặt của tôi</button>
-            </div>
-        </div>
+    <ul class="nav nav-pills mb-4 bg-white p-2 rounded-pill shadow-sm d-inline-flex" id="bookingTabs">
+        <li class="nav-item">
+            <button class="nav-link active rounded-pill px-4" data-bs-toggle="tab" data-bs-target="#tab-book">Đặt sân ngay</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link rounded-pill px-4" data-bs-toggle="tab" data-bs-target="#tab-history">Lịch đặt của tôi</button>
+        </li>
+    </ul>
 
-        <div class="booking-grid">
-            <aside class="date-sidebar">
-                <div class="card-simple">
-                    <div class="card-header">
-                        <i class="far fa-calendar-alt"></i>
-                        <h3>Chọn ngày đặt</h3>
-                    </div>
-                    <p class="text-secondary">Vui lòng chọn ngày bạn muốn đến sân</p>
-
-                    <div class="calendar-mini-wrapper">
-                        <div id="inline-datepicker"></div>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="tab-book">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0 fw-bold">Chọn khung giờ trống</h4>
+                    <div class="d-flex align-items-center gap-2">
+                        <span>Ngày:</span>
+                        <input type="date" class="form-control form-control-sm" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" onchange="window.location.href='?id=@Model.FacilityId&date=' + this.value">
                     </div>
                 </div>
-            </aside>
 
-            <main class="courts-main">
-                <div class="card-simple">
-                    <div class="card-header-flex">
-                        <h3>Sân đang trống</h3>
-                        <span class="date-badge">Ngày: <span id="displayDate">@Model.SelectedDate.ToString("dd/MM/yyyy")</span></span>
-                    </div>
-
-                    <div class="courts-list-grid">
+                <div class="table-responsive">
+                    <div class="timeline-wrapper" style="min-width: 1000px;">
                         @foreach (var court in Model.Courts)
                         {
-                            <div class="court-modern-card">
-                                <div class="court-header">
-                                    <h4>@court.CourtNumber</h4>
-                                    <span class="badge-status @(court.Status.ToLower())">
-                                        @(court.Status == "Available" ? "Còn trống" : "Đã đặt")
-                                    </span>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="court-label fw-bold pe-3" style="width: 120px;">@court.CourtNumber</div>
+                                <div class="slots-row d-flex gap-2">
+                                    @foreach (var slot in court.Slots)
+                                    {
+                                        <div class="slot-item @(slot.IsBooked ? "booked" : "available")"
+                                             data-court="@court.CourtNumber"
+                                             data-time="@slot.TimeRange"
+                                             data-price="@slot.Price"
+                                             onclick="toggleSlot(this)">
+                                            <span class="time">@slot.TimeRange.Split(" - ")[0]</span>
+                                            <span class="price">@(slot.Price / 1000)k</span>
+                                        </div>
+                                    }
                                 </div>
-
-                                <div class="court-body">
-                                    <div class="court-location-info">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                        <span>@Model.FacilityName - @court.Description</span>
-                                    </div>
-                                    <div class="court-type-info">
-                                        <strong>Loại sân:</strong> @court.CourtType
-                                    </div>
-                                </div>
-
-                                @if (court.Status == "Available")
-                                {
-                                    <div class="court-footer">
-                                        <button class="btn-select-modern" onclick="openBookingModal(@court.CourtId, '@court.CourtNumber')">
-                                            Chọn sân này
-                                        </button>
-                                    </div>
-                                }
                             </div>
                         }
                     </div>
                 </div>
-            </main>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="tab-history">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Sân</th>
+                            <th>Ngày</th>
+                            <th>Giờ</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var b in Model.UserBookings)
+                        {
+                            <tr>
+                                <td><strong>@b.CourtName</strong></td>
+                                <td>@b.Date.ToString("dd/MM/yyyy")</td>
+                                <td>@b.Time</td>
+                                <td><span class="badge bg-success">@b.Status</span></td>
+                                <td><button class="btn btn-sm btn-outline-danger">Hủy</button></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <script src="~/js/booking.js" asp-append-version="true"></script>
-    <script>
-        var selectedDate = new Date('@Model.SelectedDate.ToString("yyyy-MM-dd")');
-        var facilityId = @Model.FacilityId;
-    </script>
-}
+<div id="paymentBar" class="fixed-bottom bg-dark text-white p-3 shadow-lg d-none animate__animated animate__slideInUp">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div>
+            <span id="selectedSlotsText">Đã chọn 0 khung giờ</span>
+            <h4 class="mb-0 text-warning" id="totalAmount">0đ</h4>
+        </div>
+        <button class="btn btn-warning fw-bold px-5 py-2 rounded-pill">ĐẶT SÂN NGAY</button>
+    </div>
+</div>
+
+<style>
+    .slot-item {
+        width: 75px;
+        height: 60px;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: 0.2s;
+        background: white;
+    }
+
+        .slot-item.available:hover {
+            border-color: #6c33f2;
+            background: #f3f0ff;
+        }
+
+        .slot-item.booked {
+            background: #ffebeb;
+            color: #ff5b5b;
+            cursor: not-allowed;
+            border: none;
+        }
+
+        .slot-item.selected {
+            background: #6c33f2 !important;
+            color: white !important;
+        }
+
+        .slot-item .time {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .slot-item .price {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+</style>
+
+<script>
+    let selected = [];
+    function toggleSlot(el) {
+        if (el.classList.contains('booked')) return;
+        el.classList.toggle('selected');
+
+        const price = parseInt(el.dataset.price);
+        const time = el.dataset.time;
+
+        // Logic tính tiền đơn giản
+        const selectedCount = document.querySelectorAll('.slot-item.selected').length;
+        const total = selectedCount * price;
+
+        const bar = document.getElementById('paymentBar');
+        if (selectedCount > 0) {
+            bar.classList.remove('d-none');
+            document.getElementById('selectedSlotsText').innerText = `Đã chọn ${selectedCount} khung giờ`;
+            document.getElementById('totalAmount').innerText = total.toLocaleString() + 'đ';
+        } else {
+            bar.classList.add('d-none');
+        }
+    }
+</script>

@@ -32,6 +32,7 @@ namespace QuanLiSanCauLong.Data
         public DbSet<VoucherUsage> VoucherUsages { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
         public DbSet<SystemSetting> SystemSettings { get; set; }
+        public DbSet<Post> Posts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -177,5 +178,6 @@ namespace QuanLiSanCauLong.Data
         {
             return new ApplicationDbContext(options);
         }
+
     }
 }

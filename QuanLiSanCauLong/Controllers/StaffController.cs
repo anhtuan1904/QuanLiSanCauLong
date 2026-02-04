@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿/*using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +6,7 @@ using QuanLiSanCauLong.Data;
 using QuanLiSanCauLong.Models;
 using QuanLiSanCauLong.ViewModels;
 using System.Security.Claims;
+using static QuanLiSanCauLong.ViewModels.TimeSlotViewModel;
 
 namespace QuanLiSanCauLong.Controllers
 {
@@ -562,3 +563,4 @@ namespace QuanLiSanCauLong.Controllers
         }
     }
 }
+*/

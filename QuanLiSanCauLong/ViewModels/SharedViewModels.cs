@@ -17,7 +17,7 @@ namespace QuanLiSanCauLong.ViewModels
         public TimeSpan? OpenTime { get; set; }
         public TimeSpan? CloseTime { get; set; }
         public int TotalCourts { get; set; }
-        public List<CourtAvailabilityViewModel> AvailableCourts { get; set; }
+        public List<CourtAvailabilityViewModel> AvailableCourts { get; set; } = new();
     }
 
     /// <summary>
@@ -29,7 +29,7 @@ namespace QuanLiSanCauLong.ViewModels
         public string CourtNumber { get; set; }
         public string CourtType { get; set; }
         public string Status { get; set; }
-        public List<TimeSlotViewModel> AvailableTimeSlots { get; set; }
+        public List<TimeSlotViewModel> AvailableTimeSlots { get; set; } = new();
     }
 
     /// <summary>
@@ -42,31 +42,29 @@ namespace QuanLiSanCauLong.ViewModels
         public decimal Price { get; set; }
         public bool IsPeakHour { get; set; }
         public bool IsAvailable { get; set; }
-        public string DisplayTime => $"{StartTime:hh\\:mm} - {EndTime:hh\\:mm}";
+
+        // Fix lỗi CS1061 ở Details.cshtml
+        public bool IsBooked => !IsAvailable;
+        public string TimeRange => $"{StartTime:hh\\:mm} - {EndTime:hh\\:mm}";
+        public string DisplayTime => TimeRange;
         public string PriceDisplay => Price.ToString("N0") + "đ";
     }
 
     /// <summary>
-    /// ViewModel cho lịch sân theo khung giờ (dùng cho Staff)
+    /// ViewModel dành cho nhân viên quản lý lịch đặt
     /// </summary>
     public class TimeSlotBookingViewModel
     {
         public TimeSpan StartTime { get; set; }
         public TimeSpan EndTime { get; set; }
+        public string DisplayTime => $"{StartTime:hh\\:mm} - {EndTime:hh\\:mm}";
         public bool IsBooked { get; set; }
         public string CustomerName { get; set; }
+        public string CustomerPhone { get; set; }
         public int? BookingId { get; set; }
+        public string BookingStatus { get; set; }
     }
 
-    /// <summary>
-    /// ViewModel cho danh mục sản phẩm
-    /// </summary>
-    public class ProductCategoryViewModel
-    {
-        public string CategoryName { get; set; }
-        public string CategoryType { get; set; }
-        public List<ProductItemViewModel> Products { get; set; }
-    }
 
     /// <summary>
     /// ViewModel cho thông tin sản phẩm

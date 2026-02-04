@@ -1,21 +1,34 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using QuanLiSanCauLong.Models;
 using System.ComponentModel.DataAnnotations;
+// XÓA DÒNG using static QuanLiSanCauLong.ViewModels.TimeSlotViewModel; NẾU NÓ GÂY LỖI AMBIGUOUS
 
 namespace QuanLiSanCauLong.ViewModels
 {
+    // --- DI CHUYỂN CLASS NÀY RA NGOÀI VÀ ĐỂ ĐỘC LẬP ---
+    public class ProductCategoryViewModel
+    {
+        public int CategoryId { get; set; }
+        public string CategoryName { get; set; }
+        public string CategoryType { get; set; }
+        public List<ProductItemViewModel> Products { get; set; } = new();
+    }
+
+    // Cần có class này để ProductCategoryViewModel không bị báo lỗi thiếu Type
+
+
     /// <summary>
     /// ViewModel cho danh sách sản phẩm (khách hàng xem menu)
     /// </summary>
     public class ProductListViewModel
     {
-        public List<Product> Products { get; set; }
+        public List<Product> Products { get; set; } = new(); // Khởi tạo để tránh Null
 
         public int? FacilityId { get; set; }
         public string FacilityName { get; set; }
         public string CategoryType { get; set; }
         public string SearchKeyword { get; set; }
-        public List<ProductCategoryGroupViewModel> Categories { get; set; }
+        public List<ProductCategoryGroupViewModel> Categories { get; set; } = new();
         public int TotalProducts { get; set; }
     }
 
@@ -29,7 +42,7 @@ namespace QuanLiSanCauLong.ViewModels
         public string CategoryType { get; set; }
         public string Description { get; set; }
         public string Icon { get; set; }
-        public List<ProductCardViewModel> Products { get; set; }
+        public List<ProductCardViewModel> Products { get; set; } = new();
         public int ProductCount => Products?.Count ?? 0;
     }
 
@@ -52,7 +65,11 @@ namespace QuanLiSanCauLong.ViewModels
         public bool IsNew { get; set; }
         public decimal? DiscountPercent { get; set; }
         public decimal? DiscountedPrice { get; set; }
+
+        // Logic hiển thị giá
         public string PriceDisplay => Price.ToString("N0") + "đ";
+        public bool HasDiscount => DiscountPercent.HasValue && DiscountPercent > 0;
+        public string DiscountedPriceDisplay => DiscountedPrice?.ToString("N0") + "đ";
     }
 
     /// <summary>
@@ -66,7 +83,7 @@ namespace QuanLiSanCauLong.ViewModels
         public string Description { get; set; }
         public decimal Price { get; set; }
         public string Unit { get; set; }
-        public List<string> ImageUrls { get; set; }
+        public List<string> ImageUrls { get; set; } = new();
         public string CategoryName { get; set; }
         public string CategoryType { get; set; }
         public bool IsAvailable { get; set; }
@@ -75,10 +92,10 @@ namespace QuanLiSanCauLong.ViewModels
         // Thông tin bổ sung
         public string Ingredients { get; set; }
         public string NutritionalInfo { get; set; }
-        public List<string> Tags { get; set; }
+        public List<string> Tags { get; set; } = new();
 
         // Sản phẩm liên quan
-        public List<ProductCardViewModel> RelatedProducts { get; set; }
+        public List<ProductCardViewModel> RelatedProducts { get; set; } = new();
     }
 
     /// <summary>
@@ -113,7 +130,7 @@ namespace QuanLiSanCauLong.ViewModels
         public string Unit { get; set; }
 
         [Display(Name = "Hình ảnh")]
-        public List<string> ImageUrls { get; set; }
+        public List<string> ImageUrls { get; set; } = new();
 
         [Display(Name = "Thành phần")]
         public string Ingredients { get; set; }
@@ -128,7 +145,7 @@ namespace QuanLiSanCauLong.ViewModels
         public bool IsFeatured { get; set; }
 
         // Dropdown data
-        public List<CategoryOptionViewModel> AvailableCategories { get; set; }
+        public List<CategoryOptionViewModel> AvailableCategories { get; set; } = new();
     }
 
     /// <summary>
@@ -142,23 +159,6 @@ namespace QuanLiSanCauLong.ViewModels
     }
 
     /// <summary>
-    /// ViewModel cho menu theo cơ sở
-    /// </summary>
-    public class FacilityMenuViewModel
-    {
-        public int FacilityId { get; set; }
-        public string FacilityName { get; set; }
-        public string FacilityAddress { get; set; }
-        public string FacilityPhone { get; set; }
-
-        // Menu items grouped by category
-        public List<MenuCategoryViewModel> MenuCategories { get; set; }
-
-        // Promotions
-        public List<MenuPromotionViewModel> ActivePromotions { get; set; }
-    }
-
-    /// <summary>
     /// ViewModel cho danh mục trong menu
     /// </summary>
     public class MenuCategoryViewModel
@@ -166,7 +166,7 @@ namespace QuanLiSanCauLong.ViewModels
         public string CategoryName { get; set; }
         public string CategoryType { get; set; }
         public string Icon { get; set; }
-        public List<MenuItemViewModel> Items { get; set; }
+        public List<MenuItemViewModel> Items { get; set; } = new();
     }
 
     /// <summary>
@@ -199,5 +199,4 @@ namespace QuanLiSanCauLong.ViewModels
         public DateTime EndDate { get; set; }
         public string ImageUrl { get; set; }
     }
-
 }

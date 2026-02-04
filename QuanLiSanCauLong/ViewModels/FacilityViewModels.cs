@@ -8,7 +8,7 @@ namespace QuanLiSanCauLong.ViewModels
     /// </summary>
     public class FacilityListViewModel
     {
-        public List<FacilityCardViewModel> Facilities { get; set; }
+        public List<FacilityCardViewModel> Facilities { get; set; } = new List<FacilityCardViewModel>();
         public string SearchCity { get; set; }
         public string SearchDistrict { get; set; }
         public string SearchKeyword { get; set; }
@@ -46,9 +46,6 @@ namespace QuanLiSanCauLong.ViewModels
     /// <summary>
     /// ViewModel cho chi tiết cơ sở
     /// </summary>
-    /// <summary>
-    /// ViewModel cho chi tiết cơ sở
-    /// </summary>
     public class FacilityDetailsViewModel
     {
         public int FacilityId { get; set; }
@@ -64,41 +61,43 @@ namespace QuanLiSanCauLong.ViewModels
         public TimeSpan? OpenTime { get; set; }
         public TimeSpan? CloseTime { get; set; }
 
-        // --- CẬP NHẬT THÊM ---
-        public DateTime SelectedDate { get; set; } = DateTime.Now; // Để chọn ngày đặt sân
-        public List<RatingDistributionItem> RatingDistribution { get; set; } = new List<RatingDistributionItem>(); // Cho biểu đồ sao
-        // ---------------------
+        public DateTime SelectedDate { get; set; } = DateTime.Now;
+        public List<RatingDistributionItem> RatingDistribution { get; set; } = new List<RatingDistributionItem>();
 
-        // Thông tin sân
-        public List<FacilityCourtViewModel> Courts { get; set; }
+        // Thông tin sân - ĐÃ XÓA TRÙNG LẶP Ở ĐÂY
+        public List<FacilityCourtViewModel> Courts { get; set; } = new List<FacilityCourtViewModel>();
         public int TotalCourts { get; set; }
 
         // Giá & dịch vụ
         public decimal MinPrice { get; set; }
         public decimal MaxPrice { get; set; }
-        public List<FacilityServiceViewModel> Services { get; set; }
-        public List<FacilityAmenityViewModel> Amenities { get; set; }
+        public List<FacilityServiceViewModel> Services { get; set; } = new List<FacilityServiceViewModel>();
+        public List<FacilityAmenityViewModel> Amenities { get; set; } = new List<FacilityAmenityViewModel>();
 
         // Đánh giá
         public double? AverageRating { get; set; }
         public int TotalReviews { get; set; }
-        public List<FacilityReviewViewModel> RecentReviews { get; set; }
+        public List<FacilityReviewViewModel> RecentReviews { get; set; } = new List<FacilityReviewViewModel>();
 
         // Vị trí
         public string MapUrl { get; set; }
         public decimal? Latitude { get; set; }
         public decimal? Longitude { get; set; }
+
+        // Lịch đặt của khách hàng
+        public List<UserBookingViewModel> UserBookings { get; set; } = new List<UserBookingViewModel>();
     }
 
     /// <summary>
-    /// Class hỗ trợ hiển thị biểu đồ phân bổ đánh giá (5 sao, 4 sao...)
+    /// Class hỗ trợ hiển thị biểu đồ phân bổ đánh giá
     /// </summary>
     public class RatingDistributionItem
     {
-        public int StarLevel { get; set; } // 5, 4, 3, 2, 1
-        public int Count { get; set; }     // Số lượng đánh giá cho mức sao này
-        public double Percentage { get; set; } // Tỷ lệ phần trăm để vẽ thanh bar
+        public int StarLevel { get; set; }
+        public int Count { get; set; }
+        public double Percentage { get; set; }
     }
+
     /// <summary>
     /// ViewModel cho sân trong cơ sở
     /// </summary>
@@ -109,7 +108,22 @@ namespace QuanLiSanCauLong.ViewModels
         public string CourtType { get; set; }
         public string Status { get; set; }
         public string Description { get; set; }
-        public List<string> Features { get; set; }
+        public List<string> Features { get; set; } = new List<string>();
+
+        // Danh sách khung giờ trống
+        public List<TimeSlotViewModel> Slots { get; set; } = new List<TimeSlotViewModel>();
+    }
+
+    /// <summary>
+    /// ViewModel cho lịch đặt của user
+    /// </summary>
+    public class UserBookingViewModel
+    {
+        public int BookingId { get; set; }
+        public string CourtName { get; set; }
+        public string Time { get; set; }
+        public DateTime Date { get; set; }
+        public string Status { get; set; }
     }
 
     /// <summary>
@@ -192,7 +206,7 @@ namespace QuanLiSanCauLong.ViewModels
         public TimeSpan CloseTime { get; set; }
 
         [Display(Name = "Hình ảnh")]
-        public List<string> ImageUrls { get; set; }
+        public List<string> ImageUrls { get; set; } = new List<string>();
 
         [Display(Name = "Vĩ độ")]
         public decimal? Latitude { get; set; }
@@ -203,4 +217,16 @@ namespace QuanLiSanCauLong.ViewModels
         [Display(Name = "Hoạt động")]
         public bool IsActive { get; set; }
     }
+    public class FacilityMenuViewModel
+    {
+        public int FacilityId { get; set; }
+        public string FacilityName { get; set; }
+        public string FacilityAddress { get; set; }
+        public string FacilityPhone { get; set; }
+
+        // Khởi tạo sẵn List để tránh lỗi Null
+        public List<MenuCategoryViewModel> MenuCategories { get; set; } = new();
+        public List<MenuPromotionViewModel> ActivePromotions { get; set; } = new();
+    }
+
 }

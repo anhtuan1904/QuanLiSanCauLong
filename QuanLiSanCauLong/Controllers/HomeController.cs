@@ -101,6 +101,13 @@ namespace QuanLiSanCauLong.Controllers
 
             return View(model);
         }
+        [HttpPost]
+        public IActionResult SendMessage(string fullName, string email, string phone, string subject, string message)
+        {
+            // Chỗ này mày có thể xử lý lưu vào DB hoặc gửi Email thực tế
+            TempData["SuccessMessage"] = "Cảm ơn bạn! Tin nhắn đã được gửi thành công.";
+            return RedirectToAction("Contact");
+        }
 
         // POST: Home/Contact
         [HttpPost]
@@ -137,42 +144,93 @@ namespace QuanLiSanCauLong.Controllers
         // GET: Home/FAQ
         public IActionResult FAQ()
         {
-            var faqs = new List<FaqItem>
-            {
-                new FaqItem
-                {
-                    Question = "Làm thế nào để đặt sân?",
-                    Answer = "Bạn cần đăng ký tài khoản, sau đó chọn cơ sở, chọn sân và khung giờ phù hợp, cuối cùng xác nhận đặt sân."
-                },
-                new FaqItem
-                {
-                    Question = "Tôi có thể hủy đặt sân không?",
-                    Answer = "Có, bạn có thể hủy đặt sân trước giờ chơi ít nhất 2 giờ."
-                },
-                new FaqItem
-                {
-                    Question = "Hình thức thanh toán nào được chấp nhận?",
-                    Answer = "Chúng tôi chấp nhận thanh toán tiền mặt, chuyển khoản, thẻ ATM, Momo, ZaloPay."
-                },
-                new FaqItem
-                {
-                    Question = "Có được đặt sân trước bao lâu?",
-                    Answer = "Bạn có thể đặt sân trước tối đa 30 ngày."
-                },
-                new FaqItem
-                {
-                    Question = "Tôi có thể mua đồ ăn, nước uống không?",
-                    Answer = "Có, chúng tôi cung cấp dịch vụ đồ ăn, nước uống và các sản phẩm thể thao."
-                }
-            };
-
-            return View(faqs);
+            return View();
         }
-
         // GET: Home/AccessDenied
         public IActionResult AccessDenied()
         {
             return View();
+        }
+        public async Task<IActionResult> Stringing()
+        {
+            var services = await GetServicesByType("Restring");
+            return View("~/Views/Service/Stringing.cshtml", services);
+        }
+        public IActionResult Recruitment()
+        {
+            return View();
+        }
+
+        // GET: Service/Training (Khóa học cầu lông)
+        public async Task<IActionResult> Training()
+        {
+            var services = await GetServicesByType("Course");
+            return View("~/Views/Service/Training.cshtml", services);
+        }
+        public async Task<IActionResult> Blog()
+        {
+            var allPosts = await _context.Posts
+                .Where(p => p.IsActive)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            var viewModel = new BlogViewModel
+            {
+                FeaturedPosts = allPosts.Where(p => p.IsFeatured).Take(2)
+                    .Select(p => MapToPostItem(p)).ToList(),
+
+                OtherPosts = allPosts.Where(p => !p.IsFeatured)
+                    .Select(p => MapToPostItem(p)).ToList()
+            };
+
+            return View(viewModel);
+        }
+
+        private PostItemViewModel MapToPostItem(Post p)
+        {
+            return new PostItemViewModel
+            {
+                PostId = p.PostId,
+                Title = p.Title,
+                Summary = p.Summary,
+                ImageUrl = p.ImageUrl ?? "/images/blog-default.jpg",
+                Category = p.Category,
+                Author = p.Author,
+                PublishDate = p.CreatedAt.ToString("dd 'Tháng' MM, yyyy")
+            };
+        }
+
+        // GET: Service/Tournament (Giải đấu nội bộ)
+        public async Task<IActionResult> Tournament()
+        {
+            var services = await GetServicesByType("Tournament");
+            return View("~/Views/Service/Tournament.cshtml", services);
+        }
+
+
+        // Hàm bổ trợ để lấy dữ liệu từ Database và ánh xạ sang ServiceViewModel
+        private async Task<List<ServiceViewModel>> GetServicesByType(string type)
+        {
+            return await _context.Products
+                .Include(p => p.Category)
+                // Lọc dựa trên Metadata đã thêm vào Model
+                .Where(p => p.IsActive && p.Metadata == type)
+                .Select(p => new ServiceViewModel
+                {
+                    Type = p.Metadata,
+                    ServiceName = p.ProductName,
+                    Description = p.Description,
+                    Price = p.Price,
+                    ImageUrl = p.ImageUrl ?? "/images/default-service.jpg",
+                    Duration = p.Unit ?? "Liên hệ",
+                    // Logic hiển thị tính năng tùy theo loại dịch vụ
+                    Features = p.Metadata == "Course"
+                        ? new List<string> { "HLV chuyên nghiệp", "Luyện tập di chuyển", "Nắm vững luật chơi" }
+                        : p.Metadata == "Restring"
+                            ? new List<string> { "Căng máy điện tử", "Bảo hành 1 tháng", "Tặng quấn cán" }
+                            : new List<string> { "Giải thưởng hấp dẫn", "Trọng tài chuyên nghiệp", "Giao lưu kết nối" }
+                })
+                .ToListAsync();
         }
 
 

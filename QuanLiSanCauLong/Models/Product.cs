@@ -36,6 +36,10 @@ namespace QuanLiSanCauLong.Models
 
         // Thêm thuộc tính này để khớp với View
         public string Status { get; set; } = "InStock";
+        public bool IsAvailable { get; set; } = true;
+
+        // Thêm Metadata để phân biệt loại dịch vụ (Course, Restring, Tournament)
+        public string Metadata { get; set; }
 
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.Now;

@@ -89,6 +89,8 @@ namespace QuanLiSanCauLong.ViewModels
         [Display(Name = "Xác nhận mật khẩu")]
         [Compare("Password", ErrorMessage = "Mật khẩu xác nhận không khớp")]
         public string ConfirmPassword { get; set; }
+        [Display(Name = "Tải ảnh đại diện")]
+        public IFormFile? AvatarFile { get; set; }
 
         // Dropdown options
         public List<RoleOptionViewModel> AvailableRoles { get; set; }
@@ -287,4 +289,5 @@ namespace QuanLiSanCauLong.ViewModels
         public int FacilityId { get; set; }
         public string FacilityName { get; set; }
     }
+
 }

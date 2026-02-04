@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using static QuanLiSanCauLong.ViewModels.TimeSlotViewModel;
 
 namespace QuanLiSanCauLong.ViewModels
 {
