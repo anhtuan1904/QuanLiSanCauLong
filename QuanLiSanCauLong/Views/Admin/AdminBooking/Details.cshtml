@@ -1,5 +1,453 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model QuanLiSanCauLong.ViewModels.BookingHistoryViewModel
+
 @{
+    ViewData["Title"] = "Chi tiết đơn đặt sân";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
+
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center">
+            <a asp-action="Index" class="btn btn-outline-secondary rounded-circle me-3" style="width: 40px; height: 40px; padding: 0;">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h3 class="fw-bold mb-0">Chi Tiết Đơn Đặt Sân</h3>
+                <p class="text-muted mb-0 small">
+                    Mã: <span class="fw-semibold">@Model.BookingCode</span> •
+                    Ngày tạo: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                </p>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" onclick="window.print()">
+                <i class="bi bi-printer me-2"></i>In hóa đơn
+            </button>
+            @if (Model.Status == "Pending")
+            {
+                <button class="btn btn-success" onclick="confirmBooking(@Model.BookingId)">
+                    <i class="bi bi-check-circle me-2"></i>Xác nhận đơn
+                </button>
+            }
+            else if (Model.Status == "Confirmed")
+            {
+                <button class="btn btn-primary" onclick="checkInBooking(@Model.BookingId)">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Check-in
+                </button>
+            }
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column -->
+        <div class="col-lg-8">
+            <!-- Progress Timeline -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="progress-timeline">
+                        <div class="timeline-step @(Model.Status != "Cancelled" ? "active" : "")">
+                            <div class="step-icon">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </div>
+                            <div class="step-label">Đã Đặt</div>
+                        </div>
+                        <div class="timeline-line @(Model.Status != "Pending" && Model.Status != "Cancelled" ? "active" : "")"></div>
+
+                        <div class="timeline-step @(Model.Status == "Confirmed" || Model.Status == "CheckedIn" || Model.Status == "Completed" ? "active" : "")">
+                            <div class="step-icon">
+                                <i class="bi bi-check2"></i>
+                            </div>
+                            <div class="step-label">Xác Nhận</div>
+                        </div>
+                        <div class="timeline-line @(Model.Status == "CheckedIn" || Model.Status == "Completed" ? "active" : "")"></div>
+
+                        <div class="timeline-step @(Model.Status == "CheckedIn" || Model.Status == "Completed" ? "active" : "")">
+                            <div class="step-icon">
+                                <i class="bi bi-box-arrow-in-right"></i>
+                            </div>
+                            <div class="step-label">Check-in</div>
+                        </div>
+                        <div class="timeline-line @(Model.Status == "Completed" ? "active" : "")"></div>
+
+                        <div class="timeline-step @(Model.Status == "Completed" ? "active completed" : "")">
+                            <div class="step-icon">
+                                <i class="bi bi-flag-fill"></i>
+                            </div>
+                            <div class="step-label">Hoàn Thành</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Details -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="fw-bold mb-0">Chi Tiết Đặt Sân</h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Court Booking -->
+                    <div class="booking-item mb-4 pb-4 border-bottom">
+                        <div class="d-flex align-items-start">
+                            <div class="icon-box-large bg-primary-subtle rounded-3 p-3 me-3">
+                                <i class="bi bi-calendar-event text-primary fs-3"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="fw-bold mb-1">@Model.FacilityName</h6>
+                                        <p class="text-muted mb-2 small">
+                                            Sân @Model.CourtNumber (@Model.CourtType)
+                                        </p>
+                                    </div>
+                                    <h5 class="fw-bold text-success mb-0">₫@Model.GrandTotal.ToString("N0")</h5>
+                                </div>
+                                <div class="d-flex gap-4 flex-wrap">
+                                    <div>
+                                        <small class="text-muted d-block">Ngày đặt</small>
+                                        <span class="fw-semibold">@Model.BookingDate.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted d-block">Thời gian</small>
+                                        <span class="fw-semibold text-primary">
+                                            @Model.StartTime.ToString(@"hh\:mm") - @Model.EndTime.ToString(@"hh\:mm")
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted d-block">Thời lượng</small>
+                                        <span class="fw-semibold">@Model.Duration phút</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Related Orders -->
+                    @if (Model.RelatedOrders != null && Model.RelatedOrders.Any())
+                    {
+                        <div class="mb-4">
+                            <h6 class="fw-bold mb-3">Dịch Vụ & Sản Phẩm Đi Kèm</h6>
+                            @foreach (var order in Model.RelatedOrders)
+                            {
+                                <div class="booking-item mb-3">
+                                    <div class="d-flex align-items-start">
+                                        <div class="icon-box bg-warning-subtle rounded-3 p-2 me-3">
+                                            <i class="bi bi-box-seam text-warning fs-5"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <div class="fw-semibold">Đơn hàng #@order.OrderCode</div>
+                                                    <small class="text-muted">@order.OrderDetails.Count sản phẩm</small>
+                                                </div>
+                                                <span class="fw-bold text-success">₫@order.TotalAmount.ToString("N0")</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <!-- Summary -->
+                    <div class="mt-4 pt-4 border-top">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Tạm tính:</span>
+                            <span class="fw-semibold">₫@Model.GrandTotal.ToString("N0")</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Giảm giá:</span>
+                            <span class="text-danger fw-semibold">-₫0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                            <span class="h5 fw-bold mb-0">Tổng cộng:</span>
+                            <span class="h4 fw-bold text-success mb-0">₫@Model.GrandTotal.ToString("N0")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- Customer Info -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Thông Tin Khách Hàng</h6>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="avatar-circle bg-primary-subtle text-primary me-3">
+                            <i class="bi bi-person fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold">@Model.CustomerName</div>
+                            <small class="text-muted">Khách hàng</small>
+                        </div>
+                    </div>
+                    <div class="contact-info">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-telephone text-muted me-2"></i>
+                            <span class="small">@Model.Phone</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-envelope text-muted me-2"></i>
+                            <span class="small">@Model.Email</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment & Status -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Thanh Toán & Trạng Thái</h6>
+
+                    <div class="mb-3">
+                        <label class="small text-muted d-block mb-1">Phương thức</label>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-credit-card text-primary me-2"></i>
+                            <span class="fw-semibold">@Model.PaymentMethod</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small text-muted d-block mb-1">Trạng thái thanh toán</label>
+                        @if (Model.PaymentStatus == "Paid")
+                        {
+                            <span class="badge bg-success-subtle text-success px-3 py-2">
+                                <i class="bi bi-check-circle me-1"></i>Đã Thanh Toán
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning-subtle text-warning px-3 py-2">
+                                <i class="bi bi-clock me-1"></i>Chưa Thanh Toán
+                            </span>
+                        }
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small text-muted d-block mb-1">Trạng thái đơn</label>
+                        @switch (Model.Status)
+                        {
+                            case "Pending":
+                                <span class="badge bg-warning-subtle text-warning px-3 py-2">
+                                    <i class="bi bi-clock-history me-1"></i>Chờ Xác Nhận
+                                </span>
+                                break;
+                            case "Confirmed":
+                                <span class="badge bg-info-subtle text-info px-3 py-2">
+                                    <i class="bi bi-check-circle me-1"></i>Đã Xác Nhận
+                                </span>
+                                break;
+                            case "CheckedIn":
+                                <span class="badge bg-primary-subtle text-primary px-3 py-2">
+                                    <i class="bi bi-box-arrow-in-right me-1"></i>Đã Check-in
+                                </span>
+                                break;
+                            case "Completed":
+                                <span class="badge bg-success-subtle text-success px-3 py-2">
+                                    <i class="bi bi-check2-circle me-1"></i>Hoàn Thành
+                                </span>
+                                break;
+                            case "Cancelled":
+                                <span class="badge bg-danger-subtle text-danger px-3 py-2">
+                                    <i class="bi bi-x-circle me-1"></i>Đã Hủy
+                                </span>
+                                break;
+                        }
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="small text-muted d-block mb-1">Ghi chú</label>
+                        <p class="small mb-0 fst-italic text-muted">
+                            @if (string.IsNullOrEmpty(Model.Note))
+                            {
+                                <span>"Không có ghi chú"</span>
+                            }
+                            else
+                            {
+                                <span>@Model.Note</span>
+                            }
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            @if (Model.Status == "Pending" || Model.Status == "Confirmed")
+            {
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-3">Thao Tác</h6>
+                        <div class="d-grid gap-2">
+                            @if (Model.Status == "Pending")
+                            {
+                                <button class="btn btn-success" onclick="confirmBooking(@Model.BookingId)">
+                                    <i class="bi bi-check-circle me-2"></i>Xác nhận đơn
+                                </button>
+                            }
+                            else if (Model.Status == "Confirmed")
+                            {
+                                <button class="btn btn-primary" onclick="checkInBooking(@Model.BookingId)">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>Check-in
+                                </button>
+                            }
+                            <button class="btn btn-outline-danger" onclick="cancelBooking(@Model.BookingId)">
+                                <i class="bi bi-x-circle me-2"></i>Hủy đơn
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmBooking(bookingId) {
+            if (confirm('Xác nhận đơn đặt sân này?')) {
+                $.post('@Url.Action("Confirm", "AdminBooking")', { bookingId: bookingId })
+                    .done(function(result) {
+                        alert(result.message);
+                        if (result.success) location.reload();
+                    });
+            }
+        }
+
+        function checkInBooking(bookingId) {
+            if (confirm('Xác nhận khách hàng đã check-in?')) {
+                $.post('@Url.Action("CheckIn", "AdminBooking")', { bookingId: bookingId })
+                    .done(function(result) {
+                        alert(result.message);
+                        if (result.success) location.reload();
+                    });
+            }
+        }
+
+        function cancelBooking(bookingId) {
+            const reason = prompt('Lý do hủy đơn:');
+            if (reason) {
+                $.post('@Url.Action("Cancel", "AdminBooking")', { bookingId: bookingId, reason: reason })
+                    .done(function(result) {
+                        alert(result.message);
+                        if (result.success) location.reload();
+                    });
+            }
+        }
+    </script>
+}
+
+<style>
+    .progress-timeline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 0;
+    }
+
+    .timeline-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+    }
+
+    .step-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        transition: all 0.3s;
+    }
+
+    .timeline-step.active .step-icon {
+        background: #6366f1;
+        color: white;
+    }
+
+    .timeline-step.completed .step-icon {
+        background: #10b981;
+        color: white;
+    }
+
+    .step-label {
+        margin-top: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #64748b;
+    }
+
+    .timeline-step.active .step-label {
+        color: #1e293b;
+    }
+
+    .timeline-line {
+        flex: 1;
+        height: 3px;
+        background: #e2e8f0;
+        margin: 0 10px;
+        position: relative;
+        top: -25px;
+    }
+
+        .timeline-line.active {
+            background: #6366f1;
+        }
+
+    .icon-box-large {
+        width: 64px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .icon-box {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .avatar-circle {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .bg-success-subtle {
+        background-color: rgba(16, 185, 129, 0.1) !important;
+    }
+
+    .bg-primary-subtle {
+        background-color: rgba(99, 102, 241, 0.1) !important;
+    }
+
+    .bg-info-subtle {
+        background-color: rgba(14, 165, 233, 0.1) !important;
+    }
+
+    .bg-warning-subtle {
+        background-color: rgba(245, 158, 11, 0.1) !important;
+    }
+
+    .bg-danger-subtle {
+        background-color: rgba(239, 68, 68, 0.1) !important;
+    }
+
+    @@media print {
+        .btn, .card-footer {
+            display: none !important;
+        }
+    }
+</style>

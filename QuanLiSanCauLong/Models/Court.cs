@@ -54,5 +54,7 @@ namespace QuanLiSanCauLong.Models
         public virtual Facility? Facility { get; set; }
         public virtual ICollection<Booking>? Bookings { get; set; }
         public virtual ICollection<PriceSlot>? PriceSlots { get; set; }
+
+        public virtual ICollection<CourtImage>? CourtImages { get; set; }
     }
 }

@@ -29,6 +29,8 @@ namespace QuanLiSanCauLong.Models
         [Display(Name = "Ngày cập nhật")]
         public DateTime? UpdatedAt { get; set; }
 
+        [Display(Name = "Hình ảnh")]
+        public string? ImageUrl { get; set; } // Thêm dòng này để hết lỗi Index.cshtml
         // Navigation property
         public virtual ICollection<Product>? Products { get; set; }
     }

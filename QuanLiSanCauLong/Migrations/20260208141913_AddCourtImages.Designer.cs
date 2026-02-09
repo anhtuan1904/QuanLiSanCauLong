@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QuanLiSanCauLong.Data;
 
@@ -11,9 +12,11 @@ using QuanLiSanCauLong.Data;
 namespace QuanLiSanCauLong.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260208141913_AddCourtImages")]
+    partial class AddCourtImages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -242,6 +245,9 @@ namespace QuanLiSanCauLong.Migrations
                     b.Property<int>("CourtId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
@@ -252,9 +258,6 @@ namespace QuanLiSanCauLong.Migrations
 
                     b.Property<bool>("IsPrimary")
                         .HasColumnType("bit");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("ImageId");
 
@@ -1082,7 +1085,7 @@ namespace QuanLiSanCauLong.Migrations
             modelBuilder.Entity("QuanLiSanCauLong.Models.CourtImage", b =>
                 {
                     b.HasOne("QuanLiSanCauLong.Models.Court", "Court")
-                        .WithMany("CourtImages")
+                        .WithMany()
                         .HasForeignKey("CourtId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1312,8 +1315,6 @@ namespace QuanLiSanCauLong.Migrations
             modelBuilder.Entity("QuanLiSanCauLong.Models.Court", b =>
                 {
                     b.Navigation("Bookings");
-
-                    b.Navigation("CourtImages");
 
                     b.Navigation("PriceSlots");
                 });

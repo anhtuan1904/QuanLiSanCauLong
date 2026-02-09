@@ -1,267 +1,782 @@
 ﻿@model IEnumerable<QuanLiSanCauLong.Models.Court>
-
 @{
-    ViewData["Title"] = "Quản lý sân";
+    ViewData["Title"] = "Quản Lý Sân";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
+
 <style>
-    /* Giữ nguyên style cũ của bạn */
-    .court-card {
-        border: none;
-        border-radius: 16px;
-        transition: all 0.3s ease;
-        background: #fff;
-        margin-bottom: 1rem;
+    body {
+        background-color: #f5f5f5;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     }
 
-        .court-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
-        }
+    .page-header {
+        background: white;
+        padding: 1.5rem 2rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #e0e0e0;
+    }
 
-    .badge-status {
-        padding: 6px 12px;
-        border-radius: 8px;
+    .page-title {
+        font-size: 1.5rem;
         font-weight: 600;
-        font-size: 0.75rem;
+        color: #1a1a1a;
+        margin: 0;
     }
 
-    .badge-type {
-        background-color: #f8fafc;
-        color: #475569;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        padding: 4px 8px;
-        font-size: 0.75rem;
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
     }
 
-    .icon-box {
-        width: 45px;
-        height: 45px;
-        background: #f1f5f9;
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-icon {
+        width: 56px;
+        height: 56px;
         border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #0f172a;
-        font-size: 1.2rem;
+        font-size: 1.75rem;
+        font-weight: 700;
     }
 
-    .filter-section {
-        background: #fff;
-        border-radius: 16px;
-        padding: 1.5rem;
+        .stat-icon.purple {
+            background: #f3f0ff;
+            color: #7c3aed;
+        }
+
+        .stat-icon.green {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .stat-icon.yellow {
+            background: #fef3c7;
+            color: #ca8a04;
+        }
+
+        .stat-icon.red {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+    .stat-info h3 {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin: 0 0 0.25rem 0;
+        font-weight: 400;
     }
 
-    /* BỔ SUNG THÊM STYLE CHO ẢNH VÀ GIÁ */
-    .court-thumb {
-        width: 100px;
-        height: 70px;
-        border-radius: 10px;
-        object-fit: cover;
-        background: #eee;
+    .stat-info p {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin: 0;
+    }
+
+    .content-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+    .card-header {
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 0;
+    }
+
+    .card-subtitle {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin: 0.25rem 0 0 0;
+    }
+
+    .search-bar {
+        padding: 1rem 2rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.625rem 1rem 0.625rem 2.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: 0.75rem center;
+        background-size: 16px;
+    }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+    .view-toggle {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .view-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid #e5e7eb;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+        transition: all 0.2s;
+    }
+
+        .view-btn.active {
+            background: #1a1a1a;
+            color: white;
+            border-color: #1a1a1a;
+        }
+
+        .view-btn:hover:not(.active) {
+            border-color: #d1d5db;
+        }
+
+    .btn-primary-custom {
+        background: #1a1a1a;
+        color: white;
+        border: none;
+        padding: 0.625rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+    }
+
+        .btn-primary-custom:hover {
+            background: #0a0a0a;
+            color: white;
+        }
+
+    /* Table View */
+    .court-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .court-table thead {
+            background: #fafafa;
+        }
+
+        .court-table th {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .court-table td {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            vertical-align: middle;
+        }
+
+        .court-table tbody tr {
+            transition: background-color 0.15s;
+        }
+
+            .court-table tbody tr:hover {
+                background-color: #fafafa;
+            }
+
+    .court-id-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 0.875rem;
+        color: white;
+    }
+
+        .court-id-badge.green {
+            background: #16a34a;
+        }
+
+        .court-id-badge.blue {
+            background: #2563eb;
+        }
+
+        .court-id-badge.orange {
+            background: #ea580c;
+        }
+
+    .court-name {
+        font-weight: 600;
+        color: #1a1a1a;
+        font-size: 0.938rem;
+    }
+
+    .court-location {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        color: #6b7280;
+        font-size: 0.813rem;
+        margin-top: 0.25rem;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-success {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .badge-warning {
+        background: #fef3c7;
+        color: #ca8a04;
+    }
+
+    .badge-danger {
+        background: #fee2e2;
+        color: #dc2626;
     }
 
     .price-text {
-        font-weight: 700;
-        color: #1e293b;
-        font-size: 1.1rem;
+        font-weight: 600;
+        color: #16a34a;
+        font-size: 0.938rem;
     }
 
-    .feature-active {
-        color: #10b981 !important;
+    .rating {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-weight: 600;
     }
-    /* Xanh khi có tiện ích */
-    .feature-inactive {
-        color: #cbd5e1 !important;
+
+        .rating .star {
+            color: #fbbf24;
+        }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
     }
-    /* Xám khi không có */
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        color: #6b7280;
+    }
+
+        .action-btn:hover {
+            background: #f3f4f6;
+            color: #1a1a1a;
+        }
+
+        .action-btn.delete:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+    /* Card/Grid View */
+    .courts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1.5rem;
+        padding: 2rem;
+    }
+
+    .court-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+        .court-card:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+    .court-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 1.25rem;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .court-card-id {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+        color: white;
+    }
+
+    .court-card-body {
+        padding: 1.25rem;
+    }
+
+    .court-card-title {
+        font-size: 1.063rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 0.5rem;
+    }
+
+    .court-card-location {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        color: #6b7280;
+        font-size: 0.813rem;
+        margin-bottom: 1rem;
+    }
+
+    .court-card-stats {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-item {
+        flex: 1;
+    }
+
+    .stat-label {
+        font-size: 0.688rem;
+        color: #9ca3af;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+        font-weight: 600;
+        color: #1a1a1a;
+        font-size: 0.875rem;
+    }
+
+    .court-card-footer {
+        padding: 1rem 1.25rem;
+        background: #fafafa;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .booking-count {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.813rem;
+        color: #6b7280;
+    }
+
+    .hidden {
+        display: none;
+    }
 </style>
 
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-end mb-4">
-        <div>
-            <h2 class="fw-bold mb-1">Quản lý danh sách sân</h2>
-            <p class="text-muted mb-0">Hệ thống có tổng cộng @(Model?.Count() ?? 0) sân đang hoạt động</p>
+<div class="page-header">
+    <h1 class="page-title">Quản Lý Sân</h1>
+</div>
+
+<div class="container-fluid px-4">
+    <!-- Stats Cards -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-icon purple">@(Model?.Count() ?? 0)</div>
+            <div class="stat-info">
+                <h3>Tổng Số Sân</h3>
+                <p>@(Model?.Count() ?? 0)</p>
+            </div>
         </div>
-        <a asp-action="Create" class="btn btn-dark px-4 py-2" style="border-radius: 10px;">
-            <i class="bi bi-plus-lg me-2"></i>Thêm sân mới
-        </a>
+        <div class="stat-card">
+            <div class="stat-icon green">@(Model?.Count(c => c.Status == "Available") ?? 0)</div>
+            <div class="stat-info">
+                <h3>Đang Trống</h3>
+                <p>@(Model?.Count(c => c.Status == "Available") ?? 0)</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon yellow">@(Model?.Count(c => c.Status == "Occupied") ?? 0)</div>
+            <div class="stat-info">
+                <h3>Đang Sử Dụng</h3>
+                <p>@(Model?.Count(c => c.Status == "Occupied") ?? 0)</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red">@(Model?.Count(c => c.Status == "Maintenance") ?? 0)</div>
+            <div class="stat-info">
+                <h3>Bảo Trì</h3>
+                <p>@(Model?.Count(c => c.Status == "Maintenance") ?? 0)</p>
+            </div>
+        </div>
     </div>
 
-    <div class="filter-section shadow-sm mb-4 border">
-        <form method="get" class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label fw-semibold small text-uppercase">Cơ sở chi nhánh</label>
-                <select class="form-select border-0 bg-light" name="facilityId" style="border-radius: 8px;">
-                    <option value="">Tất cả cơ sở</option>
-                    @foreach (var facility in ViewBag.Facilities)
+    <!-- Main Content -->
+    <div class="content-card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Quản Lý Sân Chi Tiết</h2>
+                <p class="card-subtitle">Quản lý thông tin từng sân cầu lông</p>
+            </div>
+            <div class="d-flex gap-2 align-items-center">
+                <div class="view-toggle">
+                    <button class="view-btn" id="btnTableView" onclick="switchView('table')">
+                        <i class="bi bi-list-ul"></i> Lưới
+                    </button>
+                    <button class="view-btn active" id="btnCardView" onclick="switchView('card')">
+                        <i class="bi bi-grid-3x3-gap"></i> Bảng
+                    </button>
+                </div>
+                <a asp-action="Create" class="btn-primary-custom">
+                    <i class="bi bi-plus-circle"></i>
+                    Thêm Sân Mới
+                </a>
+            </div>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" class="search-input" placeholder="Tìm kiếm sân..." id="searchInput" onkeyup="filterCourts()">
+        </div>
+
+        <!-- Table View -->
+        <div id="tableView" class="hidden">
+            <table class="court-table">
+                <thead>
+                    <tr>
+                        <th>Mã Sân</th>
+                        <th>Tên Sân</th>
+                        <th>Cơ Sở</th>
+                        <th>Loại</th>
+                        <th>Giá/Giờ</th>
+                        <th>Đánh Giá</th>
+                        <th>Trạng Thái</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
                     {
-                        <option value="@facility.FacilityId" selected="@(ViewBag.SelectedFacility == facility.FacilityId)">
-                            @facility.FacilityName
-                        </option>
+                        foreach (var court in Model)
+                        {
+                            var badgeClass = court.CourtType == "Standard" ? "green" :
+                            court.CourtType == "VIP" ? "orange" : "blue";
+                            var avgRating = 4.5; // Mock data - replace with actual
+                            var bookingCount = court.Bookings?.Count() ?? 0;
+
+                            <tr class="court-row" data-name="@court.CourtNumber" data-facility="@court.Facility?.FacilityName">
+                                <td>
+                                    <div class="court-id-badge @badgeClass">@court.CourtNumber.Substring(Math.Max(0, court.CourtNumber.Length - 2))</div>
+                                </td>
+                                <td>
+                                    <div class="court-name">@court.CourtNumber</div>
+                                    <div class="court-location">
+                                        <i class="bi bi-geo-alt"></i>
+                                        @(court.Facility?.FacilityName ?? "N/A")
+                                    </div>
+                                </td>
+                                <td>@(court.Facility?.FacilityName ?? "N/A")</td>
+                                <td>
+                                    @if (court.CourtType == "Standard")
+                                    {
+                                        <span class="badge badge-success">Trong Nhà</span>
+                                    }
+                                    else if (court.CourtType == "VIP")
+                                    {
+                                        <span class="badge badge-danger">Ngoại Trời</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-warning">@court.CourtType</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="price-text">@court.HourlyRate.ToString("N0")đ</div>
+                                </td>
+                                <td>
+                                    <div class="rating">
+                                        <span class="star">★</span>
+                                        <span>@avgRating.ToString("0.0")</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (court.Status == "Available")
+                                    {
+                                        <span class="badge badge-success">Đang Trống</span>
+                                    }
+                                    else if (court.Status == "Maintenance")
+                                    {
+                                        <span class="badge badge-danger">Bảo Trì</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-warning">Đang Sử Dụng</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn" onclick="viewDetails(@court.CourtId)" title="Xem chi tiết">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <a asp-action="Edit" asp-route-id="@court.CourtId" class="action-btn" title="Chỉnh sửa">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button class="action-btn delete" onclick="confirmDelete(@court.CourtId)" title="Xóa">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
                     }
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label fw-semibold small text-uppercase">Loại sân</label>
-                <select class="form-select border-0 bg-light" name="courtType" style="border-radius: 8px;">
-                    <option value="">Tất cả loại</option>
-                    <option value="Standard" selected="@(ViewBag.SelectedType == "Standard")">Tiêu chuẩn</option>
-                    <option value="VIP" selected="@(ViewBag.SelectedType == "VIP")">Sân VIP</option>
-                    <option value="Premium" selected="@(ViewBag.SelectedType == "Premium")">Premium</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label fw-semibold small text-uppercase">Trạng thái</label>
-                <select class="form-select border-0 bg-light" name="status" style="border-radius: 8px;">
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="Available" selected="@(ViewBag.SelectedStatus == "Available")">Sẵn sàng</option>
-                    <option value="Maintenance" selected="@(ViewBag.SelectedStatus == "Maintenance")">Bảo trì</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" style="border-radius: 8px;">
-                    <i class="bi bi-funnel me-2"></i>Lọc dữ liệu
-                </button>
-            </div>
-        </form>
-    </div>
+                </tbody>
+            </table>
+        </div>
 
-    <div class="row">
-        @if (Model != null && Model.Any())
-        {
-            foreach (var court in Model)
+        <!-- Card/Grid View -->
+        <div id="cardView" class="courts-grid">
+            @if (Model != null && Model.Any())
             {
-                <div class="col-12">
-                    <div class="court-card shadow-sm border p-3">
-                        <div class="row align-items-center">
-                            <div class="col-md-4">
-                                <div class="d-flex align-items-center">
-                                    <div class="me-3 position-relative">
-                                        @if (!string.IsNullOrEmpty(court.ImagePath))
-                                        {
-                                            <img src="@court.ImagePath" class="court-thumb border" alt="court" />
-                                        }
-                                        else
-                                        {
-                                            <div class="icon-box">
-                                                <i class="bi bi-image text-muted"></i>
-                                            </div>
-                                        }
-                                    </div>
-                                    <div>
-                                        <div class="d-flex align-items-center gap-2 mb-1">
-                                            <h5 class="mb-0 fw-bold">@court.CourtNumber</h5>
-                                            <span class="badge-type">@court.CourtType</span>
-                                        </div>
-                                        <div class="text-muted small">
-                                            <i class="bi bi-geo-alt me-1"></i> @court.Facility?.FacilityName
-                                        </div>
-                                    </div>
+                foreach (var court in Model)
+                {
+                    var badgeClass = court.CourtType == "Standard" ? "green" :
+                    court.CourtType == "VIP" ? "orange" : "blue";
+                    var primaryImage = court.CourtImages?.FirstOrDefault(img => img.IsPrimary);
+                    var avgRating = 4.5; // Mock - replace with actual
+                    var bookingCount = court.Bookings?.Count() ?? 0;
+
+                    <div class="court-card court-card-item" data-name="@court.CourtNumber" data-facility="@court.Facility?.FacilityName">
+                        <div class="court-card-header">
+                            <div class="court-card-id @badgeClass">
+                                @court.CourtNumber.Substring(Math.Max(0, court.CourtNumber.Length - 2))
+                            </div>
+                            @if (court.Status == "Available")
+                            {
+                                <span class="badge badge-success">Đang Trống</span>
+                            }
+                            else if (court.Status == "Maintenance")
+                            {
+                                <span class="badge badge-danger">Bảo Trì</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-warning">Đang Sử Dụng</span>
+                            }
+                        </div>
+                        <div class="court-card-body">
+                            <h3 class="court-card-title">@court.CourtNumber</h3>
+                            <div class="court-card-location">
+                                <i class="bi bi-geo-alt"></i>
+                                @(court.Facility?.FacilityName ?? "N/A")
+                            </div>
+
+                            <div class="court-card-stats">
+                                <div class="stat-item">
+                                    <div class="stat-label">Giá giờ thường:</div>
+                                    <div class="stat-value price-text">@court.HourlyRate.ToString("N0")đ</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Cuối tuần:</div>
+                                    <div class="stat-value price-text">@((court.HourlyRate * 1.2m).ToString("N0"))đ</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Giờ cao điểm:</div>
+                                    <div class="stat-value price-text">@((court.HourlyRate * 1.3m).ToString("N0"))đ</div>
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
-                                <div class="d-flex gap-4">
-                                    <div class="text-center">
-                                        <div class="small fw-bold text-dark">
-                                            <i class="bi bi-lightbulb-fill me-1 @(court.HasLighting ? "feature-active" : "feature-inactive")"></i> Đèn
-                                        </div>
-                                        <div class="small text-muted">@(court.HasLighting ? "Đạt chuẩn" : "Không")</div>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="small fw-bold text-dark">
-                                            <i class="bi bi-wind me-1 @(court.HasAC ? "feature-active" : "feature-inactive")"></i> AC
-                                        </div>
-                                        <div class="small text-muted">@(court.HasAC ? "Có sẵn" : "Không")</div>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="small fw-bold text-dark"><i class="bi bi-calendar-check me-1"></i> Lịch đặt</div>
-                                        <div class="text-primary small">@court.Bookings?.Count() lượt</div>
-                                    </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="rating">
+                                    <span class="star">★</span>
+                                    <span>@avgRating.ToString("0.0")</span>
                                 </div>
-                            </div>
-
-                            <div class="col-md-2 text-center">
-                                <div class="price-text mb-1">@court.HourlyRate.ToString("N0") <small class="fw-normal text-muted">đ/h</small></div>
-
-                                @if (court.Status == "Available")
-                                {
-                                    <span class="badge-status bg-success-subtle text-success border border-success-subtle">
-                                        <i class="bi bi-check-circle-fill me-1"></i>Hoạt động
-                                    </span>
-                                }
-                                else if (court.Status == "Maintenance")
-                                {
-                                    <span class="badge-status bg-danger-subtle text-danger border border-danger-subtle">
-                                        <i class="bi bi-tools me-1"></i>Bảo trì
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge-status bg-warning-subtle text-warning border border-warning-subtle">
-                                        <i class="bi bi-clock-history me-1"></i>Đang bận
-                                    </span>
-                                }
-                            </div>
-
-                            <div class="col-md-2 text-end">
-                                <div class="dropdown">
-                                    <button class="btn btn-light btn-sm rounded-circle" type="button" data-bs-toggle="dropdown">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
-                                        <li><a class="dropdown-item" asp-action="Details" asp-route-id="@court.CourtId"><i class="bi bi-eye me-2"></i>Chi tiết</a></li>
-                                        <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@court.CourtId"><i class="bi bi-pencil me-2"></i>Chỉnh sửa</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteCourt(@court.CourtId)"><i class="bi bi-trash me-2"></i>Xóa sân</a></li>
-                                    </ul>
+                                <div style="font-size: 0.813rem; color: #6b7280;">
+                                    @if (court.CourtType == "Standard")
+                                    {
+                                        <span>Trong Nhà</span>
+                                    }
+                                    else if (court.CourtType == "VIP")
+                                    {
+                                        <span>Ngoại Trời</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@court.CourtType</span>
+                                    }
                                 </div>
                             </div>
                         </div>
+                        <div class="court-card-footer">
+                            <div class="booking-count">
+                                <i class="bi bi-people"></i>
+                                <span>@bookingCount lượt đặt hôm nay</span>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="action-btn" onclick="viewDetails(@court.CourtId)" title="Xem">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <a asp-action="Edit" asp-route-id="@court.CourtId" class="action-btn" title="Sửa">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button class="action-btn delete" onclick="confirmDelete(@court.CourtId)" title="Xóa">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 4rem; color: #d1d5db;"></i>
+                    <p class="mt-3" style="color: #6b7280;">Không tìm thấy sân nào</p>
                 </div>
             }
-        }
-        else
-        {
-            <div class="col-12 text-center py-5">
-                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="100" class="mb-3 opacity-25" />
-                <h5 class="text-muted">Không tìm thấy sân nào phù hợp với bộ lọc</h5>
-            </div>
-        }
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-        function deleteCourt(id) {
+        function switchView(view) {
+            const tableView = document.getElementById('tableView');
+            const cardView = document.getElementById('cardView');
+            const btnTable = document.getElementById('btnTableView');
+            const btnCard = document.getElementById('btnCardView');
+
+            if (view === 'table') {
+                tableView.classList.remove('hidden');
+                cardView.classList.add('hidden');
+                btnTable.classList.add('active');
+                btnCard.classList.remove('active');
+            } else {
+                tableView.classList.add('hidden');
+                cardView.classList.remove('hidden');
+                btnTable.classList.remove('active');
+                btnCard.classList.add('active');
+            }
+        }
+
+        function filterCourts() {
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+
+            // Filter table rows
+            const rows = document.querySelectorAll('.court-row');
+            rows.forEach(row => {
+                const name = row.dataset.name.toLowerCase();
+                const facility = row.dataset.facility.toLowerCase();
+                if (name.includes(searchValue) || facility.includes(searchValue)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Filter cards
+            const cards = document.querySelectorAll('.court-card-item');
+            cards.forEach(card => {
+                const name = card.dataset.name.toLowerCase();
+                const facility = card.dataset.facility.toLowerCase();
+                if (name.includes(searchValue) || facility.includes(searchValue)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function viewDetails(id) {
+            window.location.href = '/AdminCourt/Details/' + id;
+        }
+
+        function confirmDelete(id) {
             Swal.fire({
-                title: 'Xác nhận xóa sân?',
-                text: "Dữ liệu lịch đặt liên quan sẽ bị ảnh hưởng!",
+                title: 'Xác nhận xóa?',
+                text: "Dữ liệu sân và tất cả hình ảnh sẽ bị xóa vĩnh viễn!",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#000',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Đồng ý xóa',
-                cancelButtonText: 'Hủy'
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy',
+                reverseButtons: true
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $.ajax({
-                        url: `/Admin/AdminCourt/Delete/${id}`,
-                        type: 'POST',
-                        success: function (response) {
-                            if (response.success) {
-                                Swal.fire('Đã xóa!', response.message, 'success').then(() => location.reload());
-                            } else {
-                                Swal.fire('Lỗi!', response.message, 'error');
-                            }
+                    $.post('/AdminCourt/Delete/' + id, function(res) {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Đã xóa!',
+                                text: res.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire('Lỗi!', res.message, 'error');
                         }
-                    });
+                    }).fail(() => Swal.fire('Lỗi!', 'Không thể kết nối máy chủ', 'error'));
                 }
-            })
+            });
         }
     </script>
 }

@@ -1,204 +1,759 @@
 ﻿@model QuanLiSanCauLong.ViewModels.CourtSearchViewModel
 
-@{
-    ViewData["Title"] = "Tìm kiếm sân";
-}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-<div class="container my-4">
-    <!-- Search Filter -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-success text-white">
-            <h5 class="mb-0"><i class="bi bi-search"></i> Tìm kiếm sân cầu lông</h5>
+<style>
+    :root {
+        --primary-purple: #6c33f2;
+        --secondary-purple: #8b5cf6;
+        --bg-light: #f8fafc;
+        --text-dark: #1e293b;
+    }
+
+    body {
+        background-color: var(--bg-light);
+    }
+
+    /* Container */
+    .search-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Left Panel - Facility Info */
+    .facility-panel {
+        background: white;
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        position: sticky;
+        top: 20px;
+        height: fit-content;
+    }
+
+    .facility-image {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+        border-radius: 16px;
+        margin-bottom: 20px;
+    }
+
+    .facility-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-dark);
+        margin-bottom: 10px;
+    }
+
+    .facility-rating {
+        display: inline-flex;
+        align-items: center;
+        background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+        padding: 6px 12px;
+        border-radius: 16px;
+        margin-bottom: 15px;
+    }
+
+        .facility-rating i {
+            color: #f59e0b;
+            margin-right: 5px;
+        }
+
+    .facility-info-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+        color: #64748b;
+        font-size: 0.95rem;
+    }
+
+        .facility-info-item i {
+            width: 28px;
+            color: var(--primary-purple);
+            font-size: 1.1rem;
+        }
+
+    .facility-amenities {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 15px;
+    }
+
+    .amenity-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        background: #f1f5f9;
+        border-radius: 16px;
+        font-size: 0.85rem;
+        color: var(--text-dark);
+    }
+
+        .amenity-badge i {
+            color: var(--primary-purple);
+            margin-right: 6px;
+        }
+
+    .facility-price {
+        background: linear-gradient(135deg, #f3f0ff 0%, #ede9fe 100%);
+        padding: 15px;
+        border-radius: 12px;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+        .facility-price .label {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+
+        .facility-price .amount {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary-purple);
+        }
+
+    /* Right Panel - Search & Results */
+    .search-panel {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        margin-bottom: 20px;
+    }
+
+    .search-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-dark);
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+    }
+
+        .search-title i {
+            margin-right: 12px;
+            color: var(--primary-purple);
+        }
+
+    /* Date Picker */
+    .date-section {
+        margin-bottom: 25px;
+    }
+
+    .section-label {
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+
+        .section-label i {
+            margin-right: 8px;
+            color: var(--primary-purple);
+        }
+
+    .date-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 10px;
+    }
+
+    .date-item {
+        padding: 12px 8px;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: white;
+    }
+
+        .date-item:hover {
+            border-color: var(--primary-purple);
+            background: #f3f0ff;
+        }
+
+        .date-item.selected {
+            border-color: var(--primary-purple);
+            background: var(--primary-purple);
+            color: white;
+        }
+
+        .date-item .day-label {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-bottom: 4px;
+        }
+
+        .date-item .date-number {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+    /* Time Slots */
+    .time-section {
+        margin-bottom: 25px;
+    }
+
+    .time-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 12px;
+    }
+
+    .time-slot {
+        padding: 14px;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: white;
+    }
+
+        .time-slot:hover {
+            border-color: var(--primary-purple);
+            background: #f3f0ff;
+            transform: translateY(-2px);
+        }
+
+        .time-slot.selected {
+            border-color: var(--primary-purple);
+            background: var(--primary-purple);
+            color: white;
+        }
+
+        .time-slot .time-label {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+    /* Search Button */
+    .btn-search {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 16px 40px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        width: 100%;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-search i {
+            margin-right: 10px;
+        }
+
+    /* Results Section */
+    .results-section {
+        margin-top: 30px;
+        display: none;
+    }
+
+        .results-section.show {
+            display: block;
+        }
+
+    .results-header {
+        background: linear-gradient(135deg, #f3f0ff 0%, #ede9fe 100%);
+        padding: 20px;
+        border-radius: 16px;
+        margin-bottom: 20px;
+    }
+
+    .results-count {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+
+        .results-count strong {
+            color: var(--primary-purple);
+            font-size: 1.5rem;
+        }
+
+    .results-info {
+        font-size: 0.95rem;
+        color: #64748b;
+        margin-top: 5px;
+    }
+
+    /* Court Card */
+    .court-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s;
+    }
+
+        .court-card:hover {
+            border-color: var(--primary-purple);
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(108, 51, 242, 0.1);
+        }
+
+    .court-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .court-name {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+
+    .court-type {
+        display: inline-block;
+        padding: 6px 14px;
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border-radius: 16px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #92400e;
+    }
+
+    .court-details {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+
+    .court-detail-item {
+        display: flex;
+        align-items: center;
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+
+        .court-detail-item i {
+            margin-right: 6px;
+            color: var(--primary-purple);
+        }
+
+    .court-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 15px;
+        border-top: 2px solid #f1f5f9;
+    }
+
+    .court-price {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--primary-purple);
+    }
+
+        .court-price .unit {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #64748b;
+        }
+
+    .btn-book {
+        background: linear-gradient(135deg, var(--primary-purple) 0%, var(--secondary-purple) 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 30px;
+        font-weight: 700;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+        .btn-book:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(108, 51, 242, 0.4);
+        }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #94a3b8;
+    }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            color: #64748b;
+        }
+
+    /* Loading Spinner */
+    .loading-spinner {
+        display: none;
+        text-align: center;
+        padding: 40px;
+    }
+
+        .loading-spinner.show {
+            display: block;
+        }
+
+    .spinner {
+        border: 4px solid #f3f4f6;
+        border-top: 4px solid var(--primary-purple);
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .date-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .time-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .court-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .court-footer {
+            flex-direction: column;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .btn-book {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="search-container">
+    <div class="row">
+        <!-- Left Panel - Facility Info -->
+        <div class="col-lg-4 mb-4">
+            <div class="facility-panel">
+                <img src="@ViewBag.FacilityImage" alt="Facility" class="facility-image">
+
+                <h2 class="facility-title">@ViewBag.FacilityName</h2>
+
+                <div class="facility-rating">
+                    <i class="bi bi-star-fill"></i>
+                    <span><strong>4.8</strong> (120 đánh giá)</span>
+                </div>
+
+                <div class="facility-info-item">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <span>@ViewBag.FacilityAddress</span>
+                </div>
+
+                <div class="facility-info-item">
+                    <i class="bi bi-clock-fill"></i>
+                    <span>Giờ hoạt động: @ViewBag.OpenTime - @ViewBag.CloseTime</span>
+                </div>
+
+                <div class="facility-info-item">
+                    <i class="bi bi-grid-3x3-gap"></i>
+                    <span>Số lượng sân: @ViewBag.TotalCourts sân</span>
+                </div>
+
+                <div class="facility-info-item">
+                    <i class="bi bi-telephone-fill"></i>
+                    <span>@ViewBag.FacilityPhone</span>
+                </div>
+
+                <div class="facility-amenities">
+                    <span class="amenity-badge">
+                        <i class="bi bi-wifi"></i> Wifi
+                    </span>
+                    <span class="amenity-badge">
+                        <i class="bi bi-car-front"></i> Parking
+                    </span>
+                    <span class="amenity-badge">
+                        <i class="bi bi-cup-hot"></i> Canteen
+                    </span>
+                    <span class="amenity-badge">
+                        <i class="bi bi-droplet"></i> Shower
+                    </span>
+                </div>
+
+                <div class="facility-price">
+                    <div class="label">Giá từ</div>
+                    <div class="amount">100.000<span style="font-size: 0.6em;"> VNĐ/giờ</span></div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <form asp-action="Search" method="get" id="searchForm">
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label">Cơ sở</label>
-                        <select name="facilityId" class="form-select" id="facilitySelect">
-                            <option value="">Tất cả cơ sở</option>
-                            @if (ViewBag.Facilities != null)
-                            {
-                                @foreach (var facility in ViewBag.Facilities)
-                                {
-                                    <option value="@facility.FacilityId"
-                                            selected="@(Model.FacilityId == facility.FacilityId)">
-                                        @facility.FacilityName
-                                    </option>
-                                }
-                            }
-                        </select>
-                    </div>
 
-                    <div class="col-md-3">
-                        <label class="form-label">Thành phố</label>
-                        <select name="city" class="form-select" id="citySelect">
-                            <option value="">Tất cả</option>
-                            @if (ViewBag.Cities != null)
-                            {
-                                @foreach (var city in ViewBag.Cities)
-                                {
-                                    <option value="@city" selected="@(Model.City == city)">@city</option>
-                                }
-                            }
-                        </select>
-                    </div>
+        <!-- Right Panel - Search & Results -->
+        <div class="col-lg-8">
+            <div class="search-panel">
+                <h3 class="search-title">
+                    <i class="bi bi-search"></i>
+                    Tìm sân trống
+                </h3>
 
-                    <div class="col-md-3">
-                        <label class="form-label">Ngày chơi</label>
-                        <input type="date" name="bookingDate" class="form-control"
-                               value="@Model.BookingDate.ToString("yyyy-MM-dd")"
-                               min="@DateTime.Today.ToString("yyyy-MM-dd")"
-                               max="@DateTime.Today.AddDays(30).ToString("yyyy-MM-dd")" />
+                <!-- Date Selection -->
+                <div class="date-section">
+                    <div class="section-label">
+                        <i class="bi bi-calendar3"></i>
+                        Chọn ngày
                     </div>
+                    <div class="date-grid" id="dateGrid">
+                        <!-- Dates will be generated by JavaScript -->
+                    </div>
+                </div>
 
-                    <div class="col-md-3">
-                        <label class="form-label">&nbsp;</label>
-                        <button type="submit" class="btn btn-success w-100">
-                            <i class="bi bi-search"></i> Tìm kiếm
+                <!-- Time Selection -->
+                <div class="time-section">
+                    <div class="section-label">
+                        <i class="bi bi-clock"></i>
+                        Chọn giờ
+                    </div>
+                    <div class="time-grid" id="timeGrid">
+                        <!-- Times will be generated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Search Button -->
+                <button class="btn-search" onclick="searchCourts()">
+                    <i class="bi bi-search"></i>
+                    Tìm kiếm sân trống
+                </button>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner"></div>
+                <p>Đang tìm kiếm sân trống...</p>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection">
+                <div class="results-header">
+                    <div class="results-count" id="resultsCount">
+                        Tìm thấy <strong>0</strong> sân trống
+                    </div>
+                    <div class="results-info" id="resultsInfo">
+                        Vui lòng chọn ngày và giờ để tìm kiếm
+                    </div>
+                </div>
+
+                <div id="courtsList">
+                    <!-- Courts will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedDate = null;
+    let selectedTime = null;
+    const facilityId = @ViewBag.FacilityId;
+
+    // Generate date grid (next 14 days)
+    function initDateGrid() {
+        const dateGrid = document.getElementById('dateGrid');
+        const today = new Date();
+
+        for (let i = 0; i < 14; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() + i);
+
+            const dayLabel = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][date.getDay()];
+            const dateNumber = date.getDate();
+            const dateValue = date.toISOString().split('T')[0];
+
+            const dateItem = document.createElement('div');
+            dateItem.className = 'date-item';
+            if (i === 0) {
+                dateItem.classList.add('selected');
+                selectedDate = dateValue;
+            }
+            dateItem.setAttribute('data-date', dateValue);
+            dateItem.onclick = function() { selectDate(this); };
+
+            dateItem.innerHTML = `
+                <div class="day-label">${dayLabel}</div>
+                <div class="date-number">${dateNumber}</div>
+            `;
+
+            dateGrid.appendChild(dateItem);
+        }
+    }
+
+    // Generate time slots
+    function initTimeGrid() {
+        const timeGrid = document.getElementById('timeGrid');
+        const openHour = 6;
+        const closeHour = 23;
+
+        for (let hour = openHour; hour < closeHour; hour++) {
+            const timeSlot = document.createElement('div');
+            timeSlot.className = 'time-slot';
+            const timeValue = `${hour.toString().padStart(2, '0')}:00`;
+            timeSlot.setAttribute('data-time', timeValue);
+            timeSlot.onclick = function() { selectTime(this); };
+
+            timeSlot.innerHTML = `
+                <div class="time-label">${timeValue}</div>
+            `;
+
+            timeGrid.appendChild(timeSlot);
+        }
+    }
+
+    // Select date
+    function selectDate(element) {
+        document.querySelectorAll('.date-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        element.classList.add('selected');
+        selectedDate = element.getAttribute('data-date');
+    }
+
+    // Select time
+    function selectTime(element) {
+        document.querySelectorAll('.time-slot').forEach(item => {
+            item.classList.remove('selected');
+        });
+        element.classList.add('selected');
+        selectedTime = element.getAttribute('data-time');
+    }
+
+    // Search courts
+    async function searchCourts() {
+        if (!selectedDate || !selectedTime) {
+            alert('Vui lòng chọn ngày và giờ!');
+            return;
+        }
+
+        // Show loading
+        document.getElementById('loadingSpinner').classList.add('show');
+        document.getElementById('resultsSection').classList.remove('show');
+
+        try {
+            const response = await fetch('@Url.Action("SearchAvailableCourts", "Booking")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    facilityId: facilityId,
+                    bookingDate: selectedDate,
+                    startTime: selectedTime
+                })
+            });
+
+            const result = await response.json();
+
+            // Hide loading
+            document.getElementById('loadingSpinner').classList.remove('show');
+
+            if (result.success) {
+                displayResults(result.courts);
+            } else {
+                alert(result.message || 'Có lỗi xảy ra khi tìm kiếm!');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('loadingSpinner').classList.remove('show');
+            alert('Có lỗi xảy ra khi tìm kiếm!');
+        }
+    }
+
+    // Display results
+    function displayResults(courts) {
+        const resultsSection = document.getElementById('resultsSection');
+        const courtsList = document.getElementById('courtsList');
+        const resultsCount = document.getElementById('resultsCount');
+        const resultsInfo = document.getElementById('resultsInfo');
+
+        resultsCount.innerHTML = `Tìm thấy <strong>${courts.length}</strong> sân trống`;
+        resultsInfo.textContent = `Ngày ${selectedDate} - Khung giờ ${selectedTime}`;
+
+        if (courts.length === 0) {
+            courtsList.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-emoji-frown"></i>
+                    <p>Không tìm thấy sân trống trong khung giờ này</p>
+                </div>
+            `;
+        } else {
+            courtsList.innerHTML = courts.map(court => `
+                <div class="court-card">
+                    <div class="court-header">
+                        <div class="court-name">${court.courtNumber}</div>
+                        <span class="court-type">${court.courtType}</span>
+                    </div>
+                    <div class="court-details">
+                        <div class="court-detail-item">
+                            <i class="bi bi-clock"></i>
+                            <span>${court.startTime} - ${court.endTime}</span>
+                        </div>
+                        ${court.hasLighting ? '<div class="court-detail-item"><i class="bi bi-lightbulb"></i><span>Có đèn</span></div>' : ''}
+                        ${court.hasAC ? '<div class="court-detail-item"><i class="bi bi-snow"></i><span>Điều hòa</span></div>' : ''}
+                        ${court.isPeakHour ? '<div class="court-detail-item"><i class="bi bi-star-fill text-warning"></i><span>Giờ cao điểm</span></div>' : ''}
+                    </div>
+                    <div class="court-footer">
+                        <div class="court-price">
+                            ${court.price.toLocaleString('vi-VN')}
+                            <span class="unit">VNĐ</span>
+                        </div>
+                        <button class="btn-book" onclick="bookCourt(${court.courtId}, '${selectedDate}', '${court.startTime}', '${court.endTime}')">
+                            <i class="bi bi-calendar-check me-2"></i>Đặt sân ngay
                         </button>
                     </div>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Results -->
-    @if (Model.AvailableFacilities == null || !Model.AvailableFacilities.Any())
-    {
-        <div class="alert alert-info text-center">
-            <i class="bi bi-info-circle fs-1 d-block mb-3"></i>
-            <h5>Không tìm thấy sân trống</h5>
-            <p class="mb-0">Vui lòng thử tìm kiếm với ngày khác hoặc cơ sở khác</p>
-        </div>
-    }
-    else
-    {
-        <div class="mb-3">
-            <h5>Tìm thấy <span class="text-success">@Model.AvailableFacilities.Count</span> cơ sở có sân trống</h5>
-            <p class="text-muted">Ngày: <strong>@Model.BookingDate.ToString("dd/MM/yyyy")</strong></p>
-        </div>
-
-        @foreach (var facility in Model.AvailableFacilities)
-        {
-            <div class="card mb-4 shadow-sm">
-                <div class="card-header bg-light">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h5 class="mb-0">
-                                <i class="bi bi-building text-success"></i>
-                                @facility.FacilityName
-                            </h5>
-                            <small class="text-muted">
-                                <i class="bi bi-geo-alt"></i> @facility.Address, @facility.District, @facility.City
-                            </small>
-                        </div>
-                        <div class="col-md-4 text-md-end">
-                            <span class="badge bg-success">@facility.TotalCourts sân</span>
-                            @if (facility.OpenTime.HasValue && facility.CloseTime.HasValue)
-                            {
-                                <small class="d-block text-muted">
-                                    <i class="bi bi-clock"></i>
-                                    @facility.OpenTime.Value.ToString(@"hh\:mm") -
-                                    @facility.CloseTime.Value.ToString(@"hh\:mm")
-                                </small>
-                            }
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    @foreach (var court in facility.AvailableCourts)
-                    {
-                        <div class="court-section mb-4">
-                            <h6 class="mb-3">
-                                <i class="bi bi-grid-3x3"></i>
-                                Sân @court.CourtNumber
-                                <span class="badge bg-secondary">@court.CourtType</span>
-                            </h6>
-
-                            <div class="row g-2">
-                                @foreach (var slot in court.AvailableTimeSlots)
-                                {
-                                    <div class="col-6 col-md-4 col-lg-3">
-                                        @if (slot.IsAvailable)
-                                        {
-                                            <div class="time-slot available @(slot.IsPeakHour ? "peak-hour" : "")"
-                                                 onclick="selectTimeSlot(@court.CourtId, '@slot.StartTime', '@slot.EndTime', @slot.Price)">
-                                                <div class="fw-bold">
-                                                    @slot.StartTime.ToString(@"hh\:mm") - @slot.EndTime.ToString(@"hh\:mm")
-                                                </div>
-                                                <div class="text-success fw-bold">
-                                                    @slot.Price.ToString("N0")đ
-                                                </div>
-                                                @if (slot.IsPeakHour)
-                                                {
-                                                    <small class="text-warning">
-                                                        <i class="bi bi-star-fill"></i> Giờ cao điểm
-                                                    </small>
-                                                }
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <div class="time-slot booked">
-                                                <div class="fw-bold">
-                                                    @slot.StartTime.ToString(@"hh\:mm") - @slot.EndTime.ToString(@"hh\:mm")
-                                                </div>
-                                                <small class="text-muted">
-                                                    <i class="bi bi-lock"></i> Đã đặt
-                                                </small>
-                                            </div>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                        <hr />
-                    }
-                </div>
-            </div>
-        }
-    }
-</div>
-
-@section Scripts {
-    <script>
-        function selectTimeSlot(courtId, startTime, endTime, price) {
-            const bookingDate = $('input[name="bookingDate"]').val();
-
-            if (!bookingDate) {
-                showError('Vui lòng chọn ngày chơi');
-                return;
-            }
-
-            const url = '@Url.Action("Create", "Booking")' +
-                        '?courtId=' + courtId +
-                        '&bookingDate=' + bookingDate +
-                        '&startTime=' + startTime +
-                        '&endTime=' + endTime;
-
-            window.location.href = url;
+            `).join('');
         }
 
-        $(document).ready(function() {
-            // Auto-submit on date change
-            $('input[name="bookingDate"]').on('change', function() {
-                $('#searchForm').submit();
-            });
+        resultsSection.classList.add('show');
+        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
 
-            // Highlight selected time slots on hover
-            $('.time-slot.available').hover(
-                function() {
-                    $(this).addClass('shadow-sm');
-                },
-                function() {
-                    $(this).removeClass('shadow-sm');
-                }
-            );
+    // Book court
+    function bookCourt(courtId, date, startTime, endTime) {
+        const url = `@Url.Action("Create", "Booking")?courtId=${courtId}&bookingDate=${date}&startTime=${startTime}&endTime=${endTime}`;
+        window.location.href = url;
+    }
 
-            // Set min date to today
-            const today = new Date().toISOString().split('T')[0];
-            $('input[name="bookingDate"]').attr('min', today);
-        });
-    </script>
-}
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        initDateGrid();
+        initTimeGrid();
+    });
+</script>

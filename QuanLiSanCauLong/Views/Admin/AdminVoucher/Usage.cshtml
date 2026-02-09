@@ -1,5 +1,107 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<QuanLiSanCauLong.ViewModels.VoucherUsageViewModel>
+
 @{
+    ViewData["Title"] = "Lịch sử sử dụng Voucher";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    var voucherInfo = ViewBag.Voucher as QuanLiSanCauLong.ViewModels.VoucherViewModel;
 }
+
+<div class="container-fluid py-4">
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-dark text-white overflow-hidden">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center">
+                        <a asp-action="Index" class="btn btn-outline-light rounded-circle me-3">
+                            <i class="bi bi-arrow-left"></i>
+                        </a>
+                        <div>
+                            <h4 class="fw-bold mb-1">Lịch sử dùng mã: @voucherInfo.VoucherCode</h4>
+                            <p class="mb-0 text-white-50">@voucherInfo.VoucherName | Đã dùng @voucherInfo.UsedCount lượt</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <div class="d-inline-block bg-white text-dark rounded-3 px-3 py-2">
+                        <span class="small d-block text-muted">Tổng giảm giá</span>
+                        <span class="fw-bold fs-5">@ViewBag.TotalDiscounted.ToString("N0")đ</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted small text-uppercase">
+                        <tr>
+                            <th class="ps-4 py-3">Khách hàng</th>
+                            <th class="py-3">Đơn hàng / Đặt sân</th>
+                            <th class="py-3">Ngày sử dụng</th>
+                            <th class="py-3">Giá trị đơn</th>
+                            <th class="py-3">Số tiền đã giảm</th>
+                            <th class="pe-4 py-3 text-end">Trạng thái đơn</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-soft-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 35px; height: 35px;">
+                                                <i class="bi bi-person text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">@item.CustomerName</div>
+                                                <div class="text-muted small">@item.CustomerPhone</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="#" class="text-decoration-none fw-semibold">#@item.OrderCode</a>
+                                        <div class="x-small text-muted">@item.OrderType</div>
+                                    </td>
+                                    <td>
+                                        <div class="small">@item.UsedAt.ToString("dd/MM/yyyy")</div>
+                                        <div class="x-small text-muted">@item.UsedAt.ToString("HH:mm")</div>
+                                    </td>
+                                    <td>@item.OrderTotal.ToString("N0")đ</td>
+                                    <td>
+                                        <span class="text-danger fw-bold">-@item.DiscountAmount.ToString("N0")đ</span>
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <span class="badge bg-soft-success text-success rounded-pill">Hoàn thành</span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-3 opacity-25"></i>
+                                    Chưa có lượt sử dụng nào cho mã này.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-soft-primary {
+        background-color: #eef2ff;
+    }
+
+    .x-small {
+        font-size: 0.7rem;
+    }
+</style>

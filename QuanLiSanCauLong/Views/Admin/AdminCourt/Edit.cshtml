@@ -1,98 +1,433 @@
 ﻿@model QuanLiSanCauLong.Models.Court
 
 @{
-    ViewData["Title"] = "Chỉnh sửa sân";
+    ViewData["Title"] = "Chỉnh Sửa Sân";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="row">
-    <div class="col-lg-8 mx-auto">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-warning py-3">
-                <h4 class="mb-0 fw-bold text-dark">
-                    <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa: @Model.CourtNumber
-                </h4>
+<style>
+    body {
+        background-color: #f5f5f5;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    .page-header {
+        background: white;
+        padding: 1.5rem 2rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 0;
+    }
+
+    .form-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        padding: 2rem;
+    }
+
+    .form-header {
+        margin-bottom: 2rem;
+    }
+
+    .form-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 0.25rem;
+    }
+
+    .form-subtitle {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+        .form-label .required {
+            color: #dc2626;
+        }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 0.625rem 0.875rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .form-row-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.875rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .checkbox-group:hover {
+            border-color: #d1d5db;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+    .image-upload-area {
+        border: 2px dashed #d1d5db;
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #fafafa;
+    }
+
+        .image-upload-area:hover {
+            border-color: #9ca3af;
+            background: #f3f4f6;
+        }
+
+    .image-preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .image-preview-item {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 2px solid #e5e7eb;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .image-preview-item.primary {
+            border-color: #f59e0b;
+            border-width: 3px;
+        }
+
+        .image-preview-item.deleted {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .image-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .primary-badge {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        background: #f59e0b;
+        color: white;
+        padding: 0.125rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.625rem;
+        font-weight: 700;
+    }
+
+    .image-actions {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        display: none;
+        gap: 0.25rem;
+    }
+
+    .image-preview-item:hover .image-actions {
+        display: flex;
+    }
+
+    .image-action-btn {
+        width: 24px;
+        height: 24px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        transition: all 0.2s;
+    }
+
+        .image-action-btn.delete {
+            background: rgba(220, 38, 38, 0.9);
+            color: white;
+        }
+
+        .image-action-btn.replace {
+            background: rgba(59, 130, 246, 0.9);
+            color: white;
+        }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: #1a1a1a;
+        color: white;
+        flex: 1;
+    }
+
+        .btn-primary:hover {
+            background: #0a0a0a;
+        }
+
+    .btn-secondary {
+        background: white;
+        color: #6b7280;
+        border: 1px solid #d1d5db;
+    }
+
+        .btn-secondary:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+
+    .text-danger {
+        color: #dc2626;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+
+    .deleted-indicator {
+        position: absolute;
+        inset: 0;
+        background: rgba(220, 38, 38, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.688rem;
+        font-weight: 700;
+    }
+</style>
+
+<div class="page-header">
+    <h1 class="page-title">Chỉnh Sửa Sân</h1>
+</div>
+
+<div class="container-fluid px-4">
+    <div class="form-container">
+        <div class="form-card">
+            <div class="form-header">
+                <h2 class="form-title">Chỉnh Sửa Sân</h2>
+                <p class="form-subtitle">Cập nhật thông tin sân @Model.CourtNumber</p>
             </div>
-            <div class="card-body p-4">
-                <form asp-action="Edit" method="post">
-                    <input type="hidden" asp-for="CourtId" />
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label asp-for="FacilityId" class="form-label fw-bold">Cơ sở</label>
-                                <select asp-for="FacilityId" class="form-select border-primary-subtle" asp-items="ViewBag.FacilityId"></select>
-                            </div>
+            <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="CourtId" />
+                <input type="hidden" asp-for="CreatedAt" />
 
-                            <div class="mb-3">
-                                <label asp-for="CourtNumber" class="form-label fw-bold">Số sân / Tên sân</label>
-                                <input asp-for="CourtNumber" class="form-control" />
-                                <span asp-validation-for="CourtNumber" class="text-danger small"></span>
-                            </div>
+                <!-- Mã Sân & Cơ Sở -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">
+                            Mã Sân <span class="required">*</span>
+                        </label>
+                        <input asp-for="CourtNumber" class="form-control" />
+                        <span asp-validation-for="CourtNumber" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">
+                            Cơ Sở <span class="required">*</span>
+                        </label>
+                        <select asp-for="FacilityId" class="form-select" asp-items="ViewBag.Facilities">
+                        </select>
+                        <span asp-validation-for="FacilityId" class="text-danger"></span>
+                    </div>
+                </div>
 
-                            <div class="mb-3">
-                                <label asp-for="HourlyRate" class="form-label fw-bold">Giá cơ bản (VNĐ/h)</label>
-                                <div class="input-group">
-                                    <input asp-for="HourlyRate" type="number" class="form-control" />
-                                    <span class="input-group-text">đ</span>
-                                </div>
-                                <span asp-validation-for="HourlyRate" class="text-danger small"></span>
-                            </div>
+                <!-- Loại Sân & Trạng Thái -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">
+                            Loại Sân <span class="required">*</span>
+                        </label>
+                        <select asp-for="CourtType" class="form-select">
+                            <option value="Standard">Trong Nhà</option>
+                            <option value="VIP">Ngoại Trời</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">
+                            Trạng Thái <span class="required">*</span>
+                        </label>
+                        <select asp-for="Status" class="form-select">
+                            <option value="Available">Đang Trống</option>
+                            <option value="Maintenance">Bảo Trì</option>
+                            <option value="Occupied">Đang Sử Dụng</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Giá -->
+                <div class="form-group">
+                    <label class="form-label">Giá Giờ Thường (VNĐ)</label>
+                    <input asp-for="HourlyRate" type="number" class="form-control" />
+                </div>
+
+                <!-- Tiện Ích -->
+                <div class="form-group">
+                    <label class="form-label">Tiện Ích</label>
+                    <div class="form-row">
+                        <div class="checkbox-group">
+                            <input asp-for="HasLighting" type="checkbox" id="hasLighting" />
+                            <label for="hasLighting" class="checkbox-label">Có đèn chiếu sáng</label>
                         </div>
+                        <div class="checkbox-group">
+                            <input asp-for="HasAC" type="checkbox" id="hasAC" />
+                            <label for="hasAC" class="checkbox-label">Có điều hòa không khí</label>
+                        </div>
+                    </div>
+                </div>
 
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label asp-for="CourtType" class="form-label fw-bold">Loại sân</label>
-                                <select asp-for="CourtType" class="form-select">
-                                    <option value="Standard">Tiêu chuẩn</option>
-                                    <option value="VIP">VIP</option>
-                                    <option value="Premium">Premium</option>
-                                </select>
-                            </div>
+                <!-- Quản Lý Ảnh -->
+                <div class="form-group">
+                    <label class="form-label">Hình Ảnh Sân</label>
 
-                            <div class="mb-3">
-                                <label asp-for="Status" class="form-label fw-bold">Trạng thái vận hành</label>
-                                <select asp-for="Status" class="form-select">
-                                    <option value="Available">Sẵn sàng</option>
-                                    <option value="Occupied">Đang sử dụng</option>
-                                    <option value="Maintenance">Bảo trì</option>
-                                </select>
-                            </div>
+                    <!-- Upload new images -->
+                    <input type="file"
+                           id="newImagesInput"
+                           multiple
+                           accept="image/*"
+                           class="d-none"
+                           onchange="handleNewImages(this)" />
 
-                            <div class="p-3 border rounded bg-light">
-                                <label class="form-label fw-bold mb-2">Tiện ích đi kèm</label>
-                                <div class="form-check form-switch mb-2">
-                                    <input class="form-check-input" type="checkbox" asp-for="HasLighting">
-                                    <label class="form-check-label" asp-for="HasLighting">Có đèn chiếu sáng</label>
-                                </div>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" asp-for="HasAC">
-                                    <label class="form-check-label" asp-for="HasAC">Có máy lạnh/điều hòa</label>
-                                </div>
-                            </div>
+                    <div class="image-upload-area" onclick="document.getElementById('newImagesInput').click()" style="padding: 1rem; margin-bottom: 1rem;">
+                        <div style="font-size: 1.5rem; color: #9ca3af;">
+                            <i class="bi bi-plus-circle"></i>
+                        </div>
+                        <div style="font-size: 0.813rem; color: #6b7280; margin-top: 0.25rem;">
+                            Thêm ảnh mới
                         </div>
                     </div>
 
-                    <div class="mb-4 mt-3">
-                        <label asp-for="ImagePath" class="form-label fw-bold">Đường dẫn ảnh mô tả (URL)</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-link"></i></span>
-                            <input asp-for="ImagePath" class="form-control" placeholder="https://domain.com/image.jpg" />
-                        </div>
-                        <div class="form-text">Bạn có thể dán link ảnh từ Drive hoặc các dịch vụ lưu trữ ảnh.</div>
+                    <!-- Existing images -->
+                    <div class="image-preview-grid" id="imageGallery">
+                        @if (Model.CourtImages != null && Model.CourtImages.Any())
+                        {
+                            foreach (var img in Model.CourtImages.OrderBy(i => i.DisplayOrder))
+                            {
+                                <div class="image-preview-item @(img.IsPrimary ? "primary" : "")"
+                                     data-image-id="@img.ImageId"
+                                     data-is-primary="@img.IsPrimary.ToString().ToLower()"
+                                     onclick="setPrimaryExisting(@img.ImageId)">
+                                    <img src="@img.ImagePath" alt="Court Image">
+                                    @if (img.IsPrimary)
+                                    {
+                                        <span class="primary-badge">Chính</span>
+                                    }
+                                    <div class="image-actions">
+                                        <button type="button" class="image-action-btn replace"
+                                                onclick="replaceExisting(@img.ImageId, event)"
+                                                title="Thay thế">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </button>
+                                        @if (!img.IsPrimary)
+                                        {
+                                            <button type="button" class="image-action-btn delete"
+                                                    onclick="deleteExisting(@img.ImageId, event)"
+                                                    title="Xóa">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        }
                     </div>
 
-                    <div class="d-flex gap-2 justify-content-end border-top pt-4">
-                        <a asp-action="Index" class="btn btn-secondary px-4">
-                            <i class="bi bi-x-circle me-1"></i>Hủy
-                        </a>
-                        <button type="submit" class="btn btn-warning px-4 fw-bold">
-                            <i class="bi bi-check-circle me-1"></i>Cập nhật ngay
-                        </button>
-                    </div>
-                </form>
-            </div>
+                    <input type="hidden" id="deletedImageIds" name="DeletedImageIds" value="" />
+                    <input type="hidden" id="newPrimaryImageId" name="NewPrimaryImageId" value="" />
+
+                    <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.75rem;">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Click vào ảnh để đặt làm ảnh chính
+                    </p>
+                </div>
+
+                <!-- Actions -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i>
+                        Cập Nhật
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        Hủy
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -101,4 +436,113 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        let deletedIds = [];
+
+        function setPrimaryExisting(imageId) {
+            document.getElementById('newPrimaryImageId').value = imageId;
+
+            document.querySelectorAll('.image-preview-item').forEach(item => {
+                item.classList.remove('primary');
+                const badge = item.querySelector('.primary-badge');
+                if (badge) badge.remove();
+            });
+
+            const selectedItem = document.querySelector(`[data-image-id="${imageId}"]`);
+            if (selectedItem && !selectedItem.classList.contains('deleted')) {
+                selectedItem.classList.add('primary');
+                selectedItem.insertAdjacentHTML('afterbegin', '<span class="primary-badge">Chính</span>');
+            }
+        }
+
+        function replaceExisting(imageId, event) {
+            event.stopPropagation();
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        const item = document.querySelector(`[data-image-id="${imageId}"]`);
+                        if (item) {
+                            item.querySelector('img').src = evt.target.result;
+                        }
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            };
+            input.click();
+        }
+
+        function deleteExisting(imageId, event) {
+            event.stopPropagation();
+
+            const item = document.querySelector(`[data-image-id="${imageId}"]`);
+            if (item && item.classList.contains('primary')) {
+                Swal.fire('Lỗi!', 'Không thể xóa ảnh chính! Hãy đặt ảnh khác làm chính trước.', 'error');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Xác nhận xóa?',
+                text: 'Ảnh sẽ bị xóa vĩnh viễn',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    deletedIds.push(imageId);
+                    document.getElementById('deletedImageIds').value = deletedIds.join(',');
+
+                    if (item) {
+                        item.classList.add('deleted');
+                        item.insertAdjacentHTML('beforeend', '<div class="deleted-indicator">SẼ XÓA</div>');
+                    }
+                }
+            });
+        }
+
+        function handleNewImages(input) {
+            if (input.files) {
+                const gallery = document.getElementById('imageGallery');
+
+                Array.from(input.files).forEach((file) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const newItem = document.createElement('div');
+                        newItem.className = 'image-preview-item';
+                        newItem.dataset.isNew = 'true';
+                        newItem.innerHTML = `
+                            <img src="${e.target.result}" alt="New Image">
+                            <div class="image-actions">
+                                <button type="button" class="image-action-btn delete"
+                                        onclick="this.parentElement.parentElement.remove()"
+                                        title="Xóa">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                        newItem.onclick = function() {
+                            // Set as primary
+                            document.querySelectorAll('.image-preview-item').forEach(i => {
+                                i.classList.remove('primary');
+                                const b = i.querySelector('.primary-badge');
+                                if (b) b.remove();
+                            });
+                            this.classList.add('primary');
+                            this.insertAdjacentHTML('afterbegin', '<span class="primary-badge">Chính</span>');
+                        };
+                        gallery.appendChild(newItem);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
+    </script>
 }

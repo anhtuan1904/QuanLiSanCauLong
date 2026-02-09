@@ -29,6 +29,7 @@ namespace QuanLiSanCauLong.ViewModels
         public decimal TotalAmount { get; set; }
         public string OrderStatus { get; set; }
         public string PaymentStatus { get; set; }
+        public string Note { get; set; } // <--- THÊM DÒNG NÀY
         public DateTime CreatedAt { get; set; }
         public List<OrderDetailViewModel> OrderDetails { get; set; }
     }

@@ -1,5 +1,430 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<QuanLiSanCauLong.ViewModels.OrderViewModel>
+
 @{
+    ViewData["Title"] = "Quản lý Đơn Hàng";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
+
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Quản Lý Đơn Hàng</h3>
+            <p class="text-muted mb-0 small">Quản lý đơn hàng sản phẩm và dịch vụ</p>
+        </div>
+        <button class="btn btn-success" onclick="exportOrders()">
+            <i class="bi bi-download me-2"></i>Xuất Excel
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="icon-box bg-primary-subtle rounded-3 p-3 mb-3">
+                                <i class="bi bi-box-seam text-primary fs-4"></i>
+                            </div>
+                            <h3 class="fw-bold mb-1">@ViewBag.TotalOrders</h3>
+                            <p class="text-muted small mb-0">Tổng Đơn Hàng</p>
+                        </div>
+                        <span class="badge bg-success-subtle text-success">+12.5%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="icon-box bg-warning-subtle rounded-3 p-3 mb-3">
+                                <i class="bi bi-hourglass-split text-warning fs-4"></i>
+                            </div>
+                            <h3 class="fw-bold mb-1">@ViewBag.PendingOrders</h3>
+                            <p class="text-muted small mb-0">Chờ Xử Lý</p>
+                        </div>
+                        <span class="badge bg-warning-subtle text-warning">+5</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="icon-box bg-success-subtle rounded-3 p-3 mb-3">
+                                <i class="bi bi-check2-circle text-success fs-4"></i>
+                            </div>
+                            <h3 class="fw-bold mb-1">@ViewBag.CompletedOrders</h3>
+                            <p class="text-muted small mb-0">Hoàn Thành</p>
+                        </div>
+                        <span class="badge bg-success-subtle text-success">+28</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="icon-box bg-info-subtle rounded-3 p-3 mb-3">
+                                <i class="bi bi-currency-dollar text-info fs-4"></i>
+                            </div>
+                            <h3 class="fw-bold mb-1">₫@ViewBag.TotalRevenue.ToString("N0")</h3>
+                            <p class="text-muted small mb-0">Tổng Doanh Thu</p>
+                        </div>
+                        <span class="badge bg-info-subtle text-info">+15%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Table Card -->
+    <div class="card border-0 shadow-sm">
+        <!-- Card Header with Filters -->
+        <div class="card-header bg-white border-0 py-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0">Danh Sách Đơn Hàng</h5>
+                    <small class="text-muted">Quản lý đơn hàng sản phẩm và dịch vụ</small>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <!-- Type Filter Tabs -->
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary active" data-filter="all">
+                        Tất Cả
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-filter="withbooking">
+                        Có Đặt Sân
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-filter="standalone">
+                        Độc Lập
+                    </button>
+                </div>
+
+                <!-- Search and Status Filter -->
+                <div class="d-flex gap-2">
+                    <div class="input-group input-group-sm" style="width: 250px;">
+                        <span class="input-group-text bg-light border-0">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control bg-light border-0"
+                               placeholder="Tìm kiếm..." id="searchInput">
+                    </div>
+                    <select class="form-select form-select-sm bg-light border-0"
+                            style="width: 150px;" id="statusFilter">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="pending">Chờ xử lý</option>
+                        <option value="confirmed">Đã xác nhận</option>
+                        <option value="completed">Hoàn thành</option>
+                        <option value="cancelled">Đã hủy</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0 py-3 ps-4">
+                                <span class="text-muted small fw-bold">MÃ ĐƠN</span>
+                            </th>
+                            <th class="border-0 py-3">
+                                <span class="text-muted small fw-bold">LOẠI ĐƠN</span>
+                            </th>
+                            <th class="border-0 py-3">
+                                <span class="text-muted small fw-bold">SẢN PHẨM</span>
+                            </th>
+                            <th class="border-0 py-3">
+                                <span class="text-muted small fw-bold">TỔNG TIỀN</span>
+                            </th>
+                            <th class="border-0 py-3">
+                                <span class="text-muted small fw-bold">NGÀY TẠO</span>
+                            </th>
+                            <th class="border-0 py-3">
+                                <span class="text-muted small fw-bold">THANH TOÁN</span>
+                            </th>
+                            <th class="border-0 py-3">
+                                <span class="text-muted small fw-bold">TRẠNG THÁI</span>
+                            </th>
+                            <th class="border-0 py-3 pe-4 text-end">
+                                <span class="text-muted small fw-bold">THAO TÁC</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var order in Model)
+                            {
+                                <tr data-type="@order.OrderType.ToLower()" data-status="@order.OrderStatus.ToLower()">
+                                    <td class="ps-4 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="icon-box-sm bg-primary-subtle rounded-2 p-2 me-2">
+                                                <i class="bi bi-receipt-cutoff text-primary"></i>
+                                            </div>
+                                            <span class="fw-semibold">@order.OrderCode</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        @if (order.OrderType == "WithBooking")
+                                        {
+                                            <span class="badge bg-info-subtle text-info px-2 py-1">
+                                                <i class="bi bi-link-45deg me-1"></i>Có Đặt Sân
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary-subtle text-secondary px-2 py-1">
+                                                <i class="bi bi-bag me-1"></i>Độc Lập
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="py-3">
+                                        <div>
+                                            <div class="fw-semibold">@order.OrderDetails.Count sản phẩm</div>
+                                            <small class="text-muted">
+                                                @string.Join(", ", order.OrderDetails.Take(2).Select(d => d.ProductName))
+                                                @(order.OrderDetails.Count > 2 ? "..." : "")
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="fw-bold text-success">₫@order.TotalAmount.ToString("N0")</span>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="small">@order.CreatedAt.ToString("dd/MM/yyyy")</div>
+                                        <small class="text-muted">@order.CreatedAt.ToString("HH:mm")</small>
+                                    </td>
+                                    <td class="py-3">
+                                        @if (order.PaymentStatus == "Paid")
+                                        {
+                                            <span class="badge bg-success-subtle text-success px-2 py-1">
+                                                <i class="bi bi-check-circle me-1"></i>Đã Thanh Toán
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning-subtle text-warning px-2 py-1">
+                                                <i class="bi bi-clock me-1"></i>Chưa Thanh Toán
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="py-3">
+                                        @switch (order.OrderStatus)
+                                        {
+                                            case "Pending":
+                                                <span class="badge bg-warning-subtle text-warning px-2 py-1">
+                                                    Chờ Xử Lý
+                                                </span>
+                                                break;
+                                            case "Confirmed":
+                                                <span class="badge bg-info-subtle text-info px-2 py-1">
+                                                    Đã Xác Nhận
+                                                </span>
+                                                break;
+                                            case "Completed":
+                                                <span class="badge bg-success-subtle text-success px-2 py-1">
+                                                    Hoàn Thành
+                                                </span>
+                                                break;
+                                            case "Cancelled":
+                                                <span class="badge bg-danger-subtle text-danger px-2 py-1">
+                                                    Đã Hủy
+                                                </span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td class="py-3 pe-4 text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="Details" asp-route-id="@order.OrderId"
+                                               class="btn btn-outline-secondary" title="Chi tiết">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            @if (order.OrderStatus == "Pending")
+                                            {
+                                                <button class="btn btn-outline-success"
+                                                        onclick="confirmOrder(@order.OrderId)"
+                                                        title="Xác nhận">
+                                                    <i class="bi bi-check"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                                        <p class="mb-0">Không có dữ liệu đơn hàng</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="card-footer bg-white border-0 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Hiển thị 1-10 trong tổng số @(Model?.Count() ?? 0) đơn</small>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#">Trước</a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Sau</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmOrder(orderId) {
+            if (confirm('Bạn có chắc muốn xác nhận đơn hàng này?')) {
+                $.post('@Url.Action("Confirm", "AdminOrder")', { orderId: orderId })
+                    .done(function(result) {
+                        if (result.success) {
+                            alert(result.message);
+                            location.reload();
+                        } else {
+                            alert(result.message);
+                        }
+                    })
+                    .fail(function() {
+                        alert('Có lỗi xảy ra!');
+                    });
+            }
+        }
+
+        function exportOrders() {
+            window.location.href = '@Url.Action("Export", "AdminOrder")';
+        }
+
+        // Type filter
+        document.querySelectorAll('[data-filter]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const filter = this.dataset.filter;
+                document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                document.querySelectorAll('tbody tr[data-type]').forEach(row => {
+                    if (filter === 'all' || row.dataset.type === filter) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Status filter
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            const status = this.value;
+            document.querySelectorAll('tbody tr[data-status]').forEach(row => {
+                if (!status || row.dataset.status === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // Search
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            document.querySelectorAll('tbody tr[data-type]').forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+    </script>
+}
+
+<style>
+    .icon-box {
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .icon-box-sm {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .bg-success-subtle {
+        background-color: rgba(16, 185, 129, 0.1) !important;
+    }
+
+    .bg-primary-subtle {
+        background-color: rgba(99, 102, 241, 0.1) !important;
+    }
+
+    .bg-info-subtle {
+        background-color: rgba(14, 165, 233, 0.1) !important;
+    }
+
+    .bg-warning-subtle {
+        background-color: rgba(245, 158, 11, 0.1) !important;
+    }
+
+    .bg-danger-subtle {
+        background-color: rgba(239, 68, 68, 0.1) !important;
+    }
+
+    .bg-secondary-subtle {
+        background-color: rgba(107, 114, 128, 0.1) !important;
+    }
+
+    .card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+        }
+
+    .table tbody tr {
+        transition: background-color 0.2s;
+    }
+
+        .table tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+</style>

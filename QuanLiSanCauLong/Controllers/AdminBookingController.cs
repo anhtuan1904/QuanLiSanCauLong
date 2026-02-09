@@ -50,6 +50,12 @@ namespace QuanLiSanCauLong.Controllers
             {
                 BookingId = b.BookingId,
                 BookingCode = b.BookingCode,
+
+                // ĐÃ THÊM: Gán dữ liệu khách hàng từ navigation property b.User
+                CustomerName = b.User?.FullName ?? "Khách vãng lai",
+                Phone = b.User?.Phone ?? "N/A",
+                Email = b.User?.Email ?? "N/A",
+
                 FacilityName = b.Court.Facility.FacilityName,
                 CourtNumber = b.Court.CourtNumber,
                 CourtType = b.Court.CourtType,
@@ -69,7 +75,6 @@ namespace QuanLiSanCauLong.Controllers
                     OrderStatus = o.OrderStatus
                 }).ToList()
             }).ToList();
-
             ViewBag.Facilities = await _context.Facilities.ToListAsync();
             ViewBag.FromDate = fromDate?.ToString("yyyy-MM-dd");
             ViewBag.ToDate = toDate?.ToString("yyyy-MM-dd");

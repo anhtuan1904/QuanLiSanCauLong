@@ -5,57 +5,132 @@
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="card shadow border-0">
-    <div class="card-header bg-danger text-white py-3 d-flex justify-content-between align-items-center">
-        <h5 class="m-0 fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Sản phẩm sắp hết hàng</h5>
-        <span class="badge bg-light text-danger fs-6">@Model.Count() sản phẩm</span>
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 text-danger">
+                <i class="bi bi-exclamation-octagon-fill me-2"></i>Cảnh Báo Tồn Kho
+            </h2>
+            <p class="text-muted small mb-0">Danh sách các sản phẩm đã chạm hoặc dưới mức tối thiểu</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-3 px-3">
+                <i class="bi bi-arrow-left me-2"></i>Quay lại kho
+            </a>
+            <button onclick="window.print()" class="btn btn-light btn-sm rounded-3 px-3 border">
+                <i class="bi bi-printer me-2"></i>In danh sách
+            </button>
+        </div>
     </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Cơ sở</th>
-                        <th>Sản phẩm</th>
-                        <th class="text-center">Tồn hiện tại</th>
-                        <th class="text-center">Mức tối thiểu</th>
-                        <th>Tình trạng</th>
-                        <th class="text-end">Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
                         <tr>
-                            <td><span class="fw-bold">@item.Facility.FacilityName</span></td>
-                            <td>
-                                <strong>@item.Product.ProductName</strong><br />
-                                <small class="text-muted">@item.Product.ProductCode</small>
-                            </td>
-                            <td class="text-center">
-                                <span class="text-danger fw-bold fs-5">@item.Quantity</span>
-                                <small class="text-muted">@item.Product.Unit</small>
-                            </td>
-                            <td class="text-center text-muted">@item.MinQuantity</td>
-                            <td>
-                                @if (item.Quantity == 0)
-                                {
-                                    <span class="badge bg-dark">Hết sạch hàng</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-danger">Sắp hết</span>
-                                }
-                            </td>
-                            <td class="text-end">
-                                <a asp-action="StockIn" asp-route-facilityId="@item.FacilityId" class="btn btn-sm btn-success">
-                                    <i class="bi bi-plus-circle"></i> Nhập thêm
-                                </a>
-                            </td>
+                            <th class="ps-4 py-3 text-uppercase small fw-bold text-muted">Cơ sở</th>
+                            <th class="py-3 text-uppercase small fw-bold text-muted">Sản phẩm</th>
+                            <th class="py-3 text-center text-uppercase small fw-bold text-muted">Tồn hiện tại</th>
+                            <th class="py-3 text-center text-uppercase small fw-bold text-muted">Hạn mức tối thiểu</th>
+                            <th class="py-3 text-uppercase small fw-bold text-muted">Tình trạng</th>
+                            <th class="pe-4 py-3 text-end text-uppercase small fw-bold text-muted">Hành động</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-soft-secondary p-2 rounded-3 me-2">
+                                                <i class="bi bi-geo-alt text-secondary"></i>
+                                            </div>
+                                            <span class="fw-semibold">@item.Facility.FacilityName</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark">@item.Product.ProductName</div>
+                                        <div class="text-muted" style="font-size: 0.75rem;">Mã: @item.Product.ProductCode</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge @(item.Quantity == 0 ? "bg-dark" : "bg-soft-danger text-danger") fs-6 px-3 rounded-pill">
+                                            @item.Quantity @item.Product.Unit
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="text-muted fw-bold">@item.MinQuantity</div>
+                                        <div class="text-muted small">@item.Product.Unit</div>
+                                    </td>
+                                    <td>
+                                        @if (item.Quantity == 0)
+                                        {
+                                            <span class="badge bg-danger rounded-pill px-3">
+                                                <i class="bi bi-x-circle me-1"></i>Hết sạch
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark rounded-pill px-3">
+                                                <i class="bi bi-graph-down-arrow me-1"></i>Sắp hết
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <a asp-action="StockIn" asp-route-facilityId="@item.FacilityId"
+                                           class="btn btn-dark btn-sm rounded-3 px-3 shadow-sm">
+                                            <i class="bi bi-cart-plus me-1"></i> Nhập thêm
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="py-4">
+                                        <i class="bi bi-check-circle text-success display-4 d-block mb-3"></i>
+                                        <p class="text-muted">Tuyệt vời! Không có sản phẩm nào sắp hết hàng.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* Nền màu nhạt cho các icon và badge */
+    .bg-soft-danger {
+        background-color: #fef2f2;
+    }
+
+    .bg-soft-secondary {
+        background-color: #f8f9fa;
+    }
+
+    /* Hiệu ứng dòng khi hover */
+    .table-hover tbody tr:hover {
+        background-color: #fffafb;
+        transition: background-color 0.2s ease;
+    }
+
+    /* Tinh chỉnh bảng */
+    .table td, .table th {
+        border-bottom: 1px solid #f1f1f1;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    /* Style cho nút Nhập thêm */
+    .btn-dark:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    }
+</style>

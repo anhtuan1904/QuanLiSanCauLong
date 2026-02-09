@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QuanLiSanCauLong.Data;
 
@@ -11,9 +12,11 @@ using QuanLiSanCauLong.Data;
 namespace QuanLiSanCauLong.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260206165159_productcategory")]
+    partial class productcategory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -229,38 +232,6 @@ namespace QuanLiSanCauLong.Migrations
                     b.HasIndex("FacilityId");
 
                     b.ToTable("Courts");
-                });
-
-            modelBuilder.Entity("QuanLiSanCauLong.Models.CourtImage", b =>
-                {
-                    b.Property<int>("ImageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ImageId"));
-
-                    b.Property<int>("CourtId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ImagePath")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool>("IsPrimary")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("ImageId");
-
-                    b.HasIndex("CourtId");
-
-                    b.ToTable("CourtImages");
                 });
 
             modelBuilder.Entity("QuanLiSanCauLong.Models.Facility", b =>
@@ -1079,17 +1050,6 @@ namespace QuanLiSanCauLong.Migrations
                     b.Navigation("Facility");
                 });
 
-            modelBuilder.Entity("QuanLiSanCauLong.Models.CourtImage", b =>
-                {
-                    b.HasOne("QuanLiSanCauLong.Models.Court", "Court")
-                        .WithMany("CourtImages")
-                        .HasForeignKey("CourtId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Court");
-                });
-
             modelBuilder.Entity("QuanLiSanCauLong.Models.Inventory", b =>
                 {
                     b.HasOne("QuanLiSanCauLong.Models.Facility", "Facility")
@@ -1312,8 +1272,6 @@ namespace QuanLiSanCauLong.Migrations
             modelBuilder.Entity("QuanLiSanCauLong.Models.Court", b =>
                 {
                     b.Navigation("Bookings");
-
-                    b.Navigation("CourtImages");
 
                     b.Navigation("PriceSlots");
                 });

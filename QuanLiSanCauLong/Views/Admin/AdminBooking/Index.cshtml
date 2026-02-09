@@ -1,299 +1,304 @@
 ﻿@model IEnumerable<QuanLiSanCauLong.ViewModels.BookingHistoryViewModel>
 
 @{
-    ViewData["Title"] = "Quản lý đặt sân";
+    ViewData["Title"] = "Quản lý Đặt Sân";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold">
-        <i class="bi bi-calendar-check text-primary me-2"></i>
-        Quản lý đặt sân
-    </h2>
-    <button class="btn btn-success" onclick="exportBookings()">
-        <i class="bi bi-file-excel me-2"></i>Xuất Excel
-    </button>
-</div>
-
-<!-- Filter -->
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-2">
-                <label class="form-label small fw-semibold">Từ ngày</label>
-                <input type="date" class="form-control" name="fromDate"
-                       value="@ViewBag.FromDate" />
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small fw-semibold">Đến ngày</label>
-                <input type="date" class="form-control" name="toDate"
-                       value="@ViewBag.ToDate" />
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small fw-semibold">Cơ sở</label>
-                <select class="form-select" name="facilityId">
-                    <option value="">Tất cả</option>
-                    @foreach (var facility in ViewBag.Facilities ?? new List<object>())
-                    {
-                        <option value="@facility.FacilityId">@facility.FacilityName</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small fw-semibold">Trạng thái</label>
-                <select class="form-select" name="status">
-                    <option value="">Tất cả</option>
-                    <option value="Pending">Chờ xác nhận</option>
-                    <option value="Confirmed">Đã xác nhận</option>
-                    <option value="CheckedIn">Đã check-in</option>
-                    <option value="Completed">Hoàn thành</option>
-                    <option value="Cancelled">Đã hủy</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small fw-semibold">Thanh toán</label>
-                <select class="form-select" name="paymentStatus">
-                    <option value="">Tất cả</option>
-                    <option value="Paid">Đã thanh toán</option>
-                    <option value="Unpaid">Chưa thanh toán</option>
-                </select>
-            </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search"></i> Tìm
-                </button>
-            </div>
-        </form>
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Quản Lý Đặt Sân</h3>
+            <p class="text-muted mb-0 small">Quản lý tất cả đơn đặt sân cầu lông</p>
+        </div>
+        <button class="btn btn-success" onclick="exportBookings()">
+            <i class="bi bi-download me-2"></i>Xuất Excel
+        </button>
     </div>
-</div>
 
-<!-- Statistics Cards -->
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <div class="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-block mb-2">
-                    <i class="bi bi-calendar-check text-primary fs-3"></i>
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="icon-box bg-primary-subtle rounded-3 p-3 mb-3">
+                                <i class="bi bi-calendar-check text-primary fs-4"></i>
+                            </div>
+                            <h3 class="fw-bold mb-1">@ViewBag.TotalBookings</h3>
+                            <p class="text-muted small mb-0">Tổng Đơn Đặt</p>
+                        </div>
+                        <span class="badge bg-success-subtle text-success">+12.5%</span>
+                    </div>
                 </div>
-                <h4 class="mb-0 fw-bold">@ViewBag.TotalBookings</h4>
-                <p class="text-muted mb-0 small">Tổng đơn</p>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="icon-box bg-warning-subtle rounded-3 p-3 mb-3">
+                                <i class="bi bi-clock-history text-warning fs-4"></i>
+                            </div>
+                            <h3 class="fw-bold mb-1">@ViewBag.PendingBookings</h3>
+                            <p class="text-muted small mb-0">Chờ Xác Nhận</p>
+                        </div>
+                        <span class="badge bg-warning-subtle text-warning">+5</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="icon-box bg-info-subtle rounded-3 p-3 mb-3">
+                                <i class="bi bi-check-circle text-info fs-4"></i>
+                            </div>
+                            <h3 class="fw-bold mb-1">@ViewBag.ConfirmedBookings</h3>
+                            <p class="text-muted small mb-0">Đã Xác Nhận</p>
+                        </div>
+                        <span class="badge bg-info-subtle text-info">+18</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="icon-box bg-success-subtle rounded-3 p-3 mb-3">
+                                <i class="bi bi-check2-circle text-success fs-4"></i>
+                            </div>
+                            <h3 class="fw-bold mb-1">@ViewBag.CompletedBookings</h3>
+                            <p class="text-muted small mb-0">Hoàn Thành</p>
+                        </div>
+                        <span class="badge bg-success-subtle text-success">+28</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <div class="bg-warning bg-opacity-10 rounded-circle p-3 d-inline-block mb-2">
-                    <i class="bi bi-hourglass-split text-warning fs-3"></i>
+    <!-- Main Table Card -->
+    <div class="card border-0 shadow-sm">
+        <!-- Card Header with Filters -->
+        <div class="card-header bg-white border-0 py-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0">Danh Sách Đặt Sân</h5>
+                    <small class="text-muted">Quản lý và theo dõi đơn đặt sân</small>
                 </div>
-                <h4 class="mb-0 fw-bold text-warning">@ViewBag.PendingBookings</h4>
-                <p class="text-muted mb-0 small">Chờ xác nhận</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <!-- Status Filter Tabs -->
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary active" data-filter="all">
+                        Tất Cả
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-filter="pending">
+                        Chờ Xác Nhận
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-filter="confirmed">
+                        Đã Xác Nhận
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-filter="completed">
+                        Hoàn Thành
+                    </button>
+                </div>
+
+                <!-- Search and Date Filter -->
+                <div class="d-flex gap-2">
+                    <div class="input-group input-group-sm" style="width: 250px;">
+                        <span class="input-group-text bg-light border-0">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control bg-light border-0" 
+                               placeholder="Tìm kiếm..." id="searchInput">
+                    </div>
+                    <input type="date" class="form-control form-control-sm bg-light border-0" 
+                           style="width: 150px;" id="dateFilter">
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <div class="bg-success bg-opacity-10 rounded-circle p-3 d-inline-block mb-2">
-                    <i class="bi bi-check-circle text-success fs-3"></i>
-                </div>
-                <h4 class="mb-0 fw-bold text-success">@ViewBag.CompletedBookings</h4>
-                <p class="text-muted mb-0 small">Hoàn thành</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <div class="bg-info bg-opacity-10 rounded-circle p-3 d-inline-block mb-2">
-                    <i class="bi bi-cash-stack text-info fs-3"></i>
-                </div>
-                <h4 class="mb-0 fw-bold text-info">@ViewBag.TotalRevenue?.ToString("N0")đ</h4>
-                <p class="text-muted mb-0 small">Doanh thu</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Bookings Table -->
-<div class="card shadow-sm">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width: 120px;">Mã đơn</th>
-                        <th>Khách hàng</th>
-                        <th>Cơ sở / Sân</th>
-                        <th style="width: 140px;">Ngày đặt</th>
-                        <th style="width: 100px;">Giờ</th>
-                        <th style="width: 80px;">Thời gian</th>
-                        <th class="text-end" style="width: 120px;">Tổng tiền</th>
-                        <th style="width: 120px;">Trạng thái</th>
-                        <th style="width: 110px;">Thanh toán</th>
-                        <th class="text-end" style="width: 100px;">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model != null && Model.Any())
-                    {
-                        foreach (var booking in Model)
+        <!-- Table -->
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0 py-3 ps-4">
+                                <span class="text-muted small fw-bold">MÃ ĐẶT SÂN</span>
+                            </th>
+                            <th class="border-0 py-3">
+                                <span class="text-muted small fw-bold">KHÁCH HÀNG</span>
+                            </th>
+                            <th class="border-0 py-3">
+                                <span class="text-muted small fw-bold">CƠ SỞ & SÂN</span>
+                            </th>
+                            <th class="border-0 py-3">
+                                <span class="text-muted small fw-bold">THỜI GIAN</span>
+                            </th>
+                            <th class="border-0 py-3">
+                                <span class="text-muted small fw-bold">TỔNG TIỀN</span>
+                            </th>
+                            <th class="border-0 py-3">
+                                <span class="text-muted small fw-bold">THANH TOÁN</span>
+                            </th>
+                            <th class="border-0 py-3">
+                                <span class="text-muted small fw-bold">TRẠNG THÁI</span>
+                            </th>
+                            <th class="border-0 py-3 pe-4 text-end">
+                                <span class="text-muted small fw-bold">THAO TÁC</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var booking in Model)
+                            {
+                                <tr data-status="@booking.Status.ToLower()">
+                                    <td class="ps-4 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="icon-box-sm bg-primary-subtle rounded-2 p-2 me-2">
+                                                <i class="bi bi-receipt text-primary"></i>
+                                            </div>
+                                            <span class="fw-semibold">@booking.BookingCode</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div>
+                                            <div class="fw-semibold">@booking.CustomerName</div>
+                                            <small class="text-muted">@booking.Phone</small>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div>
+                                            <div class="fw-semibold">@booking.FacilityName</div>
+                                            <small class="text-muted">Sân @booking.CourtNumber - @booking.CourtType</small>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div>
+                                            <div class="small">@booking.BookingDate.ToString("dd/MM/yyyy")</div>
+                                            <small class="text-primary fw-semibold">
+                                                @booking.StartTime.ToString(@"hh\:mm") - @booking.EndTime.ToString(@"hh\:mm")
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="fw-bold text-success">₫@booking.GrandTotal.ToString("N0")</span>
+                                    </td>
+                                    <td class="py-3">
+                                        @if (booking.PaymentStatus == "Paid")
+                                        {
+                                            <span class="badge bg-success-subtle text-success px-2 py-1">
+                                                <i class="bi bi-check-circle me-1"></i>Đã Thanh Toán
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning-subtle text-warning px-2 py-1">
+                                                <i class="bi bi-clock me-1"></i>Chưa Thanh Toán
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="py-3">
+                                        @switch (booking.Status)
+                                        {
+                                            case "Pending":
+                                                <span class="badge bg-warning-subtle text-warning px-2 py-1">
+                                                    Chờ Xác Nhận
+                                                </span>
+                                                break;
+                                            case "Confirmed":
+                                                <span class="badge bg-info-subtle text-info px-2 py-1">
+                                                    Đã Xác Nhận
+                                                </span>
+                                                break;
+                                            case "CheckedIn":
+                                                <span class="badge bg-primary-subtle text-primary px-2 py-1">
+                                                    Đã Check-in
+                                                </span>
+                                                break;
+                                            case "Completed":
+                                                <span class="badge bg-success-subtle text-success px-2 py-1">
+                                                    Hoàn Thành
+                                                </span>
+                                                break;
+                                            case "Cancelled":
+                                                <span class="badge bg-danger-subtle text-danger px-2 py-1">
+                                                    Đã Hủy
+                                                </span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td class="py-3 pe-4 text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="Details" asp-route-id="@booking.BookingId" 
+                                               class="btn btn-outline-secondary" title="Chi tiết">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            @if (booking.Status == "Pending")
+                                            {
+                                                <button class="btn btn-outline-success" 
+                                                        onclick="confirmBooking(@booking.BookingId)" 
+                                                        title="Xác nhận">
+                                                    <i class="bi bi-check"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
                         {
                             <tr>
-                                <td>
-                                    <strong class="text-primary">@booking.BookingCode</strong>
-                                    <br>
-                                    <small class="text-muted">@booking.CreatedAt.ToString("dd/MM HH:mm")</small>
-                                </td>
-                                <td>
-                                    <div>
-                                        <strong>Khách hàng</strong>
-                                        <br>
-                                        <small class="text-muted">
-                                            <i class="bi bi-telephone me-1"></i>0xxx xxx xxx
-                                        </small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div>
-                                        <i class="bi bi-building text-muted me-1"></i>
-                                        <strong>@booking.FacilityName</strong>
-                                        <br>
-                                        <small class="text-muted">
-                                            Sân @booking.CourtNumber (@booking.CourtType)
-                                        </small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <i class="bi bi-calendar3 text-muted me-1"></i>
-                                    @booking.BookingDate.ToString("dd/MM/yyyy")
-                                    <br>
-                                    <small class="text-muted">@booking.BookingDate.ToString("dddd", new System.Globalization.CultureInfo("vi-VN"))</small>
-                                </td>
-                                <td>
-                                    <i class="bi bi-clock text-muted me-1"></i>
-                                    <strong>@booking.StartTime.ToString(@"hh\:mm")</strong>
-                                    <br>
-                                    <small class="text-muted">- @booking.EndTime.ToString(@"hh\:mm")</small>
-                                </td>
-                                <td>
-                                    <span class="badge bg-info">
-                                        @booking.Duration phút
-                                    </span>
-                                </td>
-                                <td class="text-end">
-                                    <strong class="text-success fs-6">
-                                        @booking.GrandTotal.ToString("N0")đ
-                                    </strong>
-                                    @if (booking.RelatedOrders != null && booking.RelatedOrders.Any())
-                                    {
-                                        <br>
-                                        <small class="text-muted">
-                                            (+ @booking.RelatedOrders.Sum(o => o.TotalAmount).ToString("N0")đ SP)
-                                        </small>
-                                    }
-                                </td>
-                                <td>
-                                    @switch (booking.Status)
-                                    {
-                                        case "Pending":
-                                            <span class="badge bg-warning">
-                                                <i class="bi bi-clock-history me-1"></i>Chờ xác nhận
-                                            </span>
-                                            break;
-                                        case "Confirmed":
-                                            <span class="badge bg-info">
-                                                <i class="bi bi-check-circle me-1"></i>Đã xác nhận
-                                            </span>
-                                            break;
-                                        case "CheckedIn":
-                                            <span class="badge bg-primary">
-                                                <i class="bi bi-box-arrow-in-right me-1"></i>Đã check-in
-                                            </span>
-                                            break;
-                                        case "Completed":
-                                            <span class="badge bg-success">
-                                                <i class="bi bi-check-all me-1"></i>Hoàn thành
-                                            </span>
-                                            break;
-                                        case "Cancelled":
-                                            <span class="badge bg-danger">
-                                                <i class="bi bi-x-circle me-1"></i>Đã hủy
-                                            </span>
-                                            break;
-                                        default:
-                                            <span class="badge bg-secondary">@booking.Status</span>
-                                            break;
-                                    }
-                                </td>
-                                <td>
-                                    @if (booking.PaymentStatus == "Paid")
-                                    {
-                                        <span class="badge bg-success">
-                                            <i class="bi bi-check-circle me-1"></i>Đã TT
-                                        </span>
-                                        <br>
-                                        <small class="text-muted">@booking.PaymentMethod</small>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary">
-                                            <i class="bi bi-x-circle me-1"></i>Chưa TT
-                                        </span>
-                                    }
-                                </td>
-                                <td class="text-end">
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <a asp-action="Details" asp-route-id="@booking.BookingId"
-                                           class="btn btn-outline-primary" title="Xem chi tiết">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        @if (booking.Status == "Pending")
-                                        {
-                                            <button class="btn btn-outline-success"
-                                                    onclick="confirmBooking(@booking.BookingId)"
-                                                    title="Xác nhận">
-                                                <i class="bi bi-check"></i>
-                                            </button>
-                                        }
+                                <td colspan="8" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                                        <p class="mb-0">Không có dữ liệu đơn đặt sân</p>
                                     </div>
                                 </td>
                             </tr>
                         }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="10" class="text-center text-muted py-5">
-                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                <p class="mb-0">Chưa có đơn đặt sân nào</p>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Pagination -->
-        @if (Model != null && Model.Any())
-        {
-            <nav class="mt-4">
-                <ul class="pagination justify-content-center mb-0">
-                    <li class="page-item disabled">
-                        <a class="page-link">«</a>
-                    </li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item">
-                        <a class="page-link" href="#">»</a>
-                    </li>
-                </ul>
-            </nav>
-        }
+        <div class="card-footer bg-white border-0 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Hiển thị 1-10 trong tổng số @(Model?.Count() ?? 0) đơn</small>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#">Trước</a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Sau</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -301,49 +306,79 @@
     <script>
         function confirmBooking(bookingId) {
             if (confirm('Bạn có chắc muốn xác nhận đơn đặt sân này?')) {
-                fetch(`/Admin/Booking/Confirm/${bookingId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Xác nhận thành công!');
-                        location.reload();
-                    } else {
-                        alert('Có lỗi xảy ra: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    alert('Có lỗi xảy ra!');
-                    console.error(error);
-                });
+                $.post('@Url.Action("Confirm", "AdminBooking")', { bookingId: bookingId })
+                    .done(function(result) {
+                        if (result.success) {
+                            alert(result.message);
+                            location.reload();
+                        } else {
+                            alert(result.message);
+                        }
+                    })
+                    .fail(function() {
+                        alert('Có lỗi xảy ra!');
+                    });
             }
         }
 
         function exportBookings() {
-            const params = new URLSearchParams(window.location.search);
-            window.location.href = '/Admin/Booking/Export?' + params.toString();
+            window.location.href = '@Url.Action("Export", "AdminBooking")';
         }
+
+        // Filter functionality
+        document.querySelectorAll('[data-filter]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const filter = this.dataset.filter;
+                document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                document.querySelectorAll('tbody tr[data-status]').forEach(row => {
+                    if (filter === 'all' || row.dataset.status === filter) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            document.querySelectorAll('tbody tr[data-status]').forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
     </script>
 }
 
 <style>
-    .table th {
-        font-weight: 600;
-        font-size: 0.875rem;
-        background-color: #f8f9fa;
+    .icon-box {
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    .table td {
-        vertical-align: middle;
-        font-size: 0.875rem;
+    .icon-box-sm {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    .badge {
-        font-weight: 500;
-        padding: 0.35em 0.65em;
-    }
+    .bg-success-subtle { background-color: rgba(16, 185, 129, 0.1) !important; }
+    .bg-primary-subtle { background-color: rgba(99, 102, 241, 0.1) !important; }
+    .bg-info-subtle { background-color: rgba(14, 165, 233, 0.1) !important; }
+    .bg-warning-subtle { background-color: rgba(245, 158, 11, 0.1) !important; }
+    .bg-danger-subtle { background-color: rgba(239, 68, 68, 0.1) !important; }
+
+    .card { transition: transform 0.2s, box-shadow 0.2s; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important; }
+
+    .table tbody tr { transition: background-color 0.2s; }
+    .table tbody tr:hover { background-color: rgba(0, 0, 0, 0.02); }
 </style>

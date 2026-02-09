@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using QuanLiSanCauLong.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace QuanLiSanCauLong.ViewModels
@@ -11,6 +12,9 @@ namespace QuanLiSanCauLong.ViewModels
         public int FacilityId { get; set; }
         public string FacilityName { get; set; }
         public List<InventoryItemViewModel> Items { get; set; }
+
+        // Thêm 2 dòng này để tính toán tự động dựa trên danh sách Items
+        public int TotalProducts => Items?.Count ?? 0;
         public int LowStockCount => Items?.Count(i => i.IsLowStock) ?? 0;
     }
 
@@ -20,6 +24,8 @@ namespace QuanLiSanCauLong.ViewModels
     public class InventoryItemViewModel
     {
         public int InventoryId { get; set; }
+
+        public string FacilityName { get; set; }
         public int ProductId { get; set; }
         public string ProductName { get; set; }
         public string ProductCode { get; set; }
@@ -68,4 +74,5 @@ namespace QuanLiSanCauLong.ViewModels
         public decimal UnitPrice { get; set; }
         public decimal TotalPrice => Quantity * UnitPrice;
     }
+
 }

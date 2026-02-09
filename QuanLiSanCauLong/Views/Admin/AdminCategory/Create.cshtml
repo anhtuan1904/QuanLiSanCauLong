@@ -1,168 +1,98 @@
 ﻿@model QuanLiSanCauLong.Models.ProductCategory
 
-@{
-    ViewData["Title"] = "Quản lý danh mục";
-    // Sửa từ _Layout thành _LayoutAdmin
-    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
-}
-
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold mb-1">
-                <i class="bi bi-plus-circle text-primary me-2"></i>
-                Thêm danh mục mới
-            </h2>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a asp-action="Index">Danh mục</a></li>
-                    <li class="breadcrumb-item active">Thêm mới</li>
-                </ol>
-            </nav>
-        </div>
-        <a asp-action="Index" class="btn btn-secondary">
-            <i class="bi bi-arrow-left me-2"></i>Quay lại
-        </a>
-    </div>
-
-    <!-- Form Card -->
+<div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-info-circle me-2"></i>
-                        Thông tin danh mục
-                    </h5>
-                </div>
-                <div class="card-body p-4">
-                    <form asp-action="Create" method="post">
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
-
-                        <div class="row">
-                            <div class="col-md-8 mb-3">
-                                <label asp-for="CategoryName" class="form-label fw-semibold">
-                                    Tên danh mục <span class="text-danger">*</span>
-                                </label>
-                                <input asp-for="CategoryName" class="form-control form-control-lg"
-                                       placeholder="Nhập tên danh mục..." />
-                                <span asp-validation-for="CategoryName" class="text-danger"></span>
+        <div class="col-lg-10">
+            <div class="form-glass p-5">
+                <h3 class="fw-bold mb-4">Tạo danh mục mới</h3>
+                <form id="createForm" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-7">
+                            <div class="mb-3">
+                                <label class="form-label">Tên danh mục</label>
+                                <input asp-for="CategoryName" class="form-control" placeholder="Nhập tên..." />
                             </div>
-
-                            <div class="col-md-4 mb-3">
-                                <label asp-for="CategoryType" class="form-label fw-semibold">
-                                    Loại <span class="text-danger">*</span>
-                                </label>
-                                <select asp-for="CategoryType" class="form-select form-select-lg">
-                                    <option value="">-- Chọn loại --</option>
-                                    <option value="Food">
-                                        <i class="bi bi-egg-fried"></i> Đồ ăn
-                                    </option>
-                                    <option value="Beverage">
-                                        <i class="bi bi-cup-straw"></i> Thức uống
-                                    </option>
-                                    <option value="Equipment">
-                                        <i class="bi bi-box"></i> Dụng cụ
-                                    </option>
+                            <div class="mb-3">
+                                <label class="form-label">Loại sản phẩm</label>
+                                <select asp-for="CategoryType" class="form-select form-control">
+                                    <option value="Food">Thực phẩm</option>
+                                    <option value="Beverage">Đồ uống</option>
+                                    <option value="Equipment">Dụng cụ</option>
                                 </select>
-                                <span asp-validation-for="CategoryType" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Mô tả</label>
+                                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label asp-for="Description" class="form-label fw-semibold">
-                                Mô tả
-                            </label>
-                            <textarea asp-for="Description" class="form-control" rows="4"
-                                      placeholder="Nhập mô tả cho danh mục..."></textarea>
-                            <span asp-validation-for="Description" class="text-danger"></span>
-                            <div class="form-text">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Mô tả ngắn gọn về danh mục sản phẩm này
+                        <div class="col-md-5">
+                            <label class="form-label">Hình ảnh danh mục</label>
+                            <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                                <i class="bi bi-cloud-arrow-up-fill"></i>
+                                <p class="mt-2 mb-0 fw-bold">Kéo thả hoặc click để tải lên</p>
+                                <small class="text-muted">Nhiều ảnh được chấp nhận</small>
                             </div>
-                        </div>
+                            <input type="file" id="fileInput" multiple accept="image/*" class="d-none" onchange="handleFiles(this.files)" />
 
-                        <!-- Preview Card -->
-                        <div class="card bg-light border-0 mb-4">
-                            <div class="card-body">
-                                <h6 class="fw-bold mb-3">
-                                    <i class="bi bi-eye me-2"></i>Xem trước
-                                </h6>
-                                <div class="d-flex align-items-start">
-                                    <div class="me-3">
-                                        <div class="bg-primary bg-opacity-10 rounded-3 p-3">
-                                            <i class="bi bi-tags text-primary fs-3"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h5 class="fw-bold mb-2" id="previewName">
-                                            <span class="text-muted fst-italic">Tên danh mục</span>
-                                        </h5>
-                                        <span class="badge bg-secondary mb-2" id="previewType">
-                                            Chưa chọn loại
-                                        </span>
-                                        <p class="text-muted small mb-0" id="previewDesc">
-                                            Chưa có mô tả
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                            <div id="imagePreview" class="image-grid"></div>
                         </div>
+                    </div>
 
-                        <hr class="my-4">
-
-                        <!-- Action Buttons -->
-                        <div class="d-flex justify-content-end gap-2">
-                            <a asp-action="Index" class="btn btn-secondary">
-                                <i class="bi bi-x-circle me-2"></i>Hủy
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle me-2"></i>Lưu danh mục
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    <div class="d-flex justify-content-end gap-2 mt-5 pt-4 border-top">
+                        <a asp-action="Index" class="btn btn-light px-4 rounded-pill">Hủy</a>
+                        <button type="submit" class="btn btn-primary px-5 rounded-pill shadow">Lưu danh mục</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-
     <script>
-        // Live preview
-        document.getElementById('CategoryName').addEventListener('input', function() {
-            const name = this.value || 'Tên danh mục';
-            document.getElementById('previewName').innerHTML =
-                this.value ? name : '<span class="text-muted fst-italic">Tên danh mục</span>';
-        });
+        let selectedFiles = []; // Mảng lưu trữ file thực tế
+        let primaryIndex = 0;   // Chỉ mục ảnh chính
 
-        document.getElementById('CategoryType').addEventListener('change', function() {
-            const typeMap = {
-                'Food': '<i class="bi bi-egg-fried me-1"></i>Đồ ăn',
-                'Beverage': '<i class="bi bi-cup-straw me-1"></i>Thức uống',
-                'Equipment': '<i class="bi bi-box me-1"></i>Dụng cụ'
-            };
-            const badge = document.getElementById('previewType');
-            if (this.value) {
-                badge.className = this.value === 'Food' ? 'badge bg-warning text-dark mb-2' :
-                                  this.value === 'Beverage' ? 'badge bg-info mb-2' :
-                                  'badge bg-success mb-2';
-                badge.innerHTML = typeMap[this.value] || 'Chưa chọn loại';
-            } else {
-                badge.className = 'badge bg-secondary mb-2';
-                badge.innerHTML = 'Chưa chọn loại';
-            }
-        });
+        function handleFiles(files) {
+            const newFiles = Array.from(files);
+            selectedFiles = selectedFiles.concat(newFiles);
+            renderPreviews();
+        }
 
-        document.getElementById('Description').addEventListener('input', function() {
-            document.getElementById('previewDesc').textContent =
-                this.value || 'Chưa có mô tả';
-        });
+        function renderPreviews() {
+            const container = document.getElementById('imagePreview');
+            container.innerHTML = '';
+
+            selectedFiles.forEach((file, index) => {
+                const isPrimary = index === primaryIndex;
+                const url = URL.createObjectURL(file);
+
+                const html = `
+                    <div class="image-item ${isPrimary ? 'is-primary' : ''}">
+                        ${isPrimary ? '<span class="badge-primary-img">ẢNH CHÍNH</span>' : ''}
+                        <img src="${url}">
+                        <div class="img-overlay">
+                            <button type="button" class="btn-img-action" onclick="setPrimary(${index})" title="Chọn làm ảnh chính"><i class="bi bi-star-fill"></i></button>
+                            <button type="button" class="btn-img-action btn-img-delete" onclick="removeFile(${index})" title="Xóa"><i class="bi bi-trash-fill"></i></button>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function setPrimary(index) {
+            primaryIndex = index;
+            renderPreviews();
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            if (primaryIndex >= selectedFiles.length) primaryIndex = 0;
+            renderPreviews();
+        }
+
+        // Code submit AJAX tương tự gửi FormData với 'Files' và 'PrimaryIndex'
     </script>
 }

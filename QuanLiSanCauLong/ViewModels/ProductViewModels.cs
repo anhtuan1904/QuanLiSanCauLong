@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using QuanLiSanCauLong.Models;
 using System.ComponentModel.DataAnnotations;
-// XÓA DÒNG using static QuanLiSanCauLong.ViewModels.TimeSlotViewModel; NẾU NÓ GÂY LỖI AMBIGUOUS
 
 namespace QuanLiSanCauLong.ViewModels
 {

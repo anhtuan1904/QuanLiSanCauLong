@@ -33,6 +33,8 @@ namespace QuanLiSanCauLong.Data
         public DbSet<ActivityLog> ActivityLogs { get; set; }
         public DbSet<SystemSetting> SystemSettings { get; set; }
         public DbSet<Post> Posts { get; set; }
+        public DbSet<CourtImage> CourtImages { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

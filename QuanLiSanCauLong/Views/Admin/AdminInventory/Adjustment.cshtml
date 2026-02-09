@@ -1,58 +1,86 @@
 ﻿@model QuanLiSanCauLong.Models.Inventory
 
-@{
-    ViewData["Title"] = "Điều chỉnh kho";
-    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
-}
+<div class="modal-header border-0 p-4 pb-0">
+    <div class="d-flex align-items-center">
+        <div class="bg-soft-warning p-2 rounded-3 me-3">
+            <i class="bi bi-pencil-square text-warning fs-4"></i>
+        </div>
+        <div>
+            <h4 class="fw-bold mb-0">Điều Chỉnh Tồn Kho</h4>
+            <p class="text-muted small mb-0">Cập nhật số lượng thực tế sau kiểm kê</p>
+        </div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow border-0">
-            <div class="card-header bg-warning py-3">
-                <h5 class="m-0 fw-bold text-dark"><i class="bi bi-pencil-square me-2"></i>Điều chỉnh số lượng tồn kho</h5>
-            </div>
-            <div class="card-body p-4">
-                <div class="alert alert-info mb-4">
-                    <div class="row">
-                        <div class="col-6">
-                            <small class="text-muted d-block">Sản phẩm:</small>
-                            <strong>@Model.Product.ProductName</strong>
-                        </div>
-                        <div class="col-6 text-end">
-                            <small class="text-muted d-block">Cơ sở:</small>
-                            <strong>@Model.Facility.FacilityName</strong>
-                        </div>
-                    </div>
+<form asp-action="Adjustment" method="post">
+    <div class="modal-body p-4">
+        <input type="hidden" name="inventoryId" value="@Model.InventoryId" />
+
+        <div class="bg-light rounded-4 p-3 mb-4 border-0">
+            <div class="row align-items-center">
+                <div class="col-6 border-end text-center">
+                    <label class="form-label fw-bold small text-uppercase text-muted mb-1 d-block">Sản phẩm</label>
+                    <span class="fw-bold text-dark">@Model.Product.ProductName</span>
                 </div>
+                <div class="col-6 ps-4 text-center">
+                    <label class="form-label fw-bold small text-uppercase text-muted mb-1 d-block">Cơ sở</label>
+                    <span class="fw-bold text-dark">@Model.Facility.FacilityName</span>
+                </div>
+            </div>
+        </div>
 
-                <form asp-action="Adjustment" method="post">
-                    <input type="hidden" name="inventoryId" value="@Model.InventoryId" />
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold small text-uppercase text-muted">Số lượng hiện tại</label>
+                <div class="input-group">
+                    <input type="text" class="form-control rounded-3 py-2 bg-white border shadow-none fw-bold text-secondary"
+                           value="@Model.Quantity" readonly />
+                    <span class="input-group-text border bg-light text-muted small">@Model.Product.Unit</span>
+                </div>
+            </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Số lượng hiện tại</label>
-                        <input type="text" class="form-control bg-light" value="@Model.Quantity @Model.Product.Unit" readonly />
-                    </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold small text-uppercase text-muted">Số lượng mới</label>
+                <div class="input-group border rounded-3 overflow-hidden shadow-sm">
+                    <input type="number" name="newQuantity" class="form-control py-2 border-0 shadow-none fw-bold"
+                           value="@Model.Quantity" min="0" required />
+                    <span class="input-group-text border-0 bg-white text-muted small">@Model.Product.Unit</span>
+                </div>
+            </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Số lượng thực tế mới</label>
-                        <div class="input-group">
-                            <input type="number" name="newQuantity" class="form-control" value="@Model.Quantity" min="0" required />
-                            <span class="input-group-text">@Model.Product.Unit</span>
-                        </div>
-                        <div class="form-text text-danger">* Lưu ý: Thao tác này sẽ ghi đè trực tiếp lên số tồn kho hiện tại.</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Lý do điều chỉnh</label>
-                        <textarea name="note" class="form-control" rows="3" placeholder="Ví dụ: Kiểm kho định kỳ, hàng lỗi, hàng tặng kèm..."></textarea>
-                    </div>
-
-                    <div class="d-flex gap-2 justify-content-end mt-4">
-                        <a asp-action="Index" class="btn btn-secondary">Hủy</a>
-                        <button type="submit" class="btn btn-warning px-4 fw-bold">Cập nhật kho</button>
-                    </div>
-                </form>
+            <div class="col-12">
+                <label class="form-label fw-bold small text-uppercase text-muted">Lý do điều chỉnh</label>
+                <textarea name="note" class="form-control rounded-3 bg-light border-0 shadow-none"
+                          rows="3" placeholder="Ví dụ: Kiểm kho định kỳ, hàng lỗi..."></textarea>
+                <div class="form-text text-danger small mt-2">
+                    <i class="bi bi-info-circle me-1"></i> <strong>Lưu ý:</strong> Thao tác này thay đổi trực tiếp con số tồn kho.
+                </div>
             </div>
         </div>
     </div>
-</div>
+
+    <div class="modal-footer border-0 p-4 pt-0">
+        <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Hủy</button>
+        <button type="submit" class="btn btn-dark rounded-3 px-4 shadow fw-bold">
+            <i class="bi bi-check2-circle me-2"></i>Cập Nhật Ngay
+        </button>
+    </div>
+</form>
+
+<style>
+    .bg-soft-warning {
+        background-color: #fffbeb;
+    }
+
+    /* Tinh chỉnh input focus để đồng bộ với các form trước */
+    .form-control:focus {
+        background-color: #ffffff !important;
+        border: 1px solid #dee2e6 !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+    }
+
+    .modal-content {
+        border-radius: 1.25rem;
+    }
+</style>

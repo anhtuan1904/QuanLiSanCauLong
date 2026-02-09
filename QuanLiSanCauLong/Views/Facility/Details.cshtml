@@ -1,104 +1,714 @@
 ﻿@model QuanLiSanCauLong.ViewModels.FacilityDetailsViewModel
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<style>
+    :root {
+        --primary-purple: #6c33f2;
+        --secondary-purple: #8b5cf6;
+        --bg-light: #f8fafc;
+        --text-dark: #1e293b;
+    }
+
+    body {
+        background-color: var(--bg-light);
+    }
+
+    /* Back Button */
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        color: var(--text-dark);
+        font-weight: 600;
+        text-decoration: none;
+        margin-bottom: 20px;
+        transition: all 0.3s;
+    }
+
+        .back-button:hover {
+            color: var(--primary-purple);
+            transform: translateX(-5px);
+        }
+
+        .back-button i {
+            margin-right: 8px;
+        }
+
+    /* Image Carousel */
+    .facility-carousel {
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        position: relative;
+    }
+
+    .carousel-inner {
+        border-radius: 20px;
+    }
+
+    .carousel-item img {
+        height: 450px;
+        object-fit: cover;
+    }
+
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 50px;
+        height: 50px;
+        background: rgba(255,255,255,0.9);
+        border-radius: 50%;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 0;
+        transition: all 0.3s;
+    }
+
+    .facility-carousel:hover .carousel-control-prev,
+    .facility-carousel:hover .carousel-control-next {
+        opacity: 1;
+    }
+
+    .carousel-control-prev {
+        left: 20px;
+    }
+
+    .carousel-control-next {
+        right: 20px;
+    }
+
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+        filter: invert(1);
+    }
+
+    /* Info Section */
+    .facility-info {
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        height: 100%;
+    }
+
+    .facility-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--text-dark);
+        margin-bottom: 15px;
+    }
+
+    .facility-address {
+        color: #64748b;
+        font-size: 1rem;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+    }
+
+        .facility-address i {
+            color: #ef4444;
+            margin-right: 8px;
+        }
+
+    .info-cards {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .info-card {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        padding: 20px;
+        border-radius: 16px;
+        text-align: center;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s;
+    }
+
+        .info-card:hover {
+            border-color: var(--primary-purple);
+            transform: translateY(-3px);
+        }
+
+    .info-card-label {
+        font-size: 0.85rem;
+        color: #64748b;
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .info-card-value {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--primary-purple);
+    }
+
+        .info-card-value.success {
+            color: #10b981;
+        }
+
+    .facility-description {
+        color: #475569;
+        line-height: 1.8;
+        margin-bottom: 20px;
+    }
+
+    .facility-features {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .feature-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        background: #f1f5f9;
+        border-radius: 20px;
+        color: var(--text-dark);
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+        .feature-badge i {
+            margin-right: 6px;
+            color: var(--primary-purple);
+        }
+
+    /* Tabs */
+    .booking-tabs {
+        background: white;
+        padding: 6px;
+        border-radius: 50px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        display: inline-flex;
+        margin-bottom: 30px;
+    }
+
+        .booking-tabs .nav-link {
+            border: none;
+            border-radius: 40px;
+            padding: 12px 30px;
+            color: #64748b;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+            .booking-tabs .nav-link.active {
+                background: linear-gradient(135deg, var(--primary-purple) 0%, var(--secondary-purple) 100%);
+                color: white;
+                box-shadow: 0 4px 15px rgba(108, 51, 242, 0.3);
+            }
+
+    /* Booking Card */
+    .booking-card {
+        background: white;
+        border: none;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+
+    .booking-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .booking-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-dark);
+        margin: 0;
+    }
+
+    .date-picker-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: #f8fafc;
+        padding: 10px 20px;
+        border-radius: 12px;
+        border: 2px solid #e2e8f0;
+    }
+
+        .date-picker-wrapper label {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .date-picker-wrapper input {
+            border: none;
+            background: transparent;
+            color: var(--primary-purple);
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+            .date-picker-wrapper input:focus {
+                outline: none;
+            }
+
+    /* Court Timeline */
+    .timeline-wrapper {
+        overflow-x: auto;
+        padding-bottom: 20px;
+    }
+
+        .timeline-wrapper::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .timeline-wrapper::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        .timeline-wrapper::-webkit-scrollbar-thumb {
+            background: var(--primary-purple);
+            border-radius: 10px;
+        }
+
+    .court-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        min-width: 1200px;
+    }
+
+    .court-label {
+        width: 140px;
+        font-weight: 700;
+        color: var(--text-dark);
+        font-size: 1rem;
+        padding-right: 20px;
+        flex-shrink: 0;
+    }
+
+    .slots-row {
+        display: flex;
+        gap: 10px;
+        flex: 1;
+    }
+
+    /* Slot Item */
+    .slot-item {
+        width: 85px;
+        height: 70px;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: white;
+        position: relative;
+        flex-shrink: 0;
+    }
+
+        .slot-item:hover:not(.booked) {
+            border-color: var(--primary-purple);
+            background: #f3f0ff;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(108, 51, 242, 0.2);
+        }
+
+        .slot-item.booked {
+            background: #fee2e2;
+            color: #dc2626;
+            cursor: not-allowed;
+            border-color: #fecaca;
+        }
+
+            .slot-item.booked::after {
+                content: 'Đã đặt';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 0.7rem;
+                font-weight: 700;
+                opacity: 0.8;
+            }
+
+        .slot-item.selected {
+            background: linear-gradient(135deg, var(--primary-purple) 0%, var(--secondary-purple) 100%);
+            color: white;
+            border-color: var(--primary-purple);
+            box-shadow: 0 4px 15px rgba(108, 51, 242, 0.4);
+        }
+
+    .slot-time {
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin-bottom: 2px;
+    }
+
+    .slot-price {
+        font-size: 0.8rem;
+        opacity: 0.8;
+        font-weight: 600;
+    }
+
+    .slot-item.booked .slot-time,
+    .slot-item.booked .slot-price {
+        opacity: 0;
+    }
+
+    /* History Table */
+    .history-table {
+        background: white;
+    }
+
+        .history-table thead {
+            background: #f8fafc;
+        }
+
+        .history-table th {
+            border: none;
+            color: var(--text-dark);
+            font-weight: 700;
+            padding: 15px;
+            font-size: 0.9rem;
+        }
+
+        .history-table td {
+            border: none;
+            border-bottom: 1px solid #f1f5f9;
+            padding: 18px 15px;
+            vertical-align: middle;
+        }
+
+        .history-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+    .status-badge {
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 700;
+    }
+
+        .status-badge.confirmed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+    .btn-cancel {
+        padding: 8px 20px;
+        border-radius: 10px;
+        border: 2px solid #fecaca;
+        background: white;
+        color: #dc2626;
+        font-weight: 700;
+        transition: all 0.3s;
+        font-size: 0.85rem;
+    }
+
+        .btn-cancel:hover {
+            background: #dc2626;
+            color: white;
+            border-color: #dc2626;
+        }
+
+    /* Payment Bar */
+    .payment-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        color: white;
+        padding: 20px 0;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+        z-index: 1000;
+        transform: translateY(100%);
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+        .payment-bar.show {
+            transform: translateY(0);
+        }
+
+    .payment-info {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .payment-slots {
+        font-size: 0.95rem;
+        opacity: 0.9;
+    }
+
+    .payment-total {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #fbbf24;
+        margin: 0;
+    }
+
+    .btn-book-now {
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        color: #1e293b;
+        border: none;
+        border-radius: 50px;
+        padding: 15px 40px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+    }
+
+        .btn-book-now:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(251, 191, 36, 0.6);
+        }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .carousel-item img {
+            height: 300px;
+        }
+
+        .facility-title {
+            font-size: 1.5rem;
+        }
+
+        .info-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .booking-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .court-label {
+            width: 100px;
+            font-size: 0.9rem;
+        }
+
+        .slot-item {
+            width: 70px;
+            height: 60px;
+        }
+
+        .slot-time {
+            font-size: 0.85rem;
+        }
+
+        .payment-bar {
+            padding: 15px 0;
+        }
+
+        .payment-total {
+            font-size: 1.4rem;
+        }
+
+        .btn-book-now {
+            padding: 12px 30px;
+            font-size: 1rem;
+        }
+    }
+</style>
+
 <div class="container py-4">
+    <!-- Back Button -->
+    <a href="javascript:history.back()" class="back-button">
+        <i class="bi bi-arrow-left"></i> Quay lại danh sách
+    </a>
+
+    <!-- Main Content -->
     <div class="row mb-5">
-        <div class="col-lg-7">
-            <div id="courtCarousel" class="carousel slide rounded-4 overflow-hidden shadow" data-bs-ride="carousel">
+        <!-- Image Carousel -->
+        <div class="col-lg-7 mb-4 mb-lg-0">
+            <div id="courtCarousel" class="carousel slide facility-carousel" data-bs-ride="carousel">
                 <div class="carousel-inner">
                     @for (int i = 0; i < Model.ImageUrls.Count; i++)
                     {
                         <div class="carousel-item @(i == 0 ? "active" : "")">
-                            <img src="@Model.ImageUrls[i]" class="d-block w-100" style="height: 400px; object-fit: cover;">
+                            <img src="@Model.ImageUrls[i]" class="d-block w-100" alt="@Model.FacilityName">
+                        </div>
+                    }
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#courtCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#courtCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Facility Info -->
+        <div class="col-lg-5">
+            <div class="facility-info">
+                <h1 class="facility-title">@Model.FacilityName</h1>
+                <div class="facility-address">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    @Model.Address
+                </div>
+
+                <div class="info-cards">
+                    <div class="info-card">
+                        <span class="info-card-label">Giá từ</span>
+                        <div class="info-card-value">80.000đ</div>
+                    </div>
+                    <div class="info-card">
+                        <span class="info-card-label">Trạng thái</span>
+                        <div class="info-card-value success">Đang mở</div>
+                    </div>
+                    <div class="info-card">
+                        <span class="info-card-label">Đánh giá</span>
+                        <div class="info-card-value">
+                            <i class="bi bi-star-fill" style="color: #fbbf24;"></i> 4.8
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <span class="info-card-label">Số sân</span>
+                        <div class="info-card-value">8 sân</div>
+                    </div>
+                </div>
+
+                <div class="facility-description">
+                    @Model.Description
+                </div>
+
+                <div class="facility-features">
+                    <span class="feature-badge">
+                        <i class="bi bi-wifi"></i> Wifi
+                    </span>
+                    <span class="feature-badge">
+                        <i class="bi bi-car-front"></i> Parking
+                    </span>
+                    <span class="feature-badge">
+                        <i class="bi bi-cup-hot"></i> Canteen
+                    </span>
+                    <span class="feature-badge">
+                        <i class="bi bi-droplet"></i> Shower
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav booking-tabs mb-4" id="bookingTabs">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-book">
+                <i class="bi bi-calendar-check me-2"></i>Tìm kiếm & Đặt sân
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-history">
+                <i class="bi bi-clock-history me-2"></i>Lịch đặt của tôi
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+        <!-- Book Tab -->
+        <div class="tab-pane fade show active" id="tab-book">
+            <div class="booking-card">
+                <div class="booking-header">
+                    <h4 class="booking-title">Chọn khung giờ trống</h4>
+                    <div class="date-picker-wrapper">
+                        <label><i class="bi bi-calendar3 me-2"></i>Ngày:</label>
+                        <input type="date"
+                               class="form-control-sm"
+                               value="@Model.SelectedDate.ToString("yyyy-MM-dd")"
+                               onchange="window.location.href='?id=@Model.FacilityId&date=' + this.value">
+                    </div>
+                </div>
+
+                <div class="timeline-wrapper">
+                    @foreach (var court in Model.Courts)
+                    {
+                        <div class="court-row">
+                            <div class="court-label">
+                                <i class="bi bi-grid-3x3-gap me-2" style="color: var(--primary-purple);"></i>@court.CourtNumber
+                            </div>
+                            <div class="slots-row">
+                                @foreach (var slot in court.Slots)
+                                {
+                                    <div class="slot-item @(slot.IsBooked ? "booked" : "available")"
+                                         data-court="@court.CourtNumber"
+                                         data-time="@slot.TimeRange"
+                                         data-price="@slot.Price"
+                                         onclick="toggleSlot(this)">
+                                        <span class="slot-time">@slot.TimeRange.Split(" - ")[0]</span>
+                                        <span class="slot-price">@(slot.Price / 1000)k</span>
+                                    </div>
+                                }
+                            </div>
                         </div>
                     }
                 </div>
             </div>
         </div>
-        <div class="col-lg-5">
-            <h1 class="fw-bold text-dark">@Model.FacilityName</h1>
-            <p class="text-muted"><i class="bi bi-geo-alt-fill text-danger"></i> @Model.Address</p>
-            <hr>
-            <div class="d-flex gap-3 mb-4">
-                <div class="p-3 bg-light rounded-3 text-center flex-fill">
-                    <span class="small text-muted d-block">Giá từ</span>
-                    <strong class="text-success fs-5">80.000đ</strong>
-                </div>
-                <div class="p-3 bg-light rounded-3 text-center flex-fill">
-                    <span class="small text-muted d-block">Trạng thái</span>
-                    <strong class="text-primary fs-5">Đang mở cửa</strong>
-                </div>
-            </div>
-            <p>@Model.Description</p>
-        </div>
-    </div>
 
-    <ul class="nav nav-pills mb-4 bg-white p-2 rounded-pill shadow-sm d-inline-flex" id="bookingTabs">
-        <li class="nav-item">
-            <button class="nav-link active rounded-pill px-4" data-bs-toggle="tab" data-bs-target="#tab-book">Đặt sân ngay</button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link rounded-pill px-4" data-bs-toggle="tab" data-bs-target="#tab-history">Lịch đặt của tôi</button>
-        </li>
-    </ul>
-
-    <div class="tab-content">
-        <div class="tab-pane fade show active" id="tab-book">
-            <div class="card border-0 shadow-sm rounded-4 p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4 class="mb-0 fw-bold">Chọn khung giờ trống</h4>
-                    <div class="d-flex align-items-center gap-2">
-                        <span>Ngày:</span>
-                        <input type="date" class="form-control form-control-sm" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" onchange="window.location.href='?id=@Model.FacilityId&date=' + this.value">
-                    </div>
-                </div>
-
-                <div class="table-responsive">
-                    <div class="timeline-wrapper" style="min-width: 1000px;">
-                        @foreach (var court in Model.Courts)
-                        {
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="court-label fw-bold pe-3" style="width: 120px;">@court.CourtNumber</div>
-                                <div class="slots-row d-flex gap-2">
-                                    @foreach (var slot in court.Slots)
-                                    {
-                                        <div class="slot-item @(slot.IsBooked ? "booked" : "available")"
-                                             data-court="@court.CourtNumber"
-                                             data-time="@slot.TimeRange"
-                                             data-price="@slot.Price"
-                                             onclick="toggleSlot(this)">
-                                            <span class="time">@slot.TimeRange.Split(" - ")[0]</span>
-                                            <span class="price">@(slot.Price / 1000)k</span>
-                                        </div>
-                                    }
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        <!-- History Tab -->
         <div class="tab-pane fade" id="tab-history">
-            <div class="card border-0 shadow-sm rounded-4 p-4">
-                <table class="table align-middle">
+            <div class="booking-card">
+                <table class="table history-table">
                     <thead>
                         <tr>
                             <th>Sân</th>
-                            <th>Ngày</th>
-                            <th>Giờ</th>
+                            <th>Ngày đặt</th>
+                            <th>Khung giờ</th>
                             <th>Trạng thái</th>
                             <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var b in Model.UserBookings)
+                        @if (Model.UserBookings != null && Model.UserBookings.Any())
+                        {
+                            @foreach (var booking in Model.UserBookings)
+                            {
+                                <tr>
+                                    <td><strong>@booking.CourtName</strong></td>
+                                    <td>@booking.Date.ToString("dd/MM/yyyy")</td>
+                                    <td>@booking.Time</td>
+                                    <td>
+                                        <span class="status-badge confirmed">@booking.Status</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn-cancel">
+                                            <i class="bi bi-x-circle me-1"></i>Hủy đặt
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
                         {
                             <tr>
-                                <td><strong>@b.CourtName</strong></td>
-                                <td>@b.Date.ToString("dd/MM/yyyy")</td>
-                                <td>@b.Time</td>
-                                <td><span class="badge bg-success">@b.Status</span></td>
-                                <td><button class="btn btn-sm btn-outline-danger">Hủy</button></td>
+                                <td colspan="5" class="text-center py-5">
+                                    <i class="bi bi-calendar-x" style="font-size: 3rem; color: #cbd5e1;"></i>
+                                    <p class="mt-3 text-muted">Bạn chưa có lịch đặt nào</p>
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -108,79 +718,67 @@
     </div>
 </div>
 
-<div id="paymentBar" class="fixed-bottom bg-dark text-white p-3 shadow-lg d-none animate__animated animate__slideInUp">
-    <div class="container d-flex justify-content-between align-items-center">
-        <div>
-            <span id="selectedSlotsText">Đã chọn 0 khung giờ</span>
-            <h4 class="mb-0 text-warning" id="totalAmount">0đ</h4>
+<!-- Payment Bar -->
+<div id="paymentBar" class="payment-bar">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="payment-info">
+                    <div class="payment-slots" id="selectedSlotsText">Đã chọn 0 khung giờ</div>
+                    <h3 class="payment-total" id="totalAmount">0đ</h3>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <button class="btn-book-now">
+                    <i class="bi bi-check-circle me-2"></i>ĐẶT SÂN NGAY
+                </button>
+            </div>
         </div>
-        <button class="btn btn-warning fw-bold px-5 py-2 rounded-pill">ĐẶT SÂN NGAY</button>
     </div>
 </div>
 
-<style>
-    .slot-item {
-        width: 75px;
-        height: 60px;
-        border: 1px solid #eee;
-        border-radius: 8px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: 0.2s;
-        background: white;
-    }
-
-        .slot-item.available:hover {
-            border-color: #6c33f2;
-            background: #f3f0ff;
-        }
-
-        .slot-item.booked {
-            background: #ffebeb;
-            color: #ff5b5b;
-            cursor: not-allowed;
-            border: none;
-        }
-
-        .slot-item.selected {
-            background: #6c33f2 !important;
-            color: white !important;
-        }
-
-        .slot-item .time {
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-
-        .slot-item .price {
-            font-size: 0.75rem;
-            opacity: 0.8;
-        }
-</style>
-
 <script>
-    let selected = [];
-    function toggleSlot(el) {
-        if (el.classList.contains('booked')) return;
-        el.classList.toggle('selected');
+    let selectedSlots = [];
 
-        const price = parseInt(el.dataset.price);
-        const time = el.dataset.time;
+    function toggleSlot(element) {
+        if (element.classList.contains('booked')) return;
 
-        // Logic tính tiền đơn giản
-        const selectedCount = document.querySelectorAll('.slot-item.selected').length;
-        const total = selectedCount * price;
+        const court = element.dataset.court;
+        const time = element.dataset.time;
+        const price = parseInt(element.dataset.price);
 
-        const bar = document.getElementById('paymentBar');
-        if (selectedCount > 0) {
-            bar.classList.remove('d-none');
-            document.getElementById('selectedSlotsText').innerText = `Đã chọn ${selectedCount} khung giờ`;
-            document.getElementById('totalAmount').innerText = total.toLocaleString() + 'đ';
+        const slotKey = `${court}-${time}`;
+
+        if (element.classList.contains('selected')) {
+            element.classList.remove('selected');
+            selectedSlots = selectedSlots.filter(s => s.key !== slotKey);
         } else {
-            bar.classList.add('d-none');
+            element.classList.add('selected');
+            selectedSlots.push({ key: slotKey, price: price });
+        }
+
+        updatePaymentBar();
+    }
+
+    function updatePaymentBar() {
+        const paymentBar = document.getElementById('paymentBar');
+        const count = selectedSlots.length;
+        const total = selectedSlots.reduce((sum, slot) => sum + slot.price, 0);
+
+        if (count > 0) {
+            paymentBar.classList.add('show');
+            document.getElementById('selectedSlotsText').textContent = `Đã chọn ${count} khung giờ`;
+            document.getElementById('totalAmount').textContent = total.toLocaleString('vi-VN') + 'đ';
+        } else {
+            paymentBar.classList.remove('show');
         }
     }
+
+    // Auto-play carousel
+    document.addEventListener('DOMContentLoaded', function() {
+        const carousel = new bootstrap.Carousel(document.getElementById('courtCarousel'), {
+            interval: 3000,
+            wrap: true
+        });
+    });
 </script>

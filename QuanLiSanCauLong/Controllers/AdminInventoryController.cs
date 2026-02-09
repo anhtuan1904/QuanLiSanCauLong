@@ -86,26 +86,25 @@ namespace QuanLiSanCauLong.Controllers
                 FacilityId = facilityId ?? 0,
                 TransactionType = "Import",
                 TransactionDate = DateTime.Now,
-                Items = new List<StockTransactionItemViewModel>()
+                Items = new List<StockTransactionItemViewModel> { new StockTransactionItemViewModel() }
             };
 
-            return View(model);
+            // Trả về PartialView để không kèm Layout Nav/Footer
+            return PartialView(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> StockIn(StockTransactionViewModel model)
         {
-            if (ModelState.IsValid && model.Items.Any())
+            if (ModelState.IsValid && model.Items != null && model.Items.Any())
             {
                 foreach (var item in model.Items)
                 {
-                    if (item.Quantity <= 0)
-                        continue;
+                    if (item.Quantity <= 0) continue;
 
                     var inventory = await _context.Inventories
-                        .FirstOrDefaultAsync(i => i.FacilityId == model.FacilityId &&
-                                                  i.ProductId == item.ProductId);
+                        .FirstOrDefaultAsync(i => i.FacilityId == model.FacilityId && i.ProductId == item.ProductId);
 
                     if (inventory == null)
                     {
@@ -128,14 +127,13 @@ namespace QuanLiSanCauLong.Controllers
                 }
 
                 await _context.SaveChangesAsync();
-
-                TempData["SuccessMessage"] = "Nhập kho thành công!";
-                return RedirectToAction(nameof(Index), new { facilityId = model.FacilityId });
+                // Trả về JSON để AJAX ở Index.cshtml xử lý đóng Modal
+                return Json(new { success = true, message = "Nhập kho thành công!" });
             }
 
             ViewBag.Facilities = await _context.Facilities.Where(f => f.IsActive).ToListAsync();
             ViewBag.Products = await _context.Products.Where(p => p.IsActive).ToListAsync();
-            return View(model);
+            return PartialView(model);
         }
 
         [HttpGet]
@@ -149,41 +147,33 @@ namespace QuanLiSanCauLong.Controllers
                 FacilityId = facilityId ?? 0,
                 TransactionType = "Export",
                 TransactionDate = DateTime.Now,
-                Items = new List<StockTransactionItemViewModel>()
+                Items = new List<StockTransactionItemViewModel> { new StockTransactionItemViewModel() }
             };
 
-            return View(model);
+            return PartialView(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> StockOut(StockTransactionViewModel model)
         {
-            if (ModelState.IsValid && model.Items.Any())
+            if (ModelState.IsValid && model.Items != null && model.Items.Any())
             {
                 foreach (var item in model.Items)
                 {
-                    if (item.Quantity <= 0)
-                        continue;
+                    if (item.Quantity <= 0) continue;
 
                     var inventory = await _context.Inventories
-                        .FirstOrDefaultAsync(i => i.FacilityId == model.FacilityId &&
-                                                  i.ProductId == item.ProductId);
+                        .FirstOrDefaultAsync(i => i.FacilityId == model.FacilityId && i.ProductId == item.ProductId);
 
                     if (inventory == null)
                     {
-                        ModelState.AddModelError("", $"Sản phẩm không tồn tại trong kho!");
-                        ViewBag.Facilities = await _context.Facilities.Where(f => f.IsActive).ToListAsync();
-                        ViewBag.Products = await _context.Products.Where(p => p.IsActive).ToListAsync();
-                        return View(model);
+                        return Json(new { success = false, message = $"Sản phẩm ID {item.ProductId} không có trong kho!" });
                     }
 
                     if (inventory.Quantity < item.Quantity)
                     {
-                        ModelState.AddModelError("", $"Số lượng trong kho không đủ!");
-                        ViewBag.Facilities = await _context.Facilities.Where(f => f.IsActive).ToListAsync();
-                        ViewBag.Products = await _context.Products.Where(p => p.IsActive).ToListAsync();
-                        return View(model);
+                        return Json(new { success = false, message = $"Sản phẩm {item.ProductId} không đủ số lượng tồn!" });
                     }
 
                     inventory.Quantity -= item.Quantity;
@@ -191,14 +181,12 @@ namespace QuanLiSanCauLong.Controllers
                 }
 
                 await _context.SaveChangesAsync();
-
-                TempData["SuccessMessage"] = "Xuất kho thành công!";
-                return RedirectToAction(nameof(Index), new { facilityId = model.FacilityId });
+                return Json(new { success = true, message = "Xuất kho thành công!" });
             }
 
             ViewBag.Facilities = await _context.Facilities.Where(f => f.IsActive).ToListAsync();
             ViewBag.Products = await _context.Products.Where(p => p.IsActive).ToListAsync();
-            return View(model);
+            return PartialView(model);
         }
 
         [HttpGet]
@@ -209,10 +197,9 @@ namespace QuanLiSanCauLong.Controllers
                 .Include(i => i.Facility)
                 .FirstOrDefaultAsync(i => i.InventoryId == inventoryId);
 
-            if (inventory == null)
-                return NotFound();
+            if (inventory == null) return NotFound();
 
-            return View(inventory);
+            return PartialView(inventory);
         }
 
         [HttpPost]
@@ -221,8 +208,7 @@ namespace QuanLiSanCauLong.Controllers
         {
             if (newQuantity < 0)
             {
-                TempData["ErrorMessage"] = "Số lượng không hợp lệ!";
-                return RedirectToAction(nameof(Index));
+                return Json(new { success = false, message = "Số lượng không hợp lệ!" });
             }
 
             var inventory = await _context.Inventories.FindAsync(inventoryId);
@@ -232,11 +218,10 @@ namespace QuanLiSanCauLong.Controllers
                 inventory.LastUpdated = DateTime.Now;
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = "Điều chỉnh kho thành công!";
-                return RedirectToAction(nameof(Index), new { facilityId = inventory.FacilityId });
+                return Json(new { success = true, message = "Điều chỉnh kho thành công!" });
             }
 
-            return NotFound();
+            return Json(new { success = false, message = "Không tìm thấy bản ghi kho!" });
         }
 
         [HttpGet]
@@ -250,7 +235,10 @@ namespace QuanLiSanCauLong.Controllers
                 .OrderBy(i => i.Quantity)
                 .ToListAsync();
 
-            return View(lowStockItems);
+            // Nếu trang này mở bằng trang riêng thì dùng View, nếu mở Modal thì dùng Partial
+            return Request.Headers["X-Requested-With"] == "XMLHttpRequest"
+                ? PartialView(lowStockItems)
+                : View(lowStockItems);
         }
 
         [HttpGet]

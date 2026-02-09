@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuanLiSanCauLong.Data;
 using QuanLiSanCauLong.Models;
@@ -18,105 +17,103 @@ namespace QuanLiSanCauLong.Controllers
         {
             _context = context;
         }
-        private bool CanCancelBooking(Booking booking, decimal cancelHours)
-        {
-            // 1. Chỉ cho phép hủy nếu đơn hàng đang ở trạng thái Chờ hoặc Đã xác nhận
-            if (booking.Status != "Confirmed" && booking.Status != "Pending")
-                return false;
 
-            // 2. Kết hợp ngày đặt và giờ bắt đầu để tạo mốc thời gian chơi
-            var bookingDateTime = booking.BookingDate.Date.Add(booking.StartTime);
-
-            // 3. Kiểm tra: Thời gian bắt đầu chơi phải sau (Thời điểm hiện tại + số giờ quy định hủy)
-            // Ví dụ: Giờ chơi là 14:00, quy định hủy trước 2 tiếng -> Phải hủy trước 12:00
-            return bookingDateTime > DateTime.Now.AddHours((double)cancelHours);
-        }
-        // GET: Booking/Search
+        // GET: Booking/Search - Trang tìm kiếm sân
         [HttpGet]
-        public async Task<IActionResult> Search(int? facilityId, DateTime? bookingDate, string city, string district)
+        public async Task<IActionResult> Search(int facilityId)
         {
-            var model = new CourtSearchViewModel
+            var facility = await _context.Facilities
+                .FirstOrDefaultAsync(f => f.FacilityId == facilityId);
+
+            if (facility == null)
             {
-                FacilityId = facilityId,
-                BookingDate = bookingDate ?? DateTime.Today,
-                City = city,
-                District = district,
-                AvailableFacilities = new List<FacilityAvailabilityViewModel>()
-            };
+                TempData["ErrorMessage"] = "Không tìm thấy cơ sở!";
+                return RedirectToAction("Index", "Facility");
+            }
 
-            // Query cơ sở sân
-            var facilitiesQuery = _context.Facilities.Where(f => f.IsActive);
+            // Truyền thông tin facility vào ViewBag
+            ViewBag.FacilityId = facility.FacilityId;
+            ViewBag.FacilityName = facility.FacilityName;
+            ViewBag.FacilityAddress = facility.Address + ", " + facility.District + ", " + facility.City;
+            ViewBag.FacilityPhone = facility.Phone;
+            ViewBag.FacilityImage = facility.ImageUrl ?? "/images/default-facility.jpg";
+            ViewBag.OpenTime = facility.OpenTime?.ToString(@"hh\:mm") ?? "06:00";
+            ViewBag.CloseTime = facility.CloseTime?.ToString(@"hh\:mm") ?? "23:00";
 
-            if (facilityId.HasValue)
-                facilitiesQuery = facilitiesQuery.Where(f => f.FacilityId == facilityId.Value);
+            // Đếm số sân
+            ViewBag.TotalCourts = await _context.Courts
+                .CountAsync(c => c.FacilityId == facilityId && c.Status == "Available");
 
-            if (!string.IsNullOrEmpty(city))
-                facilitiesQuery = facilitiesQuery.Where(f => f.City == city);
+            return View();
+        }
 
-            if (!string.IsNullOrEmpty(district))
-                facilitiesQuery = facilitiesQuery.Where(f => f.District == district);
-
-            var facilities = await facilitiesQuery.ToListAsync();
-
-            foreach (var facility in facilities)
+        // POST: API tìm sân trống (Ajax)
+        [HttpPost]
+        public async Task<IActionResult> SearchAvailableCourts([FromBody] SearchCourtRequest request)
+        {
+            try
             {
-                var facilityVM = new FacilityAvailabilityViewModel
+                if (request.FacilityId <= 0 || request.BookingDate == default)
                 {
-                    FacilityId = facility.FacilityId,
-                    FacilityName = facility.FacilityName,
-                    Address = facility.Address,
-                    District = facility.District,
-                    City = facility.City,
-                    Phone = facility.Phone,
-                    ImageUrl = facility.ImageUrl,
-                    OpenTime = facility.OpenTime,
-                    CloseTime = facility.CloseTime,
-                    AvailableCourts = new List<CourtAvailabilityViewModel>()
-                };
+                    return Json(new { success = false, message = "Vui lòng chọn đầy đủ thông tin!" });
+                }
 
+                // Parse time
+                TimeSpan searchTime;
+                if (!TimeSpan.TryParse(request.StartTime, out searchTime))
+                {
+                    return Json(new { success = false, message = "Khung giờ không hợp lệ!" });
+                }
+
+                // Get all courts of facility
                 var courts = await _context.Courts
-                    .Where(c => c.FacilityId == facility.FacilityId && c.Status == "Available")
+                    .Where(c => c.FacilityId == request.FacilityId && c.Status == "Available")
                     .ToListAsync();
 
-                facilityVM.TotalCourts = courts.Count;
+                var availableCourts = new List<object>();
 
                 foreach (var court in courts)
                 {
-                    var timeSlots = await GetAvailableTimeSlots(court, model.BookingDate);
+                    // Get available time slots for this court
+                    var timeSlots = await GetAvailableTimeSlots(court, request.BookingDate);
 
-                    if (timeSlots.Any(t => t.IsAvailable))
+                    // Find the slot that matches search time
+                    var matchingSlot = timeSlots.FirstOrDefault(t =>
+                        t.IsAvailable &&
+                        t.StartTime <= searchTime &&
+                        t.EndTime > searchTime);
+
+                    if (matchingSlot != null)
                     {
-                        var courtVM = new CourtAvailabilityViewModel
+                        availableCourts.Add(new
                         {
-                            CourtId = court.CourtId,
-                            CourtNumber = court.CourtNumber,
-                            CourtType = court.CourtType,
-                            Status = court.Status,
-                            AvailableTimeSlots = timeSlots
-                        };
-
-                        facilityVM.AvailableCourts.Add(courtVM);
+                            courtId = court.CourtId,
+                            courtNumber = court.CourtNumber,
+                            courtType = court.CourtType,
+                            startTime = matchingSlot.StartTime.ToString(@"hh\:mm"),
+                            endTime = matchingSlot.EndTime.ToString(@"hh\:mm"),
+                            price = matchingSlot.Price,
+                            isPeakHour = matchingSlot.IsPeakHour,
+                            hasLighting = court.HasLighting,
+                            hasAC = court.HasAC
+                        });
                     }
                 }
 
-                if (facilityVM.AvailableCourts.Any())
+                return Json(new
                 {
-                    model.AvailableFacilities.Add(facilityVM);
-                }
+                    success = true,
+                    courts = availableCourts,
+                    message = $"Tìm thấy {availableCourts.Count} sân trống"
+                });
             }
-
-            // ViewBag cho filters
-            ViewBag.Facilities = await _context.Facilities.Where(f => f.IsActive).ToListAsync();
-            ViewBag.Cities = await _context.Facilities
-                .Where(f => f.IsActive && f.City != null)
-                .Select(f => f.City)
-                .Distinct()
-                .ToListAsync();
-
-            return View(model);
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
         }
 
-        // GET: Booking/Create
+        // GET: Booking/Create - Form đặt sân
         [HttpGet]
         public async Task<IActionResult> Create(int courtId, DateTime bookingDate, string startTime, string endTime)
         {
@@ -160,6 +157,7 @@ namespace QuanLiSanCauLong.Controllers
             return View(model);
         }
 
+        // POST: Booking/Create - Xử lý đặt sân
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateBookingViewModel model)
@@ -182,7 +180,7 @@ namespace QuanLiSanCauLong.Controllers
 
             int userId = GetCurrentUserId();
 
-            // 3. Tính toán lại giá trị thực tế tại Server (Anti-Cheat)
+            // 3. Tính toán lại giá trị thực tế tại Server
             var court = await _context.Courts.FindAsync(model.CourtId);
             decimal serverCourtPrice = await CalculateCourtPrice(court.FacilityId, court.CourtType, model.StartTime, model.EndTime);
             decimal serverServiceFee = serverCourtPrice * (await GetSystemSetting("DefaultServiceFee", 0)) / 100;
@@ -192,7 +190,7 @@ namespace QuanLiSanCauLong.Controllers
             {
                 try
                 {
-                    // 4. Xử lý Voucher dựa trên giá Server tính toán
+                    // 4. Xử lý Voucher
                     decimal voucherDiscount = 0;
                     int? voucherId = null;
                     if (!string.IsNullOrEmpty(model.VoucherCode))
@@ -221,7 +219,7 @@ namespace QuanLiSanCauLong.Controllers
                         TotalPrice = baseTotal - voucherDiscount,
                         Status = "Confirmed",
                         PaymentMethod = model.PaymentMethod ?? "Cash",
-                        PaymentStatus = (model.PaymentMethod == "Cash") ? "Unpaid" : "Paid", // Tùy logic doanh nghiệp
+                        PaymentStatus = (model.PaymentMethod == "Cash") ? "Unpaid" : "Paid",
                         CreatedAt = DateTime.Now,
                         UpdatedAt = DateTime.Now
                     };
@@ -250,12 +248,12 @@ namespace QuanLiSanCauLong.Controllers
                 }
             }
         }
+
+        // GET: Booking/MyBookings - Lịch sử đặt sân
         [HttpGet]
         public async Task<IActionResult> MyBookings(string status, DateTime? fromDate, DateTime? toDate)
         {
             int userId = GetCurrentUserId();
-
-            // 1. Lấy giá trị cấu hình thời gian hủy 1 lần duy nhất bên ngoài vòng lặp
             var cancelHoursSetting = await GetSystemSetting("BookingCancellationHours", 2);
 
             var query = _context.Bookings
@@ -265,7 +263,6 @@ namespace QuanLiSanCauLong.Controllers
                         .ThenInclude(od => od.Product)
                 .Where(b => b.UserId == userId);
 
-            // 2. Các bộ lọc tìm kiếm
             if (!string.IsNullOrEmpty(status))
                 query = query.Where(b => b.Status == status);
 
@@ -277,7 +274,6 @@ namespace QuanLiSanCauLong.Controllers
 
             var bookings = await query.OrderByDescending(b => b.CreatedAt).ToListAsync();
 
-            // 3. Mapping dữ liệu sang ViewModel
             var model = bookings.Select(b => new BookingHistoryViewModel
             {
                 BookingId = b.BookingId,
@@ -295,10 +291,7 @@ namespace QuanLiSanCauLong.Controllers
                 PaymentMethod = b.PaymentMethod,
                 CreatedAt = b.CreatedAt,
                 Note = b.Note,
-
-                // Truyền thêm biến cấu hình vào hàm kiểm tra
                 CanCancel = CanCancelBooking(b, cancelHoursSetting),
-
                 RelatedOrders = b.Orders.Select(o => new OrderViewModel
                 {
                     OrderId = o.OrderId,
@@ -320,7 +313,8 @@ namespace QuanLiSanCauLong.Controllers
             ViewBag.Statuses = new[] { "Pending", "Confirmed", "Playing", "Completed", "Cancelled" };
             return View(model);
         }
-        // GET: Booking/Details
+
+        // GET: Booking/Details - Chi tiết booking
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
@@ -335,18 +329,15 @@ namespace QuanLiSanCauLong.Controllers
                 .FirstOrDefaultAsync(b => b.BookingId == id);
 
             if (booking == null)
-            {
                 return NotFound();
-            }
 
             int userId = GetCurrentUserId();
             string userRole = GetCurrentUserRole();
 
-            // Kiểm tra quyền xem
             if (userRole != "Admin" && userRole != "Staff" && booking.UserId != userId)
-            {
                 return Forbid();
-            }
+
+            var cancelHours = await GetSystemSetting("BookingCancellationHours", 2);
 
             var model = new BookingHistoryViewModel
             {
@@ -365,7 +356,7 @@ namespace QuanLiSanCauLong.Controllers
                 PaymentMethod = booking.PaymentMethod,
                 CreatedAt = booking.CreatedAt,
                 Note = booking.Note,
-                CanCancel = await CanCancelBooking(booking),
+                CanCancel = CanCancelBooking(booking, cancelHours),
                 RelatedOrders = booking.Orders.Select(o => new OrderViewModel
                 {
                     OrderId = o.OrderId,
@@ -386,8 +377,7 @@ namespace QuanLiSanCauLong.Controllers
             return View(model);
         }
 
-
-        // POST: Booking/Cancel
+        // POST: Booking/Cancel - Hủy booking
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id, string cancelReason)
@@ -395,16 +385,13 @@ namespace QuanLiSanCauLong.Controllers
             var booking = await _context.Bookings.FindAsync(id);
 
             if (booking == null)
-            {
                 return NotFound();
-            }
 
             if (booking.UserId != GetCurrentUserId())
-            {
                 return Forbid();
-            }
 
-            if (!await CanCancelBooking(booking))
+            var cancelHours = await GetSystemSetting("BookingCancellationHours", 2);
+            if (!CanCancelBooking(booking, cancelHours))
             {
                 TempData["ErrorMessage"] = "Không thể hủy đơn này do đã quá thời gian quy định!";
                 return RedirectToAction(nameof(MyBookings));
@@ -429,20 +416,16 @@ namespace QuanLiSanCauLong.Controllers
         private async Task<List<TimeSlotViewModel>> GetAvailableTimeSlots(Court court, DateTime bookingDate)
         {
             var timeSlots = new List<TimeSlotViewModel>();
-
-            // Sử dụng trực tiếp kiểu DayOfWeek để so sánh với Model
             DayOfWeek dayOfWeekEnum = bookingDate.DayOfWeek;
 
             var priceSlots = await _context.PriceSlots
                 .Where(p => p.FacilityId == court.FacilityId
                             && p.CourtType == court.CourtType
                             && p.IsActive
-                            // Ép kiểu hoặc so sánh Enum trực tiếp tùy thuộc vào định nghĩa trong DB của bạn
                             && (p.DayOfWeek == null || p.DayOfWeek == dayOfWeekEnum))
                 .OrderBy(p => p.StartTime)
                 .ToListAsync();
 
-            // Tối ưu hóa: Chỉ lấy các bản ghi có cùng ngày (tránh lệch múi giờ nếu có)
             var bookedSlots = await _context.Bookings
                 .Where(b => b.CourtId == court.CourtId
                             && b.BookingDate.Date == bookingDate.Date
@@ -451,8 +434,6 @@ namespace QuanLiSanCauLong.Controllers
 
             foreach (var slot in priceSlots)
             {
-                // Thuật toán kiểm tra chồng lấn thời gian (Overlap detection)
-                // 
                 bool isBooked = bookedSlots.Any(b =>
                     b.StartTime < slot.EndTime && b.EndTime > slot.StartTime);
 
@@ -485,7 +466,6 @@ namespace QuanLiSanCauLong.Controllers
                 .Where(p => p.FacilityId == facilityId
                        && p.CourtType == courtType
                        && p.IsActive
-                       // Tìm các slot có giao thoa với thời gian khách đặt
                        && p.StartTime < end
                        && p.EndTime > start)
                 .ToListAsync();
@@ -493,20 +473,12 @@ namespace QuanLiSanCauLong.Controllers
             return priceSlots.Sum(p => p.Price);
         }
 
-        private async Task<bool> CanCancelBooking(Booking booking)
+        private bool CanCancelBooking(Booking booking, decimal cancelHours)
         {
-            // 1. Kiểm tra trạng thái đơn hàng
             if (booking.Status != "Confirmed" && booking.Status != "Pending")
                 return false;
 
-            // 2. Tính toán thời gian bắt đầu chơi
             var bookingDateTime = booking.BookingDate.Date.Add(booking.StartTime);
-
-            // 3. Lấy cấu hình giờ hủy (Sử dụng await thay vì .Result)
-            var cancelHours = await GetSystemSetting("BookingCancellationHours", 2);
-
-            // 4. Kiểm tra xem hiện tại đã quá hạn hủy chưa
-            // Ví dụ: Đặt lúc 14:00, quy định hủy trước 2 tiếng -> Phải hủy trước 12:00
             return bookingDateTime > DateTime.Now.AddHours((double)cancelHours);
         }
 
@@ -679,5 +651,13 @@ namespace QuanLiSanCauLong.Controllers
             var roleClaim = User.FindFirst(ClaimTypes.Role);
             return roleClaim?.Value ?? "Customer";
         }
+    }
+
+    // Request model for search
+    public class SearchCourtRequest
+    {
+        public int FacilityId { get; set; }
+        public DateTime BookingDate { get; set; }
+        public string StartTime { get; set; }
     }
 }

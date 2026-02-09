@@ -1,5 +1,426 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model QuanLiSanCauLong.ViewModels.OrderViewModel
+
 @{
+    ViewData["Title"] = "Chi tiết đơn hàng";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
+
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center">
+            <a asp-action="Index" class="btn btn-outline-secondary rounded-circle me-3" style="width: 40px; height: 40px; padding: 0;">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h3 class="fw-bold mb-0">Chi Tiết Đơn Hàng</h3>
+                <p class="text-muted mb-0 small">
+                    Mã: <span class="fw-semibold">@Model.OrderCode</span> •
+                    Ngày tạo: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                </p>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" onclick="window.print()">
+                <i class="bi bi-printer me-2"></i>In hóa đơn
+            </button>
+            @if (Model.OrderStatus == "Pending")
+            {
+                <button class="btn btn-success" onclick="confirmOrder(@Model.OrderId)">
+                    <i class="bi bi-check-circle me-2"></i>Xác nhận đơn
+                </button>
+            }
+            else if (Model.OrderStatus == "Confirmed")
+            {
+                <button class="btn btn-primary" onclick="completeOrder(@Model.OrderId)">
+                    <i class="bi bi-check2-circle me-2"></i>Hoàn thành
+                </button>
+            }
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column -->
+        <div class="col-lg-8">
+            <!-- Order Type Badge -->
+            <div class="mb-4">
+                @if (Model.OrderType == "WithBooking")
+                {
+                    <span class="badge bg-info-subtle text-info px-3 py-2 fs-6">
+                        <i class="bi bi-link-45deg me-2"></i>Đơn hàng có kèm đặt sân
+                    </span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary-subtle text-secondary px-3 py-2 fs-6">
+                        <i class="bi bi-bag me-2"></i>Đơn hàng độc lập
+                    </span>
+                }
+            </div>
+
+            <!-- Order Items -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="fw-bold mb-0">Sản Phẩm Đã Đặt</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="border-0 py-3 ps-4">SẢN PHẨM</th>
+                                    <th class="border-0 py-3 text-center">ĐƠN GIÁ</th>
+                                    <th class="border-0 py-3 text-center">SỐ LƯỢNG</th>
+                                    <th class="border-0 py-3 text-center">GIẢM GIÁ</th>
+                                    <th class="border-0 py-3 pe-4 text-end">THÀNH TIỀN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.OrderDetails)
+                                {
+                                    <tr>
+                                        <td class="ps-4 py-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="icon-box bg-primary-subtle rounded-3 p-2 me-3">
+                                                    <i class="bi bi-box-seam text-primary fs-5"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-semibold">@item.ProductName</div>
+                                                    <small class="text-muted">Đơn vị: @item.Unit</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-3 text-center">
+                                            <span class="text-muted">₫@item.UnitPrice.ToString("N0")</span>
+                                        </td>
+                                        <td class="py-3 text-center">
+                                            <span class="badge bg-info-subtle text-info px-3 py-2">
+                                                x@item.Quantity
+                                            </span>
+                                        </td>
+                                        <td class="py-3 text-center">
+                                            @if (item.DiscountAmount > 0)
+                                            {
+                                                <span class="text-danger">-₫@item.DiscountAmount.ToString("N0")</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td class="py-3 pe-4 text-end">
+                                            <span class="fw-bold text-success">₫@item.TotalPrice.ToString("N0")</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Tổng Kết Đơn Hàng</h6>
+
+                    <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                        <span class="text-muted">Tạm tính (@Model.OrderDetails.Count sản phẩm):</span>
+                        <span class="fw-semibold">₫@Model.SubTotal.ToString("N0")</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                        <span class="text-muted">Giảm giá:</span>
+                        <span class="text-danger fw-semibold">-₫@Model.DiscountAmount.ToString("N0")</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="h5 fw-bold mb-0">Tổng cộng:</span>
+                        <span class="h3 fw-bold text-success mb-0">₫@Model.TotalAmount.ToString("N0")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- Customer Info -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Thông Tin Khách Hàng</h6>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="avatar-circle bg-primary-subtle text-primary me-3">
+                            <i class="bi bi-person fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold">Khách hàng</div>
+                            <small class="text-muted">Thành viên</small>
+                        </div>
+                    </div>
+                    <div class="contact-info">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-telephone text-muted me-2"></i>
+                            <span class="small">0123 456 789</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-envelope text-muted me-2"></i>
+                            <span class="small">customer@example.com</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment & Status -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Thanh Toán & Trạng Thái</h6>
+
+                    <div class="mb-3">
+                        <label class="small text-muted d-block mb-1">Phương thức</label>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-credit-card text-primary me-2"></i>
+                            <span class="fw-semibold">Chuyển khoản</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small text-muted d-block mb-1">Trạng thái thanh toán</label>
+                        @if (Model.PaymentStatus == "Paid")
+                        {
+                            <span class="badge bg-success-subtle text-success px-3 py-2">
+                                <i class="bi bi-check-circle me-1"></i>Đã Thanh Toán
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning-subtle text-warning px-3 py-2">
+                                <i class="bi bi-clock me-1"></i>Chưa Thanh Toán
+                            </span>
+                        }
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small text-muted d-block mb-1">Trạng thái đơn</label>
+                        @switch (Model.OrderStatus)
+                        {
+                            case "Pending":
+                                <span class="badge bg-warning-subtle text-warning px-3 py-2">
+                                    <i class="bi bi-hourglass-split me-1"></i>Chờ Xử Lý
+                                </span>
+                                break;
+                            case "Confirmed":
+                                <span class="badge bg-info-subtle text-info px-3 py-2">
+                                    <i class="bi bi-check-circle me-1"></i>Đã Xác Nhận
+                                </span>
+                                break;
+                            case "Completed":
+                                <span class="badge bg-success-subtle text-success px-3 py-2">
+                                    <i class="bi bi-check2-circle me-1"></i>Hoàn Thành
+                                </span>
+                                break;
+                            case "Cancelled":
+                                <span class="badge bg-danger-subtle text-danger px-3 py-2">
+                                    <i class="bi bi-x-circle me-1"></i>Đã Hủy
+                                </span>
+                                break;
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Note))
+                    {
+                        <div class="mb-0">
+                            <label class="small text-muted d-block mb-1">Ghi chú</label>
+                            <p class="small mb-0 fst-italic text-muted">"@Model.Note"</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Order Timeline -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Lịch Sử Đơn Hàng</h6>
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <div class="small fw-semibold">Đơn hàng được tạo</div>
+                                <small class="text-muted">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                            </div>
+                        </div>
+
+                        @if (Model.OrderStatus != "Pending")
+                        {
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-info"></div>
+                                <div class="timeline-content">
+                                    <div class="small fw-semibold">Đã xác nhận</div>
+                                    <small class="text-muted">@Model.CreatedAt.AddMinutes(5).ToString("dd/MM/yyyy HH:mm")</small>
+                                </div>
+                            </div>
+                        }
+
+                        @if (Model.OrderStatus == "Completed")
+                        {
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-success"></div>
+                                <div class="timeline-content">
+                                    <div class="small fw-semibold">Hoàn thành</div>
+                                    <small class="text-muted">@Model.CreatedAt.AddHours(1).ToString("dd/MM/yyyy HH:mm")</small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            @if (Model.OrderStatus == "Pending" || Model.OrderStatus == "Confirmed")
+            {
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-3">Thao Tác</h6>
+                        <div class="d-grid gap-2">
+                            @if (Model.OrderStatus == "Pending")
+                            {
+                                <button class="btn btn-success" onclick="confirmOrder(@Model.OrderId)">
+                                    <i class="bi bi-check-circle me-2"></i>Xác nhận đơn
+                                </button>
+                            }
+                            else if (Model.OrderStatus == "Confirmed")
+                            {
+                                <button class="btn btn-primary" onclick="completeOrder(@Model.OrderId)">
+                                    <i class="bi bi-check2-circle me-2"></i>Hoàn thành
+                                </button>
+                            }
+                            <button class="btn btn-outline-danger" onclick="cancelOrder(@Model.OrderId)">
+                                <i class="bi bi-x-circle me-2"></i>Hủy đơn
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmOrder(orderId) {
+            if (confirm('Xác nhận đơn hàng này?')) {
+                $.post('@Url.Action("Confirm", "AdminOrder")', { orderId: orderId })
+                    .done(function(result) {
+                        alert(result.message);
+                        if (result.success) location.reload();
+                    });
+            }
+        }
+
+        function completeOrder(orderId) {
+            if (confirm('Hoàn thành đơn hàng này?')) {
+                $.post('@Url.Action("Complete", "AdminOrder")', { orderId: orderId })
+                    .done(function(result) {
+                        alert(result.message);
+                        if (result.success) location.reload();
+                    });
+            }
+        }
+
+        function cancelOrder(orderId) {
+            const reason = prompt('Lý do hủy đơn:');
+            if (reason) {
+                $.post('@Url.Action("Cancel", "AdminOrder")', { orderId: orderId, reason: reason })
+                    .done(function(result) {
+                        alert(result.message);
+                        if (result.success) location.reload();
+                    });
+            }
+        }
+    </script>
+}
+
+<style>
+    .icon-box {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .avatar-circle {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: #e2e8f0;
+        }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+
+    .timeline-marker {
+        position: absolute;
+        left: -26px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 3px solid white;
+    }
+
+    .timeline-content {
+        padding-left: 10px;
+    }
+
+    .bg-success-subtle {
+        background-color: rgba(16, 185, 129, 0.1) !important;
+    }
+
+    .bg-primary-subtle {
+        background-color: rgba(99, 102, 241, 0.1) !important;
+    }
+
+    .bg-info-subtle {
+        background-color: rgba(14, 165, 233, 0.1) !important;
+    }
+
+    .bg-warning-subtle {
+        background-color: rgba(245, 158, 11, 0.1) !important;
+    }
+
+    .bg-danger-subtle {
+        background-color: rgba(239, 68, 68, 0.1) !important;
+    }
+
+    .bg-secondary-subtle {
+        background-color: rgba(107, 114, 128, 0.1) !important;
+    }
+
+    @@media print {
+        .btn, .card-footer, .timeline {
+            display: none !important;
+        }
+    }
+</style>

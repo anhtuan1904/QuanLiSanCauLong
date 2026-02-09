@@ -5,154 +5,220 @@
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold">
-        <i class="bi bi-building text-primary me-2"></i>
-        Quản lý cơ sở
-    </h2>
-    <a asp-action="Create" class="btn btn-primary">
-        <i class="bi bi-plus-circle me-2"></i>Thêm cơ sở mới
-    </a>
-</div>
-
-<!-- Search & Filter -->
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-4">
-                <input type="text" class="form-control" name="search"
-                       placeholder="Tìm theo tên, địa chỉ..." value="@ViewBag.Search">
-            </div>
-            <div class="col-md-3">
-                <select class="form-select" name="city">
-                    <option value="">Tất cả thành phố</option>
-                    <option value="Hồ Chí Minh">Hồ Chí Minh</option>
-                    <option value="Hà Nội">Hà Nội</option>
-                    <option value="Đà Nẵng">Đà Nẵng</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <select class="form-select" name="status">
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="Active">Hoạt động</option>
-                    <option value="Inactive">Ngừng hoạt động</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search"></i> Tìm
-                </button>
-            </div>
-        </form>
+<div class="container-fluid px-4 py-4" style="background-color: #f4f7f6; min-vh-100;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-dark m-0">Quản Lý Cơ Sở</h3>
+        <div class="user-profile bg-white shadow-sm rounded-pill px-3 py-2 d-flex align-items-center border">
+            <span class="small fw-bold text-muted me-2">admin</span>
+            <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">A</div>
+        </div>
     </div>
-</div>
 
-<!-- Facilities Grid -->
-<div class="row g-4">
-    @if (Model != null && Model.Any())
-    {
-        foreach (var facility in Model)
+    <div class="row g-4 mb-5">
+        @foreach (var item in new[] {
+                new { L = "Tổng Cơ Sở", V = Model.Count().ToString(), C = "border-dark" },
+                new { L = "Đang Hoạt Động", V = Model.Count(x => x.Status == "Active").ToString(), C = "border-success text-success" },
+                new { L = "Bảo Trì", V = "1", C = "border-warning text-warning" },
+                new { L = "Tổng Sân", V = Model.Sum(x => x.Courts?.Count ?? 0).ToString(), C = "border-primary text-primary" }
+                })
         {
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 shadow-sm border-0">
-                    @if (!string.IsNullOrEmpty(facility.ImageUrl))
-                    {
-                        <img src="@facility.ImageUrl" class="card-img-top" alt="@facility.FacilityName"
-                             style="height: 200px; object-fit: cover;">
-                    }
-                    else
-                    {
-                        <div class="bg-light d-flex align-items-center justify-content-center"
-                             style="height: 200px;">
-                            <i class="bi bi-building text-muted" style="font-size: 4rem;"></i>
-                        </div>
-                    }
+            <div class="col-md-3">
+                <div class="card border-0 shadow rounded-4 p-3 border-start border-4 @item.C">
+                    <div class="text-muted small fw-bold text-uppercase">@item.L</div>
+                    <div class="fs-2 fw-bold">@item.V</div>
+                </div>
+            </div>
+        }
+    </div>
 
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title fw-bold mb-0">@facility.FacilityName</h5>
-                            @if (facility.Status == "Active")
-                            {
-                                <span class="badge bg-success">Hoạt động</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">Ngừng</span>
-                            }
-                        </div>
-
-                        <p class="text-muted small mb-2">
-                            <i class="bi bi-geo-alt me-1"></i>
-                            @facility.Address, @facility.District, @facility.City
-                        </p>
-
-                        <p class="text-muted small mb-2">
-                            <i class="bi bi-telephone me-1"></i>
-                            @facility.Phone
-                        </p>
-
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <div>
-                                <small class="text-muted">
-                                    <i class="bi bi-clock me-1"></i>
-                                    @facility.OpenTime?.ToString(@"hh\:mm") - @facility.CloseTime?.ToString(@"hh\:mm")
-                                </small>
-                            </div>
-                            <div>
-                                <span class="badge bg-info">@facility.Courts?.Count ?? 0 sân</span>
-                            </div>
-                        </div>
+    <div class="card border-0 shadow rounded-4 mb-4 overflow-hidden">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h5 class="fw-bold mb-1">Quản lý Cơ Sở Sân</h5>
+                    <p class="text-muted small mb-3">Quản lý và cập nhật thông tin hệ thống sân cầu lông</p>
+                    <div class="input-group search-box shadow-sm rounded-3 overflow-hidden" style="max-width: 500px; border: 1px solid #eee;">
+                        <span class="input-group-text bg-white border-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" class="form-control border-0 py-2" placeholder="Tìm tên sân, địa chỉ...">
                     </div>
+                </div>
+                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                    <button class="btn btn-dark shadow rounded-3 px-4 py-2 fw-bold btn-add-new" data-bs-toggle="modal" data-bs-target="#createFacilityModal">
+                        <i class="bi bi-plus-lg me-2"></i>Thêm Cơ Sở Mới
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <div class="card-footer bg-white border-top">
-                        <div class="btn-group w-100" role="group">
-                            <a asp-action="Details" asp-route-id="@facility.FacilityId"
-                               class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-eye"></i> Xem
-                            </a>
-                            <a asp-action="Edit" asp-route-id="@facility.FacilityId"
-                               class="btn btn-sm btn-outline-warning">
-                                <i class="bi bi-pencil"></i> Sửa
-                            </a>
-                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                    onclick="deleteFacility(@facility.FacilityId)">
-                                <i class="bi bi-trash"></i> Xóa
+    <div class="row g-4">
+        @foreach (var facility in Model)
+        {
+            <div class="col-md-6">
+                <div class="card border-0 shadow-lg rounded-4 facility-card h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between">
+                            <h5 class="fw-bold text-dark mb-1">@facility.FacilityName</h5>
+                            <span class="badge @(facility.Status == "Active" ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning") rounded-pill px-3 py-2 border">
+                                @(facility.Status == "Active" ? "Hoạt Động" : "Bảo Trì")
+                            </span>
+                        </div>
+                        <p class="text-muted small mb-3"><i class="bi bi-geo-alt-fill text-danger"></i> @facility.Address</p>
+
+                        <div class="row bg-light rounded-4 p-3 mb-4 g-0 text-center shadow-inner">
+                            <div class="col-6 border-end">
+                                <div class="text-muted small">Tổng Số Sân</div>
+                                <div class="fw-bold fs-5">@(facility.Courts?.Count ?? 0) sân</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small text-success">Sân Trống</div>
+                                <div class="fw-bold text-success fs-5">-- sân</div>
+                            </div>
+                        </div>
+
+                        <div class="info-list small mb-4">
+                            <div class="d-flex justify-content-between border-bottom py-2">
+                                <span class="text-muted">Giá thuê:</span><span class="fw-bold text-success">150,000đ/h</span>
+                            </div>
+                            <div class="d-flex justify-content-between border-bottom py-2">
+                                <span class="text-muted">Giờ hoạt động:</span><span class="fw-bold"><i class="bi bi-clock me-1"></i> @facility.OpenTime?.ToString(@"hh\:mm") - @facility.CloseTime?.ToString(@"hh\:mm")</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-2">
+                                <span class="text-muted">Liên hệ:</span><span class="fw-bold text-dark">@facility.Phone</span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-3">
+                            <button onclick="openEditModal(@facility.FacilityId)" class="btn btn-outline-dark w-100 rounded-3 py-2 fw-bold shadow-sm">
+                                <i class="bi bi-pencil-square me-2"></i>Chỉnh Sửa
+                            </button>
+                            <button onclick="confirmDelete(@facility.FacilityId, '@facility.FacilityName')" class="btn btn-outline-danger w-100 rounded-3 py-2 fw-bold shadow-sm border-opacity-50">
+                                <i class="bi bi-trash3 me-2"></i>Xóa
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
         }
-    }
-    else
-    {
-        <div class="col-12">
-            <div class="alert alert-info text-center">
-                <i class="bi bi-info-circle me-2"></i>
-                Chưa có cơ sở nào. Nhấn "Thêm cơ sở mới" để bắt đầu.
+    </div>
+</div>
+
+<div class="modal fade" id="createFacilityModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-20 rounded-5">
+            @await Html.PartialAsync("Create", new QuanLiSanCauLong.Models.Facility())
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editFacilityModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-20 rounded-5" id="editModalContent">
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+        <div class="modal-content border-0 shadow-lg rounded-5">
+            <div class="modal-body p-4 text-center">
+                <div class="mb-3">
+                    <i class="bi bi-exclamation-triangle text-danger" style="font-size: 4rem;"></i>
+                </div>
+                <h4 class="fw-bold">Xác nhận xóa?</h4>
+                <p class="text-muted">Mày có chắc chắn muốn xóa cơ sở <span id="deleteFacilityName" class="fw-bold text-dark"></span> không? Hành động này không thể hoàn tác.</p>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="button" class="btn btn-light w-100 rounded-3 fw-bold py-2" data-bs-dismiss="modal">Hủy</button>
+                    <form id="deleteForm" method="post" class="w-100">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger w-100 rounded-3 fw-bold py-2 shadow-sm">Xác nhận xóa</button>
+                    </form>
+                </div>
             </div>
         </div>
-    }
+    </div>
 </div>
+<style>
+    .facility-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid transparent !important;
+    }
+
+        .facility-card:hover {
+            transform: translateY(-10px);
+            shadow: 0 20px 40px rgba(0,0,0,0.12) !important;
+            border-color: #198754 !important;
+        }
+
+    .shadow-20 {
+        shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    .rounded-5 {
+        border-radius: 25px !important;
+    }
+
+    .bg-success-subtle {
+        background-color: #d1e7dd !important;
+    }
+
+    .bg-warning-subtle {
+        background-color: #fff3cd !important;
+    }
+
+    .btn-add-new:hover {
+        background-color: #333 !important;
+        transform: scale(1.02);
+    }
+    /* Làm mờ nền khi mở modal */
+    .modal-backdrop.show {
+        backdrop-filter: blur(8px);
+        background-color: rgba(0,0,0,0.4);
+    }
+</style>
 
 @section Scripts {
     <script>
-        function deleteFacility(id) {
-            if (confirm('Bạn có chắc muốn xóa cơ sở này?')) {
-                fetch(`/Admin/Facility/Delete/${id}`, {
-                    method: 'POST',
-                    headers: {
-                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        location.reload();
+        // Hàm mở Modal Chỉnh Sửa qua AJAX
+        function openEditModal(id) {
+            $('#editModalContent').html('<div class="p-5 text-center"><div class="spinner-border text-success"></div><p class="mt-2">Đang tải dữ liệu...</p></div>');
+            $('#editFacilityModal').modal('show');
+
+            $.get('/AdminFacility/Edit/' + id, function (data) {
+                $('#editModalContent').html(data);
+            }).fail(function() {
+                $('#editFacilityModal').modal('hide');
+                alert("Lỗi: Không thể tải dữ liệu chỉnh sửa!");
+            });
+        }
+
+        function confirmDelete(id, name) {
+            $('#deleteFacilityName').text(name);
+            $('#deleteModal').modal('show');
+
+            // Lắng nghe sự kiện submit của form xóa
+            $('#deleteForm').off('submit').on('submit', function (e) {
+                e.preventDefault(); // Chặn load lại trang
+
+                const form = $(this);
+                const url = '/AdminFacility/Delete/' + id;
+
+                $.post(url, form.serialize(), function (response) {
+                    if (response.success) {
+                        // Đóng modal
+                        $('#deleteModal').modal('hide');
+
+                        // Hiển thị thông báo và reload nhẹ hoặc xóa card đó đi
+                        alert(response.message);
+                        location.reload(); // Cách nhanh nhất để cập nhật lại danh sách
                     } else {
-                        alert('Không thể xóa cơ sở này!');
+                        // Nếu lỗi (ví dụ: cơ sở đang có sân) thì báo lỗi
+                        alert("Lỗi: " + response.message);
                     }
+                }).fail(function () {
+                    alert("Đã xảy ra lỗi hệ thống khi xóa!");
                 });
-            }
+            });
         }
     </script>
 }

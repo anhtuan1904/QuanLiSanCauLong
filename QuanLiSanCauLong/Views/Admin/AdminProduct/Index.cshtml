@@ -5,140 +5,212 @@
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold">
-        <i class="bi bi-box-seam text-primary me-2"></i>
-        Quản lý sản phẩm
-    </h2>
-    <a asp-action="Create" class="btn btn-primary">
-        <i class="bi bi-plus-circle me-2"></i>Thêm sản phẩm
-    </a>
-</div>
+<div class="container-fluid py-4 page-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Quản Lý Sản Phẩm</h2>
+            <p class="text-muted small mb-0">Quản lý danh mục, sản phẩm và kho hàng của bạn</p>
+        </div>
+        <a asp-action="Create" class="btn btn-dark rounded-3 px-4 py-2 fw-bold shadow-sm">
+            <i class="bi bi-plus-lg me-2"></i>Thêm Sản Phẩm
+        </a>
+    </div>
 
-<!-- Filter -->
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
+    <div class="d-flex gap-2 mb-4 bg-light p-1 rounded-3 d-inline-flex">
+        <a href="/Admin/AdminCategory" class="btn btn-sm px-3 rounded-2 text-secondary fw-medium">Danh Mục</a>
+        <a href="#" class="btn btn-sm px-3 rounded-2 bg-white shadow-sm text-dark fw-bold">Sản Phẩm</a>
+        <a href="#" class="btn btn-sm px-3 rounded-2 text-secondary fw-medium">Kho Hàng</a>
+    </div>
+
+    <div class="search-bar-container mb-4 position-relative">
         <form method="get" class="row g-3">
-            <div class="col-md-4">
-                <input type="text" class="form-control" name="search"
-                       placeholder="Tìm theo tên sản phẩm..." value="@ViewBag.Search">
+            <div class="col-md-8 position-relative">
+                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                <input type="text" class="form-control ps-5 border-0 shadow-sm rounded-3 py-2"
+                       name="search" placeholder="Tìm kiếm sản phẩm..." value="@ViewBag.Search">
             </div>
-            <div class="col-md-3">
-                <select class="form-select" name="categoryId">
+            <div class="col-md-4">
+                <select class="form-select border-0 shadow-sm rounded-3 py-2" name="categoryId" onchange="this.form.submit()">
                     <option value="">Tất cả danh mục</option>
                     @foreach (var cat in ViewBag.Categories)
                     {
-                        <option value="@cat.CategoryId">@cat.CategoryName</option>
+                        <option value="@cat.CategoryId" selected="@(ViewBag.CurrentCategory == cat.CategoryId)">
+                            @cat.CategoryName
+                        </option>
                     }
                 </select>
-            </div>
-            <div class="col-md-3">
-                <select class="form-select" name="status">
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="Available">Còn hàng</option>
-                    <option value="OutOfStock">Hết hàng</option>
-                    <option value="Discontinued">Ngừng bán</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search"></i> Tìm
-                </button>
             </div>
         </form>
     </div>
-</div>
 
-<!-- Products Grid -->
-<div class="row g-4">
-    @if (Model != null && Model.Any())
-    {
-        foreach (var product in Model)
+    <div class="row g-4">
+        @if (Model != null && Model.Any())
         {
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 shadow-sm border-0">
-                    @if (!string.IsNullOrEmpty(product.ImageUrl))
-                    {
-                        <img src="@product.ImageUrl" class="card-img-top" alt="@product.ProductName"
-                             style="height: 180px; object-fit: cover;">
-                    }
-                    else
-                    {
-                        <div class="bg-light d-flex align-items-center justify-content-center"
-                             style="height: 180px;">
-                            <i class="bi bi-box text-muted" style="font-size: 3rem;"></i>
+            foreach (var product in Model)
+            {
+                <div class="col-md-6">
+                    <div class="card product-modern-card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex">
+                                <div class="product-img-wrapper rounded-3 overflow-hidden shadow-sm me-4">
+                                    @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                    {
+                                        <img src="@product.ImageUrl" class="w-100 h-100 object-fit-cover" alt="@product.ProductName">
+                                    }
+                                    else
+                                    {
+                                        <div class="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
+                                            <i class="bi bi-image text-muted opacity-50 fs-2"></i>
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <h5 class="fw-bold text-dark mb-0">@product.ProductName</h5>
+                                        @Html.Raw(GetStatusBadge(product.Status))
+                                    </div>
+                                    <p class="text-muted small mb-2">SKU: @(product.ProductCode ?? "N/A")</p>
+
+                                    <div class="mb-3">
+                                        <span class="badge bg-light text-dark border rounded-pill px-3 py-1 fw-medium">
+                                            @product.Category?.CategoryName
+                                        </span>
+                                    </div>
+
+                                    <div class="row g-0 align-items-end">
+                                        <div class="col-4">
+                                            <label class="d-block text-muted tiny-text text-uppercase fw-bold">Giá</label>
+                                            <span class="text-success fw-bold fs-5">₫@product.Price.ToString("N0")</span>
+                                        </div>
+                                        <div class="col-4">
+                                            <label class="d-block text-muted tiny-text text-uppercase fw-bold">Tồn kho</label>
+                                            <span class="fw-bold text-dark">15</span> @* Giả định logic *@
+                                        </div>
+                                        <div class="col-4">
+                                            <label class="d-block text-muted tiny-text text-uppercase fw-bold">Đã bán</label>
+                                            <span class="fw-bold text-dark">45</span> @* Giả định logic *@
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    }
 
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h6 class="card-title fw-bold mb-0">@product.ProductName</h6>
-                            @if (product.Status == "Available")
-                            {
-                                <span class="badge bg-success">Còn</span>
-                            }
-                            else if (product.Status == "OutOfStock")
-                            {
-                                <span class="badge bg-danger">Hết</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">Ngừng</span>
-                            }
-                        </div>
-
-                        <p class="text-muted small mb-2">
-                            <i class="bi bi-tag me-1"></i>@product.Category?.CategoryName
-                        </p>
-
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="text-success fw-bold fs-5">
-                                @product.Price.ToString("N0")đ
-                            </span>
-                            <small class="text-muted">/@product.Unit</small>
-                        </div>
-                    </div>
-
-                    <div class="card-footer bg-white border-top">
-                        <div class="btn-group w-100" role="group">
+                        <div class="card-footer bg-white border-top-0 p-3 px-4 d-flex gap-2">
                             <a asp-action="Edit" asp-route-id="@product.ProductId"
-                               class="btn btn-sm btn-outline-warning">
-                                <i class="bi bi-pencil"></i>
+                               class="btn btn-outline-secondary btn-sm flex-fill rounded-3 fw-bold py-2">
+                                <i class="bi bi-pencil-square me-2"></i>Sửa
                             </a>
-                            <a asp-action="Details" asp-route-id="@product.ProductId"
-                               class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            <button class="btn btn-sm btn-outline-danger"
-                                    onclick="deleteProduct(@product.ProductId)">
-                                <i class="bi bi-trash"></i>
+                            <button onclick="deleteProduct(@product.ProductId)"
+                                    class="btn btn-outline-danger btn-sm flex-fill rounded-3 fw-bold py-2">
+                                <i class="bi bi-trash-fill me-2"></i>Xóa
                             </button>
                         </div>
                     </div>
                 </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5">
+                <div class="bg-light d-inline-block p-4 rounded-circle mb-3">
+                    <i class="bi bi-box-seam text-muted fs-1"></i>
+                </div>
+                <h5 class="text-muted">Không tìm thấy sản phẩm nào</h5>
             </div>
         }
-    }
-    else
-    {
-        <div class="col-12">
-            <div class="alert alert-info text-center">
-                <i class="bi bi-info-circle me-2"></i>
-                Chưa có sản phẩm nào
-            </div>
-        </div>
-    }
+    </div>
 </div>
+
+@functions {
+    public string GetStatusBadge(string status) => status switch
+    {
+        "Available" => "<span class='badge badge-soft-success rounded-pill px-2'>Còn Hàng</span>",
+        "OutOfStock" => "<span class='badge badge-soft-warning rounded-pill px-2'>Sắp Hết</span>",
+        _ => "<span class='badge badge-soft-danger rounded-pill px-2'>Ngừng Bán</span>"
+    };
+}
+
+<style>
+    .page-content {
+        background-color: #fcfcfd;
+        min-vh-100;
+    }
+
+    /* Card Styling */
+    .product-modern-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .product-modern-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+        }
+
+    /* Image Wrapper */
+    .product-img-wrapper {
+        width: 120px;
+        height: 120px;
+        flex-shrink: 0;
+        background: #f8f9fa;
+    }
+
+    /* Badge Custom Colors */
+    .badge-soft-success {
+        background-color: #ecfdf5;
+        color: #10b981;
+        border: 1px solid #d1fae5;
+    }
+
+    .badge-soft-warning {
+        background-color: #fffbeb;
+        color: #f59e0b;
+        border: 1px solid #fef3c7;
+    }
+
+    .badge-soft-danger {
+        background-color: #fef2f2;
+        color: #ef4444;
+        border: 1px solid #fee2e2;
+    }
+
+    .tiny-text {
+        font-size: 0.65rem;
+        letter-spacing: 0.5px;
+    }
+
+    /* Form Elements */
+    .form-control:focus, .form-select:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.05);
+        border: 1px solid #dee2e6;
+    }
+
+    /* Buttons */
+    .btn-outline-secondary {
+        color: #64748b;
+        border-color: #e2e8f0;
+    }
+
+        .btn-outline-secondary:hover {
+            background-color: #f8fafc;
+            color: #334155;
+            border-color: #cbd5e1;
+        }
+</style>
 
 @section Scripts {
     <script>
         function deleteProduct(id) {
-            if (confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
-                fetch(`/Admin/Product/Delete/${id}`, {
-                    method: 'POST'
+            if (confirm('Bạn có chắc muốn xóa sản phẩm này? Thao tác này không thể hoàn tác.')) {
+                fetch(`/Admin/AdminProduct/Delete/${id}`, {
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
                 }).then(response => {
-                    if (response.ok) location.reload();
-                    else alert('Không thể xóa!');
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Đã xảy ra lỗi khi xóa sản phẩm!');
+                    }
                 });
             }
         }

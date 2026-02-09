@@ -94,6 +94,7 @@ namespace QuanLiSanCauLong.Controllers
             {
                 OrderId = order.OrderId,
                 OrderCode = order.OrderCode,
+                Note = order.Note,
                 OrderType = order.BookingId.HasValue ? "WithBooking" : "Standalone",
                 SubTotal = order.SubTotal,
                 DiscountAmount = order.DiscountAmount,

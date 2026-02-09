@@ -5,7 +5,7 @@ namespace QuanLiSanCauLong.ViewModels
     /// <summary>
     /// ViewModel cho thông tin cơ sở thể thao và sân trống
     /// </summary>
-    public class FacilityAvailabilityViewModel
+/*    public class FacilityAvailabilityViewModel
     {
         public int FacilityId { get; set; }
         public string FacilityName { get; set; }
@@ -19,11 +19,11 @@ namespace QuanLiSanCauLong.ViewModels
         public int TotalCourts { get; set; }
         public List<CourtAvailabilityViewModel> AvailableCourts { get; set; } = new();
     }
-
+*/
     /// <summary>
     /// ViewModel cho thông tin sân và các khung giờ trống
     /// </summary>
-    public class CourtAvailabilityViewModel
+/*    public class CourtAvailabilityViewModel
     {
         public int CourtId { get; set; }
         public string CourtNumber { get; set; }
@@ -32,7 +32,7 @@ namespace QuanLiSanCauLong.ViewModels
         public List<TimeSlotViewModel> AvailableTimeSlots { get; set; } = new();
     }
 
-    /// <summary>
+*/    /// <summary>
     /// ViewModel cho khung giờ và giá
     /// </summary>
     public class TimeSlotViewModel
