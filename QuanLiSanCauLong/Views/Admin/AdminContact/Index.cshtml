@@ -1,0 +1,178 @@
+﻿@model IEnumerable<QuanLiSanCauLong.Models.ContactMessage>
+@{
+    ViewData["Title"] = "Quản Lý Liên Hệ";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid px-4 py-4" style="background:#f8f9fa; min-height:100vh;">
+
+    <h4 class="fw-bold mb-4">💬 Quản Lý Liên Hệ & Hỗ Trợ</h4>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3">
+                <div class="fs-2 fw-bold">@Model.Count()</div>
+                <div class="text-muted small">Tổng Tin Nhắn</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3">
+                <div class="fs-2 fw-bold text-danger">@Model.Count(m => m.Status == "New")</div>
+                <div class="text-muted small">Chưa Xử Lý</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3">
+                <div class="fs-2 fw-bold text-warning">@Model.Count(m => m.Status == "InProgress")</div>
+                <div class="text-muted small">Đang Xử Lý</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3">
+                <div class="fs-2 fw-bold text-success">@Model.Count(m => m.Status == "Resolved")</div>
+                <div class="text-muted small">Đã Giải Quyết</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4 p-3">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <input type="text" name="search" class="form-control" placeholder="Tìm kiếm..." />
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="New">Mới</option>
+                    <option value="InProgress">Đang xử lý</option>
+                    <option value="Resolved">Đã giải quyết</option>
+                    <option value="Closed">Đã đóng</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="priority" class="form-select">
+                    <option value="">Mức ưu tiên</option>
+                    <option value="Urgent">Khẩn cấp</option>
+                    <option value="High">Cao</option>
+                    <option value="Normal">Bình thường</option>
+                    <option value="Low">Thấp</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="category" class="form-select">
+                    <option value="">Danh mục</option>
+                    <option value="Support">Hỗ trợ</option>
+                    <option value="Feedback">Phản hồi</option>
+                    <option value="Question">Câu hỏi</option>
+                    <option value="Complaint">Khiếu nại</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Lọc</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Messages List -->
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4 py-3" width="3%"></th>
+                            <th class="py-3">Người Gửi</th>
+                            <th class="py-3">Tiêu Đề</th>
+                            <th class="py-3" width="12%">Danh Mục</th>
+                            <th class="py-3" width="10%">Ưu Tiên</th>
+                            <th class="py-3" width="12%">Trạng Thái</th>
+                            <th class="py-3" width="12%">Thời Gian</th>
+                            <th class="py-3 text-center" width="10%">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var msg in Model)
+                        {
+                            var priorityClass = msg.Priority == "Urgent" ? "danger" : (msg.Priority == "High" ? "warning" : "secondary");
+                            var statusClass = msg.Status == "New" ? "danger" : (msg.Status == "InProgress" ? "warning" : (msg.Status == "Resolved" ? "success" : "secondary"));
+                            var rowClass = !msg.IsRead ? "table-active" : "";
+
+                            <tr class="@rowClass">
+                                <td class="px-4 align-middle">
+                                    @if (msg.IsStarred)
+                                    {
+                                        <i class="bi bi-star-fill text-warning" onclick="toggleStar(@msg.MessageId)" style="cursor:pointer;"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-star text-muted" onclick="toggleStar(@msg.MessageId)" style="cursor:pointer;"></i>
+                                    }
+                                </td>
+                                <td class="align-middle">
+                                    <div class="fw-semibold">@msg.FullName</div>
+                                    <small class="text-muted">@msg.Email</small>
+                                    @if (!string.IsNullOrEmpty(msg.Phone))
+                                    {
+                                        <br />
+                                
+                                        <small class="text-muted"><i class="bi bi-telephone"></i> @msg.Phone</small>
+                                    }
+                                </td>
+                                <td class="align-middle">
+                                    <div class="@(!msg.IsRead ? "fw-bold" : "")">@msg.Subject</div>
+                                    <small class="text-muted">@(msg.Message.Substring(0, Math.Min(60, msg.Message.Length)))...</small>
+                                </td>
+                                <td class="align-middle">
+                                    <span class="badge bg-light text-dark">@msg.Category</span>
+                                </td>
+                                <td class="align-middle">
+                                    <span class="badge bg-@priorityClass">@msg.Priority</span>
+                                </td>
+                                <td class="align-middle">
+                                    <span class="badge bg-@statusClass">@msg.Status</span>
+                                </td>
+                                <td class="align-middle">
+                                    <small class="text-muted">@msg.CreatedAt.ToString("dd/MM HH:mm")</small>
+                                </td>
+                                <td class="align-middle text-center">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewDetails(@msg.MessageId)">
+                                        <i class="bi bi-eye"></i> Xem
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" id="detailsContent"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function viewDetails(id) {
+            fetch('/AdminContact/Details/' + id)
+                .then(r => r.text())
+                .then(html => {
+                    document.getElementById('detailsContent').innerHTML = html;
+                    new bootstrap.Modal(document.getElementById('detailsModal')).show();
+                });
+        }
+
+        function toggleStar(id) {
+            fetch('/AdminContact/ToggleStar/' + id, { method: 'POST' })
+                .then(r => r.json())
+                .then(res => { if(res.success) location.reload(); });
+        }
+    </script>
+}

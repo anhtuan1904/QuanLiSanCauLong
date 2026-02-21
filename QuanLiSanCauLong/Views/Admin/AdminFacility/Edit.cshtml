@@ -1,82 +1,386 @@
 ﻿@model QuanLiSanCauLong.Models.Facility
 @{
     Layout = null;
+    var images = ViewBag.FacilityImages as List<QuanLiSanCauLong.Models.FacilityImage> ?? new List<QuanLiSanCauLong.Models.FacilityImage>();
 }
 
-<div class="modal-header border-0 p-4 pb-0">
-    <div class="d-flex align-items-center">
-        <div class="bg-warning rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
-            <i class="bi bi-pencil-fill text-white fs-5"></i>
-        </div>
-        <div>
-            <h4 class="fw-bold mb-0">Cập nhật thông tin cơ sở</h4>
-            <small class="text-muted">Chỉnh sửa chi tiết cho @Model.FacilityName</small>
-        </div>
+<div class="modal-header border-0 px-4 pt-4 pb-0">
+    <div>
+        <h5 class="fw-bold mb-1">Chỉnh Sửa Cơ Sở</h5>
+        <p class="text-muted small mb-0">Cập nhật thông tin cho <strong>@Model.FacilityName</strong></p>
     </div>
-    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
 </div>
 
-<div class="modal-body p-4">
-    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+<div class="modal-body px-4 py-3">
+    <form id="editFacilityForm" asp-action="Edit" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
         <input type="hidden" asp-for="FacilityId" />
         <input type="hidden" asp-for="CreatedAt" />
-        <input type="hidden" asp-for="ImageUrl" />
 
-        <div class="row g-4">
-            <div class="col-md-8">
-                <label class="form-label fw-bold small text-uppercase">Tên Cơ Sở Sân</label>
-                <input asp-for="FacilityName" class="form-control rounded-3 py-2 border-2" placeholder="VD: Sân Cầu Lông ABC" required />
+        <div class="row g-3">
+
+            <div class="col-md-7">
+                <label class="form-label fw-semibold small text-muted">Tên Cơ Sở</label>
+                <input asp-for="FacilityName" class="form-control fi" required />
             </div>
-
-            <div class="col-md-4">
-                <label class="form-label fw-bold small text-uppercase">Số Điện Thoại</label>
-                <input asp-for="Phone" class="form-control rounded-3 py-2 border-2" placeholder="0123 456..." required />
+            <div class="col-md-5">
+                <label class="form-label fw-semibold small text-muted">Số Điện Thoại</label>
+                <input asp-for="Phone" class="form-control fi" />
             </div>
 
             <div class="col-12">
-                <label class="form-label fw-bold small text-uppercase">Địa Chỉ Chi Tiết</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-2 border-end-0"><i class="bi bi-geo-alt"></i></span>
-                    <input asp-for="Address" class="form-control rounded-end-3 py-2 border-2" placeholder="Số nhà, tên đường, quận/huyện..." required />
-                </div>
+                <label class="form-label fw-semibold small text-muted">Địa Chỉ</label>
+                <input asp-for="Address" class="form-control fi" />
             </div>
 
             <div class="col-md-6">
-                <label class="form-label fw-bold small text-uppercase text-success">Giờ Mở Cửa</label>
-                <input asp-for="OpenTime" type="time" class="form-control rounded-3 py-2 border-2 border-success border-opacity-25" />
+                <label class="form-label fw-semibold small text-muted">Quận / Huyện</label>
+                <input asp-for="District" class="form-control fi" />
             </div>
             <div class="col-md-6">
-                <label class="form-label fw-bold small text-uppercase text-danger">Giờ Đóng Cửa</label>
-                <input asp-for="CloseTime" type="time" class="form-control rounded-3 py-2 border-2 border-danger border-opacity-25" />
+                <label class="form-label fw-semibold small text-muted">Thành Phố</label>
+                <input asp-for="City" class="form-control fi" />
             </div>
 
             <div class="col-md-6">
-                <label class="form-label fw-bold small text-uppercase">Trạng Thái Hoạt Động</label>
-                <select asp-for="Status" class="form-select rounded-3 py-2 border-2">
-                    <option value="Active text-success">Đang Hoạt Động</option>
-                    <option value="Maintenance text-warning">Bảo Trì / Ngừng</option>
+                <label class="form-label fw-semibold small text-muted">Giờ Mở Cửa</label>
+                <input asp-for="OpenTime" type="time" class="form-control fi" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small text-muted">Giờ Đóng Cửa</label>
+                <input asp-for="CloseTime" type="time" class="form-control fi" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small text-muted">Trạng Thái</label>
+                <select asp-for="Status" class="form-select fi">
+                    <option value="Active">Hoạt Động</option>
+                    <option value="Maintenance">Bảo Trì</option>
+                    <option value="Inactive">Ngừng Hoạt Động</option>
                 </select>
             </div>
 
-            <div class="col-md-6 text-center">
-                <label class="form-label fw-bold small text-uppercase d-block text-start">Hình Ảnh Cơ Sở</label>
-                <div class="d-flex align-items-center gap-3">
-                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
-                    {
-                        <img src="@Model.ImageUrl" class="rounded-3 shadow-sm border" style="width: 60px; height: 60px; object-fit: cover;" />
-                    }
-                    <input type="file" name="ImageFile" class="form-control rounded-3 small py-2" />
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small text-muted">Mô Tả</label>
+                <textarea asp-for="Description" class="form-control fi" rows="2"></textarea>
+            </div>
+
+            <!-- ===== MULTI-IMAGE SECTION ===== -->
+            <div class="col-12">
+                <label class="form-label fw-semibold small text-muted">Hình Ảnh Cơ Sở</label>
+                <div class="image-upload-area rounded-3 border border-dashed p-3">
+
+                    <div class="d-flex flex-wrap gap-2 mb-3" id="imagePreviewEdit">
+                        <!-- Existing images will be added here by JavaScript -->
+                        <div class="add-img-btn" onclick="document.getElementById('imgInputEdit').click()">
+                            <i class="bi bi-plus-lg fs-4 text-muted"></i>
+                            <div class="small text-muted mt-1">Thêm ảnh</div>
+                        </div>
+                    </div>
+
+                    <input type="file" id="imgInputEdit" name="NewImageFiles" multiple accept="image/*" style="display:none" />
+                    
+                    <!-- Hidden inputs to track changes -->
+                    <input type="hidden" name="PrimaryImageId" id="primaryImageIdEdit" value="@(images.FirstOrDefault(i => i.IsPrimary)?.ImageId ?? 0)" />
+                    <input type="hidden" name="NewMainImageIndex" id="mainImageIdxEdit" value="-1" />
+                    <input type="hidden" name="DeletedImageIds" id="deletedImageIdsEdit" value="" />
+                    <div id="existingImagesContainer"></div>
+
+                    <p class="text-muted mb-0" style="font-size:.8rem;">
+                        <i class="bi bi-info-circle me-1"></i>Nhấn vào ảnh để đặt làm ảnh chính. Nhấn X để xóa ảnh.
+                    </p>
                 </div>
             </div>
+
         </div>
 
-        <hr class="my-4 opacity-50">
-
-        <div class="d-flex gap-2 justify-content-end">
-            <button type="button" class="btn btn-light fw-bold px-4 rounded-3 py-2" data-bs-dismiss="modal">Hủy bỏ</button>
-            <button type="submit" class="btn btn-dark fw-bold px-5 rounded-3 py-2 shadow-sm">
-                <i class="bi bi-check-lg me-2"></i>Lưu Thay Đổi
+        <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
+            <button type="button" class="btn btn-light px-4 fw-semibold rounded-3" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-dark px-5 fw-semibold rounded-3">
+                <i class="bi bi-check-lg me-1"></i>Lưu Thay Đổi
             </button>
         </div>
     </form>
 </div>
+
+<style>
+    .fi {
+        background: #f8f9fa !important;
+        border: 1px solid #e9ecef !important;
+        border-radius: 8px !important;
+    }
+
+        .fi:focus {
+            background: #fff !important;
+            border-color: #212529 !important;
+            box-shadow: none !important;
+        }
+
+    .border-dashed {
+        border-style: dashed !important;
+        background: #fafafa;
+    }
+
+    .add-img-btn {
+        width: 90px;
+        height: 90px;
+        border: 2px dashed #ced4da;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+        .add-img-btn:hover {
+            border-color: #212529;
+            background: #f5f5f5;
+        }
+
+    .img-thumb-wrap {
+        position: relative;
+        width: 90px;
+        height: 90px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid #dee2e6;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .img-thumb-wrap:hover {
+            border-color: #198754;
+        }
+
+        .img-thumb-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .img-thumb-wrap .main-star {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            background: rgba(255,193,7,.9);
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: .75rem;
+        }
+
+        .img-thumb-wrap.is-main {
+            border-color: #198754 !important;
+            border-width: 3px !important;
+        }
+
+            .img-thumb-wrap.is-main .main-star {
+                display: flex;
+            }
+
+        .img-thumb-wrap .del-btn {
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            background: rgba(220,53,69,.9);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: .75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .img-thumb-wrap .del-btn:hover {
+                background: rgba(220,53,69,1);
+                transform: scale(1.1);
+            }
+</style>
+
+<script>
+    (function() {
+        const existingImages = @Html.Raw(Json.Serialize(images.Select(i => new { 
+            imageId = i.ImageId, 
+            imagePath = i.ImagePath, 
+            isPrimary = i.IsPrimary 
+        })));
+
+        const previewContainer = document.getElementById('imagePreviewEdit');
+        const addBtn = previewContainer.querySelector('.add-img-btn');
+        const imgInput = document.getElementById('imgInputEdit');
+        const existingImagesContainer = document.getElementById('existingImagesContainer');
+        const deletedIdsInput = document.getElementById('deletedImageIdsEdit');
+        const primaryIdInput = document.getElementById('primaryImageIdEdit');
+        const mainIdxInput = document.getElementById('mainImageIdxEdit');
+
+        let newFiles = []; // Mảng chứa các file thực tế
+        let deletedIds = [];
+
+        // 1. Render ảnh cũ từ database
+        existingImages.forEach((img) => {
+            const wrap = createExistingImageThumb(img);
+            previewContainer.insertBefore(wrap, addBtn);
+            
+            // Tạo input ẩn để duy trì danh sách ID ảnh cũ không bị xóa
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'ExistingImageIds';
+            hiddenInput.value = img.imageId;
+            hiddenInput.dataset.imageId = img.imageId;
+            existingImagesContainer.appendChild(hiddenInput);
+        });
+
+        function createExistingImageThumb(img) {
+            const wrap = document.createElement('div');
+            wrap.className = 'img-thumb-wrap' + (img.isPrimary ? ' is-main' : '');
+            wrap.dataset.type = 'existing';
+            wrap.dataset.imageId = img.imageId;
+            wrap.innerHTML = `
+                <img src="${img.imagePath}" alt="Facility image" />
+                <div class="main-star"><i class="bi bi-star-fill text-dark"></i></div>
+                <button type="button" class="del-btn" title="Xóa ảnh">
+                    <i class="bi bi-x"></i>
+                </button>
+            `;
+
+            wrap.onclick = function(e) {
+                if (!e.target.closest('.del-btn')) setMain(wrap);
+            };
+
+            wrap.querySelector('.del-btn').onclick = function(e) {
+                e.stopPropagation();
+                removeExistingImage(img.imageId, wrap);
+            };
+
+            return wrap;
+        }
+
+        // 2. Xử lý khi chọn thêm ảnh mới
+        imgInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            
+            files.forEach(file => {
+                if (file && file.type.startsWith('image/')) {
+                    newFiles.push(file);
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const wrap = createNewImageThumb(event.target.result);
+                        previewContainer.insertBefore(wrap, addBtn);
+                        
+                        // Nếu chưa có ảnh nào là chính, tự chọn ảnh mới này
+                        if (!previewContainer.querySelector('.img-thumb-wrap.is-main')) {
+                            setMain(wrap);
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            updateFilesAndIndexes();
+        });
+
+        function createNewImageThumb(src) {
+            const wrap = document.createElement('div');
+            wrap.className = 'img-thumb-wrap';
+            wrap.dataset.type = 'new';
+            wrap.innerHTML = `
+                <img src="${src}" alt="New image" />
+                <div class="main-star"><i class="bi bi-star-fill text-dark"></i></div>
+                <button type="button" class="del-btn" title="Xóa ảnh">
+                    <i class="bi bi-x"></i>
+                </button>
+            `;
+
+            wrap.onclick = function(e) {
+                if (!e.target.closest('.del-btn')) setMain(wrap);
+            };
+
+            wrap.querySelector('.del-btn').onclick = function(e) {
+                e.stopPropagation();
+                removeNewImage(wrap);
+            };
+
+            return wrap;
+        }
+
+        // 3. Hàm đặt ảnh chính (Dùng chung cho cả cũ và mới)
+        function setMain(wrap) {
+            document.querySelectorAll('#imagePreviewEdit .img-thumb-wrap').forEach(w => w.classList.remove('is-main'));
+            wrap.classList.add('is-main');
+            updateFilesAndIndexes();
+        }
+
+        // 4. Xóa ảnh cũ
+        function removeExistingImage(imageId, wrap) {
+            const wasMain = wrap.classList.contains('is-main');
+            deletedIds.push(imageId);
+            deletedIdsInput.value = deletedIds.join(',');
+            
+            const hiddenInput = existingImagesContainer.querySelector(`input[data-image-id="${imageId}"]`);
+            if (hiddenInput) hiddenInput.remove();
+            
+            wrap.remove();
+            handleMainAfterDelete(wasMain);
+        }
+
+        // 5. Xóa ảnh mới
+        function removeNewImage(wrap) {
+            const wasMain = wrap.classList.contains('is-main');
+            
+            // Tìm index của ảnh mới này trong danh sách các ảnh mới đang hiển thị
+            const allNewThumbs = Array.from(previewContainer.querySelectorAll('.img-thumb-wrap[data-type="new"]'));
+            const indexInNew = allNewThumbs.indexOf(wrap);
+            
+            if (indexInNew > -1) {
+                newFiles.splice(indexInNew, 1);
+            }
+            
+            wrap.remove();
+            updateFilesAndIndexes();
+            handleMainAfterDelete(wasMain);
+        }
+
+        function handleMainAfterDelete(wasMain) {
+            if (wasMain) {
+                const remaining = previewContainer.querySelector('.img-thumb-wrap');
+                if (remaining) setMain(remaining);
+            }
+        }
+
+        // 6. CẬP NHẬT DỮ LIỆU ĐỂ GỬI LÊN SERVER
+        function updateFilesAndIndexes() {
+            const dt = new DataTransfer();
+            newFiles.forEach(file => dt.items.add(file));
+            imgInput.files = dt.files;
+
+            const mainWrap = previewContainer.querySelector('.img-thumb-wrap.is-main');
+            if (!mainWrap) {
+                primaryIdInput.value = -1;
+                mainIdxInput.value = -1;
+                return;
+            }
+
+            if (mainWrap.dataset.type === 'existing') {
+                primaryIdInput.value = mainWrap.dataset.imageId;
+                mainIdxInput.value = -1;
+            } else {
+                // Tính index của ảnh mới được chọn làm chính trong danh sách newFiles
+                const allNewThumbs = Array.from(previewContainer.querySelectorAll('.img-thumb-wrap[data-type="new"]'));
+                const newIdx = allNewThumbs.indexOf(mainWrap);
+                primaryIdInput.value = -1;
+                mainIdxInput.value = newIdx;
+            }
+        }
+    })();
+</script>

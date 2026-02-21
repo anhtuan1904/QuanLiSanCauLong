@@ -1,0 +1,127 @@
+﻿@model QuanLiSanCauLong.Models.BlogPost
+@{
+    Layout = null;
+}
+
+<div class="modal-header border-0 px-4 pt-4 pb-0">
+    <div>
+        <h5 class="fw-bold mb-1">Thêm Bài Viết Mới</h5>
+        <p class="text-muted small mb-0">Tạo bài viết với trình soạn thảo chuyên nghiệp</p>
+    </div>
+    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body px-4 py-3">
+    <form asp-action="Create" method="post" enctype="multipart/form-data" id="blogCreateForm" onsubmit="return syncEditorContent()">
+        @Html.AntiForgeryToken()
+        <div class="row g-3">
+
+            <div class="col-md-8">
+                <label class="form-label fw-semibold small">Tiêu đề <span class="text-danger">*</span></label>
+                <input asp-for="Title" class="form-control" placeholder="Nhập tiêu đề bài viết..." required />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small">Danh mục <span class="text-danger">*</span></label>
+                <select asp-for="CategoryId" class="form-select" required>
+                    <option value="">-- Chọn danh mục --</option>
+                    @foreach (var cat in ViewBag.Categories as List<QuanLiSanCauLong.Models.BlogCategory> ?? new())
+                    {
+                        <option value="@cat.CategoryId">@cat.CategoryName</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-semibold small">Tóm tắt</label>
+                <textarea asp-for="Excerpt" class="form-control" rows="2" placeholder="Mô tả ngắn gọn về bài viết..."></textarea>
+                <small class="text-muted">Hiển thị trong danh sách bài viết</small>
+            </div>
+
+            <!-- TinyMCE Textarea -->
+            <div class="col-12">
+                <label class="form-label fw-semibold small">Nội dung <span class="text-danger">*</span></label>
+                <textarea asp-for="Content" id="editor-content" class="form-control" rows="6" required></textarea>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small">Ảnh đại diện</label>
+                <input type="file" name="featuredImage" class="form-control" accept="image/*" />
+                <small class="text-muted">JPG, PNG, WEBP (tối đa 5MB)</small>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small">Tags</label>
+                <input asp-for="Tags" class="form-control" placeholder="cầu lông, thể thao, sức khỏe" />
+                <small class="text-muted">Phân cách bằng dấu phẩy</small>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small">Trạng thái</label>
+                <select asp-for="Status" class="form-select">
+                    <option value="Draft">Bản nháp</option>
+                    <option value="Published">Xuất bản</option>
+                    <option value="Archived">Lưu trữ</option>
+                </select>
+            </div>
+            <div class="col-md-8 d-flex align-items-end">
+                <div class="form-check">
+                    <input asp-for="IsFeatured" class="form-check-input" type="checkbox" />
+                    <label class="form-check-label fw-semibold">Bài viết nổi bật</label>
+                </div>
+                <div class="form-check ms-4">
+                    <input asp-for="AllowComments" class="form-check-input" type="checkbox" checked />
+                    <label class="form-check-label fw-semibold">Cho phép bình luận</label>
+                </div>
+            </div>
+
+            <!-- SEO Section -->
+            <div class="col-12 mt-3">
+                <hr>
+                <h6 class="fw-bold mb-3">🔍 Tối ưu SEO</h6>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-semibold small">Meta Title</label>
+                <input asp-for="MetaTitle" class="form-control" placeholder="Tiêu đề SEO..." />
+                <small class="text-muted">Nếu bỏ trống sẽ dùng tiêu đề bài viết</small>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-semibold small">Meta Description</label>
+                <textarea asp-for="MetaDescription" class="form-control" rows="2" placeholder="Mô tả cho Google (160 ký tự)..." maxlength="160"></textarea>
+                <small class="text-muted"><span id="metaDescLength">0</span>/160 ký tự</small>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-semibold small">Meta Keywords</label>
+                <input asp-for="MetaKeywords" class="form-control" placeholder="từ khóa 1, từ khóa 2, từ khóa 3" />
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+            <button type="button" class="btn btn-light px-4 rounded-3" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-dark px-5 rounded-3">
+                <i class="bi bi-plus-circle me-1"></i>Thêm Bài Viết
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Đếm ký tự Meta Description
+    const metaDescInput = document.querySelector('textarea[name="MetaDescription"]');
+    const metaDescCounter = document.getElementById('metaDescLength');
+    if (metaDescInput && metaDescCounter) {
+        metaDescInput.addEventListener('input', function () {
+            metaDescCounter.textContent = this.value.length;
+            metaDescCounter.classList.toggle('text-danger', this.value.length > 160);
+        });
+    }
+
+    // Force sync trước khi submit
+    function syncEditorContent() {
+        if (typeof tinymce !== 'undefined' && tinymce.get('editor-content')) {
+            tinymce.get('editor-content').save();
+        }
+        return true;
+    }
+</script>

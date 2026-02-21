@@ -1,0 +1,190 @@
+﻿@model QuanLiSanCauLong.Models.Service
+@{
+    Layout = null;
+    var images = ViewBag.ServiceImages as List<QuanLiSanCauLong.Models.ServiceImage> ?? new List<QuanLiSanCauLong.Models.ServiceImage>();
+    var primaryImage = images.FirstOrDefault(i => i.IsPrimary)?.ImagePath ?? Model.FeaturedImage;
+}
+
+<div class="modal-header border-0 px-4 pt-4 pb-0">
+    <div>
+        <h5 class="fw-bold mb-1">Chi Tiết Dịch Vụ</h5>
+        <p class="text-muted small mb-0">Xem thông tin đầy đủ</p>
+    </div>
+    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body px-4 py-3">
+    <div class="service-details">
+
+        <!-- Image Gallery -->
+        @if (images.Any())
+        {
+            <div class="mb-4">
+                <div class="main-image-container mb-3 rounded-3 overflow-hidden" style="height: 300px;">
+                    <img src="@primaryImage" class="w-100 h-100" style="object-fit: cover;" id="mainDisplayImage" alt="@Model.ServiceName" />
+                </div>
+
+                @if (images.Count > 1)
+                {
+                    <div class="d-flex gap-2 flex-wrap">
+                        @foreach (var img in images)
+                        {
+                            <div class="thumb-image-wrap @(img.IsPrimary ? "active" : "")" onclick="changeMainImage('@img.ImagePath', this)" style="width: 70px; height: 70px; border-radius: 8px; overflow: hidden; border: 2px solid #dee2e6; cursor: pointer;">
+                                <img src="@img.ImagePath" style="width: 100%; height: 100%; object-fit: cover;" alt="Thumb" />
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Header -->
+        <div class="bg-light rounded-3 p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h4 class="fw-bold mb-0">@Model.ServiceName</h4>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-@(Model.Status == "Active" ? "success" : "secondary")">
+                        @(Model.Status == "Active" ? "Hoạt động" : "Ngừng hoạt động")
+                    </span>
+                    @if (Model.IsFeatured)
+                    {
+                        <span class="badge bg-warning text-dark"><i class="bi bi-star-fill me-1"></i>Nổi bật</span>
+                    }
+                    @if (Model.IsPopular)
+                    {
+                        <span class="badge bg-info text-white"><i class="bi bi-fire me-1"></i>Phổ biến</span>
+                    }
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.ShortDescription))
+            {
+                <p class="text-muted mb-0">@Model.ShortDescription</p>
+            }
+        </div>
+
+        <!-- Price -->
+        @if (Model.Price.HasValue)
+        {
+            <div class="mb-4">
+                <h6 class="fw-bold mb-2">💰 Giá Dịch Vụ</h6>
+                <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                    @if (Model.DiscountPrice.HasValue)
+                    {
+                        <div class="mb-1">
+                            <span class="text-decoration-line-through text-muted me-2">@Model.Price.Value.ToString("N0")đ</span>
+                            <span class="badge bg-danger">-@(((Model.Price - Model.DiscountPrice) / Model.Price * 100).Value.ToString("N0"))%</span>
+                        </div>
+                        <div class="fs-4 fw-bold text-success">
+                            @Model.DiscountPrice.Value.ToString("N0")đ
+                            @if (!string.IsNullOrEmpty(Model.PriceUnit))
+                            {
+                                <small class="text-muted fs-6">/@Model.PriceUnit</small>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="fs-4 fw-bold text-success">
+                            @Model.Price.Value.ToString("N0")đ
+                            @if (!string.IsNullOrEmpty(Model.PriceUnit))
+                            {
+                                <small class="text-muted fs-6">/@Model.PriceUnit</small>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Description -->
+        <div class="mb-4">
+            <h6 class="fw-bold mb-2">📝 Mô Tả Chi Tiết</h6>
+            <div class="text-secondary" style="white-space: pre-wrap; line-height: 1.8;">@Model.Description</div>
+        </div>
+
+        <!-- Features -->
+        @if (!string.IsNullOrEmpty(Model.Features))
+        {
+            <div class="mb-4">
+                <h6 class="fw-bold mb-2">✨ Các Tính Năng</h6>
+                <div class="features-list">
+                    @foreach (var feature in Model.Features.Split('\n').Where(f => !string.IsNullOrWhiteSpace(f)))
+                    {
+                        <div class="d-flex align-items-start mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2 mt-1"></i>
+                            <span>@feature.Trim().TrimStart('-').Trim()</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Icon -->
+        @if (!string.IsNullOrEmpty(Model.Icon))
+        {
+            <div class="mb-4">
+                <h6 class="fw-bold mb-2">🎨 Icon</h6>
+                <div class="bg-light rounded-3 p-3 d-inline-flex align-items-center gap-2">
+                    <i class="@Model.Icon fs-3"></i>
+                    <code>@Model.Icon</code>
+                </div>
+            </div>
+        }
+
+        <!-- Meta Info -->
+        <div class="border-top pt-3">
+            <div class="row g-2 small text-muted">
+                <div class="col-md-4">
+                    <i class="bi bi-sort-numeric-down me-1"></i>
+                    Thứ tự: <strong>@Model.DisplayOrder</strong>
+                </div>
+                <div class="col-md-4">
+                    <i class="bi bi-calendar-plus me-1"></i>
+                    Tạo: <strong>@Model.CreatedAt.ToString("dd/MM/yyyy")</strong>
+                </div>
+                <div class="col-md-4">
+                    <i class="bi bi-eye me-1"></i>
+                    Lượt xem: <strong>@Model.ViewCount.ToString("N0")</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+        <button type="button" class="btn btn-light px-4 rounded-3" data-bs-dismiss="modal">Đóng</button>
+        <button type="button" class="btn btn-primary px-4 rounded-3" onclick="openEditFromDetails(@Model.ServiceId)">
+            <i class="bi bi-pencil me-1"></i>Chỉnh Sửa
+        </button>
+    </div>
+</div>
+
+<style>
+    .thumb-image-wrap {
+        transition: all 0.2s;
+    }
+
+        .thumb-image-wrap:hover,
+        .thumb-image-wrap.active {
+            border-color: #198754 !important;
+            transform: scale(1.05);
+        }
+</style>
+
+<script>
+    function changeMainImage(imagePath, thumbElement) {
+        document.getElementById('mainDisplayImage').src = imagePath;
+
+        document.querySelectorAll('.thumb-image-wrap').forEach(el => {
+            el.classList.remove('active');
+        });
+
+        thumbElement.classList.add('active');
+    }
+
+    function openEditFromDetails(id) {
+        const currentModal = bootstrap.Modal.getInstance(document.getElementById('modalService'));
+        if (currentModal) currentModal.hide();
+        setTimeout(() => { openEditModal(id); }, 300);
+    }
+</script>

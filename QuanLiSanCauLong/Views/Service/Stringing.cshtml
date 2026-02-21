@@ -1,44 +1,578 @@
-﻿@model IEnumerable<QuanLiSanCauLong.ViewModels.ServiceViewModel>
+﻿@model IEnumerable<QuanLiSanCauLong.Models.StringingService>
+@{
+    ViewData["Title"] = "Dịch Vụ Căng Vợt";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
 
-<div class="container py-5">
-    <div class="text-center mb-5">
-        <h2 class="fw-bold">Dịch Vụ Căng Vợt</h2>
-        <p class="text-muted">Máy căng điện tử hiện đại, độ chính xác tuyệt đối</p>
-    </div>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <div class="row justify-content-center g-4">
-        @foreach (var item in Model.Where(x => x.Type == "Restring"))
-        {
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm rounded-4 service-card">
-                    <div class="card-body p-4 text-center">
-                        <div class="icon-box bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 70px; height: 70px;">
-                            <i class="bi bi-tools fs-2"></i>
-                        </div>
-                        <h5 class="fw-bold">@item.ServiceName</h5>
-                        <p class="text-muted small">@item.Description</p>
+<style>
+    :root {
+        --black:   #080c0a;
+        --white:   #fafaf8;
+        --green:   #00e67a;
+        --green2:  #00b860;
+        --gray:    #9ca3a0;
+        --card-bg: #111815;
+        --border:  rgba(255,255,255,.07);
+    }
+    .string-page { background: var(--black); font-family: 'Plus Jakarta Sans', sans-serif; color: var(--white); min-height: 100vh; }
 
-                        <div class="bg-light rounded-3 py-2 mb-4">
-                            <span class="text-secondary small"><i class="bi bi-stopwatch me-1"></i> Thời gian: </span>
-                            <span class="fw-bold">@item.Duration</span>
-                        </div>
+    /* ── HERO ─────────────────────────────────────────── */
+    .string-hero {
+        padding: 5rem 0 0;
+        position: relative;
+        overflow: hidden;
+    }
+    .string-hero::before {
+        content: '';
+        position: absolute;
+        top: -200px; right: -200px;
+        width: 600px; height: 600px;
+        background: radial-gradient(circle, rgba(0,230,122,.15) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .hero-inner { max-width: 1200px; margin: 0 auto; padding: 0 4rem; }
+    .eyebrow {
+        font-family: 'Space Mono', monospace;
+        font-size: .7rem;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: var(--green);
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+    .eyebrow::before {
+        content: '';
+        display: block;
+        width: 30px; height: 1px;
+        background: var(--green);
+    }
+    .hero-h1 {
+        font-size: clamp(3.5rem, 6vw, 7rem);
+        font-weight: 800;
+        line-height: .95;
+        margin-bottom: 2.5rem;
+        letter-spacing: -.03em;
+    }
+    .hero-h1 .outline-text {
+        -webkit-text-stroke: 1px rgba(255,255,255,.3);
+        color: transparent;
+        display: block;
+    }
+    .hero-h1 .solid-text { color: var(--white); display: block; }
+    .hero-sub {
+        max-width: 480px;
+        color: var(--gray);
+        font-size: 1rem;
+        line-height: 1.8;
+        font-weight: 300;
+        margin-bottom: 3.5rem;
+    }
+    .hero-badges { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 5rem; }
+    .hero-badge {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        border: 1px solid var(--border);
+        padding: .6rem 1.2rem;
+        border-radius: 100px;
+        font-size: .82rem;
+        color: var(--gray);
+        font-family: 'Space Mono', monospace;
+    }
+    .hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .hero-ticker {
+        border-top: 1px solid var(--border);
+        padding: 1.5rem 0;
+        display: flex;
+        gap: 4rem;
+        overflow: hidden;
+    }
+    .ticker-item {
+        display: flex;
+        align-items: baseline;
+        gap: .75rem;
+        flex-shrink: 0;
+    }
+    .ticker-num {
+        font-family: 'Space Mono', monospace;
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--green);
+    }
+    .ticker-desc { font-size: .8rem; color: var(--gray); text-transform: uppercase; letter-spacing: .08em; }
 
-                        <h3 class="text-primary fw-bold mb-4">@item.Price.ToString("N0") VNĐ</h3>
+    /* ── CARDS SECTION ────────────────────────────────── */
+    .cards-section {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 5rem 4rem;
+    }
+    .section-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 3rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--border);
+    }
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        letter-spacing: -.01em;
+    }
+    .count-badge {
+        font-family: 'Space Mono', monospace;
+        font-size: .78rem;
+        color: var(--green);
+        border: 1px solid rgba(0,230,122,.3);
+        padding: .3rem .8rem;
+        border-radius: 3px;
+    }
 
-                        <div class="text-start mb-4">
-                            @foreach (var feature in item.Features)
-                            {
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="bi bi-dot text-primary fs-4"></i>
-                                    <span class="small text-secondary">@feature</span>
-                                </div>
-                            }
-                        </div>
+    /* ── STRING CARD ──────────────────────────────────── */
+    .strings-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1px;
+        background: var(--border);
+    }
+    .string-card {
+        background: var(--card-bg);
+        padding: 2.5rem;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: background .3s;
+    }
+    .string-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0;
+        width: 3px; height: 0;
+        background: var(--green);
+        transition: height .4s cubic-bezier(.25,.46,.45,.94);
+    }
+    .string-card:hover { background: #161e19; }
+    .string-card:hover::before { height: 100%; }
+    .string-card.popular { background: #0a1a10; }
+    .popular-flag {
+        position: absolute;
+        top: 1.5rem; right: 1.5rem;
+        background: var(--green);
+        color: var(--black);
+        font-family: 'Space Mono', monospace;
+        font-size: .65rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        padding: .25rem .75rem;
+        text-transform: uppercase;
+    }
+    .brand-pill {
+        display: inline-block;
+        border: 1px solid rgba(0,230,122,.4);
+        color: var(--green);
+        font-family: 'Space Mono', monospace;
+        font-size: .68rem;
+        padding: .25rem .75rem;
+        letter-spacing: .08em;
+        margin-bottom: 1.5rem;
+    }
+    .string-name {
+        font-size: 1.4rem;
+        font-weight: 800;
+        letter-spacing: -.02em;
+        color: var(--white);
+        margin-bottom: .6rem;
+        line-height: 1.2;
+    }
+    .string-short {
+        font-size: .85rem;
+        color: var(--gray);
+        font-weight: 300;
+        line-height: 1.7;
+        margin-bottom: 2rem;
+    }
+    .string-specs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .75rem;
+        margin-bottom: 2rem;
+    }
+    .spec-box {
+        background: rgba(255,255,255,.04);
+        padding: .8rem 1rem;
+        border-radius: 4px;
+    }
+    .spec-label {
+        font-family: 'Space Mono', monospace;
+        font-size: .6rem;
+        color: var(--gray);
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: .3rem;
+    }
+    .spec-val {
+        font-weight: 700;
+        font-size: .9rem;
+        color: var(--white);
+    }
+    .string-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+    }
+    .string-price {
+        font-family: 'Space Mono', monospace;
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--green);
+    }
+    .string-price small { font-size: .65rem; color: var(--gray); font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 300; }
+    .detail-trigger {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        background: rgba(0,230,122,.1);
+        border: 1px solid rgba(0,230,122,.25);
+        color: var(--green);
+        padding: .6rem 1.2rem;
+        font-size: .78rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .25s;
+        font-family: 'Space Mono', monospace;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        border-radius: 2px;
+    }
+    .detail-trigger:hover { background: var(--green); color: var(--black); }
 
-                        <button class="btn btn-primary w-100 rounded-pill fw-bold">Đăng ký ngay</button>
-                    </div>
+    /* ── DETAIL MODAL ─────────────────────────────────── */
+    .modal-overlay {
+        position: fixed; inset: 0;
+        background: rgba(8,12,10,.92);
+        backdrop-filter: blur(12px);
+        z-index: 9999;
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-sheet {
+        background: #111815;
+        width: 100%;
+        max-width: 700px;
+        max-height: 88vh;
+        border-radius: 16px 16px 0 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        animation: sheetUp .4s cubic-bezier(.25,.46,.45,.94);
+    }
+    @@keyframes sheetUp {
+        from { transform: translateY(100%); }
+        to   { transform: translateY(0); }
+    }
+    .modal-handle {
+        width: 40px; height: 4px;
+        background: rgba(255,255,255,.15);
+        border-radius: 2px;
+        margin: 1.2rem auto .5rem;
+        flex-shrink: 0;
+    }
+    .modal-head {
+        padding: 1.5rem 2.5rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-shrink: 0;
+    }
+    .modal-close-btn {
+        background: rgba(255,255,255,.08);
+        border: none;
+        color: var(--gray);
+        width: 32px; height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all .2s;
+        font-size: .9rem;
+        flex-shrink: 0;
+    }
+    .modal-close-btn:hover { background: rgba(255,255,255,.15); color: var(--white); }
+    .modal-scroll { overflow-y: auto; padding: 2rem 2.5rem; flex: 1; }
+    .modal-specs-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: .75rem; margin-bottom: 2rem; }
+    .modal-spec {
+        background: rgba(255,255,255,.04);
+        padding: 1rem 1.2rem;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+    }
+    .modal-feat-list { list-style: none; padding: 0; margin: 0 0 2rem; }
+    .modal-feat-list li {
+        display: flex;
+        gap: .75rem;
+        padding: .65rem 0;
+        border-bottom: 1px solid var(--border);
+        font-size: .88rem;
+        color: var(--gray);
+        font-weight: 300;
+    }
+    .modal-feat-list li:last-child { border-bottom: none; }
+    .feat-green { color: var(--green); flex-shrink: 0; margin-top: 2px; }
+    .modal-cta {
+        padding: 1.5rem 2.5rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+    }
+    .btn-book {
+        background: var(--green);
+        color: var(--black);
+        border: none;
+        padding: .9rem 2rem;
+        font-weight: 700;
+        font-size: .85rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all .25s;
+        border-radius: 3px;
+        font-family: 'Space Mono', monospace;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+    .btn-book:hover { background: #00cc6e; transform: translateY(-2px); }
+
+    @@media (max-width: 900px) {
+        .strings-grid { grid-template-columns: 1fr 1fr; }
+        .cards-section, .hero-inner { padding-left: 1.5rem; padding-right: 1.5rem; }
+        .hero-h1 { font-size: 3.5rem; }
+    }
+    @@media (max-width: 600px) {
+        .strings-grid { grid-template-columns: 1fr; }
+        .modal-specs-grid { grid-template-columns: 1fr; }
+        .modal-sheet { max-height: 95vh; }
+    }
+</style>
+
+<div class="string-page">
+
+    <!-- HERO -->
+    <section class="string-hero">
+        <div class="hero-inner">
+            <div class="eyebrow">Stringing Service</div>
+            <h1 class="hero-h1">
+                <span class="outline-text">Căng vợt</span>
+                <span class="solid-text">chuẩn lực.</span>
+            </h1>
+            <p class="hero-sub">Máy căng điện tử Yonex chính hãng, kỹ thuật viên chuyên nghiệp, độ chính xác ±0.5 lbs. Hoàn thành trong 30 phút.</p>
+            <div class="hero-badges">
+                <div class="hero-badge"><div class="dot"></div>Máy điện tử Yonex</div>
+                <div class="hero-badge"><div class="dot"></div>Hoàn thành 30 phút</div>
+                <div class="hero-badge"><div class="dot"></div>Bảo hành dây</div>
+                <div class="hero-badge"><div class="dot"></div>Tư vấn miễn phí</div>
+            </div>
+            <div class="hero-ticker">
+                <div class="ticker-item">
+                    <span class="ticker-num">@Model.Count()</span>
+                    <span class="ticker-desc">Loại dây</span>
+                </div>
+                <div class="ticker-item">
+                    <span class="ticker-num">@Model.Sum(s => s.TotalOrders)</span>
+                    <span class="ticker-desc">Đơn đã hoàn thành</span>
+                </div>
+                <div class="ticker-item">
+                    <span class="ticker-num">98%</span>
+                    <span class="ticker-desc">Khách hài lòng</span>
+                </div>
+                <div class="ticker-item">
+                    <span class="ticker-num">30<small style="font-size:1.2rem;">ph</small></span>
+                    <span class="ticker-desc">Thời gian TB</span>
                 </div>
             </div>
-        }
+        </div>
+    </section>
+
+    <!-- CARDS -->
+    <section class="cards-section">
+        <div class="section-line">
+            <div class="section-title">Các loại dây &amp; dịch vụ</div>
+            <div class="count-badge">@Model.Count() SERVICES</div>
+        </div>
+
+        <div class="strings-grid">
+            @if (!Model.Any())
+            {
+                
+                    var samples = new[] {
+                        new { Name="Căng Vợt Yonex BG80", Brand="Yonex", Model="BG80", Short="Dây chuyên nghiệp cho lực căng cao, độ bền tốt", Price="150,000đ", Duration="30 phút", Warranty="7 ngày", Tension="22-30 lbs", Orders="156", Popular=true, Feats="Độ bền cao\nTăng lực smash\nKiểm soát hướng cầu\nBảo hành 7 ngày" },
+                        new { Name="Căng Vợt Victor VS850", Brand="Victor", Model="VS850", Short="Dây đa năng phù hợp cho nhiều phong cách chơi", Price="120,000đ", Duration="30 phút", Warranty="7 ngày", Tension="20-28 lbs", Orders="89", Popular=true, Feats="Cân bằng lực và kiểm soát\nĐộ đàn hồi cao\nPhù hợp mọi phong cách\nBảo hành 7 ngày" },
+                        new { Name="Căng Vợt Lining No.1", Brand="Lining", Model="No.1", Short="Dây giá rẻ, chất lượng tốt cho người mới", Price="100,000đ", Duration="25 phút", Warranty="5 ngày", Tension="18-26 lbs", Orders="234", Popular=false, Feats="Giá thành hợp lý\nDễ thi công\nNhiều màu sắc\nBảo hành 5 ngày" },
+                    };
+                
+                @foreach (var s in samples)
+                {
+                    <div class="string-card @(s.Popular ? "popular" : "")"
+                         onclick="openStringDetail('@s.Name','@s.Brand','@s.Model','@s.Short','@s.Price','@s.Duration','@s.Warranty','@s.Tension','@s.Orders','@s.Feats.Replace("\n","\\n")')">
+                        @if (s.Popular) { <div class="popular-flag">🔥 Phổ biến</div> }
+                        <div class="brand-pill">@s.Brand · @s.Model</div>
+                        <div class="string-name">@s.Name</div>
+                        <div class="string-short">@s.Short</div>
+                        <div class="string-specs">
+                            <div class="spec-box">
+                                <span class="spec-label">Thời gian</span>
+                                <span class="spec-val">@s.Duration</span>
+                            </div>
+                            <div class="spec-box">
+                                <span class="spec-label">Bảo hành</span>
+                                <span class="spec-val">@s.Warranty</span>
+                            </div>
+                            <div class="spec-box">
+                                <span class="spec-label">Lực căng</span>
+                                <span class="spec-val">@s.Tension</span>
+                            </div>
+                            <div class="spec-box">
+                                <span class="spec-label">Đơn đã làm</span>
+                                <span class="spec-val">@s.Orders</span>
+                            </div>
+                        </div>
+                        <div class="string-footer">
+                            <div class="string-price">@s.Price<br/><small>/lần căng</small></div>
+                            <div class="detail-trigger" onclick="event.stopPropagation();openStringDetail('@s.Name','@s.Brand','@s.Model','@s.Short','@s.Price','@s.Duration','@s.Warranty','@s.Tension','@s.Orders','@s.Feats.Replace("\n","\\n")')">Chi tiết ↗</div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                @foreach (var s in Model.OrderBy(x => x.DisplayOrder))
+                {
+                    var feats = (s.Features ?? "").Replace("\r","").Replace("'","&#39;");
+                    var popular = s.IsPopular || s.IsFeatured;
+                    <div class="string-card @(popular ? "popular" : "")"
+                         onclick="openStringDetail('@s.ServiceName.Replace("'","&#39;")','@(s.Brand??"")','@(s.StringModel??"")','@(s.ShortDesc?.Replace("'","&#39;") ?? "")','@(s.Price?.ToString("N0") + "đ" ?? "—")','@(s.DurationMinutes != null ? s.DurationMinutes + " phút" : "—")','@(s.WarrantyDays != null ? s.WarrantyDays + " ngày" : "—")','@(s.Tension??"—")','@s.TotalOrders','@feats.Replace("\n","\\n")')">
+                        @if (popular) { <div class="popular-flag">🔥 Phổ biến</div> }
+                        <div class="brand-pill">@(s.Brand ?? "—") · @(s.StringModel ?? "—")</div>
+                        <div class="string-name">@s.ServiceName</div>
+                        <div class="string-short">@s.ShortDesc</div>
+                        <div class="string-specs">
+                            <div class="spec-box">
+                                <span class="spec-label">Thời gian</span>
+                                <span class="spec-val">@(s.DurationMinutes != null ? s.DurationMinutes + " ph" : "—")</span>
+                            </div>
+                            <div class="spec-box">
+                                <span class="spec-label">Bảo hành</span>
+                                <span class="spec-val">@(s.WarrantyDays != null ? s.WarrantyDays + " ngày" : "—")</span>
+                            </div>
+                            <div class="spec-box">
+                                <span class="spec-label">Lực căng</span>
+                                <span class="spec-val">@(s.Tension ?? "—")</span>
+                            </div>
+                            <div class="spec-box">
+                                <span class="spec-label">Đơn đã làm</span>
+                                <span class="spec-val">@s.TotalOrders</span>
+                            </div>
+                        </div>
+                        <div class="string-footer">
+                            <div class="string-price">@(s.Price?.ToString("N0") + "đ")<br/><small>/lần căng</small></div>
+                            <div class="detail-trigger">Chi tiết ↗</div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </section>
+</div>
+
+<!-- DETAIL BOTTOM SHEET -->
+<div class="modal-overlay" id="stringModal" onclick="closeStringDetail(event)">
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-head">
+            <div>
+                <div id="sm-brand" style="font-family:'Space Mono',monospace;font-size:.7rem;color:var(--green);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.5rem;"></div>
+                <div id="sm-name" style="font-size:1.5rem;font-weight:800;color:var(--white);"></div>
+            </div>
+            <button class="modal-close-btn" onclick="document.getElementById('stringModal').classList.remove('open');document.body.style.overflow=''">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="modal-scroll">
+            <p id="sm-desc" style="color:var(--gray);font-weight:300;line-height:1.8;margin-bottom:2rem;"></p>
+            <div class="modal-specs-grid">
+                <div class="modal-spec">
+                    <span class="spec-label">Thời gian thực hiện</span>
+                    <span class="spec-val" id="sm-dur"></span>
+                </div>
+                <div class="modal-spec">
+                    <span class="spec-label">Bảo hành</span>
+                    <span class="spec-val" id="sm-war"></span>
+                </div>
+                <div class="modal-spec">
+                    <span class="spec-label">Lực căng hỗ trợ</span>
+                    <span class="spec-val" id="sm-ten"></span>
+                </div>
+                <div class="modal-spec">
+                    <span class="spec-label">Tổng đơn</span>
+                    <span class="spec-val" id="sm-ord"></span>
+                </div>
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gray);margin-bottom:1rem;">Tính năng nổi bật</div>
+            <ul class="modal-feat-list" id="sm-feats"></ul>
+        </div>
+        <div class="modal-cta">
+            <div>
+                <div style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--gray);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;">Giá dịch vụ</div>
+                <div id="sm-price" style="font-family:'Space Mono',monospace;font-size:2rem;font-weight:700;color:var(--green);"></div>
+            </div>
+            <button class="btn-book"><i class="bi bi-calendar-check"></i> Đặt lịch ngay</button>
+        </div>
     </div>
 </div>
+
+@section Scripts {
+<script>
+    function openStringDetail(name,brand,model,desc,price,dur,war,ten,ord,feats) {
+        document.getElementById('sm-name').textContent = name;
+        document.getElementById('sm-brand').textContent = brand + (model ? ' · ' + model : '');
+        document.getElementById('sm-desc').textContent = desc;
+        document.getElementById('sm-price').textContent = price;
+        document.getElementById('sm-dur').textContent = dur;
+        document.getElementById('sm-war').textContent = war;
+        document.getElementById('sm-ten').textContent = ten;
+        document.getElementById('sm-ord').textContent = ord + ' đơn';
+        const ul = document.getElementById('sm-feats');
+        ul.innerHTML = '';
+        (feats||'').split('\n').filter(f=>f.trim()).forEach(f=>{
+            const li = document.createElement('li');
+            li.innerHTML = `<i class="bi bi-check2 feat-green"></i>${f.replace(/^[-•]\s*/,'')}`;
+            ul.appendChild(li);
+        });
+        document.getElementById('stringModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeStringDetail(e) {
+        if(e.target === document.getElementById('stringModal')) {
+            document.getElementById('stringModal').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+    }
+    document.addEventListener('keydown', e => {
+        if(e.key==='Escape') { document.getElementById('stringModal').classList.remove('open'); document.body.style.overflow=''; }
+    });
+</script>
+}

@@ -1,0 +1,330 @@
+﻿@model QuanLiSanCauLong.Models.Service
+@{
+    Layout = null;
+    var images = ViewBag.ServiceImages as List<QuanLiSanCauLong.Models.ServiceImage> ?? new List<QuanLiSanCauLong.Models.ServiceImage>();
+}
+
+<div class="modal-header border-0 px-4 pt-4 pb-0">
+    <div>
+        <h5 class="fw-bold mb-1">Chỉnh Sửa Dịch Vụ</h5>
+        <p class="text-muted small mb-0">Cập nhật <strong>@Model.ServiceName</strong></p>
+    </div>
+    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body px-4 py-3">
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ServiceId" />
+        <input type="hidden" asp-for="CreatedAt" />
+        <input type="hidden" asp-for="ViewCount" />
+        <input type="hidden" asp-for="Slug" />
+
+        <div class="row g-3">
+            
+            <div class="col-md-9">
+                <label class="form-label fw-semibold small">Tên Dịch Vụ <span class="text-danger">*</span></label>
+                <input asp-for="ServiceName" class="form-control" required />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small">Thứ tự</label>
+                <input asp-for="DisplayOrder" type="number" class="form-control" />
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-semibold small">Mô Tả Ngắn</label>
+                <textarea asp-for="ShortDescription" class="form-control" rows="2"></textarea>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-semibold small">Mô Tả Chi Tiết <span class="text-danger">*</span></label>
+                <textarea asp-for="Description" class="form-control" rows="6" required></textarea>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small">Giá Gốc</label>
+                <input asp-for="Price" type="number" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small">Giá KM</label>
+                <input asp-for="DiscountPrice" type="number" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small">Đơn Vị</label>
+                <select asp-for="PriceUnit" class="form-select">
+                    <option value="">-- Chọn --</option>
+                    <option value="giờ">/giờ</option>
+                    <option value="tháng">/tháng</option>
+                    <option value="lần">/lần</option>
+                    <option value="khóa">/khóa</option>
+                    <option value="buổi">/buổi</option>
+                </select>
+            </div>
+
+            <div class="col-md-12">
+                <label class="form-label fw-semibold small">Icon</label>
+                <input asp-for="Icon" class="form-control" />
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-semibold small">Các Tính Năng</label>
+                <textarea asp-for="Features" class="form-control" rows="4"></textarea>
+            </div>
+
+            <!-- Upload ảnh -->
+            <div class="col-12">
+                <label class="form-label fw-semibold small">Hình Ảnh</label>
+                <div class="image-upload-area rounded-3 border border-dashed p-3">
+                    <div class="d-flex flex-wrap gap-2 mb-3" id="imagePreviewEdit">
+                        <div class="add-img-btn" onclick="document.getElementById('imgInputEdit').click()">
+                            <i class="bi bi-plus-lg fs-4 text-muted"></i>
+                            <div class="small text-muted mt-1">Thêm ảnh</div>
+                        </div>
+                    </div>
+
+                    <input type="file" id="imgInputEdit" name="NewImageFiles" multiple accept="image/*" style="display:none" />
+                    
+                    <input type="hidden" name="PrimaryImageId" id="primaryImageIdEdit" value="@(images.FirstOrDefault(i => i.IsPrimary)?.ImageId ?? 0)" />
+                    <input type="hidden" name="NewMainImageIndex" id="mainImageIdxEdit" value="-1" />
+                    <input type="hidden" name="DeletedImageIds" id="deletedImageIdsEdit" value="" />
+                    <div id="existingImagesContainer"></div>
+
+                    <p class="text-muted mb-0" style="font-size:.8rem;">
+                        <i class="bi bi-info-circle me-1"></i>Nhấn vào ảnh để đặt làm ảnh chính. X để xóa.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small">Trạng Thái</label>
+                <select asp-for="Status" class="form-select">
+                    <option value="Active">Hoạt động</option>
+                    <option value="Inactive">Ngừng hoạt động</option>
+                </select>
+            </div>
+            <div class="col-md-8 d-flex align-items-end gap-4">
+                <div class="form-check">
+                    <input asp-for="IsFeatured" class="form-check-input" type="checkbox" />
+                    <label class="form-check-label fw-semibold">Nổi bật</label>
+                </div>
+                <div class="form-check">
+                    <input asp-for="IsPopular" class="form-check-input" type="checkbox" />
+                    <label class="form-check-label fw-semibold">Phổ biến</label>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+            <button type="button" class="btn btn-light px-4 rounded-3" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-dark px-5 rounded-3">
+                <i class="bi bi-check-lg me-1"></i>Lưu Thay Đổi
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .border-dashed { border-style: dashed !important; background: #fafafa; }
+    .add-img-btn {
+        width: 90px; height: 90px;
+        border: 2px dashed #ced4da;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: .2s;
+    }
+    .add-img-btn:hover { border-color: #212529; background: #f5f5f5; }
+    
+    .img-thumb-wrap {
+        position: relative;
+        width: 90px; height: 90px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid #dee2e6;
+        cursor: pointer;
+    }
+    .img-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .img-thumb-wrap .main-star {
+        position: absolute;
+        top: 4px; left: 4px;
+        background: rgba(255,193,7,.9);
+        border-radius: 50%;
+        width: 22px; height: 22px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+    .img-thumb-wrap.is-main { border-color: #198754 !important; border-width: 3px !important; }
+    .img-thumb-wrap.is-main .main-star { display: flex; }
+    .img-thumb-wrap .del-btn {
+        position: absolute;
+        top: 3px; right: 3px;
+        background: rgba(220,53,69,.9);
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 22px; height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    (function() {
+        const existingImages = @Html.Raw(Json.Serialize(images.Select(i => new { 
+            imageId = i.ImageId, 
+            imagePath = i.ImagePath, 
+            isPrimary = i.IsPrimary 
+        })));
+
+        const previewContainer = document.getElementById('imagePreviewEdit');
+        const addBtn = previewContainer.querySelector('.add-img-btn');
+        const imgInput = document.getElementById('imgInputEdit');
+        const existingImagesContainer = document.getElementById('existingImagesContainer');
+        const deletedIdsInput = document.getElementById('deletedImageIdsEdit');
+        const primaryIdInput = document.getElementById('primaryImageIdEdit');
+        const mainIdxInput = document.getElementById('mainImageIdxEdit');
+
+        let newFiles = [];
+        let deletedIds = [];
+
+        existingImages.forEach((img, index) => {
+            const wrap = createExistingImageThumb(img);
+            previewContainer.insertBefore(wrap, addBtn);
+            
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'ExistingImageIds';
+            hiddenInput.value = img.imageId;
+            hiddenInput.dataset.imageId = img.imageId;
+            existingImagesContainer.appendChild(hiddenInput);
+        });
+
+        function createExistingImageThumb(img) {
+            const wrap = document.createElement('div');
+            wrap.className = 'img-thumb-wrap' + (img.isPrimary ? ' is-main' : '');
+            wrap.dataset.type = 'existing';
+            wrap.dataset.imageId = img.imageId;
+            wrap.innerHTML = `
+                <img src="${img.imagePath}" />
+                <div class="main-star"><i class="bi bi-star-fill text-dark"></i></div>
+                <button type="button" class="del-btn"><i class="bi bi-x"></i></button>
+            `;
+
+            wrap.addEventListener('click', function(e) {
+                if (!e.target.closest('.del-btn')) {
+                    setMainExisting(wrap, img.imageId);
+                }
+            });
+
+            wrap.querySelector('.del-btn').addEventListener('click', function(e) {
+                e.stopPropagation();
+                removeExistingImage(img.imageId, wrap);
+            });
+
+            return wrap;
+        }
+
+        function setMainExisting(wrap, imageId) {
+            document.querySelectorAll('#imagePreviewEdit .img-thumb-wrap').forEach(w => {
+                w.classList.remove('is-main');
+            });
+            wrap.classList.add('is-main');
+            primaryIdInput.value = imageId;
+            mainIdxInput.value = -1;
+        }
+
+        function removeExistingImage(imageId, wrap) {
+            deletedIds.push(imageId);
+            deletedIdsInput.value = deletedIds.join(',');
+            
+            const hiddenInput = existingImagesContainer.querySelector(`input[data-image-id="${imageId}"]`);
+            if (hiddenInput) hiddenInput.remove();
+            
+            wrap.remove();
+
+            if (wrap.classList.contains('is-main')) {
+                const remaining = document.querySelector('#imagePreviewEdit .img-thumb-wrap');
+                if (remaining) {
+                    if (remaining.dataset.type === 'existing') {
+                        setMainExisting(remaining, remaining.dataset.imageId);
+                    }
+                }
+            }
+        }
+
+        imgInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            
+            files.forEach(file => {
+                if (file && file.type.startsWith('image/')) {
+                    const currentIndex = newFiles.length;
+                    newFiles.push(file);
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const wrap = createNewImageThumb(e.target.result, currentIndex);
+                        previewContainer.insertBefore(wrap, addBtn);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            updateFileInput();
+        });
+
+        function createNewImageThumb(src, index) {
+            const wrap = document.createElement('div');
+            wrap.className = 'img-thumb-wrap';
+            wrap.dataset.type = 'new';
+            wrap.dataset.index = index;
+            wrap.innerHTML = `
+                <img src="${src}" />
+                <div class="main-star"><i class="bi bi-star-fill text-dark"></i></div>
+                <button type="button" class="del-btn"><i class="bi bi-x"></i></button>
+            `;
+
+            wrap.addEventListener('click', function(e) {
+                if (!e.target.closest('.del-btn')) {
+                    setMainNew(wrap, index);
+                }
+            });
+
+            wrap.querySelector('.del-btn').addEventListener('click', function(e) {
+                e.stopPropagation();
+                removeNewImage(index, wrap);
+            });
+
+            return wrap;
+        }
+
+        function setMainNew(wrap, index) {
+            document.querySelectorAll('#imagePreviewEdit .img-thumb-wrap').forEach(w => {
+                w.classList.remove('is-main');
+            });
+            wrap.classList.add('is-main');
+            primaryIdInput.value = -1;
+            mainIdxInput.value = index;
+        }
+
+        function removeNewImage(index, wrap) {
+            newFiles[index] = null;
+            wrap.remove();
+            updateFileInput();
+        }
+
+        function updateFileInput() {
+            const dataTransfer = new DataTransfer();
+            newFiles.forEach(file => {
+                if (file !== null) dataTransfer.items.add(file);
+            });
+            imgInput.files = dataTransfer.files;
+        }
+    })();
+</script>

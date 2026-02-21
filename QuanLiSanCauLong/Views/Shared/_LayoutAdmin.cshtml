@@ -4,19 +4,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Admin Panel</title>
+
+    <script src="~/lib/tinymce/tinymce.min.js"></script>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="~/css/admin.css" />
     <style>
         :root {
-            --sidebar-bg: #1a1d29;
-            --sidebar-hover: #2d3142;
-            --sidebar-active: #4e73df;
-            --primary-color: #4e73df;
-            --success-color: #1cc88a;
-            --danger-color: #e74a3b;
-            --warning-color: #f6c23e;
-            --info-color: #36b9cc;
+            --sidebar-bg: #ffffff;
+            --primary-purple: #6c33f2;
+            --primary-green: #10b981;
+            --sidebar-hover: #f8fafc;
+            --sidebar-active: #f0ebff;
         }
 
         body {
@@ -30,78 +30,74 @@
             min-height: 100vh;
         }
 
-        /* Sidebar Styles */
+        /* Sidebar */
         #sidebar {
-            min-width: 260px;
-            max-width: 260px;
+            min-width: 270px;
+            max-width: 270px;
             background: var(--sidebar-bg);
-            color: #fff;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            color: #2d3748;
+            transition: all 0.3s;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.05);
             overflow-y: auto;
             position: fixed;
             height: 100vh;
             z-index: 999;
+            border-right: 1px solid #e2e8f0;
         }
 
             #sidebar.active {
-                margin-left: -260px;
+                margin-left: -270px;
             }
 
         .sidebar-header {
-            padding: 25px 20px;
-            background: linear-gradient(135deg, var(--primary-color) 0%, #224abe 100%);
+            padding: 2rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary-purple) 0%, #8b5cf6 100%);
             text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 3px solid rgba(255,255,255,0.1);
         }
 
             .sidebar-header h3 {
-                font-size: 1.3rem;
+                font-size: 1.4rem;
                 margin: 0;
-                font-weight: 700;
+                font-weight: 800;
                 color: #fff;
-                text-transform: uppercase;
                 letter-spacing: 1px;
             }
 
             .sidebar-header .subtitle {
                 font-size: 0.75rem;
-                color: rgba(255,255,255,0.8);
+                color: rgba(255,255,255,0.9);
                 margin-top: 5px;
+                font-weight: 600;
             }
 
-        /* Navigation Styles */
+        /* Navigation */
         .components {
-            padding: 10px 0;
+            padding: 1rem 0;
         }
 
         .nav-section {
-            padding: 20px 20px 8px 20px;
+            padding: 1rem 1.5rem 0.5rem;
             font-size: 0.7rem;
             text-transform: uppercase;
-            color: #6c757d;
+            color: #a0aec0;
             font-weight: 700;
             letter-spacing: 1.5px;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            margin-top: 10px;
+            margin-top: 0.5rem;
         }
-
-            .nav-section:first-child {
-                border-top: none;
-                margin-top: 0;
-            }
 
         #sidebar ul li {
             position: relative;
         }
 
             #sidebar ul li a {
-                padding: 12px 20px;
+                padding: 0.85rem 1.5rem;
                 display: flex;
                 align-items: center;
-                color: rgba(255,255,255,0.7);
+                color: #4a5568;
                 text-decoration: none;
                 font-size: 0.9rem;
+                font-weight: 500;
                 transition: all 0.2s;
                 border-left: 3px solid transparent;
             }
@@ -109,27 +105,30 @@
                 #sidebar ul li a i {
                     width: 25px;
                     margin-right: 12px;
-                    font-size: 1.1rem;
+                    font-size: 1.15rem;
+                    background: linear-gradient(135deg, var(--primary-purple), var(--primary-green));
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
                 }
 
                 #sidebar ul li a:hover {
-                    color: #fff;
+                    color: var(--primary-purple);
                     background: var(--sidebar-hover);
-                    border-left-color: var(--primary-color);
+                    border-left-color: var(--primary-purple);
                 }
 
             #sidebar ul li.active > a {
-                color: #fff;
-                background: var(--sidebar-hover);
-                border-left-color: var(--primary-color);
+                color: var(--primary-purple);
+                background: var(--sidebar-active);
+                border-left-color: var(--primary-purple);
                 font-weight: 600;
             }
 
-        /* Content Area */
+        /* Content */
         #content {
             width: 100%;
-            margin-left: 260px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-left: 270px;
+            transition: all 0.3s;
         }
 
         #sidebar.active ~ #content {
@@ -138,75 +137,79 @@
 
         /* Top Navbar */
         .top-navbar {
-            padding: 15px 30px;
+            padding: 1rem 2rem;
             background: #fff;
             border-bottom: 1px solid #e3e6f0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
             position: sticky;
             top: 0;
             z-index: 998;
         }
 
         #sidebarCollapse {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-purple), #8b5cf6);
             border: none;
-            padding: 8px 15px;
-            border-radius: 8px;
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
             transition: all 0.2s;
-        }
-
-            #sidebarCollapse:hover {
-                background: #224abe;
-                transform: scale(1.05);
-            }
-
-        /* User Dropdown */
-        .user-dropdown {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary-color), var(--info-color));
-            display: flex;
-            align-items: center;
-            justify-content: center;
             color: white;
             font-weight: 600;
         }
 
-        /* Main Content */
-        main {
-            padding: 30px;
-            min-height: calc(100vh - 70px);
+            #sidebarCollapse:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(108, 51, 242, 0.3);
+            }
+
+        /* User Section */
+        .user-section {
+            margin-top: auto;
+            padding: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
         }
 
-        /* Scrollbar Styles */
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-purple), var(--primary-green));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        /* Main Content */
+        main {
+            padding: 2rem;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* Scrollbar */
         #sidebar::-webkit-scrollbar {
             width: 6px;
         }
 
         #sidebar::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.1);
+            background: #f1f5f9;
         }
 
         #sidebar::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.2);
+            background: #cbd5e0;
             border-radius: 3px;
         }
 
             #sidebar::-webkit-scrollbar-thumb:hover {
-                background: rgba(255,255,255,0.3);
+                background: #a0aec0;
             }
 
         /* Responsive */
         @@media (max-width: 768px) {
             #sidebar {
-                margin-left: -260px;
+                margin-left: -270px;
             }
 
                 #sidebar.active {
@@ -218,91 +221,15 @@
             }
         }
 
-        /* Badge Counts */
-        .badge-count {
-            background: var(--danger-color);
+        /* Badge */
+        .badge-new {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
             color: white;
-            padding: 2px 6px;
+            padding: 0.2rem 0.5rem;
             border-radius: 10px;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             margin-left: auto;
-        }
-
-        /* ==========================================================
-                   CSS OVERRIDE - GIỮ NGUYÊN CODE CŨ, GHI ĐÈ GIAO DIỆN MỚI
-                   ========================================================== */
-        :root {
-            --new-success: #2ecc71;
-            --new-blue: #3498db;
-            --sidebar-bg-light: #ffffff;
-        }
-
-        #sidebar {
-            background: var(--sidebar-bg-light) !important;
-            border-right: 1px solid #edf2f7 !important;
-            box-shadow: 5px 0 15px rgba(0,0,0,0.02) !important;
-            display: flex !important;
-            flex-direction: column !important;
-        }
-
-        .sidebar-header {
-            background: white !important;
-            border-bottom: 1px solid #f7fafc !important;
-            padding: 35px 20px !important;
-        }
-
-            .sidebar-header h3 {
-                color: var(--new-success) !important;
-                font-size: 1.5rem !important;
-                letter-spacing: 1px !important;
-            }
-
-            .sidebar-header .subtitle {
-                color: #a0aec0 !important;
-                font-weight: 600 !important;
-            }
-
-        .nav-section {
-            color: #cbd5e0 !important;
-            background: transparent !important;
-            border-top: none !important;
-            padding-left: 25px !important;
-        }
-
-        #sidebar ul li a {
-            color: #4a5568 !important;
-            font-weight: 500 !important;
-            padding: 14px 25px !important;
-            border-left: 4px solid transparent !important;
-        }
-
-            /* Hiệu ứng Icon Gradient */
-            #sidebar ul li a i {
-                background: linear-gradient(135deg, var(--new-success) 0%, var(--new-blue) 100%) !important;
-                -webkit-background-clip: text !important;
-                -webkit-text-fill-color: transparent !important;
-                font-size: 1.25rem !important;
-                font-weight: bold !important;
-            }
-
-            #sidebar ul li a:hover {
-                background: #f8fafc !important;
-                color: var(--new-success) !important;
-            }
-
-        #sidebar ul li.active > a {
-            background: #f0fff4 !important;
-            color: var(--new-success) !important;
-            border-left-color: var(--new-success) !important;
-        }
-
-        #sidebarCollapse {
-            background: linear-gradient(135deg, var(--new-success) 0%, #27ae60 100%) !important;
-            box-shadow: 0 4px 6px rgba(46, 204, 113, 0.2) !important;
-        }
-
-        .user-avatar {
-            background: linear-gradient(135deg, var(--new-success), var(--new-blue)) !important;
+            font-weight: 700;
         }
     </style>
 </head>
@@ -310,8 +237,8 @@
     <div class="wrapper">
         <nav id="sidebar">
             <div class="sidebar-header">
-                <h3><i class="bi bi-shield-fill"></i> BADMINTON</h3>
-                <div class="subtitle">Admin Panel</div>
+                <h3><i class="bi bi-shuttlecock-fill"></i> BADMINTON</h3>
+                <div class="subtitle">Admin Dashboard</div>
             </div>
 
             <ul class="list-unstyled components">
@@ -322,12 +249,12 @@
                     </a>
                 </li>
 
-                <li class="nav-section">Quản lý cơ sở</li>
+                <li class="nav-section">⚙️ QUẢN LÝ CƠ SỞ</li>
 
                 <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminFacility" ? "active" : "")">
                     <a asp-controller="AdminFacility" asp-action="Index">
                         <i class="bi bi-building"></i>
-                        <span>Cơ sở</span>
+                        <span>Cơ sở sân</span>
                     </a>
                 </li>
 
@@ -345,12 +272,12 @@
                     </a>
                 </li>
 
-                <li class="nav-section">Quản lý đặt sân</li>
+                <li class="nav-section">📅 ĐẶT SÂN & ĐƠN HÀNG</li>
 
                 <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminBooking" ? "active" : "")">
                     <a asp-controller="AdminBooking" asp-action="Index">
                         <i class="bi bi-calendar-check"></i>
-                        <span>Tất cả đơn đặt</span>
+                        <span>Đặt sân</span>
                     </a>
                 </li>
 
@@ -361,7 +288,7 @@
                     </a>
                 </li>
 
-                <li class="nav-section">Quản lý hàng hóa</li>
+                <li class="nav-section">🛍️ SẢN PHẨM</li>
 
                 <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminCategory" ? "active" : "")">
                     <a asp-controller="AdminCategory" asp-action="Index">
@@ -384,7 +311,43 @@
                     </a>
                 </li>
 
-                <li class="nav-section">Marketing</li>
+                <li class="nav-section">📝 NỘI DUNG</li>
+
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminBlog" ? "active" : "")">
+                    <a asp-controller="AdminBlog" asp-action="Index">
+                        <i class="bi bi-newspaper"></i>
+                        <span>Bài viết</span>
+                        <span class="badge-new">NEW</span>
+                    </a>
+                </li>
+
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminService" ? "active" : "")">
+                    <a asp-controller="AdminService" asp-action="Index">
+                        <i class="bi bi-stars"></i>
+                        <span>Dịch vụ</span>
+                        <span class="badge-new">NEW</span>
+                    </a>
+                </li>
+
+                <li class="nav-section">💼 TUYỂN DỤNG & LIÊN HỆ</li>
+
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminJob" ? "active" : "")">
+                    <a asp-controller="AdminJob" asp-action="Index">
+                        <i class="bi bi-briefcase"></i>
+                        <span>Tuyển dụng</span>
+                        <span class="badge-new">NEW</span>
+                    </a>
+                </li>
+
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminContact" ? "active" : "")">
+                    <a asp-controller="AdminContact" asp-action="Index">
+                        <i class="bi bi-chat-dots"></i>
+                        <span>Liên hệ</span>
+                        <span class="badge-new">NEW</span>
+                    </a>
+                </li>
+
+                <li class="nav-section">🎁 MARKETING</li>
 
                 <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminVoucher" ? "active" : "")">
                     <a asp-controller="AdminVoucher" asp-action="Index">
@@ -393,23 +356,16 @@
                     </a>
                 </li>
 
-                <li class="nav-section">Báo cáo & Thống kê</li>
+                <li class="nav-section">📊 BÁO CÁO</li>
 
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminReport" && ViewContext.RouteData.Values["action"]?.ToString() == "Revenue" ? "active" : "")">
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Revenue" ? "active" : "")">
                     <a asp-controller="AdminReport" asp-action="Revenue">
                         <i class="bi bi-graph-up"></i>
                         <span>Doanh thu</span>
                     </a>
                 </li>
 
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminReport" && ViewContext.RouteData.Values["action"]?.ToString() == "Booking" ? "active" : "")">
-                    <a asp-controller="AdminReport" asp-action="Booking">
-                        <i class="bi bi-calendar-event"></i>
-                        <span>Đặt sân</span>
-                    </a>
-                </li>
-
-                <li class="nav-section">Hệ thống</li>
+                <li class="nav-section">🔧 HỆ THỐNG</li>
 
                 <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminUser" ? "active" : "")">
                     <a asp-controller="AdminUser" asp-action="Index">
@@ -418,59 +374,48 @@
                     </a>
                 </li>
 
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminSettings" ? "active" : "")">
-                    <a asp-controller="AdminSettings" asp-action="Index">
-                        <i class="bi bi-gear"></i>
-                        <span>Cài đặt</span>
-                    </a>
-                </li>
-
-                <li class="nav-section"></li>
                 <li>
                     <a asp-controller="Home" asp-action="Index">
                         <i class="bi bi-house-door"></i>
                         <span>Về trang chủ</span>
                     </a>
                 </li>
-                <li>
-                    <a asp-controller="Account" asp-action="Logout">
-                        <i class="bi bi-box-arrow-right"></i>
-                        <span>Đăng xuất</span>
-                    </a>
-                </li>
             </ul>
 
-            <div class="mt-auto p-3" style="border-top: 1px solid #f7fafc;">
-                <div class="d-flex align-items-center p-2 rounded shadow-sm" style="background: #f8fafc;">
-                    <div class="user-avatar me-2" style="width: 38px; height: 38px; font-size: 0.9rem;">
+            <div class="user-section">
+                <div class="d-flex align-items-center">
+                    <div class="user-avatar me-3">
                         @User.Identity.Name?.Substring(0, 1).ToUpper()
                     </div>
-                    <div style="line-height: 1.2;">
-                        <div class="fw-bold text-dark" style="font-size: 0.85rem;">@User.Identity.Name</div>
+                    <div style="line-height: 1.3;">
+                        <div class="fw-bold text-dark" style="font-size: 0.9rem;">@User.Identity.Name</div>
                         <small class="text-muted" style="font-size: 0.75rem;">Administrator</small>
                     </div>
                 </div>
             </div>
         </nav>
+
         <div id="content">
             <nav class="top-navbar">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-3">
-                        <button type="button" id="sidebarCollapse" class="btn btn-primary">
-                            <i class="bi bi-list"></i>
+                        <button type="button" id="sidebarCollapse" class="btn">
+                            <i class="bi bi-list fs-5"></i>
                         </button>
-                        <span class="text-muted fw-bold">@ViewData["Title"]</span>
+                        <h5 class="mb-0 fw-bold text-dark">@ViewData["Title"]</h5>
                     </div>
 
-                    <div class="user-dropdown">
+                    <div class="d-flex align-items-center gap-3">
                         @if (User.Identity.IsAuthenticated)
                         {
-                            <div class="text-end d-none d-sm-block">
-                                <div class="fw-bold text-dark" style="font-size: 0.9rem;">@User.Identity.Name</div>
-                                <small class="text-muted">Administrator</small>
-                            </div>
-                            <div class="user-avatar">
-                                @User.Identity.Name?.Substring(0, 1).ToUpper()
+                            <div class="d-none d-md-flex align-items-center gap-2">
+                                <div class="user-avatar" style="width: 38px; height: 38px; font-size: 0.9rem;">
+                                    @User.Identity.Name?.Substring(0, 1).ToUpper()
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-semibold text-dark" style="font-size: 0.85rem;">@User.Identity.Name</div>
+                                    <small class="text-muted" style="font-size: 0.7rem;">Admin</small>
+                                </div>
                             </div>
                         }
                     </div>
@@ -487,17 +432,24 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         $(document).ready(function () {
-            // Toggle Sidebar
+            // Xử lý đóng mở sidebar
             $('#sidebarCollapse').on('click', function () {
                 $('#sidebar').toggleClass('active');
             });
 
-            // Close sidebar on mobile when clicking outside
             $(document).on('click', function(e) {
                 if ($(window).width() <= 768) {
                     if (!$(e.target).closest('#sidebar, #sidebarCollapse').length) {
                         $('#sidebar').addClass('active');
                     }
+                }
+            });
+
+            // FIX: Cho phép focus vào TinyMCE trong Bootstrap Modal
+            // Cách này hoạt động ngay cả khi Modal được nạp sau bằng Ajax
+            $(document).on('focusin', function(e) {
+                if (e.target.closest(".tox-tinymce-aux, .moxman-window, .tam-assetmanager-root") !== null) {
+                    e.stopImmediatePropagation();
                 }
             });
         });

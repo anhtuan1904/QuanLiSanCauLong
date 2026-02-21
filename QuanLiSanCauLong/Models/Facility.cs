@@ -7,38 +7,31 @@ namespace QuanLiSanCauLong.Models
         [Key]
         public int FacilityId { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Tên cơ sở không được để trống")]
         [StringLength(200)]
         public string FacilityName { get; set; }
 
         [StringLength(300)]
-        public string Address { get; set; }
+        public string? Address { get; set; } // Thêm ? để cho phép Null
 
         [StringLength(100)]
-        public string District { get; set; }
+        public string? District { get; set; } // Thêm ?
 
         [StringLength(100)]
-        public string City { get; set; }
+        public string? City { get; set; } // Thêm ?
 
         [StringLength(20)]
-        public string Phone { get; set; }
+        public string? Phone { get; set; } // Thêm ?
 
-        [EmailAddress]
-        [StringLength(100)]
-        public string Email { get; set; }
-
-        [StringLength(200)]
-        public string Website { get; set; } // Đã thêm để khớp ViewModel
-
-        public string ImageUrl { get; set; }
+        // ImageUrl nên để Nullable vì chúng ta dùng bảng FacilityImages để lưu ảnh
+        public string? ImageUrl { get; set; }
 
         [StringLength(1000)]
-        public string Description { get; set; }
+        public string? Description { get; set; } // Thêm ? để hết lỗi "Description is required"
 
         public TimeSpan? OpenTime { get; set; }
         public TimeSpan? CloseTime { get; set; }
 
-        // Tọa độ để hiển thị bản đồ
         public decimal? Latitude { get; set; }
         public decimal? Longitude { get; set; }
 
@@ -48,9 +41,9 @@ namespace QuanLiSanCauLong.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
-        // Quan hệ dữ liệu
         public virtual ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
         public virtual ICollection<Court> Courts { get; set; } = new List<Court>();
         public virtual ICollection<PriceSlot> PriceSlots { get; set; } = new List<PriceSlot>();
+        public virtual ICollection<FacilityImage> FacilityImages { get; set; } = new List<FacilityImage>();
     }
 }

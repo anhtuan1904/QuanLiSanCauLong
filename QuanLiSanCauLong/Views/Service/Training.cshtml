@@ -1,50 +1,780 @@
-﻿@model IEnumerable<QuanLiSanCauLong.ViewModels.ServiceViewModel>
+﻿@model IEnumerable<QuanLiSanCauLong.Models.Course>
+@{
+    ViewData["Title"] = "Khóa Học Cầu Lông";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
 
-<div class="container py-5">
-    <div class="text-center mb-5">
-        <h2 class="fw-bold">Khóa Học Cầu Lông</h2>
-        <p class="text-muted">Nâng tầm kỹ năng cùng huấn luyện viên chuyên nghiệp</p>
-    </div>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 
-    <div class="d-flex justify-content-center gap-2 mb-5">
-        <button class="btn btn-primary rounded-pill px-4">Tất cả khóa học</button>
-        <button class="btn btn-outline-secondary rounded-pill px-4">Cơ bản</button>
-        <button class="btn btn-outline-secondary rounded-pill px-4">Nâng cao</button>
-    </div>
+<style>
+    :root {
+        --ink:    #0d0d14;
+        --paper:  #f5f3ee;
+        --volt:   #c8ff00;
+        --violet: #5b21b6;
+        --mist:   #e8e6df;
+        --slate:  #64748b;
+    }
 
-    <div class="row g-4">
-        @foreach (var item in Model.Where(x => x.Type == "Course"))
-        {
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden service-card">
-                    <div class="position-relative">
-                        <img src="@item.ImageUrl" class="card-img-top" style="height: 200px; object-fit: cover;">
-                        <span class="position-absolute top-0 start-0 m-3 badge bg-primary rounded-pill">
-                            <i class="bi bi-mortarboard-fill me-1"></i> Khóa học
-                        </span>
-                    </div>
-                    <div class="card-body p-4">
-                        <h5 class="fw-bold mb-2">@item.ServiceName</h5>
-                        <p class="text-muted small mb-3">@item.Description</p>
+    .training-page { background: var(--paper); font-family: 'DM Sans', sans-serif; }
 
-                        <div class="d-flex align-items-center text-primary mb-3">
-                            <i class="bi bi-clock-history me-2"></i>
-                            <span class="fw-bold">@item.Duration</span>
-                        </div>
+    /* ── HERO ─────────────────────────────────────────── */
+    .hero-training {
+        background: var(--ink);
+        min-height: 92vh;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        overflow: hidden;
+        position: relative;
+    }
+    .hero-left {
+        padding: 7rem 4rem 7rem 7rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        z-index: 2;
+    }
+    .hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        background: var(--volt);
+        color: var(--ink);
+        font-family: 'Syne', sans-serif;
+        font-weight: 700;
+        font-size: .75rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        padding: .4rem 1rem;
+        border-radius: 2px;
+        margin-bottom: 2rem;
+        width: fit-content;
+    }
+    .hero-title {
+        font-family: 'Syne', sans-serif;
+        font-size: clamp(3rem, 5vw, 5.5rem);
+        font-weight: 800;
+        line-height: 1.0;
+        color: #fff;
+        margin-bottom: 1.5rem;
+    }
+    .hero-title span { color: var(--volt); display: block; }
+    .hero-desc {
+        color: rgba(255,255,255,.55);
+        font-size: 1.1rem;
+        font-weight: 300;
+        line-height: 1.8;
+        max-width: 440px;
+        margin-bottom: 3rem;
+    }
+    .hero-stats {
+        display: flex;
+        gap: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255,255,255,.1);
+    }
+    .stat-num {
+        font-family: 'Syne', sans-serif;
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: var(--volt);
+        line-height: 1;
+    }
+    .stat-label { font-size: .8rem; color: rgba(255,255,255,.45); margin-top: .3rem; letter-spacing: .05em; text-transform: uppercase; }
+    .hero-right {
+        position: relative;
+        overflow: hidden;
+    }
+    .hero-right img {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        filter: grayscale(20%) contrast(1.05);
+    }
+    .hero-right::after {
+        content: '';
+        position: absolute; inset: 0;
+        background: linear-gradient(to right, var(--ink) 0%, transparent 40%);
+    }
+    .hero-scroll-hint {
+        position: absolute;
+        bottom: 2.5rem; left: 7rem;
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        color: rgba(255,255,255,.35);
+        font-size: .78rem;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        z-index: 3;
+    }
+    .scroll-line {
+        width: 40px; height: 1px;
+        background: rgba(255,255,255,.3);
+        position: relative;
+        overflow: hidden;
+    }
+    .scroll-line::after {
+        content: '';
+        position: absolute;
+        top: 0; left: -100%;
+        width: 100%; height: 100%;
+        background: var(--volt);
+        animation: scrollLine 2s ease infinite;
+    }
+    @@keyframes scrollLine { to { left: 100%; } }
 
-                        <h4 class="text-primary fw-bold mb-3">@item.Price.ToString("N0") VNĐ<small class="text-muted fs-6">/tháng</small></h4>
+    /* ── FILTER BAR ───────────────────────────────────── */
+    .filter-bar {
+        background: #fff;
+        border-bottom: 1px solid var(--mist);
+        padding: 0 4rem;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        gap: 0;
+        overflow-x: auto;
+    }
+    .filter-pill {
+        padding: 1.2rem 1.8rem;
+        font-family: 'Syne', sans-serif;
+        font-weight: 600;
+        font-size: .82rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--slate);
+        border: none;
+        background: none;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        white-space: nowrap;
+        transition: all .2s;
+    }
+    .filter-pill:hover { color: var(--ink); }
+    .filter-pill.active { color: var(--violet); border-bottom-color: var(--violet); }
 
-                        <ul class="list-unstyled mb-4">
-                            @foreach (var feature in item.Features)
-                            {
-                                <li class="small mb-2 text-secondary"><i class="bi bi-check2-circle text-success me-2"></i>@feature</li>
-                            }
-                        </ul>
+    /* ── COURSES SECTION ──────────────────────────────── */
+    .courses-section { padding: 6rem 5rem; background: var(--paper); }
+    .section-label {
+        font-family: 'Syne', sans-serif;
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        color: var(--slate);
+        margin-bottom: 1rem;
+    }
+    .section-heading {
+        font-family: 'Syne', sans-serif;
+        font-size: clamp(2rem, 3vw, 3rem);
+        font-weight: 800;
+        color: var(--ink);
+        margin-bottom: 3.5rem;
+        max-width: 480px;
+        line-height: 1.15;
+    }
+    .courses-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5px;
+        background: var(--mist);
+    }
 
-                        <a href="#" class="btn btn-primary w-100 rounded-pill py-2 fw-bold">Đăng ký ngay</a>
-                    </div>
+    /* ── COURSE CARD ──────────────────────────────────── */
+    .course-card {
+        background: #fff;
+        cursor: pointer;
+        transition: all .35s cubic-bezier(.25,.46,.45,.94);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .course-card:hover { background: var(--ink); }
+    .card-thumb {
+        height: 260px;
+        position: relative;
+        overflow: hidden;
+        background: var(--mist);
+    }
+    .card-thumb img {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        transition: transform .6s cubic-bezier(.25,.46,.45,.94);
+    }
+    .course-card:hover .card-thumb img { transform: scale(1.07); }
+    .thumb-placeholder {
+        width: 100%; height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+    }
+    .level-chip {
+        position: absolute;
+        top: 1.2rem; left: 1.2rem;
+        background: var(--volt);
+        color: var(--ink);
+        font-family: 'Syne', sans-serif;
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        padding: .3rem .8rem;
+        border-radius: 2px;
+    }
+    .featured-dot {
+        position: absolute;
+        top: 1.2rem; right: 1.2rem;
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: var(--volt);
+        box-shadow: 0 0 0 4px rgba(200,255,0,.25);
+    }
+    .card-body-custom {
+        padding: 2rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        transition: all .35s;
+    }
+    .course-card:hover .card-body-custom { background: var(--ink); }
+    .card-instructor {
+        font-size: .78rem;
+        color: var(--slate);
+        font-weight: 300;
+        margin-bottom: .5rem;
+        letter-spacing: .03em;
+        transition: color .35s;
+    }
+    .course-card:hover .card-instructor { color: rgba(255,255,255,.45); }
+    .card-title-custom {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: .75rem;
+        line-height: 1.25;
+        transition: color .35s;
+    }
+    .course-card:hover .card-title-custom { color: #fff; }
+    .card-desc {
+        font-size: .88rem;
+        color: var(--slate);
+        line-height: 1.7;
+        margin-bottom: 1.5rem;
+        font-weight: 300;
+        flex: 1;
+        transition: color .35s;
+    }
+    .course-card:hover .card-desc { color: rgba(255,255,255,.5); }
+    .card-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .5rem;
+        margin-bottom: 1.5rem;
+    }
+    .meta-item {
+        background: var(--paper);
+        padding: .6rem .8rem;
+        border-radius: 4px;
+        transition: background .35s;
+    }
+    .course-card:hover .meta-item { background: rgba(255,255,255,.08); }
+    .meta-label {
+        font-size: .68rem;
+        color: var(--slate);
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: .2rem;
+        transition: color .35s;
+    }
+    .course-card:hover .meta-label { color: rgba(255,255,255,.35); }
+    .meta-val {
+        font-family: 'Syne', sans-serif;
+        font-size: .88rem;
+        font-weight: 700;
+        color: var(--ink);
+        transition: color .35s;
+    }
+    .course-card:hover .meta-val { color: #fff; }
+    .card-footer-custom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-top: 1px solid var(--mist);
+        padding-top: 1.5rem;
+        transition: border-color .35s;
+    }
+    .course-card:hover .card-footer-custom { border-color: rgba(255,255,255,.1); }
+    .price-main {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--violet);
+        line-height: 1;
+        transition: color .35s;
+    }
+    .course-card:hover .price-main { color: var(--volt); }
+    .price-old {
+        font-size: .78rem;
+        color: var(--slate);
+        text-decoration: line-through;
+        margin-top: .2rem;
+        transition: color .35s;
+    }
+    .course-card:hover .price-old { color: rgba(255,255,255,.3); }
+    .enroll-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px; height: 44px;
+        border-radius: 50%;
+        background: var(--paper);
+        border: none;
+        cursor: pointer;
+        transition: all .3s;
+        font-size: 1rem;
+        color: var(--ink);
+    }
+    .enroll-btn:hover, .course-card:hover .enroll-btn {
+        background: var(--volt);
+        color: var(--ink);
+        transform: scale(1.1);
+    }
+
+    /* ── DETAILS MODAL ────────────────────────────────── */
+    .detail-overlay {
+        position: fixed; inset: 0;
+        background: rgba(13,13,20,.85);
+        backdrop-filter: blur(8px);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+    .detail-overlay.open { display: flex; }
+    .detail-panel {
+        background: #fff;
+        width: 100%;
+        max-width: 780px;
+        max-height: 90vh;
+        border-radius: 12px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        animation: slideUp .4s cubic-bezier(.25,.46,.45,.94);
+    }
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .detail-hero {
+        height: 280px;
+        position: relative;
+        overflow: hidden;
+        background: var(--ink);
+        flex-shrink: 0;
+    }
+    .detail-hero img { width: 100%; height: 100%; object-fit: cover; opacity: .7; }
+    .detail-hero-info {
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        padding: 2rem;
+        background: linear-gradient(to top, rgba(13,13,20,1) 0%, transparent 100%);
+    }
+    .detail-close {
+        position: absolute;
+        top: 1.2rem; right: 1.2rem;
+        width: 38px; height: 38px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.15);
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+        transition: background .2s;
+        font-size: 1.1rem;
+    }
+    .detail-close:hover { background: rgba(255,255,255,.3); }
+    .detail-body {
+        padding: 2.5rem;
+        overflow-y: auto;
+        flex: 1;
+    }
+    .detail-chips { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .detail-chip {
+        background: var(--paper);
+        border: 1px solid var(--mist);
+        font-size: .75rem;
+        font-family: 'Syne', sans-serif;
+        font-weight: 600;
+        padding: .35rem .9rem;
+        border-radius: 3px;
+        color: var(--ink);
+        letter-spacing: .05em;
+        text-transform: uppercase;
+    }
+    .detail-chip.volt { background: var(--volt); border-color: var(--volt); }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+    .detail-item {
+        background: var(--paper);
+        padding: 1rem 1.2rem;
+        border-radius: 6px;
+    }
+    .detail-item-label {
+        font-size: .68rem;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--slate);
+        display: block;
+        margin-bottom: .4rem;
+        font-family: 'Syne', sans-serif;
+    }
+    .detail-item-val {
+        font-family: 'Syne', sans-serif;
+        font-weight: 700;
+        color: var(--ink);
+        font-size: 1rem;
+    }
+    .features-list-detail { list-style: none; padding: 0; margin: 0 0 2rem; }
+    .features-list-detail li {
+        display: flex;
+        gap: .75rem;
+        padding: .6rem 0;
+        border-bottom: 1px solid var(--mist);
+        font-size: .9rem;
+        color: var(--ink);
+        font-weight: 300;
+    }
+    .features-list-detail li:last-child { border-bottom: none; }
+    .feat-icon { color: var(--violet); flex-shrink: 0; margin-top: 2px; }
+    .detail-cta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-top: 1px solid var(--mist);
+        padding-top: 2rem;
+    }
+    .btn-enroll {
+        background: var(--ink);
+        color: #fff;
+        border: none;
+        padding: 1rem 2.5rem;
+        font-family: 'Syne', sans-serif;
+        font-size: .85rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: all .3s;
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+    .btn-enroll:hover { background: var(--violet); transform: translateY(-2px); }
+    .btn-enroll-volt {
+        background: var(--volt);
+        color: var(--ink);
+    }
+    .btn-enroll-volt:hover { background: #b5e600; }
+
+    /* ── RESPONSIVE ───────────────────────────────────── */
+    @@media (max-width: 1024px) {
+        .hero-training { grid-template-columns: 1fr; min-height: auto; }
+        .hero-right { display: none; }
+        .hero-left { padding: 5rem 2rem 4rem; }
+        .courses-section { padding: 4rem 1.5rem; }
+        .courses-grid { grid-template-columns: repeat(2, 1fr); }
+        .filter-bar { padding: 0 1.5rem; }
+    }
+    @@media (max-width: 640px) {
+        .courses-grid { grid-template-columns: 1fr; }
+        .hero-left { padding: 4rem 1.5rem; }
+        .hero-stats { gap: 2rem; }
+        .detail-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="training-page">
+
+    <!-- HERO -->
+    <section class="hero-training">
+        <div class="hero-left">
+            <div class="hero-tag"><i class="bi bi-mortarboard-fill"></i> Badminton Academy</div>
+            <h1 class="hero-title">
+                Học cầu lông
+                <span>đúng cách.</span>
+            </h1>
+            <p class="hero-desc">Chương trình đào tạo bài bản từ cơ bản đến nâng cao, dưới sự hướng dẫn của HLV chuyên nghiệp giàu kinh nghiệm thi đấu.</p>
+            <div class="hero-stats">
+                <div>
+                    <div class="stat-num">@Model.Count()</div>
+                    <div class="stat-label">Khóa học</div>
+                </div>
+                <div>
+                    <div class="stat-num">@Model.Sum(c => c.CurrentStudents)</div>
+                    <div class="stat-label">Học viên</div>
+                </div>
+                <div>
+                    <div class="stat-num">98%</div>
+                    <div class="stat-label">Hài lòng</div>
                 </div>
             </div>
-        }
+            <div class="hero-scroll-hint">
+                <div class="scroll-line"></div>
+                Xem khóa học
+            </div>
+        </div>
+        <div class="hero-right">
+            <img src="https://images.unsplash.com/photo-1617083934555-ac7c4b4ae8e4?w=900&q=80" alt="Badminton" />
+        </div>
+    </section>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+        <button class="filter-pill active" data-filter="all">Tất cả (@Model.Count())</button>
+        <button class="filter-pill" data-filter="Beginner">Cơ bản</button>
+        <button class="filter-pill" data-filter="Intermediate">Trung cấp</button>
+        <button class="filter-pill" data-filter="Advanced">Nâng cao</button>
+        <button class="filter-pill" data-filter="Active">Đang tuyển</button>
+    </div>
+
+    <!-- COURSES -->
+    <section class="courses-section">
+        <div class="section-label">Danh sách khóa học</div>
+        <h2 class="section-heading">Chọn lộ trình phù hợp với bạn</h2>
+
+        <div class="courses-grid" id="coursesGrid">
+            @if (!Model.Any())
+            {
+                var sampleCourses = new[]
+                {
+                        new { Name = "Cầu Lông Cơ Bản", HLV = "HLV Nguyễn Văn A", Level = "Beginner", Weeks = "8 tuần", Schedule = "Thứ 2,4,6 - 18h", Students = "12/15", Price = "2,500,000đ", OldPrice = "", Desc = "Khóa học dành cho người mới..." },
+                        new { Name = "Kỹ Thuật Nâng Cao", HLV = "HLV Trần Thị B", Level = "Advanced", Weeks = "12 tuần", Schedule = "Thứ 3,5,7 - 17h", Students = "8/10", Price = "3,900,000đ", OldPrice = "4,500,000đ", Desc = "Smash, drop shot..." },
+                        new { Name = "Trẻ Em (6–15 tuổi)", HLV = "HLV Lê Văn C", Level = "Beginner", Weeks = "10 tuần", Schedule = "Thứ 7, CN - 8h", Students = "9/12", Price = "1,800,000đ", OldPrice = "2,000,000đ", Desc = "Chương trình vui nhộn..." },
+                        };
+                @foreach (var s in sampleCourses)
+                {
+                    <div class="course-card course-item" data-level="@s.Level" data-status="Active"
+                         onclick="openDetail('@s.Name','@s.HLV','@s.Level','@s.Weeks','@s.Schedule','@s.Students','@s.Price','@s.OldPrice','@s.Desc','','Học các động tác cơ bản\nLuyện tập tại chuyên sân\nNắm vững luật chơi\nCó chứng chỉ hoàn thành')">
+                        <div class="card-thumb">
+                            <div class="thumb-placeholder">
+                                <i class="bi bi-person-arms-up" style="font-size:5rem; color:rgba(255,255,255,.15);"></i>
+                            </div>
+                            <div class="level-chip">@s.Level</div>
+                            <div class="featured-dot"></div>
+                        </div>
+                        <div class="card-body-custom">
+                            <div class="card-instructor"><i class="bi bi-person me-1"></i>@s.HLV</div>
+                            <h3 class="card-title-custom">@s.Name</h3>
+                            <p class="card-desc">@s.Desc</p>
+                            <div class="card-meta">
+                                <div class="meta-item">
+                                    <span class="meta-label">Thời lượng</span>
+                                    <span class="meta-val">@s.Weeks</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Lịch học</span>
+                                    <span class="meta-val" style="font-size:.78rem;">@s.Schedule</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Học viên</span>
+                                    <span class="meta-val">@s.Students</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Trình độ</span>
+                                    <span class="meta-val">@s.Level</span>
+                                </div>
+                            </div>
+                            <div class="card-footer-custom">
+                                <div>
+                                    <div class="price-main">@s.Price</div>
+                                    @if (!string.IsNullOrEmpty(s.OldPrice))
+                                    {
+                                        <div class="price-old">@s.OldPrice</div>
+                                    }
+                                </div>
+                                <button class="enroll-btn" title="Đăng ký">
+                                    <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                @foreach (var c in Model.OrderBy(x => x.DisplayOrder))
+                {
+                    var features = c.Features ?? "";
+                    var price = c.DiscountFee?.ToString("N0") + "đ" ?? c.TuitionFee?.ToString("N0") + "đ" ?? "—";
+                    var oldPrice = c.DiscountFee.HasValue ? c.TuitionFee?.ToString("N0") + "đ" : "";
+                    <div class="course-card course-item" data-level="@c.Level" data-status="@c.Status"
+                         onclick="openDetail('@c.CourseName.Replace("'","\\'")', '@(c.Instructor ?? "")','@c.Level','@(c.DurationWeeks != null ? c.DurationWeeks + " tuần" : "—")','@(c.Schedule ?? "—")','@c.CurrentStudents/@(c.MaxStudents?.ToString() ?? "∞")','@price','@oldPrice','@c.ShortDesc?.Replace("'", "\\'")','@(c.FeaturedImage ?? "")','@features.Replace("\n","\\n").Replace("'","\\'")')">
+                        <div class="card-thumb">
+                            @if (!string.IsNullOrEmpty(c.FeaturedImage))
+                            {
+                                <img src="@c.FeaturedImage" alt="@c.CourseName" />
+                            }
+                            else
+                            {
+                                <div class="thumb-placeholder">
+                                    <i class="bi bi-person-arms-up" style="font-size:5rem;color:rgba(255,255,255,.15);"></i>
+                                </div>
+                            }
+                            <div class="level-chip">@c.Level</div>
+                            @if (c.IsFeatured) { <div class="featured-dot"></div> }
+                        </div>
+                        <div class="card-body-custom">
+                            <div class="card-instructor"><i class="bi bi-person me-1"></i>@c.Instructor</div>
+                            <h3 class="card-title-custom">@c.CourseName</h3>
+                            <p class="card-desc">@c.ShortDesc</p>
+                            <div class="card-meta">
+                                <div class="meta-item">
+                                    <span class="meta-label">Thời lượng</span>
+                                    <span class="meta-val">@(c.DurationWeeks != null ? c.DurationWeeks + " tuần" : "—")</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Lịch học</span>
+                                    <span class="meta-val" style="font-size:.78rem;">@(c.Schedule ?? "—")</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Học viên</span>
+                                    <span class="meta-val">@c.CurrentStudents/@(c.MaxStudents?.ToString() ?? "∞")</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Trình độ</span>
+                                    <span class="meta-val">@c.Level</span>
+                                </div>
+                            </div>
+                            <div class="card-footer-custom">
+                                <div>
+                                    <div class="price-main">@price</div>
+                                    @if (!string.IsNullOrEmpty(oldPrice))
+                                    {
+                                        <div class="price-old">@oldPrice</div>
+                                    }
+                                </div>
+                                <button class="enroll-btn" title="Xem chi tiết">
+                                    <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </section>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)">
+    <div class="detail-panel">
+        <div class="detail-hero">
+            <img id="dImg" src="" alt="" />
+            <button class="detail-close" onclick="closeDetailBtn()"><i class="bi bi-x"></i></button>
+            <div class="detail-hero-info">
+                <div id="dLevel" class="level-chip" style="position:relative;top:0;left:0;display:inline-block;margin-bottom:.75rem;"></div>
+                <h2 id="dName" style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:#fff;margin:0;"></h2>
+                <p id="dInstructor" style="color:rgba(255,255,255,.6);margin-top:.4rem;font-size:.9rem;"></p>
+            </div>
+        </div>
+        <div class="detail-body">
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-item-label"><i class="bi bi-clock me-1"></i>Thời lượng</span>
+                    <span class="detail-item-val" id="dWeeks"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-item-label"><i class="bi bi-calendar3 me-1"></i>Lịch học</span>
+                    <span class="detail-item-val" id="dSchedule" style="font-size:.88rem;"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-item-label"><i class="bi bi-people me-1"></i>Học viên</span>
+                    <span class="detail-item-val" id="dStudents"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-item-label"><i class="bi bi-tag me-1"></i>Học phí</span>
+                    <span class="detail-item-val" id="dPrice" style="color:#5b21b6;"></span>
+                </div>
+            </div>
+            <p id="dDesc" style="color:#64748b;line-height:1.8;margin-bottom:1.5rem;font-weight:300;"></p>
+            <div style="margin-bottom:2rem;">
+                <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:#0d0d14;margin-bottom:1rem;">Nội dung khóa học</div>
+                <ul class="features-list-detail" id="dFeatures"></ul>
+            </div>
+            <div class="detail-cta">
+                <div>
+                    <div style="font-size:.78rem;color:#64748b;margin-bottom:.3rem;">Học phí</div>
+                    <div id="dPriceBig" style="font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:#5b21b6;"></div>
+                </div>
+                <div style="display:flex;gap:.75rem;">
+                    <button class="btn-enroll" onclick="closeDetailBtn()"><i class="bi bi-x"></i> Đóng</button>
+                    <button class="btn-enroll btn-enroll-volt"><i class="bi bi-cart-plus"></i> Đăng ký ngay</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+@section Scripts {
+<script>
+    // Filter
+    document.querySelectorAll('.filter-pill').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const f = this.dataset.filter;
+            document.querySelectorAll('.course-item').forEach(card => {
+                const show = f === 'all' || card.dataset.level === f || card.dataset.status === f;
+                card.style.display = show ? '' : 'none';
+            });
+        });
+    });
+
+    // Detail modal
+    function openDetail(name, hlv, level, weeks, schedule, students, price, oldPrice, desc, img, features) {
+        document.getElementById('dName').textContent = name;
+        document.getElementById('dInstructor').textContent = hlv ? '👤 ' + hlv : '';
+        document.getElementById('dLevel').textContent = level || '';
+        document.getElementById('dWeeks').textContent = weeks;
+        document.getElementById('dSchedule').textContent = schedule;
+        document.getElementById('dStudents').textContent = students;
+        document.getElementById('dPrice').textContent = price;
+        document.getElementById('dPriceBig').textContent = price;
+        document.getElementById('dDesc').textContent = desc || '';
+
+        const imgEl = document.getElementById('dImg');
+        imgEl.src = img || '';
+        imgEl.style.display = img ? '' : 'none';
+
+        const ul = document.getElementById('dFeatures');
+        ul.innerHTML = '';
+        (features || '').split('\n').filter(f => f.trim()).forEach(f => {
+            const li = document.createElement('li');
+            li.innerHTML = `<i class="bi bi-check2 feat-icon"></i>${f.replace(/^[-•]\s*/, '')}`;
+            ul.appendChild(li);
+        });
+
+        document.getElementById('detailOverlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeDetail(e) {
+        if (e.target === document.getElementById('detailOverlay')) closeDetailBtn();
+    }
+    function closeDetailBtn() {
+        document.getElementById('detailOverlay').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetailBtn(); });
+</script>
+}

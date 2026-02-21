@@ -12,10 +12,9 @@ namespace QuanLiSanCauLong.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
-
         }
 
-        // DbSets - 16 bảng (Giữ nguyên)
+        // --- DbSets Cũ (Giữ nguyên) ---
         public DbSet<User> Users { get; set; }
         public DbSet<Facility> Facilities { get; set; }
         public DbSet<Court> Courts { get; set; }
@@ -34,12 +33,70 @@ namespace QuanLiSanCauLong.Data
         public DbSet<SystemSetting> SystemSettings { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<CourtImage> CourtImages { get; set; }
+        public DbSet<FacilityImage> FacilityImages { get; set; }
 
+        // --- DbSets Mới Bổ sung ---
+        public DbSet<BlogPost> BlogPosts { get; set; }
+        public DbSet<BlogCategory> BlogCategories { get; set; }
+        public DbSet<BlogComment> BlogComments { get; set; }
+        public DbSet<JobPosting> JobPostings { get; set; }
+        public DbSet<JobApplication> JobApplications { get; set; }
+        public DbSet<Service> Services { get; set; }
+        public DbSet<ServiceImage> ServiceImages { get; set; }
+        public DbSet<ServiceInquiry> ServiceInquiries { get; set; }
+        public DbSet<ContactMessage> ContactMessages { get; set; }
+
+        // Bổ sung thêm 3 DbSet theo yêu cầu mới nhất
+        public DbSet<Course> Courses { get; set; }
+        public DbSet<StringingService> StringingServices { get; set; }
+        public DbSet<Tournament> Tournaments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
+            // --- Cấu hình Fluent API cho 3 bảng mới (Courses, StringingServices, Tournaments) ---
+
+            // Course
+            modelBuilder.Entity<Course>(entity =>
+            {
+                entity.HasKey(e => e.CourseId);
+                entity.Property(e => e.CourseName).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.TuitionFee).HasPrecision(18, 2); // Sử dụng Precision đồng nhất
+                entity.Property(e => e.DiscountFee).HasPrecision(18, 2);
+                entity.Property(e => e.Status).HasDefaultValue("Active");
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
+            });
+
+            // StringingService
+            modelBuilder.Entity<StringingService>(entity =>
+            {
+                entity.HasKey(e => e.StringingId);
+                entity.Property(e => e.ServiceName).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Price).HasPrecision(18, 2);
+                entity.Property(e => e.Status).HasDefaultValue("Active");
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
+            });
+
+            // Tournament
+            modelBuilder.Entity<Tournament>(entity =>
+            {
+                entity.HasKey(e => e.TournamentId);
+                entity.Property(e => e.TournamentName).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.EntryFee).HasPrecision(18, 2);
+                entity.Property(e => e.PrizeMoney).HasPrecision(18, 2);
+                entity.Property(e => e.Status).HasDefaultValue("Upcoming");
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
+            });
+
+            // --- Cấu hình Precision cho các trường Decimal hệ thống mới ---
+            modelBuilder.Entity<JobPosting>().Property(j => j.SalaryMin).HasPrecision(18, 2);
+            modelBuilder.Entity<JobPosting>().Property(j => j.SalaryMax).HasPrecision(18, 2);
+            modelBuilder.Entity<JobApplication>().Property(a => a.ExpectedSalary).HasPrecision(18, 2);
+            modelBuilder.Entity<Service>().Property(s => s.Price).HasPrecision(18, 2);
+            modelBuilder.Entity<Service>().Property(s => s.DiscountPrice).HasPrecision(18, 2);
+
+            // --- Cấu hình cũ (Giữ nguyên 100%) ---
             modelBuilder.Entity<PriceSlot>().Property(p => p.Price).HasPrecision(10, 2);
             modelBuilder.Entity<Booking>().Property(b => b.CourtPrice).HasPrecision(10, 2);
             modelBuilder.Entity<Booking>().Property(b => b.ServiceFee).HasPrecision(10, 2);
@@ -172,14 +229,17 @@ namespace QuanLiSanCauLong.Data
             modelBuilder.Entity<SystemSetting>()
                 .HasOne(ss => ss.Updater).WithMany().HasForeignKey(ss => ss.UpdatedBy)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<FacilityImage>()
+                .HasOne(fi => fi.Facility)
+                .WithMany(f => f.FacilityImages)
+                .HasForeignKey(fi => fi.FacilityId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
-        // Lưu ý: Phương thức Create() kiểu cũ này thường không dùng trong EF Core 
-        // vì Context được khởi tạo qua Dependency Injection (DI) trong Program.cs.
         public static ApplicationDbContext Create(DbContextOptions<ApplicationDbContext> options)
         {
             return new ApplicationDbContext(options);
         }
-
     }
 }

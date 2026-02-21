@@ -64,6 +64,7 @@ namespace QuanLiSanCauLong.ViewModels
         public bool IsNew { get; set; }
         public decimal? DiscountPercent { get; set; }
         public decimal? DiscountedPrice { get; set; }
+        public decimal? DiscountPrice => DiscountedPrice;
 
         // Logic hiển thị giá
         public string PriceDisplay => Price.ToString("N0") + "đ";

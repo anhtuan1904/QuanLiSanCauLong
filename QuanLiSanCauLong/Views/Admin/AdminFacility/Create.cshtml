@@ -1,101 +1,358 @@
 ﻿@model QuanLiSanCauLong.Models.Facility
+@{
+    Layout = null;
+}
 
-<div class="modal-header border-0 pt-4 px-4 pb-0">
+<div class="modal-header border-0 px-4 pt-4 pb-0">
     <div>
-        <h4 class="fw-bold mb-1">Thêm Cơ Sở Sân Mới</h4>
+        <h5 class="fw-bold mb-1">Thêm Cơ Sở Sân Mới</h5>
         <p class="text-muted small mb-0">Nhập thông tin cơ sở sân cầu lông mới</p>
     </div>
-    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
 </div>
 
-<div class="modal-body p-4">
-    <form asp-action="Create" method="post" enctype="multipart/form-data">
+<div class="modal-body px-4 py-3">
+    <form id="createFacilityForm" asp-action="Create" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
         <div class="row g-3">
+
+            <!-- Tên cơ sở + SĐT -->
             <div class="col-md-7">
-                <label class="form-label fw-bold small text-secondary">Tên Cơ Sở</label>
-                <input asp-for="FacilityName" class="form-control custom-input" placeholder="Nhập tên cơ sở" />
+                <label class="form-label fw-semibold small text-muted">Tên Cơ Sở</label>
+                <input asp-for="FacilityName" class="form-control fi" placeholder="Nhập tên cơ sở" required />
+                <span asp-validation-for="FacilityName" class="text-danger small"></span>
             </div>
             <div class="col-md-5">
-                <label class="form-label fw-bold small text-secondary">Số Điện Thoại</label>
-                <input asp-for="Phone" class="form-control custom-input" placeholder="0123 456 789" />
+                <label class="form-label fw-semibold small text-muted">Số Điện Thoại</label>
+                <input asp-for="Phone" class="form-control fi" placeholder="0123 456 789" />
             </div>
 
+            <!-- Địa chỉ -->
             <div class="col-12">
-                <label class="form-label fw-bold small text-secondary">Địa Chỉ</label>
-                <input asp-for="Address" class="form-control custom-input" placeholder="Nhập địa chỉ đầy đủ" />
+                <label class="form-label fw-semibold small text-muted">Địa Chỉ</label>
+                <input asp-for="Address" class="form-control fi" placeholder="Nhập địa chỉ đầy đủ" />
             </div>
 
+            <!-- Quận / Thành phố -->
             <div class="col-md-6">
-                <label class="form-label fw-bold small text-secondary">Số Lượng Sân</label>
-                <input type="number" name="TotalCourts" class="form-control custom-input" placeholder="6" />
+                <label class="form-label fw-semibold small text-muted">Quận / Huyện</label>
+                <input asp-for="District" class="form-control fi" placeholder="Quận 1" />
             </div>
             <div class="col-md-6">
-                <label class="form-label fw-bold small text-secondary">Giá/Giờ (VNĐ)</label>
-                <input type="text" name="BasePrice" class="form-control custom-input" placeholder="150,000" />
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label fw-bold small text-secondary">Giờ Mở Cửa</label>
-                <div class="input-group">
-                    <input asp-for="OpenTime" type="time" class="form-control custom-input border-end-0" value="06:00" />
-                    <span class="input-group-text bg-light border-start-0 custom-input-icon"><i class="bi bi-clock"></i></span>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label fw-bold small text-secondary">Giờ Đóng Cửa</label>
-                <div class="input-group">
-                    <input asp-for="CloseTime" type="time" class="form-control custom-input border-end-0" value="23:00" />
-                    <span class="input-group-text bg-light border-start-0 custom-input-icon"><i class="bi bi-clock"></i></span>
-                </div>
+                <label class="form-label fw-semibold small text-muted">Thành Phố</label>
+                <input asp-for="City" class="form-control fi" placeholder="TP.HCM" />
             </div>
 
+            <!-- Số sân + Giá -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small text-muted">Số Lượng Sân</label>
+                <input type="number" name="TotalCourts" class="form-control fi" placeholder="6" min="1" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small text-muted">Giá/Giờ (VNĐ)</label>
+                <input type="text" name="BasePrice" class="form-control fi" placeholder="150,000" />
+            </div>
+
+            <!-- Giờ mở / đóng -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small text-muted">Giờ Mở Cửa</label>
+                <input asp-for="OpenTime" type="time" class="form-control fi" value="06:00" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small text-muted">Giờ Đóng Cửa</label>
+                <input asp-for="CloseTime" type="time" class="form-control fi" value="23:00" />
+            </div>
+
+            <!-- Mô tả -->
             <div class="col-12">
-                <label class="form-label fw-bold small text-secondary">Hình Ảnh Cơ Sở</label>
-                <div class="upload-area rounded-3 p-3 text-center border-dashed">
-                    <input type="file" name="ImageFile" class="form-control form-control-sm mb-1" accept="image/*" />
-                    <span class="text-muted smaller">Hỗ trợ JPG, PNG, WEBP</span>
+                <label class="form-label fw-semibold small text-muted">Mô Tả</label>
+                <textarea asp-for="Description" class="form-control fi" rows="2" placeholder="Mô tả ngắn về cơ sở..."></textarea>
+            </div>
+
+            <!-- ===== MULTI-IMAGE SECTION ===== -->
+            <div class="col-12">
+                <label class="form-label fw-semibold small text-muted">Hình Ảnh Cơ Sở</label>
+                <div class="image-upload-area rounded-3 border border-dashed p-3">
+                    <div class="d-flex flex-wrap gap-2 mb-3" id="imagePreviewCreate">
+                        <div class="add-img-btn" onclick="document.getElementById('imgInputCreate').click()">
+                            <i class="bi bi-plus-lg fs-4 text-muted"></i>
+                            <div class="small text-muted mt-1">Thêm ảnh</div>
+                        </div>
+                    </div>
+
+                    <input type="file" id="imgInputCreate" name="FacilityImages" multiple accept="image/*" style="display:none" />
+                    <input type="hidden" name="PrimaryImageIndex" id="mainImageIdxCreate" value="0" />
+
+                    <p class="text-muted mb-0" style="font-size:.8rem;">
+                        <i class="bi bi-info-circle me-1"></i>Nhấn vào ảnh để đặt làm ảnh chính. Hỗ trợ JPG, PNG, WEBP.
+                    </p>
                 </div>
             </div>
+
         </div>
 
-        <div class="d-flex justify-content-end gap-2 mt-4 pt-2">
-            <button type="button" class="btn btn-light px-4 fw-bold text-secondary" data-bs-dismiss="modal">Hủy</button>
-            <button type="submit" class="btn btn-dark px-4 fw-bold rounded-2">Thêm Cơ Sở</button>
+        <!-- Footer buttons -->
+        <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
+            <button type="button" class="btn btn-light px-4 fw-semibold rounded-3" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-dark px-5 fw-semibold rounded-3">
+                <i class="bi bi-plus-circle me-1"></i>Thêm Cơ Sở
+            </button>
         </div>
     </form>
 </div>
 
 <style>
-    /* CSS tinh chỉnh để giống ảnh mẫu 100% */
-    .custom-input {
-        background-color: #f8f9fa !important;
+    .fi {
+        background: #f8f9fa !important;
         border: 1px solid #e9ecef !important;
         border-radius: 8px !important;
-        padding: 0.6rem 1rem;
     }
 
-        .custom-input:focus {
-            background-color: #fff !important;
-            border-color: #000 !important;
+        .fi:focus {
+            background: #fff !important;
+            border-color: #212529 !important;
             box-shadow: none !important;
         }
 
-    .custom-input-icon {
-        border-radius: 0 8px 8px 0 !important;
-        border: 1px solid #e9ecef !important;
-    }
-
     .border-dashed {
-        border: 2px dashed #dee2e6 !important;
-        background-color: #fafafa;
+        border-style: dashed !important;
+        background: #fafafa;
     }
 
-    .btn-dark {
-        background-color: #0d1117;
+    .add-img-btn {
+        width: 90px;
+        height: 90px;
+        border: 2px dashed #ced4da;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: .2s;
     }
 
-    .modal-content {
-        max-width: 650px;
-        margin: auto;
+        .add-img-btn:hover {
+            border-color: #212529;
+            background: #f5f5f5;
+        }
+
+    .img-thumb-wrap {
+        position: relative;
+        width: 90px;
+        height: 90px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid #dee2e6;
+        cursor: pointer;
+        transition: all 0.2s;
     }
+
+        .img-thumb-wrap:hover {
+            border-color: #198754;
+        }
+
+        .img-thumb-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .img-thumb-wrap .main-star {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            background: rgba(255,193,7,.9);
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: .75rem;
+        }
+
+        .img-thumb-wrap.is-main {
+            border-color: #198754 !important;
+            border-width: 3px !important;
+        }
+
+            .img-thumb-wrap.is-main .main-star {
+                display: flex;
+            }
+
+        .img-thumb-wrap .del-btn {
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            background: rgba(220,53,69,.9);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: .75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .img-thumb-wrap .del-btn:hover {
+                background: rgba(220,53,69,1);
+                transform: scale(1.1);
+            }
 </style>
+
+<script>
+    (function() {
+        const input = document.getElementById('imgInputCreate');
+        const previewContainer = document.getElementById('imagePreviewCreate');
+        const mainIdxInput = document.getElementById('mainImageIdxCreate');
+        const form = document.getElementById('createFacilityForm');
+        const addBtn = previewContainer.querySelector('.add-img-btn');
+
+        // Mảng này sẽ lưu các đối tượng { id: number, file: File }
+        let selectedFiles = [];
+
+        if (addBtn) {
+            addBtn.addEventListener('click', () => input.click());
+        }
+
+        input.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+
+            files.forEach((file) => {
+                if (file && file.type.startsWith('image/')) {
+                    // Tạo một ID duy nhất cho mỗi file để quản lý việc xóa
+                    const uniqueId = Date.now() + Math.random();
+                    selectedFiles.push({ id: uniqueId, file: file });
+
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const wrap = createImageThumb(event.target.result, uniqueId);
+                        previewContainer.insertBefore(wrap, addBtn);
+
+                        // Nếu là ảnh đầu tiên thực tế trong danh sách, đặt làm chính
+                        const activeThumbs = previewContainer.querySelectorAll('.img-thumb-wrap');
+                        if (activeThumbs.length === 1) {
+                            setMainImage(wrap);
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Quan trọng: Reset input gốc để có thể chọn lại cùng 1 file vừa chọn
+            input.value = "";
+            updateFileInput();
+        });
+
+        function createImageThumb(src, id) {
+            const wrap = document.createElement('div');
+            wrap.className = 'img-thumb-wrap';
+            wrap.dataset.uid = id;
+            wrap.innerHTML = `
+                <img src="${src}" alt="Preview" />
+                <div class="main-star"><i class="bi bi-star-fill"></i></div>
+                <button type="button" class="del-btn" title="Xóa ảnh"><i class="bi bi-x"></i></button>
+            `;
+
+            wrap.addEventListener('click', function(e) {
+                if (!e.target.closest('.del-btn')) setMainImage(wrap);
+            });
+
+            wrap.querySelector('.del-btn').addEventListener('click', function(e) {
+                e.stopPropagation();
+                removeImage(wrap, id);
+            });
+            return wrap;
+        }
+
+        function setMainImage(wrap) {
+            previewContainer.querySelectorAll('.img-thumb-wrap').forEach(w => w.classList.remove('is-main'));
+            wrap.classList.add('is-main');
+            updateFileInput();
+        }
+
+        function removeImage(wrap, id) {
+            const wasMain = wrap.classList.contains('is-main');
+
+            // Lọc bỏ file khỏi mảng lưu trữ
+            selectedFiles = selectedFiles.filter(item => item.id !== id);
+            wrap.remove();
+
+            if (wasMain) {
+                const nextImg = previewContainer.querySelector('.img-thumb-wrap');
+                if (nextImg) setMainImage(nextImg);
+            }
+            updateFileInput();
+        }
+
+        function updateFileInput() {
+            const dataTransfer = new DataTransfer();
+            let serverIndex = 0;
+            let finalMainIdx = 0;
+
+            // Duyệt qua các thumb đang hiển thị trên giao diện để đảm bảo đúng thứ tự
+            const thumbs = previewContainer.querySelectorAll('.img-thumb-wrap');
+            thumbs.forEach((thumb) => {
+                const uid = parseFloat(thumb.dataset.uid);
+                const fileItem = selectedFiles.find(item => item.id === uid);
+
+                if (fileItem) {
+                    dataTransfer.items.add(fileItem.file);
+                    if (thumb.classList.contains('is-main')) {
+                        finalMainIdx = serverIndex;
+                    }
+                    serverIndex++;
+                }
+            });
+
+            // Cập nhật lại input file thật và input ẩn chứa index ảnh chính
+            input.files = dataTransfer.files;
+            if (mainIdxInput) {
+                mainIdxInput.value = finalMainIdx;
+            }
+        }
+
+        // --- AJAX SUBMIT (GIỮ NGUYÊN) ---
+        if (form) {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                const formData = new FormData(this);
+
+                try {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang lưu...';
+
+                    const response = await fetch(this.action, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const contentType = response.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        throw new Error("Lỗi Server (Không trả về JSON)");
+                    }
+
+                    const result = await response.json();
+                    if (result.success) {
+                        alert(result.message);
+                        window.location.reload();
+                    } else {
+                        alert("Lỗi: " + result.message);
+                    }
+                } catch (error) {
+                    alert("Lỗi hệ thống: " + error.message);
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            });
+        }
+    })();
+</script>

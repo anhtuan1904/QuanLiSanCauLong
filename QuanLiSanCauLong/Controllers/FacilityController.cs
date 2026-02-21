@@ -94,20 +94,21 @@ namespace QuanLiSanCauLong.Controllers
 
         // GET: Facility/Details/5
         [HttpGet]
-        [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            // 1. Sửa câu lệnh truy vấn: Đi xuyên qua Inventories để đến Product
+            // 1. Truy vấn dữ liệu: Loại bỏ logic IsActive nếu bạn muốn Admin vẫn xem được cơ sở bị ẩn
             var facility = await _context.Facilities
                 .Include(f => f.Courts)
                     .ThenInclude(c => c.PriceSlots)
-                .Include(f => f.Inventories) 
+                .Include(f => f.Inventories)
                     .ThenInclude(i => i.Product)
                         .ThenInclude(p => p.Category)
-                .FirstOrDefaultAsync(f => f.FacilityId == id && f.IsActive);
+                .Include(f => f.FacilityImages) // Thêm Include này để lấy đủ ảnh
+                .FirstOrDefaultAsync(f => f.FacilityId == id);
 
             if (facility == null) return NotFound();
 
+            // 2. Map sang ViewModel (Đã xóa Email và Website)
             var model = new FacilityDetailsViewModel
             {
                 FacilityId = facility.FacilityId,
@@ -117,8 +118,13 @@ namespace QuanLiSanCauLong.Controllers
                 District = facility.District,
                 City = facility.City,
                 Phone = facility.Phone,
-                Email = facility.Email,
-                ImageUrls = new List<string> { facility.ImageUrl ?? "/images/default-facility.jpg" },
+                // Đã xóa Email và Website ở đây
+
+                // Lấy danh sách ảnh từ bảng FacilityImages, nếu trống thì dùng ảnh mặc định
+                ImageUrls = facility.FacilityImages.Any()
+                            ? facility.FacilityImages.OrderBy(i => i.DisplayOrder).Select(i => i.ImagePath).ToList()
+                            : new List<string> { facility.ImageUrl ?? "/images/default-facility.jpg" },
+
                 OpenTime = facility.OpenTime,
                 CloseTime = facility.CloseTime,
 
@@ -145,7 +151,6 @@ namespace QuanLiSanCauLong.Controllers
         {
             new FacilityAmenityViewModel { AmenityName = "Bãi đỗ xe", IsAvailable = true, Icon = "fa-car" },
             new FacilityAmenityViewModel { AmenityName = "Wifi", IsAvailable = true, Icon = "fa-wifi" },
-            // 2. Sửa kiểm tra Canteen: Kiểm tra trong danh sách Inventories
             new FacilityAmenityViewModel {
                 AmenityName = "Canteen",
                 IsAvailable = facility.Inventories != null && facility.Inventories.Any(i => i.Quantity > 0),
@@ -154,8 +159,15 @@ namespace QuanLiSanCauLong.Controllers
         }
             };
 
+            // Nếu bạn gọi từ Ajax để hiện Modal, hãy dùng PartialView
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return PartialView("_Details", model);
+            }
+
             return View(model);
-        }        // GET: Facility/GetAvailableCourts
+        }
+        // GET: Facility/GetAvailableCourts
         [HttpGet]
         public async Task<IActionResult> GetAvailableCourts(int facilityId, DateTime date, TimeSpan? startTime)
         {

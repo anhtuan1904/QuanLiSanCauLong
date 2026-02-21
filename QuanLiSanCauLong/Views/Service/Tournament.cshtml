@@ -1,72 +1,657 @@
-﻿@model IEnumerable<QuanLiSanCauLong.ViewModels.ServiceViewModel>
+﻿@model IEnumerable<QuanLiSanCauLong.Models.Tournament>
+@{
+    ViewData["Title"] = "Giải Đấu Nội Bộ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
 
-<div class="container py-5">
-    <div class="text-center mb-5">
-        <h2 class="fw-bold">Giải Đấu Nội Bộ</h2>
-        <p class="text-muted">Sân chơi giao lưu, kết nối cộng đồng lông thủ</p>
-    </div>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <div class="row g-4">
-        @foreach (var item in Model.Where(x => x.Type == "Tournament"))
-        {
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden service-card">
-                    <div class="position-relative">
-                        <img src="@item.ImageUrl" class="card-img-top" style="height: 180px; object-fit: cover; filter: brightness(0.8);">
-                        <div class="position-absolute top-50 start-50 translate-middle text-white text-center w-100">
-                            <i class="bi bi-trophy-fill display-5 shadow-sm"></i>
-                        </div>
+<style>
+    :root {
+        --gold:    #d4a017;
+        --gold2:   #f5c842;
+        --deep:    #1a1209;
+        --cream:   #fdf8f0;
+        --warm:    #f5efe0;
+        --muted:   #8a7560;
+        --border:  #e8ddc8;
+        --success: #16a34a;
+        --ongoing: #0284c7;
+        --upcoming:#7c3aed;
+    }
+    .tournament-page { background: var(--cream); font-family: 'Outfit', sans-serif; color: var(--deep); }
+
+    /* ── HERO ─────────────────────────────────────────── */
+    .tour-hero {
+        background: var(--deep);
+        position: relative;
+        overflow: hidden;
+        padding: 0;
+    }
+    .tour-hero-inner {
+        display: grid;
+        grid-template-columns: 55% 45%;
+        min-height: 88vh;
+    }
+    .hero-content {
+        padding: 6rem 5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        z-index: 2;
+    }
+    .hero-overline {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+    }
+    .hero-overline-line { width: 40px; height: 1px; background: var(--gold); }
+    .hero-overline span {
+        font-size: .72rem;
+        letter-spacing: .22em;
+        text-transform: uppercase;
+        color: var(--gold);
+        font-weight: 500;
+    }
+    .hero-title {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(3rem, 5.5vw, 6rem);
+        font-weight: 900;
+        color: #fff;
+        line-height: 1.0;
+        margin-bottom: 2rem;
+    }
+    .hero-title em { font-style: italic; color: var(--gold2); }
+    .hero-subtitle {
+        color: rgba(255,255,255,.5);
+        font-size: 1rem;
+        font-weight: 300;
+        line-height: 1.8;
+        max-width: 400px;
+        margin-bottom: 3.5rem;
+    }
+    .hero-counts {
+        display: flex;
+        gap: 0;
+        border: 1px solid rgba(255,255,255,.1);
+        width: fit-content;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .hcount-item {
+        padding: 1.2rem 2rem;
+        border-right: 1px solid rgba(255,255,255,.1);
+        text-align: center;
+    }
+    .hcount-item:last-child { border-right: none; }
+    .hcount-n {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--gold2);
+        line-height: 1;
+    }
+    .hcount-l {
+        font-size: .72rem;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,.35);
+        margin-top: .3rem;
+    }
+    .hero-image-panel {
+        position: relative;
+        overflow: hidden;
+    }
+    .hero-image-panel img {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        filter: sepia(20%) contrast(1.1);
+    }
+    .hero-image-panel::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to right, var(--deep) 0%, transparent 30%);
+        z-index: 1;
+    }
+    .trophy-watermark {
+        position: absolute;
+        right: -2rem; bottom: -2rem;
+        font-size: 18rem;
+        opacity: .04;
+        z-index: 0;
+        color: var(--gold);
+        pointer-events: none;
+    }
+
+    /* ── TOURNAMENT CARDS ─────────────────────────────── */
+    .cards-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 6rem 4rem;
+    }
+    .cards-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-bottom: 4rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--border);
+    }
+    .cards-heading {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.8rem;
+        font-weight: 700;
+        line-height: 1.1;
+        color: var(--deep);
+    }
+    .cards-heading span { color: var(--gold); display: block; font-style: italic; }
+    .filter-tabs { display: flex; gap: .5rem; }
+    .ftab {
+        padding: .5rem 1.2rem;
+        border: 1px solid var(--border);
+        background: none;
+        font-size: .78rem;
+        font-weight: 600;
+        cursor: pointer;
+        letter-spacing: .05em;
+        border-radius: 2px;
+        transition: all .2s;
+        color: var(--muted);
+    }
+    .ftab.active { background: var(--deep); color: #fff; border-color: var(--deep); }
+    .ftab:hover:not(.active) { border-color: var(--deep); color: var(--deep); }
+
+    /* ── CARD ─────────────────────────────────────────── */
+    .tour-list { display: flex; flex-direction: column; gap: 1px; background: var(--border); }
+    .tour-card {
+        background: #fff;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: stretch;
+        cursor: pointer;
+        transition: all .3s;
+        overflow: hidden;
+    }
+    .tour-card:hover { transform: translateX(6px); }
+    .tour-card:hover .card-accent { width: 6px; }
+    .card-accent {
+        width: 4px;
+        background: var(--border);
+        flex-shrink: 0;
+        transition: all .3s;
+    }
+    .card-accent.status-Completed { background: var(--success); }
+    .card-accent.status-Ongoing   { background: var(--ongoing); }
+    .card-accent.status-Upcoming  { background: var(--upcoming); }
+    .card-accent.status-Cancelled { background: #dc2626; }
+    .card-main { padding: 2.5rem 3rem; }
+    .card-top-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+    .status-tag {
+        font-size: .68rem;
+        font-weight: 600;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        padding: .3rem .9rem;
+        border-radius: 2px;
+    }
+    .status-tag.Completed { background: #dcfce7; color: var(--success); }
+    .status-tag.Ongoing   { background: #dbeafe; color: var(--ongoing); }
+    .status-tag.Upcoming  { background: #ede9fe; color: var(--upcoming); }
+    .status-tag.Cancelled { background: #fee2e2; color: #dc2626; }
+    .type-tag {
+        font-size: .72rem;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        padding: .2rem .7rem;
+        border-radius: 2px;
+    }
+    .card-name {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: var(--deep);
+        margin-bottom: .6rem;
+        line-height: 1.2;
+    }
+    .card-short { color: var(--muted); font-size: .9rem; font-weight: 300; line-height: 1.7; margin-bottom: 1.5rem; }
+    .card-info-row { display: flex; gap: 2.5rem; flex-wrap: wrap; }
+    .cinfo { display: flex; flex-direction: column; gap: .2rem; }
+    .cinfo-label { font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .cinfo-val { font-size: .9rem; font-weight: 600; color: var(--deep); }
+    .card-right {
+        padding: 2.5rem 2.5rem 2.5rem 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        justify-content: space-between;
+        min-width: 200px;
+    }
+    .prize-box { text-align: right; }
+    .prize-label { font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: .4rem; }
+    .prize-amount {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--gold);
+    }
+    .prize-amount small { font-size: .8rem; }
+    .players-bar {
+        width: 100%;
+        height: 4px;
+        background: var(--warm);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-top: .5rem;
+    }
+    .players-bar-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width 1s; }
+    .players-info { font-size: .78rem; color: var(--muted); margin-top: .5rem; }
+    .btn-view {
+        background: var(--deep);
+        color: #fff;
+        border: none;
+        padding: .7rem 1.5rem;
+        font-size: .78rem;
+        font-weight: 600;
+        letter-spacing: .08em;
+        cursor: pointer;
+        transition: all .25s;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        border-radius: 2px;
+    }
+    .btn-view:hover { background: var(--gold); color: var(--deep); }
+
+    /* ── DETAIL MODAL ─────────────────────────────────── */
+    .tour-overlay {
+        position: fixed; inset: 0;
+        background: rgba(26,18,9,.88);
+        backdrop-filter: blur(10px);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+    .tour-overlay.open { display: flex; }
+    .tour-modal {
+        background: var(--cream);
+        width: 100%;
+        max-width: 820px;
+        max-height: 90vh;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        animation: fadeInScale .4s cubic-bezier(.25,.46,.45,.94);
+    }
+    @@keyframes fadeInScale {
+        from { opacity: 0; transform: scale(.96); }
+        to   { opacity: 1; transform: scale(1); }
+    }
+    .tour-modal-hero {
+        background: var(--deep);
+        padding: 3rem;
+        position: relative;
+        flex-shrink: 0;
+    }
+    .tour-modal-hero img {
+        position: absolute; inset: 0;
+        width: 100%; height: 100%;
+        object-fit: cover;
+        opacity: .25;
+    }
+    .tour-modal-hero-content { position: relative; z-index: 1; }
+    .tour-modal-close {
+        position: absolute;
+        top: 1.5rem; right: 1.5rem;
+        background: rgba(255,255,255,.12);
+        border: none;
+        color: #fff;
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+        transition: background .2s;
+    }
+    .tour-modal-close:hover { background: rgba(255,255,255,.25); }
+    .tour-modal-body {
+        padding: 2.5rem 3rem;
+        overflow-y: auto;
+        flex: 1;
+    }
+    .info-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin-bottom: 2rem; }
+    .info-box {
+        background: var(--warm);
+        padding: 1rem 1.2rem;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+    }
+    .info-box-label { font-size: .65rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: .4rem; }
+    .info-box-val { font-weight: 700; font-size: .95rem; color: var(--deep); }
+    .rules-list { list-style: none; padding: 0; margin: 0 0 2rem; }
+    .rules-list li {
+        display: flex;
+        gap: .75rem;
+        padding: .65rem 0;
+        border-bottom: 1px solid var(--border);
+        font-size: .9rem;
+        color: var(--deep);
+        font-weight: 300;
+    }
+    .rules-list li:last-child { border-bottom: none; }
+    .rule-icon { color: var(--gold); flex-shrink: 0; margin-top: 2px; }
+    .prize-breakdown {
+        background: var(--deep);
+        color: #fff;
+        padding: 1.5rem 2rem;
+        border-radius: 6px;
+        margin-bottom: 2rem;
+        font-size: .9rem;
+    }
+    .prize-breakdown strong { color: var(--gold2); }
+    .modal-footer {
+        padding: 1.5rem 3rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+        background: #fff;
+    }
+    .btn-register {
+        background: var(--gold);
+        color: var(--deep);
+        border: none;
+        padding: .9rem 2.5rem;
+        font-weight: 700;
+        font-size: .85rem;
+        letter-spacing: .08em;
+        cursor: pointer;
+        transition: all .25s;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+    .btn-register:hover { background: var(--gold2); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212,160,23,.4); }
+
+    @@media (max-width: 900px) {
+        .tour-hero-inner { grid-template-columns: 1fr; }
+        .hero-image-panel { display: none; }
+        .hero-content { padding: 5rem 2rem; }
+        .cards-wrapper { padding: 4rem 1.5rem; }
+        .tour-card { grid-template-columns: auto 1fr; }
+        .card-right { display: none; }
+        .info-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @@media (max-width: 600px) {
+        .cards-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+        .card-main { padding: 1.5rem; }
+        .tour-modal-body { padding: 1.5rem; }
+        .info-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="tournament-page">
+
+    <!-- HERO -->
+    <section class="tour-hero">
+        <div class="tour-hero-inner">
+            <div class="hero-content">
+                <div class="hero-overline">
+                    <div class="hero-overline-line"></div>
+                    <span>Internal Tournament</span>
+                </div>
+                <h1 class="hero-title">Giải đấu<br/><em>nội bộ.</em></h1>
+                <p class="hero-subtitle">Sân chơi giao lưu, kết nối cộng đồng lông thủ. Cơ hội thể hiện bản thân và tranh tài cùng những người đam mê cầu lông.</p>
+                <div class="hero-counts">
+                    <div class="hcount-item">
+                        <div class="hcount-n">@Model.Count()</div>
+                        <div class="hcount-l">Giải đấu</div>
                     </div>
-                    <div class="card-body p-4">
-                        <h5 class="fw-bold mb-1">@item.ServiceName</h5>
-                        <div class="d-flex align-items-center gap-2 mb-3">
-                            <i class="bi bi-calendar-event text-primary"></i>
-                            <span class="small text-muted">Thời gian: @item.Duration</span>
-                        </div>
-
-                        <p class="text-secondary small mb-4">@item.Description</p>
-
-                        <div class="d-flex justify-content-between align-items-center border-top pt-3">
-                            <div>
-                                <small class="text-muted d-block">Lệ phí từ:</small>
-                                <span class="text-primary fw-bold fs-5">@item.Price.ToString("N0") VNĐ</span>
-                            </div>
-                            <a href="#" class="btn btn-primary rounded-pill px-4 fw-bold">Tham gia</a>
-                        </div>
+                    <div class="hcount-item">
+                        <div class="hcount-n">@Model.Count(t => t.Status == "Ongoing")</div>
+                        <div class="hcount-l">Đang diễn ra</div>
+                    </div>
+                    <div class="hcount-item">
+                        <div class="hcount-n">@Model.Sum(t => t.CurrentPlayers)</div>
+                        <div class="hcount-l">Vận động viên</div>
                     </div>
                 </div>
             </div>
-        }
+            <div class="hero-image-panel">
+                <img src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&q=80" alt="Tournament" />
+                <div class="trophy-watermark"><i class="bi bi-trophy-fill"></i></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TOURNAMENT LIST -->
+    <section class="cards-wrapper">
+        <div class="cards-header">
+            <div class="cards-heading">
+                Các giải đấu
+                <span>đang diễn ra &amp; sắp tới</span>
+            </div>
+            <div class="filter-tabs">
+                <button class="ftab active" data-filter="all">Tất cả</button>
+                <button class="ftab" data-filter="Ongoing">Đang diễn ra</button>
+                <button class="ftab" data-filter="Upcoming">Sắp diễn ra</button>
+                <button class="ftab" data-filter="Completed">Đã kết thúc</button>
+            </div>
+        </div>
+
+        <div class="tour-list">
+            @if (!Model.Any())
+            {
+                
+                    var samples = new[]
+                    {
+                        new { Name="Giải Đấu Mùa Xuân 2026", Type="Đơn Nam/Nữ", Short="Giải đấu nội bộ chào mừng mùa xuân", Status="Completed", Start="15/03/2026", End="20/03/2026", Venue="Cơ Sở Hoàng Mai", MaxP=32, CurP=32, Fee="200,000đ", Prize="10,000,000đ", PrizeDesc="Giải Nhất: 5.000.000đ | Giải Nhì: 3.000.000đ | Giải Ba: 1.000.000đ x2", Rules="Thi đấu theo thể thức vòng tròn\nMỗi trận 3 séc, thắng 2 séc thắng trận\nMỗi séc 21 điểm, hơn 2 điểm thắng séc" },
+                        new { Name="Giải Đấu Cặp Đôi", Type="Đôi Nam/Nữ/Mix", Short="Giải đấu đôi dành cho các cặp đôi", Status="Ongoing", Start="01/04/2026", End="05/04/2026", Venue="Cơ Sở Tây Hồ", MaxP=24, CurP=18, Fee="300,000đ", Prize="15,000,000đ", PrizeDesc="Giải Nhất: 8.000.000đ | Giải Nhì: 4.000.000đ | Giải Ba: 1.500.000đ x2", Rules="Thi đấu loại trực tiếp từ vòng 1/8\nHạt giống được bốc thăm phân nhánh\nTrang phục thi đấu đúng quy định\nĐến muộn quá 15 phút tính thua" },
+                        new { Name="Giải Vô Địch Q4/2026", Type="Đơn Nam", Short="Giải vô địch lớn nhất trong năm dành cho nam", Status="Upcoming", Start="10/10/2026", End="15/10/2026", Venue="Cơ Sở Đống Đa", MaxP=48, CurP=0, Fee="500,000đ", Prize="30,000,000đ", PrizeDesc="Giải Nhất: 15.000.000đ | Giải Nhì: 8.000.000đ | Giải Ba: 3.500.000đ x2 | Top 8: 1.000.000đ", Rules="Áp dụng luật BWF quốc tế\nThi đấu vòng bảng + loại trực tiếp\nVĐV phải có thẻ hội viên CLB" },
+                    };
+                
+                @foreach (var t in samples)
+                {
+                    var pct = t.MaxP > 0 ? (t.CurP * 100 / t.MaxP) : 0;
+                    <div class="tour-card tour-item" data-status="@t.Status"
+                         onclick="openTourDetail('@t.Name','@t.Type','@t.Short','@t.Status','@t.Start','@t.End','@t.Venue','@t.MaxP','@t.CurP','@t.Fee','@t.Prize','@t.PrizeDesc','@t.Rules.Replace("\n","\\n")')">
+                        <div class="card-accent status-@t.Status"></div>
+                        <div class="card-main">
+                            <div class="card-top-row">
+                                <span class="status-tag @t.Status">
+                                    @(t.Status == "Completed" ? "✓ Đã kết thúc" : t.Status == "Ongoing" ? "● Đang diễn ra" : t.Status == "Upcoming" ? "◎ Sắp diễn ra" : t.Status)
+                                </span>
+                                <span class="type-tag">@t.Type</span>
+                            </div>
+                            <div class="card-name">@t.Name</div>
+                            <div class="card-short">@t.Short</div>
+                            <div class="card-info-row">
+                                <div class="cinfo">
+                                    <span class="cinfo-label">Thời gian</span>
+                                    <span class="cinfo-val">@t.Start – @t.End</span>
+                                </div>
+                                <div class="cinfo">
+                                    <span class="cinfo-label">Địa điểm</span>
+                                    <span class="cinfo-val">@t.Venue</span>
+                                </div>
+                                <div class="cinfo">
+                                    <span class="cinfo-label">VĐV</span>
+                                    <span class="cinfo-val">@t.CurP/@t.MaxP người</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-right">
+                            <div class="prize-box">
+                                <div class="prize-label">Giải thưởng</div>
+                                <div class="prize-amount">@t.Prize</div>
+                                <div class="players-bar"><div class="players-bar-fill" style="width:@pct%"></div></div>
+                                <div class="players-info">@t.CurP/@t.MaxP VĐV đã đăng ký</div>
+                            </div>
+                            <button class="btn-view"><i class="bi bi-arrow-right"></i> Chi tiết</button>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                @foreach (var t in Model.OrderBy(x => x.DisplayOrder))
+                {
+                    var pct = t.MaxPlayers.HasValue && t.MaxPlayers > 0 ? (t.CurrentPlayers * 100 / t.MaxPlayers) : 0;
+                    var rules = (t.Rules ?? "").Replace("\r","").Replace("'","&#39;");
+                    <div class="tour-card tour-item" data-status="@t.Status"
+                         onclick="openTourDetail('@t.TournamentName.Replace("'","&#39;")','@(t.TournamentType??"")','@(t.ShortDesc?.Replace("'","&#39;") ?? "")','@t.Status','@(t.StartDate?.ToString("dd/MM/yyyy") ?? "—")','@(t.EndDate?.ToString("dd/MM/yyyy") ?? "—")','@(t.Venue??"—")','@(t.MaxPlayers ?? 0)','@t.CurrentPlayers','@(t.EntryFee?.ToString("N0") + "đ" ?? "—")','@(t.PrizeMoney?.ToString("N0") + "đ" ?? "—")','@(t.PrizeDescription?.Replace("'","&#39;") ?? "")','@rules.Replace("\n","\\n")')">
+                        <div class="card-accent status-@t.Status"></div>
+                        <div class="card-main">
+                            <div class="card-top-row">
+                                <span class="status-tag @t.Status">@t.StatusLabel</span>
+                                @if (!string.IsNullOrEmpty(t.TournamentType))
+                                {
+                                    <span class="type-tag">@t.TournamentType</span>
+                                }
+                                @if (t.IsFeatured) { <span style="color:var(--gold);font-size:.85rem;">★ Nổi bật</span> }
+                            </div>
+                            <div class="card-name">@t.TournamentName</div>
+                            <div class="card-short">@t.ShortDesc</div>
+                            <div class="card-info-row">
+                                <div class="cinfo">
+                                    <span class="cinfo-label">Thời gian</span>
+                                    <span class="cinfo-val">@(t.StartDate?.ToString("dd/MM") ?? "—") – @(t.EndDate?.ToString("dd/MM/yyyy") ?? "—")</span>
+                                </div>
+                                <div class="cinfo">
+                                    <span class="cinfo-label">Địa điểm</span>
+                                    <span class="cinfo-val">@(t.Venue ?? "—")</span>
+                                </div>
+                                <div class="cinfo">
+                                    <span class="cinfo-label">VĐV</span>
+                                    <span class="cinfo-val">@t.CurrentPlayers/@(t.MaxPlayers?.ToString() ?? "∞") người</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-right">
+                            <div class="prize-box">
+                                <div class="prize-label">Giải thưởng</div>
+                                <div class="prize-amount">@(t.PrizeMoney?.ToString("N0") + "đ" ?? "—")</div>
+                                <div class="players-bar"><div class="players-bar-fill" style="width:@pct%"></div></div>
+                                <div class="players-info">@t.CurrentPlayers/@(t.MaxPlayers?.ToString() ?? "?") VĐV đã đăng ký</div>
+                            </div>
+                            <button class="btn-view"><i class="bi bi-arrow-right"></i> Chi tiết</button>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </section>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="tour-overlay" id="tourOverlay" onclick="closeTourDetail(event)">
+    <div class="tour-modal">
+        <div class="tour-modal-hero">
+            <button class="tour-modal-close" onclick="closeTourDetailBtn()"><i class="bi bi-x"></i></button>
+            <div class="tour-modal-hero-content">
+                <div id="tm-status-tag" class="status-tag" style="margin-bottom:1rem;display:inline-block;"></div>
+                <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;">
+                    <span id="tm-type" style="border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);font-size:.72rem;padding:.2rem .7rem;"></span>
+                </div>
+                <h2 id="tm-name" style="font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:900;color:#fff;margin:0;"></h2>
+                <p id="tm-short" style="color:rgba(255,255,255,.5);margin-top:.6rem;font-weight:300;"></p>
+            </div>
+        </div>
+        <div class="tour-modal-body">
+            <div class="info-grid">
+                <div class="info-box">
+                    <span class="info-box-label"><i class="bi bi-calendar-range me-1"></i>Thời gian</span>
+                    <span class="info-box-val" id="tm-dates"></span>
+                </div>
+                <div class="info-box">
+                    <span class="info-box-label"><i class="bi bi-geo-alt me-1"></i>Địa điểm</span>
+                    <span class="info-box-val" id="tm-venue"></span>
+                </div>
+                <div class="info-box">
+                    <span class="info-box-label"><i class="bi bi-people me-1"></i>VĐV</span>
+                    <span class="info-box-val" id="tm-players"></span>
+                </div>
+                <div class="info-box">
+                    <span class="info-box-label"><i class="bi bi-ticket me-1"></i>Phí đăng ký</span>
+                    <span class="info-box-val" id="tm-fee"></span>
+                </div>
+                <div class="info-box" style="grid-column:span 2;">
+                    <span class="info-box-label"><i class="bi bi-trophy me-1"></i>Cơ cấu giải thưởng</span>
+                    <span class="info-box-val" id="tm-prize-desc" style="font-size:.85rem;font-weight:500;"></span>
+                </div>
+            </div>
+            <div style="font-weight:600;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;">Thể lệ thi đấu</div>
+            <ul class="rules-list" id="tm-rules"></ul>
+        </div>
+        <div class="modal-footer">
+            <div>
+                <div style="font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem;">Tổng giải thưởng</div>
+                <div id="tm-prize" style="font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:var(--gold);"></div>
+            </div>
+            <div style="display:flex;gap:.75rem;">
+                <button style="border:1px solid var(--border);background:none;padding:.8rem 1.5rem;cursor:pointer;border-radius:3px;font-size:.8rem;" onclick="closeTourDetailBtn()">Đóng</button>
+                <button class="btn-register"><i class="bi bi-trophy"></i> Đăng ký tham gia</button>
+            </div>
+        </div>
     </div>
 </div>
 
-<style>
-    .service-card {
-        transition: all 0.3s ease;
-        border: 1px solid #f1f5f9 !important;
+@section Scripts {
+<script>
+    // Filter
+    document.querySelectorAll('.ftab').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const f = this.dataset.filter;
+            document.querySelectorAll('.tour-item').forEach(card => {
+                card.style.display = (f === 'all' || card.dataset.status === f) ? '' : 'none';
+            });
+        });
+    });
+
+    // Detail modal
+    function openTourDetail(name,type,shortDesc,status,start,end,venue,maxP,curP,fee,prize,prizeDesc,rules) {
+        document.getElementById('tm-name').textContent = name;
+        document.getElementById('tm-type').textContent = type;
+        document.getElementById('tm-short').textContent = shortDesc;
+        document.getElementById('tm-dates').textContent = start + ' – ' + end;
+        document.getElementById('tm-venue').textContent = venue;
+        document.getElementById('tm-players').textContent = curP + '/' + maxP + ' người';
+        document.getElementById('tm-fee').textContent = fee;
+        document.getElementById('tm-prize').textContent = prize;
+        document.getElementById('tm-prize-desc').textContent = prizeDesc;
+        const stEl = document.getElementById('tm-status-tag');
+        const labels = { Completed:'✓ Đã kết thúc', Ongoing:'● Đang diễn ra', Upcoming:'◎ Sắp diễn ra', Cancelled:'✕ Đã hủy' };
+        stEl.textContent = labels[status] || status;
+        stEl.className = 'status-tag ' + status;
+        const ul = document.getElementById('tm-rules');
+        ul.innerHTML = '';
+        (rules||'').split('\n').filter(r=>r.trim()).forEach(r=>{
+            const li = document.createElement('li');
+            li.innerHTML = `<i class="bi bi-check-circle rule-icon"></i>${r.replace(/^[-•]\s*/,'')}`;
+            ul.appendChild(li);
+        });
+        document.getElementById('tourOverlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
     }
-
-        .service-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(108, 51, 242, 0.1) !important;
-            border-color: #6c33f2 !important;
-        }
-
-    .btn-primary {
-        background-color: #6c33f2;
-        border-color: #6c33f2;
-    }
-
-        .btn-primary:hover {
-            background-color: #5621d6;
-            border-color: #5621d6;
-        }
-
-    .text-primary {
-        color: #6c33f2 !important;
-    }
-
-    .bg-primary-subtle {
-        background-color: #f0ebff !important;
-    }
-</style>
+    function closeTourDetail(e) { if(e.target===document.getElementById('tourOverlay')) closeTourDetailBtn(); }
+    function closeTourDetailBtn() { document.getElementById('tourOverlay').classList.remove('open'); document.body.style.overflow=''; }
+    document.addEventListener('keydown', e => { if(e.key==='Escape') closeTourDetailBtn(); });
+</script>
+}
