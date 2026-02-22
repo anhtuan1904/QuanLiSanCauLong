@@ -4,7 +4,6 @@
 }
 
 <div class="blog-detail-container">
-    <!-- Breadcrumb -->
     <div class="container py-3">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
@@ -18,7 +17,6 @@
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-10">
-                <!-- Post Header -->
                 <article class="post-article">
                     <div class="post-meta mb-4">
                         <span class="badge bg-purple-soft text-purple rounded-pill px-4 py-2 me-2">
@@ -39,7 +37,6 @@
                         <p class="lead text-muted mb-4" style="font-size: 1.15rem; line-height: 1.8;">@Model.Excerpt</p>
                     }
 
-                    <!-- Author Info -->
                     <div class="author-box d-flex align-items-center p-4 rounded-4 bg-light mb-5">
                         <div class="author-avatar me-3">
                             <div class="rounded-circle bg-gradient-purple d-flex align-items-center justify-content-center"
@@ -50,7 +47,7 @@
                         <div class="flex-grow-1">
                             <div class="fw-bold fs-5">@Model.AuthorId</div>
                             <div class="text-muted small">
-                                <i class="bi bi-calendar3 me-1"></i>Đăng ngày @Model.PublishedAt?.ToString("dd/MM/yyyy") ?? @Model.CreatedAt.ToString("dd/MM/yyyy")
+                                <i class="bi bi-calendar3 me-1"></i>Đăng ngày @(Model.PublishedAt?.ToString("dd/MM/yyyy") ?? Model.CreatedAt.ToString("dd/MM/yyyy"))
                                 <span class="mx-2">•</span>
                                 <i class="bi bi-eye me-1"></i>@Model.ViewCount.ToString("N0") lượt xem
                             </div>
@@ -66,7 +63,6 @@
                         }
                     </div>
 
-                    <!-- Featured Image -->
                     @if (!string.IsNullOrEmpty(Model.FeaturedImage))
                     {
                         <div class="featured-image mb-5">
@@ -75,12 +71,10 @@
                         </div>
                     }
 
-                    <!-- Post Content -->
                     <div class="post-content fs-5" style="line-height: 1.9; color: #2d3748;">
                         @Html.Raw(Model.Content)
                     </div>
 
-                    <!-- Tags -->
                     @if (!string.IsNullOrEmpty(Model.Tags))
                     {
                         <div class="post-tags mt-5 pt-4 border-top">
@@ -96,7 +90,6 @@
                         </div>
                     }
 
-                    <!-- Share Buttons -->
                     <div class="share-section mt-5 pt-4 border-top">
                         <h6 class="fw-bold mb-3">Chia sẻ bài viết:</h6>
                         <div class="d-flex gap-2">
@@ -115,7 +108,17 @@
                         </div>
                     </div>
 
-                    <!-- Back Button -->
+                    <hr class="my-5" />
+
+                    <div id="reviewSection" class="mt-5">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-purple" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Đang tải đánh giá và bình luận...</p>
+                        </div>
+                    </div>
+
                     <div class="text-center mt-5 pt-4">
                         <a asp-action="Index" class="btn btn-purple btn-lg rounded-pill px-5 shadow-sm">
                             <i class="bi bi-arrow-left me-2"></i>Quay lại danh sách
@@ -208,12 +211,11 @@
 
         .post-content blockquote {
             border-left: 4px solid #6c33f2;
-            padding-left: 1.5rem;
+            padding: 1.5rem;
             margin: 2rem 0;
             font-style: italic;
             color: #4a5568;
             background: #f7fafc;
-            padding: 1.5rem;
             border-radius: 0.5rem;
         }
 
@@ -234,5 +236,22 @@
                 alert('Đã copy link bài viết!');
             });
         }
+
+        $(document).ready(function () {
+            // Sửa từ BlogId thành PostId theo Model BlogPost
+            const postId = '@Model.PostId';
+
+            $.ajax({
+                url: '/BlogReview/Index',
+                type: 'GET',
+                data: { blogId: postId }, // Vẫn giữ tên tham số blogId nếu Controller yêu cầu vậy
+                success: function (data) {
+                    $('#reviewSection').html(data);
+                },
+                error: function () {
+                    $('#reviewSection').html('<p class="text-danger">Không thể tải phần đánh giá lúc này.</p>');
+                }
+            });
+        });
     </script>
 }

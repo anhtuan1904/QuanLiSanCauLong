@@ -1,303 +1,737 @@
 ﻿@model QuanLiSanCauLong.ViewModels.AdminDashboardViewModel
-
 @{
     ViewData["Title"] = "Dashboard";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="container-fluid px-4 py-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold mb-0">Dashboard</h3>
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #fdf8f0;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+        --success: #16a34a;
+        --blue: #0284c7;
+    }
+
+    /* KPI CARDS */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .kpi-card {
+        background: #fff;
+        padding: 1.75rem 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: .75rem;
+        position: relative;
+        overflow: hidden;
+        transition: background .25s;
+    }
+
+        .kpi-card:hover {
+            background: var(--cream);
+        }
+
+        .kpi-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            width: 0;
+            background: var(--gold);
+            transition: width .4s;
+        }
+
+        .kpi-card:hover::after {
+            width: 100%;
+        }
+
+    .kpi-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+    }
+
+    .kpi-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+
+        .kpi-icon.gold {
+            background: rgba(212,160,23,.12);
+            color: var(--gold);
+        }
+
+        .kpi-icon.green {
+            background: rgba(22,163,74,.1);
+            color: var(--success);
+        }
+
+        .kpi-icon.blue {
+            background: rgba(2,132,199,.1);
+            color: var(--blue);
+        }
+
+        .kpi-icon.rust {
+            background: rgba(201,75,42,.1);
+            color: #c94b2a;
+        }
+
+    .kpi-change {
+        font-size: .72rem;
+        font-weight: 700;
+        padding: .25rem .65rem;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+        .kpi-change.up {
+            background: rgba(22,163,74,.1);
+            color: var(--success);
+        }
+
+        .kpi-change.down {
+            background: rgba(201,75,42,.1);
+            color: #c94b2a;
+        }
+
+    .kpi-value {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--deep);
+        line-height: 1;
+        letter-spacing: -.01em;
+    }
+
+    .kpi-label {
+        font-size: .78rem;
+        color: var(--muted);
+        letter-spacing: .05em;
+        font-weight: 400;
+    }
+
+    /* SECTION TITLE */
+    .sec-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        font-style: italic;
+        color: var(--deep);
+        margin: 0;
+    }
+
+    .sec-sub {
+        font-size: .75rem;
+        color: var(--muted);
+        margin-top: .2rem;
+    }
+
+    /* CHART CARDS */
+    .chart-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .chart-card-head {
+        padding: 1.2rem 1.6rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+    }
+
+    .chart-card-body {
+        padding: 1.5rem;
+    }
+
+    /* CHART LEGEND */
+    .chart-legend {
+        display: flex;
+        gap: 1.25rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+
+    .cl-item {
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+        font-size: .78rem;
+        color: var(--muted);
+    }
+
+    .cl-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+
+    /* TABLE */
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .admin-table th {
+            background: var(--warm);
+            padding: .75rem 1rem;
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .admin-table td {
+            padding: .9rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: .875rem;
+            vertical-align: middle;
+            color: var(--deep);
+        }
+
+        .admin-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .admin-table tr:hover td {
+            background: var(--cream);
+        }
+
+    /* STATUS PILLS */
+    .spill {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        font-size: .68rem;
+        font-weight: 700;
+        padding: .3rem .7rem;
+        border-radius: 3px;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+        .spill.done {
+            background: rgba(22,163,74,.1);
+            color: var(--success);
+        }
+
+        .spill.pend {
+            background: rgba(212,160,23,.15);
+            color: #92660a;
+        }
+
+        .spill.proc {
+            background: rgba(2,132,199,.1);
+            color: var(--blue);
+        }
+
+        .spill.cancel {
+            background: rgba(201,75,42,.1);
+            color: #c94b2a;
+        }
+
+        .spill::before {
+            content: '●';
+            font-size: .55em;
+        }
+
+    /* TOP PRODUCTS */
+    .prod-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: .9rem 1.2rem;
+        border-bottom: 1px solid var(--border);
+        transition: background .2s;
+    }
+
+        .prod-row:last-child {
+            border-bottom: none;
+        }
+
+        .prod-row:hover {
+            background: var(--cream);
+        }
+
+    .prod-rank {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--gold);
+        width: 28px;
+        text-align: center;
+        flex-shrink: 0;
+    }
+
+    .prod-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .prod-name-t {
+        font-weight: 600;
+        font-size: .88rem;
+        color: var(--deep);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .prod-sold {
+        font-size: .73rem;
+        color: var(--muted);
+    }
+
+    .prod-rev {
+        font-family: 'Playfair Display', serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--gold);
+    }
+
+    /* MINI STATS */
+    .mini-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .mini-card {
+        background: var(--deep);
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .mini-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gold), var(--gold2));
+        }
+
+    .mini-icon {
+        font-size: 1.8rem;
+        margin-bottom: .75rem;
+        opacity: .6;
+        color: var(--gold2);
+    }
+
+    .mini-n {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1;
+    }
+
+    .mini-l {
+        font-size: .72rem;
+        color: rgba(255,255,255,.4);
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        margin-top: .4rem;
+    }
+
+    /* REVIEW SNAPSHOT */
+    .review-snap {
+        background: var(--warm);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .review-big-score {
+        font-family: 'Playfair Display', serif;
+        font-size: 4rem;
+        font-weight: 700;
+        color: var(--gold);
+        line-height: 1;
+        flex-shrink: 0;
+    }
+
+    .star-row {
+        display: flex;
+        gap: .2rem;
+        color: var(--gold);
+        font-size: 1.1rem;
+    }
+
+    .review-bars {
+        flex: 1;
+    }
+
+    .rbar-row {
+        display: flex;
+        align-items: center;
+        gap .75rem;
+        margin-bottom: .4rem;
+    }
+
+    .rbar-label {
+        font-size: .75rem;
+        color: var(--muted);
+        width: 16px;
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .rbar-track {
+        flex: 1;
+        height: 6px;
+        background: var(--border);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .rbar-fill {
+        height: 100%;
+        background: var(--gold);
+        border-radius: 3px;
+    }
+
+    .rbar-count {
+        font-size: .72rem;
+        color: var(--muted);
+        width: 28px;
+        flex-shrink: 0;
+    }
+
+    .review-total {
+        font-size: .78rem;
+        color: var(--muted);
+        margin-top: .4rem;
+    }
+
+    @@media (max-width: 1100px) {
+        .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .mini-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @@media (max-width: 640px) {
+        .kpi-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .mini-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .review-snap {
+            flex-direction: column;
+            gap: 1rem;
+        }
+    }
+</style>
+
+<div style="max-width:1400px;">
+
+    <!-- KPI ROW -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-top">
+                <div class="kpi-icon gold"><i class="bi bi-currency-dollar"></i></div>
+                <span class="kpi-change up"><i class="bi bi-arrow-up-short"></i>+12.5%</span>
+            </div>
+            <div class="kpi-value">₫@Model.TotalRevenue.ToString("N0")</div>
+            <div class="kpi-label">Tổng Doanh Thu</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-top">
+                <div class="kpi-icon green"><i class="bi bi-calendar-check"></i></div>
+                <span class="kpi-change up"><i class="bi bi-arrow-up-short"></i>+8.2%</span>
+            </div>
+            <div class="kpi-value">@Model.TotalBookings</div>
+            <div class="kpi-label">Đơn Đặt Sân Hôm Nay</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-top">
+                <div class="kpi-icon blue"><i class="bi bi-people"></i></div>
+                <span class="kpi-change up"><i class="bi bi-arrow-up-short"></i>+15.3%</span>
+            </div>
+            <div class="kpi-value">@Model.TotalCustomers</div>
+            <div class="kpi-label">Khách Hàng Mới</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-top">
+                <div class="kpi-icon rust"><i class="bi bi-graph-up-arrow"></i></div>
+                <span class="kpi-change up"><i class="bi bi-arrow-up-short"></i>+4.1%</span>
+            </div>
+            <div class="kpi-value">87%</div>
+            <div class="kpi-label">Tỷ Lệ Sử Dụng Sân</div>
+        </div>
     </div>
 
-    <!-- KPI Cards Row 1 -->
-    <div class="row g-3 mb-4">
-        <!-- Total Revenue -->
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="icon-box bg-success-subtle rounded-3 p-3">
-                            <i class="bi bi-currency-dollar text-success fs-4"></i>
-                        </div>
-                        <span class="badge bg-success-subtle text-success">+12.5%</span>
-                    </div>
-                    <h2 class="fw-bold mb-1">₫@Model.TotalRevenue.ToString("N0")</h2>
-                    <p class="text-muted mb-0 small">Tổng Doanh Thu</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Today Orders -->
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="icon-box bg-primary-subtle rounded-3 p-3">
-                            <i class="bi bi-bag-check text-primary fs-4"></i>
-                        </div>
-                        <span class="badge bg-primary-subtle text-primary">+8.2%</span>
-                    </div>
-                    <h2 class="fw-bold mb-1">@Model.TotalBookings</h2>
-                    <p class="text-muted mb-0 small">Đơn Hàng Hôm Nay</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- New Customers -->
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="icon-box bg-pink-subtle rounded-3 p-3">
-                            <i class="bi bi-people text-pink fs-4"></i>
-                        </div>
-                        <span class="badge bg-pink-subtle text-pink">+15.3%</span>
-                    </div>
-                    <h2 class="fw-bold mb-1">@Model.TotalCustomers</h2>
-                    <p class="text-muted mb-0 small">Khách Hàng Mới</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Court Usage Rate -->
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="icon-box bg-warning-subtle rounded-3 p-3">
-                            <i class="bi bi-graph-up-arrow text-warning fs-4"></i>
-                        </div>
-                        <span class="badge bg-warning-subtle text-warning">+4.1%</span>
-                    </div>
-                    <h2 class="fw-bold mb-1">87%</h2>
-                    <p class="text-muted mb-0 small">Tỷ Lệ Sử Dụng Sân</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts Row -->
+    <!-- CHARTS ROW -->
     <div class="row g-4 mb-4">
-        <!-- Revenue Chart -->
+        <!-- Revenue Line -->
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="fw-bold mb-1">Doanh Thu & Đơn Hàng</h5>
-                    <p class="text-muted small mb-0">Thống kê theo tháng</p>
-                </div>
-                <div class="card-body">
-                    <canvas id="revenueChart" height="280"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Court Usage Chart -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="fw-bold mb-1">Tỷ Lệ Sử Dụng Sân</h5>
-                    <p class="text-muted small mb-0">Số giờ sử dụng trong tháng</p>
-                </div>
-                <div class="card-body">
-                    <canvas id="courtUsageChart" height="280"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Time Slots & Revenue Breakdown Row -->
-    <div class="row g-4 mb-4">
-        <!-- Popular Time Slots -->
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="fw-bold mb-1">Đặt Sân Theo Khung Giờ</h5>
-                    <p class="text-muted small mb-0">Phân bố lượt đặt trong ngày</p>
-                </div>
-                <div class="card-body">
-                    <canvas id="timeSlotsChart" height="280"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Revenue by Category -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="fw-bold mb-1">Doanh Số Theo Danh Mục</h5>
-                    <p class="text-muted small mb-0">Phần trăm đóng góp doanh thu</p>
-                </div>
-                <div class="card-body">
-                    <canvas id="categoryChart" height="280"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Orders & Top Products -->
-    <div class="row g-4 mb-4">
-        <!-- Recent Orders -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="fw-bold mb-1">Đơn Hàng Gần Đây</h5>
-                    <p class="text-muted small mb-0">Các đơn hàng mới nhất</p>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <tbody>
-                                <tr>
-                                    <td class="border-0 py-3">
-                                        <div class="d-flex align-items-center">
-                                            <span class="badge bg-success me-3">#ORD-2001</span>
-                                            <div>
-                                                <div class="fw-semibold">Nguyễn Văn A</div>
-                                                <small class="text-muted">Vợt Yonex Astrox 99</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="border-0 py-3 text-end">
-                                        <div class="fw-bold text-success">₫3,500,000</div>
-                                        <span class="badge bg-success-subtle text-success">Hoàn Thành</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="border-0 py-3">
-                                        <div class="d-flex align-items-center">
-                                            <span class="badge bg-warning me-3">#ORD-2002</span>
-                                            <div>
-                                                <div class="fw-semibold">Trần Thị B</div>
-                                                <small class="text-muted">Giày Victor P9200</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="border-0 py-3 text-end">
-                                        <div class="fw-bold text-success">₫2,800,000</div>
-                                        <span class="badge bg-warning-subtle text-warning">Chờ Xử Lý</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="border-0 py-3">
-                                        <div class="d-flex align-items-center">
-                                            <span class="badge bg-success me-3">#ORD-2003</span>
-                                            <div>
-                                                <div class="fw-semibold">Lê Văn C</div>
-                                                <small class="text-muted">Đặt Sân 2 - 18h</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="border-0 py-3 text-end">
-                                        <div class="fw-bold text-success">₫150,000</div>
-                                        <span class="badge bg-success-subtle text-success">Hoàn Thành</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="border-0 py-3">
-                                        <div class="d-flex align-items-center">
-                                            <span class="badge bg-primary me-3">#ORD-2004</span>
-                                            <div>
-                                                <div class="fw-semibold">Phạm Thị D</div>
-                                                <small class="text-muted">Combo 10 buổi</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="border-0 py-3 text-end">
-                                        <div class="fw-bold text-success">₫1,200,000</div>
-                                        <span class="badge bg-primary-subtle text-primary">Đang Xử Lý</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+            <div class="chart-card">
+                <div class="chart-card-head">
+                    <div>
+                        <div class="sec-title">Doanh Thu Theo Tháng</div>
+                        <div class="sec-sub">8 tháng gần nhất</div>
+                    </div>
+                    <div class="chart-legend">
+                        <div class="cl-item"><div class="cl-dot" style="background:var(--gold);"></div>Doanh thu</div>
+                        <div class="cl-item"><div class="cl-dot" style="background:var(--deep);"></div>Đơn hàng</div>
                     </div>
                 </div>
+                <div class="chart-card-body">
+                    <canvas id="revenueChart" height="240"></canvas>
+                </div>
             </div>
         </div>
-
-        <!-- Top Products -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="fw-bold mb-1">Sản Phẩm Bán Chạy</h5>
-                    <p class="text-muted small mb-0">Top sản phẩm theo doanh thu</p>
+        <!-- Court Usage -->
+        <div class="col-lg-4">
+            <div class="chart-card" style="height:100%;">
+                <div class="chart-card-head">
+                    <div>
+                        <div class="sec-title">Sử Dụng Sân</div>
+                        <div class="sec-sub">Số giờ trong tháng</div>
+                    </div>
                 </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        @if (Model.TopProducts != null && Model.TopProducts.Any())
-                        {
-                            var rank = 1;
-                            foreach (var product in Model.TopProducts.Take(4))
-                            {
-                                <div class="list-group-item border-0 py-3">
-                                    <div class="d-flex align-items-center">
-                                        <div class="rank-badge me-3">
-                                            <span class="badge rounded-circle bg-success text-white" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">@rank</span>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <div class="fw-semibold">@product.ProductName</div>
-                                            <small class="text-muted">@product.QuantitySold sản phẩm đã bán</small>
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="fw-bold text-success">₫@product.Revenue.ToString("N0")</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                rank++;
+                <div class="chart-card-body">
+                    <canvas id="courtChart" height="240"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ORDERS + PRODUCTS -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="chart-card">
+                <div class="chart-card-head">
+                    <div>
+                        <div class="sec-title">Đơn Hàng Gần Đây</div>
+                        <div class="sec-sub">Cập nhật mới nhất</div>
+                    </div>
+                    <a asp-controller="AdminOrder" asp-action="Index" class="dark-btn" style="font-size:.75rem;padding:.4rem 1rem;">Xem tất cả <i class="bi bi-arrow-right"></i></a>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Đơn hàng</th>
+                            <th>Khách hàng</th>
+                            <th>Giá trị</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span style="font-weight:700;color:var(--gold);font-size:.8rem;">#ORD-2001</span><br /><span style="font-size:.75rem;color:var(--muted);">Vợt Yonex Astrox 99</span></td>
+                            <td>Nguyễn Văn A</td>
+                            <td style="font-family:'Playfair Display',serif;font-weight:700;">₫3,500,000</td>
+                            <td><span class="spill done">Hoàn thành</span></td>
+                        </tr>
+                        <tr>
+                            <td><span style="font-weight:700;color:var(--gold);font-size:.8rem;">#ORD-2002</span><br /><span style="font-size:.75rem;color:var(--muted);">Giày Victor P9200</span></td>
+                            <td>Trần Thị B</td>
+                            <td style="font-family:'Playfair Display',serif;font-weight:700;">₫2,800,000</td>
+                            <td><span class="spill pend">Chờ xử lý</span></td>
+                        </tr>
+                        <tr>
+                            <td><span style="font-weight:700;color:var(--gold);font-size:.8rem;">#ORD-2003</span><br /><span style="font-size:.75rem;color:var(--muted);">Đặt Sân 2 - 18h</span></td>
+                            <td>Lê Văn C</td>
+                            <td style="font-family:'Playfair Display',serif;font-weight:700;">₫150,000</td>
+                            <td><span class="spill done">Hoàn thành</span></td>
+                        </tr>
+                        <tr>
+                            <td><span style="font-weight:700;color:var(--gold);font-size:.8rem;">#ORD-2004</span><br /><span style="font-size:.75rem;color:var(--muted);">Combo 10 buổi</span></td>
+                            <td>Phạm Thị D</td>
+                            <td style="font-family:'Playfair Display',serif;font-weight:700;">₫1,200,000</td>
+                            <td><span class="spill proc">Đang xử lý</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="chart-card" style="height:100%;">
+                <div class="chart-card-head">
+                    <div>
+                        <div class="sec-title">Sản Phẩm Bán Chạy</div>
+                        <div class="sec-sub">Top theo doanh thu</div>
+                    </div>
+                </div>
+                @if (Model.TopProducts != null && Model.TopProducts.Any())
+                {
+                    var rank = 1;
+                    @foreach (var p in Model.TopProducts.Take(5))
+                    {
+                        <div class="prod-row">
+                            <div class="prod-rank">@rank</div>
+                            <div class="prod-info">
+                                <div class="prod-name-t">@p.ProductName</div>
+                                <div class="prod-sold">@p.QuantitySold sản phẩm đã bán</div>
+                            </div>
+                            <div class="prod-rev">₫@p.Revenue.ToString("N0")</div>
+                        </div>
+                        rank++;
+                    }
+                }
+                <!-- Time slots chart -->
+                <div style="padding:1.2rem 1.6rem;border-top:1px solid var(--border);">
+                    <div class="sec-title" style="font-size:.9rem;margin-bottom:1rem;">Khung Giờ Phổ Biến</div>
+                    <canvas id="timeChart" height="120"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- REVIEW SNAPSHOT + CATEGORY PIE -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-5">
+            <div class="chart-card">
+                <div class="chart-card-head">
+                    <div>
+                        <div class="sec-title">Tổng Quan Đánh Giá</div>
+                        <div class="sec-sub">Tất cả cơ sở &amp; sân</div>
+                    </div>
+                    <a asp-controller="AdminReview" asp-action="Index" class="gold-btn" style="font-size:.75rem;padding:.4rem 1rem;">
+                        <i class="bi bi-star"></i> Xem đánh giá
+                    </a>
+                </div>
+                <div class="chart-card-body">
+                    <div class="review-snap">
+                        <div style="text-align:center;flex-shrink:0;">
+                            <div class="review-big-score">4.8</div>
+                            <div class="star-row">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-half"></i>
+                            </div>
+                            <div class="review-total" style="margin-top:.5rem;">248 đánh giá</div>
+                        </div>
+                        <div class="review-bars" style="width:100%;">
+                            @{
+                                var bars = new[] { (5, 72, 180), (4, 18, 45), (3, 6, 15), (2, 3, 6), (1, 1, 2) };
                             }
-                        }
+                            @foreach (var (star, pct, cnt) in bars)
+                            {
+                                <div class="rbar-row" style="display:flex;align-items:center;gap:.6rem;margin-bottom:.4rem;">
+                                    <span class="rbar-label" style="font-size:.72rem;color:var(--muted);width:12px;">@star</span>
+                                    <i class="bi bi-star-fill" style="font-size:.65rem;color:var(--gold);"></i>
+                                    <div class="rbar-track" style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+                                        <div class="rbar-fill" style="width:@pct%;height:100%;background:var(--gold);border-radius:3px;"></div>
+                                    </div>
+                                    <span class="rbar-count" style="font-size:.72rem;color:var(--muted);width:28px;">@cnt</span>
+                                </div>
+                            }
+                        </div>
                     </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="chart-card" style="height:100%;">
+                <div class="chart-card-head">
+                    <div>
+                        <div class="sec-title">Doanh Số Danh Mục</div>
+                        <div class="sec-sub">% đóng góp doanh thu</div>
+                    </div>
+                </div>
+                <div class="chart-card-body">
+                    <canvas id="catChart" height="230"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="chart-card" style="height:100%;">
+                <div class="chart-card-head">
+                    <div class="sec-title">Nhanh</div>
+                </div>
+                <div style="padding:1.2rem;">
+                    @{
+                        var quickLinks = new[] {
+                                        ("Thêm cơ sở sân",  "AdminFacility",  "Create", "bi-plus-circle", "gold"),
+                                        ("Thêm sản phẩm",   "AdminProduct",   "Create", "bi-box-seam",    "gold"),
+                                        ("Xem đặt sân",     "AdminBooking",   "Index",  "bi-calendar",    "gold"),
+                                        ("Quản lý đánh giá","AdminReview",    "Index",  "bi-star",        "gold"),
+                                        ("Tạo voucher",     "AdminVoucher",   "Create", "bi-ticket",      "gold"),
+                                        ("Báo cáo doanh thu","AdminReport",   "Revenue","bi-graph-up",    "gold"),
+                                        };
+                    }
+                    @foreach (var (label, ctrl, action, icon, _) in quickLinks)
+                    {
+                        <a asp-controller="@ctrl" asp-action="@action"
+                           style="display:flex;align-items:center;gap:.75rem;padding:.75rem .5rem;border-bottom:1px solid var(--border);text-decoration:none;color:var(--deep);font-size:.85rem;transition:all .2s;"
+                           onmouseover="this.style.color='var(--gold)';this.style.paddingLeft='1rem'"
+                           onmouseout="this.style.color='var(--deep)';this.style.paddingLeft='.5rem'">
+                            <i class="bi @icon" style="color:var(--gold);"></i>
+                            @label
+                            <i class="bi bi-arrow-right ms-auto" style="font-size:.7rem;opacity:.4;"></i>
+                        </a>
+                    }
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Stats Row -->
-    <div class="row g-3">
-        <div class="col-lg-3 col-md-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center py-4">
-                    <div class="icon-box-large bg-primary-subtle rounded-3 p-3 d-inline-flex mb-3">
-                        <i class="bi bi-building text-primary fs-3"></i>
-                    </div>
-                    <h3 class="fw-bold mb-1">6</h3>
-                    <p class="text-muted mb-0 small">Cơ Sở Sân</p>
-                </div>
-            </div>
+    <!-- MINI STATS -->
+    <div class="mini-grid">
+        <div class="mini-card">
+            <div class="mini-icon"><i class="bi bi-building"></i></div>
+            <div class="mini-n">6</div>
+            <div class="mini-l">Cơ Sở Sân</div>
         </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center py-4">
-                    <div class="icon-box-large bg-pink-subtle rounded-3 p-3 d-inline-flex mb-3">
-                        <i class="bi bi-box-seam text-pink fs-3"></i>
-                    </div>
-                    <h3 class="fw-bold mb-1">142</h3>
-                    <p class="text-muted mb-0 small">Sản Phẩm</p>
-                </div>
-            </div>
+        <div class="mini-card">
+            <div class="mini-icon"><i class="bi bi-box-seam"></i></div>
+            <div class="mini-n">142</div>
+            <div class="mini-l">Sản Phẩm</div>
         </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center py-4">
-                    <div class="icon-box-large bg-success-subtle rounded-3 p-3 d-inline-flex mb-3">
-                        <i class="bi bi-calendar-check text-success fs-3"></i>
-                    </div>
-                    <h3 class="fw-bold mb-1">89</h3>
-                    <p class="text-muted mb-0 small">Đặt Hôm Nay</p>
-                </div>
-            </div>
+        <div class="mini-card">
+            <div class="mini-icon"><i class="bi bi-calendar-check"></i></div>
+            <div class="mini-n">89</div>
+            <div class="mini-l">Đặt Hôm Nay</div>
         </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center py-4">
-                    <div class="icon-box-large bg-warning-subtle rounded-3 p-3 d-inline-flex mb-3">
-                        <i class="bi bi-clock text-warning fs-3"></i>
-                    </div>
-                    <h3 class="fw-bold mb-1">12</h3>
-                    <p class="text-muted mb-0 small">Chờ Xác Nhận</p>
-                </div>
-            </div>
+        <div class="mini-card">
+            <div class="mini-icon"><i class="bi bi-clock-history"></i></div>
+            <div class="mini-n">12</div>
+            <div class="mini-l">Chờ Xác Nhận</div>
         </div>
     </div>
 </div>
@@ -305,212 +739,111 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
-        // Revenue & Orders Chart
-        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-        new Chart(revenueCtx, {
+        const GOLD  = '#d4a017';
+        const GOLD2 = '#f5c842';
+        const DEEP  = '#1a1209';
+        const CREAM = '#f5ede0';
+        const MUTED = 'rgba(138,117,96,.4)';
+
+        Chart.defaults.font.family = "'Outfit', sans-serif";
+        Chart.defaults.color = '#8a7560';
+
+        // Revenue
+        new Chart(document.getElementById('revenueChart'), {
             type: 'line',
             data: {
-                labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8'],
-                datasets: [{
-                    label: 'Doanh Thu',
-                    data: [2800000, 3200000, 2900000, 3500000, 3800000, 3300000, 4200000, 4000000],
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
+                labels: ['T1','T2','T3','T4','T5','T6','T7','T8'],
+                datasets: [
+                    {
+                        label: 'Doanh Thu',
+                        data: [28,32,29,35,38,33,42,40].map(v=>v*100000),
+                        borderColor: GOLD,
+                        backgroundColor: 'rgba(212,160,23,.08)',
+                        fill: true,
+                        tension: .45,
+                        pointBackgroundColor: GOLD,
+                        pointRadius: 4,
+                        pointHoverRadius: 7,
+                        borderWidth: 2.5,
+                    },
+                    {
+                        label: 'Đơn hàng',
+                        data: [42,56,49,63,72,58,88,75],
+                        borderColor: DEEP,
+                        backgroundColor: 'transparent',
+                        tension: .45,
+                        pointBackgroundColor: DEEP,
+                        pointRadius: 3,
+                        borderWidth: 1.5,
+                        yAxisID: 'y2'
+                    }
+                ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
+                    y:  { grid: { color: 'rgba(0,0,0,.05)' }, border: { dash: [4,4] }, ticks: { callback: v => '₫'+v.toLocaleString() } },
+                    y2: { position: 'right', grid: { display: false }, ticks: { color: DEEP } },
+                    x:  { grid: { display: false } }
                 }
             }
         });
 
-        // Court Usage Chart
-        const courtCtx = document.getElementById('courtUsageChart').getContext('2d');
-        new Chart(courtCtx, {
+        // Court usage
+        new Chart(document.getElementById('courtChart'), {
             type: 'bar',
             data: {
-                labels: ['Sân 1', 'Sân 2', 'Sân 3', 'Sân 4', 'Sân 5', 'Sân 6'],
+                labels: ['Sân 1','Sân 2','Sân 3','Sân 4','Sân 5','Sân 6'],
                 datasets: [{
-                    label: 'Giờ sử dụng',
-                    data: [145, 130, 125, 155, 98, 145],
-                    backgroundColor: '#10b981',
-                    borderRadius: 8
+                    data: [145,130,125,155,98,145],
+                    backgroundColor: [GOLD, GOLD2, GOLD, GOLD2, GOLD, GOLD2],
+                    borderRadius: 6,
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { grid: { color:'rgba(0,0,0,.04)' }, beginAtZero: true }, x: { grid: { display:false } } }
             }
         });
 
-        // Time Slots Chart
-        const timeSlotsCtx = document.getElementById('timeSlotsChart').getContext('2d');
-        new Chart(timeSlotsCtx, {
-            type: 'line',
+        // Time slots
+        new Chart(document.getElementById('timeChart'), {
+            type: 'bar',
             data: {
-                labels: ['6h-8h', '8h-10h', '10h-12h', '12h-14h', '14h-16h', '16h-18h', '18h-20h', '20h-22h'],
+                labels: ['6h','8h','10h','12h','14h','16h','18h','20h'],
                 datasets: [{
-                    label: 'Lượt Đặt',
-                    data: [45, 38, 28, 22, 35, 52, 68, 58],
-                    borderColor: '#6366f1',
-                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 5,
-                    pointHoverRadius: 7
+                    data: [45,38,28,22,35,52,68,58],
+                    backgroundColor: ctx => ctx.parsed.y >= 60 ? GOLD : 'rgba(212,160,23,.3)',
+                    borderRadius: 4,
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return 'Lượt Đặt: ' + context.parsed.y;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { display: false }, x: { grid: { display: false }, ticks: { font: { size: 10 } } } }
             }
         });
 
-        // Category Revenue Chart
-        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-        new Chart(categoryCtx, {
+        // Category donut
+        new Chart(document.getElementById('catChart'), {
             type: 'doughnut',
             data: {
-                labels: ['Vợt', 'Giày', 'Phụ Kiện', 'Quần Áo'],
+                labels: ['Vợt','Giày','Phụ Kiện','Quần Áo'],
                 datasets: [{
-                    data: [35, 28, 15, 22],
-                    backgroundColor: [
-                        '#10b981',
-                        '#6366f1',
-                        '#f59e0b',
-                        '#ec4899'
-                    ],
-                    borderWidth: 0
+                    data: [35,28,15,22],
+                    backgroundColor: [GOLD, DEEP, '#c94b2a', '#8a7560'],
+                    borderWidth: 0,
+                    hoverOffset: 8,
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false, cutout: '68%',
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 15,
-                            usePointStyle: true
-                        }
-                    }
+                    legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyleWidth: 10 } }
                 }
             }
         });
     </script>
 }
-
-<style>
-    .icon-box {
-        width: 56px;
-        height: 56px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .icon-box-large {
-        width: 64px;
-        height: 64px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .bg-success-subtle {
-        background-color: rgba(16, 185, 129, 0.1) !important;
-    }
-
-    .bg-primary-subtle {
-        background-color: rgba(99, 102, 241, 0.1) !important;
-    }
-
-    .bg-pink-subtle {
-        background-color: rgba(236, 72, 153, 0.1) !important;
-    }
-
-    .bg-warning-subtle {
-        background-color: rgba(245, 158, 11, 0.1) !important;
-    }
-
-    .text-pink {
-        color: #ec4899 !important;
-    }
-
-    .badge {
-        font-weight: 600;
-        padding: 0.35rem 0.65rem;
-    }
-
-    .card {
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
-        }
-</style>

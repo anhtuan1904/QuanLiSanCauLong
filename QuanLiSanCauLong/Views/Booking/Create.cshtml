@@ -1,245 +1,768 @@
 ﻿@model QuanLiSanCauLong.ViewModels.CreateBookingViewModel
-
 @{
-    ViewData["Title"] = "Đặt sân";
+    ViewData["Title"] = "Xác nhận đặt sân";
 }
 
-<div class="container my-4">
-    <div class="row">
-        <!-- Booking Form -->
-        <div class="col-lg-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="bi bi-calendar-plus"></i> Đặt sân cầu lông</h5>
-                </div>
-                <div class="card-body">
-                    <form asp-action="Create" method="post" id="bookingForm">
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+<style>
+    :root {
+        --D: #1a1209;
+        --D2: #231a0e;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --G3: rgba(212,160,23,.1);
+        --W: #f5ede0;
+        --S: #ede5d8;
+        --R: #c94b2a;
+        --GN: #10b981;
+        --M: rgba(255,255,255,.38);
+    }
 
-                        <input type="hidden" asp-for="CourtId" />
-                        <input type="hidden" asp-for="BookingDate" />
-                        <input type="hidden" asp-for="StartTime" />
-                        <input type="hidden" asp-for="EndTime" />
-                        <input type="hidden" asp-for="Duration" />
-                        <input type="hidden" asp-for="CourtPrice" />
-                        <input type="hidden" asp-for="ServiceFee" />
+    * {
+        box-sizing: border-box;
+    }
 
-                        <!-- Booking Info -->
-                        <div class="mb-4">
-                            <h6 class="border-bottom pb-2 mb-3">Thông tin đặt sân</h6>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-muted">Cơ sở</label>
-                                    <div class="fw-bold">@Model.FacilityName</div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-muted">Sân</label>
-                                    <div class="fw-bold">
-                                        Sân @Model.CourtNumber
-                                        <span class="badge bg-secondary">@Model.CourtType</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-muted">Ngày chơi</label>
-                                    <div class="fw-bold">
-                                        <i class="bi bi-calendar"></i>
-                                        @Model.BookingDate.ToString("dd/MM/yyyy")
-                                        (@Model.BookingDate.ToString("dddd", new System.Globalization.CultureInfo("vi-VN")))
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-muted">Giờ chơi</label>
-                                    <div class="fw-bold">
-                                        <i class="bi bi-clock"></i>
-                                        @Model.StartTime.ToString(@"hh\:mm") - @Model.EndTime.ToString(@"hh\:mm")
-                                        <small class="text-muted">(@Model.Duration phút)</small>
-                                    </div>
-                                </div>
-                            </div>
+    body {
+        background: var(--W);
+    }
+
+    .pghd {
+        background: var(--D);
+        border-bottom: 1px solid rgba(212,160,23,.18);
+        padding: .78rem 2rem;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        position: relative;
+    }
+
+        .pghd::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,var(--G),var(--G2),transparent);
+        }
+
+        .pghd a {
+            color: var(--G2);
+            text-decoration: none;
+            font-size: .78rem;
+            font-weight: 600;
+            opacity: .8;
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+        }
+
+            .pghd a:hover {
+                opacity: 1;
+            }
+
+        .pghd .sep {
+            color: var(--M);
+            font-size: .65rem;
+        }
+
+        .pghd .cur {
+            color: var(--M);
+            font-size: .78rem;
+            font-style: italic;
+        }
+
+    .pw {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 1.8rem;
+        align-items: start;
+    }
+
+    /* Cards */
+    .c {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1.2rem;
+    }
+
+    .c-hd {
+        background: var(--D);
+        border-bottom: 1px solid rgba(212,160,23,.18);
+        padding: .95rem 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+        .c-hd i {
+            color: var(--G);
+        }
+
+    .c-title {
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        font-size: .96rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .c-bd {
+        padding: 1.3rem 1.4rem;
+    }
+
+    /* Info grid */
+    .ig {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .9rem;
+    }
+
+    .ig-item {
+    }
+
+    .ig-lbl {
+        font-size: .64rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: #8c7a68;
+        margin-bottom: .28rem;
+    }
+
+    .ig-val {
+        font-size: .9rem;
+        font-weight: 600;
+        color: var(--D);
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+    }
+
+        .ig-val i {
+            color: var(--G);
+        }
+
+    .vtag {
+        background: var(--S);
+        color: #4a3728;
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        padding: .14rem .5rem;
+        border-radius: 3px;
+    }
+
+    /* Payment method */
+    .pm-g {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .65rem;
+    }
+
+    .pm-o {
+        position: relative;
+    }
+
+        .pm-o input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+    .pm-l {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        padding: .72rem 1rem;
+        border: 1.5px solid var(--S);
+        border-radius: 7px;
+        cursor: pointer;
+        font-size: .82rem;
+        font-weight: 600;
+        color: #4a3728;
+        transition: all .2s;
+    }
+
+        .pm-l i {
+            font-size: 1rem;
+            color: #8c7a68;
+            transition: color .2s;
+        }
+
+    .pm-o input:checked + .pm-l {
+        border-color: var(--G);
+        background: var(--G3);
+        color: var(--D);
+    }
+
+        .pm-o input:checked + .pm-l i {
+            color: var(--G);
+        }
+
+    /* Voucher */
+    .vwrap {
+        display: flex;
+        gap: .45rem;
+    }
+
+    .vi {
+        flex: 1;
+        padding: .65rem .95rem;
+        border: 1.5px solid var(--S);
+        border-radius: 6px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .84rem;
+        outline: none;
+        transition: border-color .2s;
+        color: var(--D);
+    }
+
+        .vi:focus {
+            border-color: var(--G);
+            box-shadow: 0 0 0 3px var(--G3);
+        }
+
+    .vbtn {
+        padding: .65rem 1.1rem;
+        background: var(--D);
+        color: var(--G2);
+        border: none;
+        border-radius: 6px;
+        font-size: .76rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        cursor: pointer;
+        transition: background .2s;
+        white-space: nowrap;
+    }
+
+        .vbtn:hover {
+            background: var(--D2);
+        }
+
+    .vmsg {
+        font-size: .76rem;
+        margin-top: .45rem;
+        padding: .38rem .75rem;
+        border-radius: 4px;
+        display: none;
+    }
+
+        .vmsg.ok {
+            background: #d1fae5;
+            color: #065f46;
+            display: block;
+        }
+
+        .vmsg.err {
+            background: #fee2e2;
+            color: #991b1b;
+            display: block;
+        }
+
+    /* Products */
+    .ps {
+        margin-bottom: 1rem;
+    }
+
+    .ps-ttl {
+        font-size: .66rem;
+        font-weight: 700;
+        letter-spacing: .15em;
+        text-transform: uppercase;
+        color: #8c7a68;
+        margin-bottom: .65rem;
+        padding-bottom: .45rem;
+        border-bottom: 1px solid var(--S);
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+        .ps-ttl i {
+            color: var(--G);
+        }
+
+    .pg {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .55rem;
+    }
+
+    .pi {
+        border: 1.5px solid var(--S);
+        border-radius: 7px;
+        padding: .7rem .85rem;
+        transition: border-color .2s;
+    }
+
+        .pi:hover {
+            border-color: var(--G);
+        }
+
+        .pi.has {
+            border-color: var(--G);
+            background: var(--G3);
+        }
+
+    .pn {
+        font-size: .82rem;
+        font-weight: 600;
+        color: var(--D);
+        margin-bottom: .18rem;
+    }
+
+    .pp {
+        font-size: .74rem;
+        color: var(--GN);
+        font-weight: 700;
+        margin-bottom: .45rem;
+    }
+
+    .qc {
+        display: flex;
+        align-items: center;
+        gap: .38rem;
+    }
+
+    .qb {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        border: 1.5px solid var(--S);
+        background: #fff;
+        font-size: .84rem;
+        font-weight: 700;
+        color: var(--D);
+        cursor: pointer;
+        transition: all .18s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .qb:hover {
+            border-color: var(--G);
+            background: var(--G3);
+        }
+
+    .qi {
+        width: 38px;
+        text-align: center;
+        border: 1.5px solid var(--S);
+        border-radius: 4px;
+        padding: .2rem;
+        font-size: .82rem;
+        font-weight: 700;
+        color: var(--D);
+        outline: none;
+    }
+
+        .qi:focus {
+            border-color: var(--G);
+        }
+
+    .no-prod {
+        font-size: .82rem;
+        color: #8c7a68;
+        text-align: center;
+        padding: .8rem 0;
+    }
+
+    /* Note */
+    .nta {
+        width: 100%;
+        padding: .75rem .95rem;
+        border: 1.5px solid var(--S);
+        border-radius: 7px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .84rem;
+        color: var(--D);
+        resize: vertical;
+        outline: none;
+        transition: border-color .2s;
+    }
+
+        .nta:focus {
+            border-color: var(--G);
+            box-shadow: 0 0 0 3px var(--G3);
+        }
+
+    /* Summary */
+    .sum {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: 10px;
+        overflow: hidden;
+        position: sticky;
+        top: 84px;
+    }
+
+    .sum-hd {
+        background: var(--D);
+        padding: .95rem 1.4rem;
+        border-bottom: 1px solid rgba(212,160,23,.18);
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+    .sum-bd {
+        padding: 1.3rem 1.4rem;
+    }
+
+    .sr {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: .45rem 0;
+        font-size: .84rem;
+    }
+
+        .sr + .sr {
+            border-top: 1px solid #f5f0ea;
+        }
+
+    .sl {
+        color: #8c7a68;
+    }
+
+    .sv {
+        font-weight: 600;
+        color: var(--D);
+    }
+
+        .sv.gn {
+            color: var(--GN);
+        }
+
+        .sv.gl {
+            color: var(--G);
+        }
+
+        .sv.rd {
+            color: #dc2626;
+        }
+
+    .sdiv {
+        border: none;
+        border-top: 2px solid var(--S);
+        margin: .7rem 0;
+    }
+
+    .stot {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+    }
+
+    .stot-l {
+        font-size: .88rem;
+        font-weight: 700;
+        color: var(--D);
+    }
+
+    .stot-v {
+        font-family: 'Outfit',sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--D);
+    }
+
+    .snote {
+        background: rgba(16,185,129,.07);
+        border: 1px solid rgba(16,185,129,.18);
+        border-radius: 6px;
+        padding: .65rem .9rem;
+        margin-top: .9rem;
+        font-size: .74rem;
+        color: #065f46;
+        display: flex;
+        align-items: flex-start;
+        gap: .45rem;
+    }
+
+        .snote i {
+            color: var(--GN);
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+
+    .btn-sub {
+        width: 100%;
+        padding: .92rem;
+        background: linear-gradient(135deg,var(--G),var(--G2));
+        color: var(--D);
+        font-family: 'Outfit',sans-serif;
+        font-size: .94rem;
+        font-weight: 800;
+        letter-spacing: .03em;
+        border: none;
+        border-radius: 7px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .45rem;
+        transition: all .22s;
+        margin-bottom: .65rem;
+    }
+
+        .btn-sub:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(212,160,23,.38);
+        }
+
+        .btn-sub:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    .btn-bk {
+        display: block;
+        width: 100%;
+        padding: .65rem;
+        background: none;
+        color: #8c7a68;
+        border: 1.5px solid var(--S);
+        border-radius: 7px;
+        font-size: .8rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        text-align: center;
+        transition: all .2s;
+    }
+
+        .btn-bk:hover {
+            border-color: var(--D);
+            color: var(--D);
+        }
+
+    @@media(max-width:900px) {
+        .pw {
+            grid-template-columns: 1fr;
+        }
+
+        .sum {
+            position: static;
+        }
+
+        .ig, .pm-g, .pg {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media(max-width:600px) {
+        .pghd, .pw {
+            padding-left: 1.2rem;
+            padding-right: 1.2rem;
+        }
+    }
+</style>
+
+<div class="pghd">
+    <a href="javascript:history.back()"><i class="bi bi-arrow-left"></i> Quay lại</a>
+    <span class="sep"><i class="bi bi-chevron-right"></i></span>
+    <span class="cur">Xác nhận đặt sân</span>
+</div>
+
+<div class="pw">
+    <!-- LEFT -->
+    <div>
+        <form asp-action="Create" method="post" id="bkForm">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" style="border-radius:7px;font-size:.84rem"></div>
+
+            <!-- Hidden -->
+            <input type="hidden" asp-for="CourtId" />
+            <input type="hidden" asp-for="BookingDate" />
+            <input type="hidden" asp-for="StartTime" />
+            <input type="hidden" asp-for="EndTime" />
+            <input type="hidden" asp-for="Duration" />
+            <input type="hidden" asp-for="CourtPrice" />
+            <input type="hidden" asp-for="ServiceFee" />
+
+            <!-- 1. Booking Info -->
+            <div class="c">
+                <div class="c-hd"><i class="bi bi-calendar-check"></i><span class="c-title">Thông tin đặt sân</span></div>
+                <div class="c-bd">
+                    <div class="ig">
+                        <div class="ig-item">
+                            <div class="ig-lbl">Cơ sở</div>
+                            <div class="ig-val"><i class="bi bi-building"></i> @Model.FacilityName</div>
                         </div>
-
-                        <!-- Payment Method -->
-                        <div class="mb-4">
-                            <h6 class="border-bottom pb-2 mb-3">Phương thức thanh toán</h6>
-                            <div class="row">
-                                <div class="col-md-6 mb-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="PaymentMethod"
-                                               id="cash" value="Cash" checked />
-                                        <label class="form-check-label" for="cash">
-                                            <i class="bi bi-cash"></i> Tiền mặt
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="PaymentMethod"
-                                               id="transfer" value="Transfer" />
-                                        <label class="form-check-label" for="transfer">
-                                            <i class="bi bi-bank"></i> Chuyển khoản
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="PaymentMethod"
-                                               id="momo" value="Momo" />
-                                        <label class="form-check-label" for="momo">
-                                            <i class="bi bi-wallet2"></i> Momo
-                                        </label>
-                                    </div>
-                                </div>l
-                                <div class="col-md-6 mb-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="PaymentMethod"
-                                               id="zalopay" value="ZaloPay" />
-                                        <label class="form-check-label" for="zalopay">
-                                            <i class="bi bi-wallet"></i> ZaloPay
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="ig-item">
+                            <div class="ig-lbl">Sân</div>
+                            <div class="ig-val"><i class="bi bi-grid-3x3-gap"></i> @Model.CourtNumber <span class="vtag">@Model.CourtType</span></div>
                         </div>
-
-                        <!-- Voucher -->
-                        <div class="mb-4">
-                            <h6 class="border-bottom pb-2 mb-3">Mã giảm giá</h6>
-                            <div class="input-group">
-                                <input type="text" asp-for="VoucherCode" class="form-control"
-                                       placeholder="Nhập mã giảm giá (nếu có)" />
-                                <button type="button" class="btn btn-outline-success" id="applyVoucher">
-                                    <i class="bi bi-check-circle"></i> Áp dụng
-                                </button>
-                            </div>
-                            <span asp-validation-for="VoucherCode" class="text-danger"></span>
-                            <div id="voucherMessage" class="mt-2"></div>
+                        <div class="ig-item">
+                            <div class="ig-lbl">Ngày chơi</div>
+                            <div class="ig-val"><i class="bi bi-calendar3"></i> @Model.BookingDate.ToString("dd/MM/yyyy") <span style="color:#8c7a68;font-size:.74rem">(@Model.BookingDate.ToString("dddd", new System.Globalization.CultureInfo("vi-VN")))</span></div>
                         </div>
-
-                        <!-- Additional Products -->
-                        <div class="mb-4">
-                            <h6 class="border-bottom pb-2 mb-3">
-                                Sản phẩm đi kèm
-                                <small class="text-muted">(Tùy chọn)</small>
-                            </h6>
-
-                            <!-- Food -->
-                            @if (ViewBag.FoodItems != null && ViewBag.FoodItems.Count > 0)
-                            {
-                                <div class="mb-3">
-                                    <h6 class="text-muted"><i class="bi bi-cup-straw"></i> Đồ ăn</h6>
-                                    <div class="row">
-                                        @foreach (var item in ViewBag.FoodItems)
-                                        {
-                                            <div class="col-md-6 mb-2">
-                                                <div class="product-item p-2 border rounded">
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <div>
-                                                            <div class="fw-bold">@item.ProductName</div>
-                                                            <small class="text-success">@item.Price.ToString("N0")đ</small>
-                                                        </div>
-                                                        <input type="number" name="OrderItems[@item.ProductId].Quantity"
-                                                               class="form-control form-control-sm product-quantity"
-                                                               style="width: 80px;" min="0" max="99" value="0"
-                                                               data-price="@item.Price" data-product-id="@item.ProductId" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                            }
-
-                            <!-- Beverages -->
-                            @if (ViewBag.BeverageItems != null && ViewBag.BeverageItems.Count > 0)
-                            {
-                                <div class="mb-3">
-                                    <h6 class="text-muted"><i class="bi bi-droplet"></i> Nước uống</h6>
-                                    <div class="row">
-                                        @foreach (var item in ViewBag.BeverageItems)
-                                        {
-                                            <div class="col-md-6 mb-2">
-                                                <div class="product-item p-2 border rounded">
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <div>
-                                                            <div class="fw-bold">@item.ProductName</div>
-                                                            <small class="text-success">@item.Price.ToString("N0")đ</small>
-                                                        </div>
-                                                        <input type="number" name="OrderItems[@item.ProductId].Quantity"
-                                                               class="form-control form-control-sm product-quantity"
-                                                               style="width: 80px;" min="0" max="99" value="0"
-                                                               data-price="@item.Price" data-product-id="@item.ProductId" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                            }
+                        <div class="ig-item">
+                            <div class="ig-lbl">Giờ chơi</div>
+                            <div class="ig-val"><i class="bi bi-clock"></i> @Model.StartTime.ToString(@"hh\:mm") – @Model.EndTime.ToString(@"hh\:mm") <span style="color:#8c7a68;font-size:.74rem">(@Model.Duration phút)</span></div>
                         </div>
-
-                        <!-- Note -->
-                        <div class="mb-4">
-                            <label asp-for="Note" class="form-label">Ghi chú</label>
-                            <textarea asp-for="Note" class="form-control" rows="3"
-                                      placeholder="Nhập ghi chú (nếu có)"></textarea>
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success btn-lg">
-                                <i class="bi bi-check-circle"></i> Xác nhận đặt sân
-                            </button>
-                            <a asp-action="Search" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left"></i> Quay lại tìm kiếm
-                            </a>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Order Summary -->
-        <div class="col-lg-4">
-            <div class="card shadow-sm sticky-top" style="top: 20px;">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0"><i class="bi bi-receipt"></i> Chi tiết thanh toán</h6>
+            <!-- 2. Products -->
+            <div class="c">
+                <div class="c-hd"><i class="bi bi-bag"></i><span class="c-title">Sản phẩm đi kèm <span style="font-size:.72rem;opacity:.6;font-weight:400">(tuỳ chọn)</span></span></div>
+                <div class="c-bd">
+                    @{
+                        int pidx = 0;
+                        bool hasProd = false;
+                        var food = ViewBag.FoodItems as IEnumerable<dynamic>;
+                        var bev = ViewBag.BeverageItems as IEnumerable<dynamic>;
+                        var eqp = ViewBag.EquipmentItems as IEnumerable<dynamic>;
+                        if ((food != null && food.Any()) || (bev != null && bev.Any()) || (eqp != null && eqp.Any())) hasProd = true;
+                    }
+                    @if (!hasProd)
+                    {
+                        <div class="no-prod"><i class="bi bi-bag-x me-1"></i> Cơ sở này chưa có sản phẩm</div>
+                    }
+                    else
+                    {
+                        @if (food != null && food.Any())
+                        {
+                            <div class="ps">
+                                <div class="ps-ttl"><i class="bi bi-cup-straw"></i> Đồ ăn</div>
+                                <div class="pg">
+                                    @foreach (var item in food)
+                                    {
+                                        <input type="hidden" name="OrderItems[@pidx].ProductId" value="@item.ProductId" />
+                                        <input type="hidden" name="OrderItems[@pidx].Price" value="@item.Price" />
+                                        <div class="pi" id="pw-@item.ProductId">
+                                            <div class="pn">@item.ProductName</div>
+                                            <div class="pp">@(((decimal)item.Price).ToString("N0"))đ</div>
+                                            <div class="qc">
+                                                <button type="button" class="qb" onclick="dQty('@item.ProductId',-1)">−</button>
+                                                <input type="number" name="OrderItems[@pidx].Quantity" id="q-@item.ProductId" class="qi pq" value="0" min="0" max="99" data-price="@item.Price" data-pid="@item.ProductId" onchange="onQ('@item.ProductId',this)" />
+                                                <button type="button" class="qb" onclick="dQty('@item.ProductId',1)">+</button>
+                                            </div>
+                                        </div>
+                                        pidx++;
+                                    }
+                                </div>
+                            </div>
+                        }
+                        @if (bev != null && bev.Any())
+                        {
+                            <div class="ps">
+                                <div class="ps-ttl"><i class="bi bi-cup-hot"></i> Đồ uống</div>
+                                <div class="pg">
+                                    @foreach (var item in bev)
+                                    {
+                                        <input type="hidden" name="OrderItems[@pidx].ProductId" value="@item.ProductId" />
+                                        <input type="hidden" name="OrderItems[@pidx].Price" value="@item.Price" />
+                                        <div class="pi" id="pw-@item.ProductId">
+                                            <div class="pn">@item.ProductName</div>
+                                            <div class="pp">@(((decimal)item.Price).ToString("N0"))đ</div>
+                                            <div class="qc">
+                                                <button type="button" class="qb" onclick="dQty('@item.ProductId',-1)">−</button>
+                                                <input type="number" name="OrderItems[@pidx].Quantity" id="q-@item.ProductId" class="qi pq" value="0" min="0" max="99" data-price="@item.Price" data-pid="@item.ProductId" onchange="onQ('@item.ProductId',this)" />
+                                                <button type="button" class="qb" onclick="dQty('@item.ProductId',1)">+</button>
+                                            </div>
+                                        </div>
+                                        pidx++;
+                                    }
+                                </div>
+                            </div>
+                        }
+                        @if (eqp != null && eqp.Any())
+                        {
+                            <div class="ps">
+                                <div class="ps-ttl"><i class="bi bi-tools"></i> Thiết bị</div>
+                                <div class="pg">
+                                    @foreach (var item in eqp)
+                                    {
+                                        <input type="hidden" name="OrderItems[@pidx].ProductId" value="@item.ProductId" />
+                                        <input type="hidden" name="OrderItems[@pidx].Price" value="@item.Price" />
+                                        <div class="pi" id="pw-@item.ProductId">
+                                            <div class="pn">@item.ProductName</div>
+                                            <div class="pp">@(((decimal)item.Price).ToString("N0"))đ</div>
+                                            <div class="qc">
+                                                <button type="button" class="qb" onclick="dQty('@item.ProductId',-1)">−</button>
+                                                <input type="number" name="OrderItems[@pidx].Quantity" id="q-@item.ProductId" class="qi pq" value="0" min="0" max="99" data-price="@item.Price" data-pid="@item.ProductId" onchange="onQ('@item.ProductId',this)" />
+                                                <button type="button" class="qb" onclick="dQty('@item.ProductId',1)">+</button>
+                                            </div>
+                                        </div>
+                                        pidx++;
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
                 </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Giá sân:</span>
-                            <strong class="text-success" id="courtPriceDisplay">
-                                @Model.CourtPrice.ToString("N0")đ
-                            </strong>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Phí dịch vụ:</span>
-                            <span id="serviceFeeDisplay">@Model.ServiceFee.ToString("N0")đ</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2" id="productTotalRow" style="display: none !important;">
-                            <span>Sản phẩm:</span>
-                            <span id="productTotalDisplay">0đ</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2 text-danger" id="discountRow" style="display: none !important;">
-                            <span>Giảm giá:</span>
-                            <span id="discountDisplay">0đ</span>
-                        </div>
-                        <hr />
-                        <div class="d-flex justify-content-between">
-                            <strong>Tổng cộng:</strong>
-                            <h5 class="text-success mb-0" id="totalPriceDisplay">
-                                @Model.TotalPrice.ToString("N0")đ
-                            </h5>
-                        </div>
-                    </div>
+            </div>
 
-                    <div class="alert alert-info mb-0">
-                        <small>
-                            <i class="bi bi-info-circle"></i>
-                            Vui lòng có mặt trước giờ chơi 15 phút để check-in
-                        </small>
+            <!-- 3. Payment Method -->
+            <div class="c">
+                <div class="c-hd"><i class="bi bi-credit-card"></i><span class="c-title">Phương thức thanh toán</span></div>
+                <div class="c-bd">
+                    <div class="pm-g">
+                        <div class="pm-o"><input type="radio" name="PaymentMethod" id="pm-cash" value="Cash" checked /><label class="pm-l" for="pm-cash"><i class="bi bi-cash-stack"></i> Tiền mặt</label></div>
+                        <div class="pm-o"><input type="radio" name="PaymentMethod" id="pm-tr" value="Transfer" /><label class="pm-l" for="pm-tr"><i class="bi bi-bank"></i> Chuyển khoản</label></div>
+                        <div class="pm-o"><input type="radio" name="PaymentMethod" id="pm-mo" value="Momo" /><label class="pm-l" for="pm-mo"><i class="bi bi-phone"></i> Momo</label></div>
+                        <div class="pm-o"><input type="radio" name="PaymentMethod" id="pm-zp" value="ZaloPay" /><label class="pm-l" for="pm-zp"><i class="bi bi-wallet2"></i> ZaloPay</label></div>
                     </div>
                 </div>
+            </div>
+
+            <!-- 4. Voucher -->
+            <div class="c">
+                <div class="c-hd"><i class="bi bi-ticket-perforated"></i><span class="c-title">Mã giảm giá</span></div>
+                <div class="c-bd">
+                    <div class="vwrap">
+                        <input type="text" asp-for="VoucherCode" class="vi" id="vci" placeholder="Nhập mã voucher..." />
+                        <button type="button" class="vbtn" onclick="applyV()"><i class="bi bi-check-circle me-1"></i> Áp dụng</button>
+                    </div>
+                    <div id="vmsg" class="vmsg"></div>
+                </div>
+            </div>
+
+            <!-- 5. Note -->
+            <div class="c">
+                <div class="c-hd"><i class="bi bi-pencil-square"></i><span class="c-title">Ghi chú</span></div>
+                <div class="c-bd">
+                    <textarea asp-for="Note" class="nta" rows="3" placeholder="Yêu cầu đặc biệt, lưu ý..."></textarea>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- RIGHT: Summary -->
+    <div>
+        <div class="sum">
+            <div class="sum-hd">
+                <i class="bi bi-receipt" style="color:var(--G)"></i>
+                <span style="font-family:'Playfair Display',serif;font-style:italic;font-size:.96rem;font-weight:700;color:#fff">Chi tiết thanh toán</span>
+            </div>
+            <div class="sum-bd">
+                <div class="sr"><span class="sl">Giá sân</span><span class="sv gn" id="sc">@Model.CourtPrice.ToString("N0")đ</span></div>
+                <div class="sr"><span class="sl">Phí dịch vụ</span><span class="sv" id="sf">@Model.ServiceFee.ToString("N0")đ</span></div>
+                <div class="sr" id="sp-row" style="display:none"><span class="sl">Sản phẩm</span><span class="sv gl" id="sp">0đ</span></div>
+                <div class="sr" id="sd-row" style="display:none"><span class="sl">Giảm giá</span><span class="sv rd" id="sd">0đ</span></div>
+                <hr class="sdiv" />
+                <div class="stot"><span class="stot-l">Tổng cộng</span><span class="stot-v" id="st">@Model.TotalPrice.ToString("N0")đ</span></div>
+                <div class="snote"><i class="bi bi-clock-history"></i><span>Có mặt trước giờ chơi <strong>15 phút</strong> để check-in</span></div>
+            </div>
+            <div style="padding:0 1.4rem 1.4rem">
+                <button type="submit" form="bkForm" class="btn-sub" id="btnSub">
+                    <i class="bi bi-check-circle-fill"></i> Xác nhận đặt sân
+                </button>
+                <a href="javascript:history.back()" class="btn-bk"><i class="bi bi-arrow-left me-1"></i> Quay lại</a>
             </div>
         </div>
     </div>
@@ -248,63 +771,42 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        let courtPrice = @Model.CourtPrice;
-        let serviceFee = @Model.ServiceFee;
-        let discountAmount = 0;
-        let productTotal = 0;
-
-        function updateTotal() {
-            const total = courtPrice + serviceFee + productTotal - discountAmount;
-            $('#totalPriceDisplay').text(formatCurrency(total));
-
-            if (productTotal > 0) {
-                $('#productTotalRow').show();
-                $('#productTotalDisplay').text(formatCurrency(productTotal));
-            } else {
-                $('#productTotalRow').hide();
-            }
-
-            if (discountAmount > 0) {
-                $('#discountRow').show();
-                $('#discountDisplay').text('-' + formatCurrency(discountAmount));
-            } else {
-                $('#discountRow').hide();
-            }
+        var BASE_COURT = @Model.CourtPrice, BASE_FEE = @Model.ServiceFee;
+        var prodTot = 0, discAmt = 0;
+        function fmt(n){return n.toLocaleString('vi-VN')+'đ';}
+        function recalc(){
+            var t = BASE_COURT + BASE_FEE + prodTot - discAmt;
+            document.getElementById('st').textContent = fmt(t);
+            var pr = document.getElementById('sp-row');
+            if(prodTot>0){pr.style.display='';document.getElementById('sp').textContent=fmt(prodTot);}else pr.style.display='none';
+            var dr = document.getElementById('sd-row');
+            if(discAmt>0){dr.style.display='';document.getElementById('sd').textContent='−'+fmt(discAmt);}else dr.style.display='none';
         }
-
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
+        function dQty(pid, d){
+            var inp = document.getElementById('q-'+pid);
+            if(!inp) return;
+            inp.value = Math.max(0, Math.min(99, (parseInt(inp.value)||0)+d));
+            onQ(pid, inp);
         }
-
-        $(document).ready(function() {
-            // Calculate product total when quantity changes
-            $('.product-quantity').on('input', function() {
-                productTotal = 0;
-                $('.product-quantity').each(function() {
-                    const quantity = parseInt($(this).val()) || 0;
-                    const price = parseFloat($(this).data('price')) || 0;
-                    productTotal += quantity * price;
-                });
-                updateTotal();
+        function onQ(pid, inp){
+            inp.value = Math.max(0, parseInt(inp.value)||0);
+            var wrap = document.getElementById('pw-'+pid);
+            if(wrap) wrap.classList.toggle('has', inp.value>0);
+            prodTot = 0;
+            document.querySelectorAll('.pq').forEach(function(e){
+                prodTot += (parseInt(e.value)||0)*(parseFloat(e.dataset.price)||0);
             });
-
-            // Apply voucher
-            $('#applyVoucher').on('click', function() {
-                const voucherCode = $('#VoucherCode').val().trim();
-
-                if (!voucherCode) {
-                    showWarning('Vui lòng nhập mã voucher');
-                    return;
-                }
-
-                // TODO: Call API to validate voucher
-                showInfo('Chức năng đang phát triển');
-            });
-
-            // Prevent form resubmit
-            $('#bookingForm').on('submit', function() {
-                $(this).find('button[type="submit"]').prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Đang xử lý...');
-            });
+            recalc();
+        }
+        function applyV(){
+            var code = document.getElementById('vci').value.trim();
+            var msg = document.getElementById('vmsg');
+            if(!code){msg.className='vmsg err';msg.textContent='Vui lòng nhập mã voucher!';return;}
+            msg.className='vmsg err';msg.textContent='Chức năng đang phát triển';
+        }
+        document.getElementById('bkForm').addEventListener('submit', function(){
+            var btn = document.getElementById('btnSub');
+            btn.disabled=true; btn.innerHTML='<i class="bi bi-hourglass-split"></i> Đang xử lý...';
         });
     </script>
 }

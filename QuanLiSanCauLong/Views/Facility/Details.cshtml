@@ -1,784 +1,1246 @@
 ﻿@model QuanLiSanCauLong.ViewModels.FacilityDetailsViewModel
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+@{
+    ViewData["Title"] = Model.FacilityName;
+}
 
 <style>
     :root {
-        --primary-purple: #6c33f2;
-        --secondary-purple: #8b5cf6;
-        --bg-light: #f8fafc;
-        --text-dark: #1e293b;
+        --D: #1a1209;
+        --D2: #231a0e;
+        --D3: #2e2010;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --G3: rgba(212,160,23,.1);
+        --G4: rgba(212,160,23,.18);
+        --W: #f5ede0;
+        --S: #ede5d8;
+        --R: #c94b2a;
+        --GN: #10b981;
+        --M: rgba(255,255,255,.38);
+        --M2: rgba(255,255,255,.08);
+    }
+
+    * {
+        box-sizing: border-box;
     }
 
     body {
-        background-color: var(--bg-light);
-    }
-
-    /* Back Button */
-    .back-button {
-        display: inline-flex;
-        align-items: center;
-        color: var(--text-dark);
-        font-weight: 600;
-        text-decoration: none;
-        margin-bottom: 20px;
-        transition: all 0.3s;
-    }
-
-        .back-button:hover {
-            color: var(--primary-purple);
-            transform: translateX(-5px);
-        }
-
-        .back-button i {
-            margin-right: 8px;
-        }
-
-    /* Image Carousel */
-    .facility-carousel {
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-        position: relative;
-    }
-
-    .carousel-inner {
-        border-radius: 20px;
-    }
-
-    .carousel-item img {
-        height: 450px;
-        object-fit: cover;
-    }
-
-    .carousel-control-prev,
-    .carousel-control-next {
-        width: 50px;
-        height: 50px;
-        background: rgba(255,255,255,0.9);
-        border-radius: 50%;
-        top: 50%;
-        transform: translateY(-50%);
-        opacity: 0;
-        transition: all 0.3s;
-    }
-
-    .facility-carousel:hover .carousel-control-prev,
-    .facility-carousel:hover .carousel-control-next {
-        opacity: 1;
-    }
-
-    .carousel-control-prev {
-        left: 20px;
-    }
-
-    .carousel-control-next {
-        right: 20px;
-    }
-
-    .carousel-control-prev-icon,
-    .carousel-control-next-icon {
-        filter: invert(1);
-    }
-
-    /* Info Section */
-    .facility-info {
-        background: white;
-        padding: 30px;
-        border-radius: 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-        height: 100%;
-    }
-
-    .facility-title {
-        font-size: 2rem;
-        font-weight: 800;
-        color: var(--text-dark);
-        margin-bottom: 15px;
-    }
-
-    .facility-address {
-        color: #64748b;
-        font-size: 1rem;
-        margin-bottom: 25px;
-        display: flex;
-        align-items: center;
-    }
-
-        .facility-address i {
-            color: #ef4444;
-            margin-right: 8px;
-        }
-
-    .info-cards {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-        margin-bottom: 25px;
-    }
-
-    .info-card {
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        padding: 20px;
-        border-radius: 16px;
-        text-align: center;
-        border: 2px solid #e2e8f0;
-        transition: all 0.3s;
-    }
-
-        .info-card:hover {
-            border-color: var(--primary-purple);
-            transform: translateY(-3px);
-        }
-
-    .info-card-label {
-        font-size: 0.85rem;
-        color: #64748b;
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-    }
-
-    .info-card-value {
-        font-size: 1.3rem;
-        font-weight: 800;
-        color: var(--primary-purple);
-    }
-
-        .info-card-value.success {
-            color: #10b981;
-        }
-
-    .facility-description {
-        color: #475569;
-        line-height: 1.8;
-        margin-bottom: 20px;
-    }
-
-    .facility-features {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 20px;
-    }
-
-    .feature-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 8px 16px;
-        background: #f1f5f9;
-        border-radius: 20px;
-        color: var(--text-dark);
-        font-size: 0.9rem;
-        font-weight: 600;
-    }
-
-        .feature-badge i {
-            margin-right: 6px;
-            color: var(--primary-purple);
-        }
-
-    /* Tabs */
-    .booking-tabs {
-        background: white;
-        padding: 6px;
-        border-radius: 50px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-        display: inline-flex;
-        margin-bottom: 30px;
-    }
-
-        .booking-tabs .nav-link {
-            border: none;
-            border-radius: 40px;
-            padding: 12px 30px;
-            color: #64748b;
-            font-weight: 700;
-            transition: all 0.3s;
-        }
-
-            .booking-tabs .nav-link.active {
-                background: linear-gradient(135deg, var(--primary-purple) 0%, var(--secondary-purple) 100%);
-                color: white;
-                box-shadow: 0 4px 15px rgba(108, 51, 242, 0.3);
-            }
-
-    /* Booking Card */
-    .booking-card {
-        background: white;
-        border: none;
-        border-radius: 20px;
-        padding: 30px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-    }
-
-    .booking-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 30px;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-
-    .booking-title {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--text-dark);
+        background: var(--W);
         margin: 0;
     }
 
-    .date-picker-wrapper {
+    /* BREADCRUMB */
+    .bc {
+        background: var(--D);
+        padding: .75rem 2rem;
         display: flex;
         align-items: center;
-        gap: 12px;
-        background: #f8fafc;
-        padding: 10px 20px;
-        border-radius: 12px;
-        border: 2px solid #e2e8f0;
+        gap: .6rem;
+        border-bottom: 1px solid var(--G4);
     }
 
-        .date-picker-wrapper label {
+        .bc a {
+            color: var(--G2);
+            text-decoration: none;
+            font-size: .78rem;
             font-weight: 600;
-            color: var(--text-dark);
-            margin: 0;
+            opacity: .8;
+            display: flex;
+            align-items: center;
+            gap: .35rem;
         }
 
-        .date-picker-wrapper input {
+            .bc a:hover {
+                opacity: 1;
+            }
+
+    .bc-sep {
+        color: var(--M);
+        font-size: .65rem;
+    }
+
+    .bc-cur {
+        color: var(--M);
+        font-size: .78rem;
+        font-style: italic;
+    }
+
+    /* HERO */
+    .hero {
+        background: var(--D);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 55% 90% at 72% 50%,rgba(212,160,23,.07),transparent 65%);
+            pointer-events: none;
+        }
+
+    .hero-wrap {
+        max-width: 1380px;
+        margin: 0 auto;
+        padding: 2.2rem 2rem;
+        display: grid;
+        grid-template-columns: 1fr 370px;
+        gap: 2.2rem;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Carousel */
+    .fc {
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--G4);
+    }
+
+        .fc .carousel-item img {
+            height: 400px;
+            object-fit: cover;
+            filter: brightness(.88);
+        }
+
+        .fc .carousel-control-prev, .fc .carousel-control-next {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(26,18,9,.72);
+            border: 1px solid var(--G4);
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity .25s;
+        }
+
+        .fc:hover .carousel-control-prev, .fc:hover .carousel-control-next {
+            opacity: 1;
+        }
+
+        .fc .carousel-control-prev {
+            left: 10px;
+        }
+
+        .fc .carousel-control-next {
+            right: 10px;
+        }
+
+    .carousel-indicators [data-bs-target] {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--G);
+        border: 0;
+        opacity: .45;
+    }
+
+    .carousel-indicators .active {
+        opacity: 1;
+    }
+
+    /* Info */
+    .iblock {
+        display: flex;
+        flex-direction: column;
+        gap: 1.1rem;
+    }
+
+    .i-pills {
+        display: flex;
+        gap: .5rem;
+        align-items: center;
+    }
+
+    .i-pill {
+        background: var(--R);
+        color: #fff;
+        font-size: .58rem;
+        font-weight: 700;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        padding: .24rem .7rem;
+        border-radius: 3px;
+    }
+
+    .i-open {
+        background: rgba(16,185,129,.12);
+        color: #34d399;
+        border: 1px solid rgba(16,185,129,.2);
+        font-size: .58rem;
+        font-weight: 700;
+        letter-spacing: .15em;
+        text-transform: uppercase;
+        padding: .24rem .7rem;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+    .i-title {
+        font-family: 'Playfair Display',serif;
+        font-size: clamp(1.55rem,2.2vw,2.3rem);
+        font-weight: 700;
+        color: #fff;
+        margin: 0;
+        line-height: 1.15;
+    }
+
+    .i-addr {
+        font-size: .82rem;
+        color: var(--M);
+        display: flex;
+        align-items: flex-start;
+        gap: .4rem;
+    }
+
+        .i-addr i {
+            color: var(--R);
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+    /* Stats */
+    .i-stats {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: 1px;
+        background: var(--G4);
+        border: 1px solid var(--G4);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .istat {
+        background: var(--D2);
+        padding: .9rem .5rem;
+        text-align: center;
+        transition: background .18s;
+    }
+
+        .istat:hover {
+            background: var(--G3);
+        }
+
+    .sv {
+        font-weight: 700;
+        font-size: 1.15rem;
+        color: var(--G2);
+        line-height: 1;
+        margin-bottom: .28rem;
+    }
+
+    .sl {
+        font-size: .56rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--M);
+    }
+
+    .i-desc {
+        font-size: .82rem;
+        line-height: 1.8;
+        color: var(--M);
+        border-left: 2px solid var(--G);
+        padding-left: .9rem;
+    }
+
+    .i-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .45rem;
+    }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .27rem .78rem;
+        background: var(--M2);
+        border: 1px solid var(--G4);
+        border-radius: 4px;
+        color: rgba(255,255,255,.65);
+        font-size: .72rem;
+        font-weight: 500;
+        transition: all .2s;
+    }
+
+        .chip:hover {
+            background: var(--G3);
+            border-color: var(--G);
+            color: var(--G2);
+        }
+
+        .chip i {
+            color: var(--G);
+            font-size: .72rem;
+        }
+
+    /* BOOKING SECTION */
+    .bsec {
+        max-width: 1380px;
+        margin: 0 auto;
+        padding: 2.2rem 2rem;
+    }
+
+    /* Tabs */
+    .tabs {
+        display: flex;
+        gap: .35rem;
+        background: var(--D);
+        border: 1px solid var(--G4);
+        border-radius: 8px;
+        padding: .4rem;
+        width: fit-content;
+        margin-bottom: 1.6rem;
+    }
+
+    .tb {
+        padding: .55rem 1.3rem;
+        border: none;
+        background: none;
+        border-radius: 5px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .8rem;
+        font-weight: 600;
+        color: var(--M);
+        cursor: pointer;
+        transition: all .22s;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+        .tb.on {
+            background: linear-gradient(135deg,var(--G),var(--G2));
+            color: var(--D);
+        }
+
+    .tp {
+        display: none;
+    }
+
+        .tp.on {
+            display: block;
+        }
+
+    /* Card */
+    .bcard {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .bcard-hd {
+        background: var(--D);
+        border-bottom: 1px solid var(--G4);
+        padding: 1.1rem 1.6rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: .9rem;
+    }
+
+    .bcard-title {
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .dpick {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        background: rgba(255,255,255,.05);
+        border: 1px solid var(--G4);
+        border-radius: 6px;
+        padding: .5rem .9rem;
+    }
+
+        .dpick label {
+            font-size: .72rem;
+            font-weight: 600;
+            color: var(--M);
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .dpick input[type=date] {
+            background: none;
             border: none;
-            background: transparent;
-            color: var(--primary-purple);
+            color: var(--G2);
+            font-family: 'Outfit',sans-serif;
             font-weight: 700;
+            font-size: .82rem;
+            outline: none;
             cursor: pointer;
         }
 
-            .date-picker-wrapper input:focus {
-                outline: none;
-            }
-
-    /* Court Timeline */
-    .timeline-wrapper {
-        overflow-x: auto;
-        padding-bottom: 20px;
+    .bcard-bd {
+        padding: 1.6rem;
     }
 
-        .timeline-wrapper::-webkit-scrollbar {
-            height: 8px;
-        }
+    /* Legend */
+    .leg {
+        display: flex;
+        gap: 1.4rem;
+        margin-bottom: 1.2rem;
+        padding-bottom: 1.1rem;
+        border-bottom: 1px solid var(--S);
+    }
 
-        .timeline-wrapper::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 10px;
-        }
-
-        .timeline-wrapper::-webkit-scrollbar-thumb {
-            background: var(--primary-purple);
-            border-radius: 10px;
-        }
-
-    .court-row {
+    .li {
         display: flex;
         align-items: center;
-        margin-bottom: 20px;
-        min-width: 1200px;
+        gap: .4rem;
+        font-size: .72rem;
+        color: #8c7a68;
+        font-weight: 500;
     }
 
-    .court-label {
-        width: 140px;
-        font-weight: 700;
-        color: var(--text-dark);
-        font-size: 1rem;
-        padding-right: 20px;
-        flex-shrink: 0;
+    .ld {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        border: 1.5px solid;
     }
 
-    .slots-row {
+        .ld.a {
+            background: #fff;
+            border-color: var(--S);
+        }
+
+        .ld.s {
+            background: var(--D);
+            border-color: var(--G);
+        }
+
+        .ld.b {
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+
+    /* Timeline */
+    .tscroll {
+        overflow-x: auto;
+        padding-bottom: .5rem;
+    }
+
+        .tscroll::-webkit-scrollbar {
+            height: 5px;
+        }
+
+        .tscroll::-webkit-scrollbar-track {
+            background: var(--S);
+            border-radius: 3px;
+        }
+
+        .tscroll::-webkit-scrollbar-thumb {
+            background: var(--G);
+            border-radius: 3px;
+        }
+
+    .crow {
         display: flex;
-        gap: 10px;
+        align-items: center;
+        gap: .9rem;
+        margin-bottom: 1rem;
+        min-width: 1000px;
+    }
+
+    .clbl {
+        width: 110px;
+        flex-shrink: 0;
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        font-size: .84rem;
+        font-weight: 700;
+        color: var(--D);
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+    }
+
+        .clbl i {
+            color: var(--G);
+        }
+
+    .srow {
+        display: flex;
+        gap: .4rem;
         flex: 1;
     }
 
-    /* Slot Item */
-    .slot-item {
-        width: 85px;
-        height: 70px;
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
+    /* Slot */
+    .slot {
+        width: 76px;
+        height: 64px;
+        border: 1.5px solid var(--S);
+        border-radius: 7px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: all 0.3s;
-        background: white;
-        position: relative;
+        transition: all .2s;
+        background: #fff;
         flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
     }
 
-        .slot-item:hover:not(.booked) {
-            border-color: var(--primary-purple);
-            background: #f3f0ff;
-            transform: translateY(-3px);
-            box-shadow: 0 4px 12px rgba(108, 51, 242, 0.2);
+        .slot::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,var(--G),var(--G2));
+            transform: scaleX(0);
+            transition: transform .2s;
         }
 
-        .slot-item.booked {
-            background: #fee2e2;
-            color: #dc2626;
-            cursor: not-allowed;
+        .slot:hover:not(.bk)::before {
+            transform: scaleX(1);
+        }
+
+        .slot:hover:not(.bk) {
+            border-color: var(--G);
+            background: var(--G3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212,160,23,.18);
+        }
+
+        .slot.bk {
+            background: #fef2f2;
             border-color: #fecaca;
+            cursor: not-allowed;
         }
 
-            .slot-item.booked::after {
+            .slot.bk::after {
                 content: 'Đã đặt';
                 position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                font-size: 0.7rem;
+                inset: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: .6rem;
                 font-weight: 700;
-                opacity: 0.8;
+                letter-spacing: .04em;
+                color: #dc2626;
+                background: rgba(254,242,242,.88);
             }
 
-        .slot-item.selected {
-            background: linear-gradient(135deg, var(--primary-purple) 0%, var(--secondary-purple) 100%);
-            color: white;
-            border-color: var(--primary-purple);
-            box-shadow: 0 4px 15px rgba(108, 51, 242, 0.4);
+        .slot.sel {
+            background: var(--D);
+            border-color: var(--G);
+            box-shadow: 0 4px 14px rgba(212,160,23,.28);
         }
 
-    .slot-time {
+            .slot.sel::before {
+                transform: scaleX(1);
+            }
+
+    .slot-t {
+        font-family: 'Outfit',sans-serif;
         font-weight: 700;
-        font-size: 0.95rem;
-        margin-bottom: 2px;
+        font-size: .82rem;
+        color: var(--D);
     }
 
-    .slot-price {
-        font-size: 0.8rem;
-        opacity: 0.8;
-        font-weight: 600;
+    .slot.sel .slot-t {
+        color: var(--G2);
     }
 
-    .slot-item.booked .slot-time,
-    .slot-item.booked .slot-price {
+    .slot-p {
+        font-size: .68rem;
+        font-weight: 500;
+        color: #8c7a68;
+        margin-top: 1px;
+    }
+
+    .slot.sel .slot-p {
+        color: rgba(255,255,255,.45);
+    }
+
+    .slot.bk .slot-t, .slot.bk .slot-p {
         opacity: 0;
     }
 
-    /* History Table */
-    .history-table {
-        background: white;
+    /* History table */
+    .htbl {
+        width: 100%;
+        border-collapse: collapse;
     }
 
-        .history-table thead {
-            background: #f8fafc;
+        .htbl thead tr {
+            background: var(--D2);
         }
 
-        .history-table th {
-            border: none;
-            color: var(--text-dark);
+        .htbl th {
+            padding: .8rem 1rem;
+            font-size: .68rem;
             font-weight: 700;
-            padding: 15px;
-            font-size: 0.9rem;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--G);
+            text-align: left;
+            border: none;
         }
 
-        .history-table td {
-            border: none;
-            border-bottom: 1px solid #f1f5f9;
-            padding: 18px 15px;
+        .htbl td {
+            padding: .85rem 1rem;
+            font-size: .84rem;
+            border-bottom: 1px solid var(--S);
             vertical-align: middle;
         }
 
-        .history-table tbody tr:hover {
-            background: #f8fafc;
+        .htbl tbody tr:hover {
+            background: #fdfcfa;
         }
 
-    .status-badge {
-        padding: 6px 16px;
-        border-radius: 20px;
-        font-size: 0.85rem;
+    .sb {
+        padding: .24rem .72rem;
+        border-radius: 4px;
+        font-size: .66rem;
         font-weight: 700;
+        letter-spacing: .06em;
+        text-transform: uppercase;
     }
 
-        .status-badge.confirmed {
+        .sb.confirmed {
             background: #d1fae5;
             color: #065f46;
         }
 
-        .status-badge.pending {
+        .sb.pending {
             background: #fef3c7;
             color: #92400e;
         }
 
-        .status-badge.cancelled {
+        .sb.cancelled {
             background: #fee2e2;
             color: #991b1b;
         }
 
-    .btn-cancel {
-        padding: 8px 20px;
-        border-radius: 10px;
-        border: 2px solid #fecaca;
-        background: white;
-        color: #dc2626;
-        font-weight: 700;
-        transition: all 0.3s;
-        font-size: 0.85rem;
-    }
-
-        .btn-cancel:hover {
-            background: #dc2626;
-            color: white;
-            border-color: #dc2626;
+        .sb.playing {
+            background: #dbeafe;
+            color: #1e40af;
         }
 
-    /* Payment Bar */
-    .payment-bar {
+        .sb.completed {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+    .empty-blk {
+        text-align: center;
+        padding: 3.5rem;
+        color: #8c7a68;
+    }
+
+        .empty-blk i {
+            font-size: 2.5rem;
+            color: var(--S);
+            display: block;
+            margin-bottom: .75rem;
+        }
+
+    /* PAY BAR */
+    .paybar {
         position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
-        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-        color: white;
-        padding: 20px 0;
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+        background: var(--D);
+        border-top: 2px solid var(--G4);
+        padding: 1rem 0;
         z-index: 1000;
-        transform: translateY(100%);
-        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transform: translateY(110%);
+        transition: transform .38s cubic-bezier(.175,.885,.32,1.275);
+        box-shadow: 0 -8px 32px rgba(0,0,0,.42);
     }
 
-        .payment-bar.show {
+        .paybar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,var(--G),var(--G2),transparent);
+        }
+
+        .paybar.show {
             transform: translateY(0);
         }
 
-    .payment-info {
+    .pay-in {
+        max-width: 1380px;
+        margin: 0 auto;
+        padding: 0 2rem;
         display: flex;
-        flex-direction: column;
-        gap: 5px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.2rem;
     }
 
-    .payment-slots {
-        font-size: 0.95rem;
-        opacity: 0.9;
+    .pay-txt {
     }
 
-    .payment-total {
+    .pay-lbl {
+        font-size: .7rem;
+        color: var(--M);
+        letter-spacing: .05em;
+    }
+
+    .pay-tot {
+        font-family: 'Outfit',sans-serif;
+        font-weight: 700;
         font-size: 1.8rem;
-        font-weight: 800;
-        color: #fbbf24;
-        margin: 0;
+        color: var(--G2);
+        line-height: 1;
     }
 
-    .btn-book-now {
-        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-        color: #1e293b;
+    .pay-meta {
+        font-size: .68rem;
+        color: var(--M);
+        margin-top: .1rem;
+    }
+
+    .pay-acts {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+
+    .btn-clr {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        background: var(--M2);
+        border: 1px solid var(--G4);
+        color: var(--M);
+        cursor: pointer;
+        transition: all .2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .82rem;
+    }
+
+        .btn-clr:hover {
+            background: rgba(220,38,38,.15);
+            border-color: #dc2626;
+            color: #dc2626;
+        }
+
+    .btn-book {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        background: linear-gradient(135deg,var(--G),var(--G2));
+        color: var(--D);
+        font-family: 'Outfit',sans-serif;
+        font-size: .9rem;
+        font-weight: 800;
+        letter-spacing: .03em;
+        padding: .82rem 2rem;
         border: none;
-        border-radius: 50px;
-        padding: 15px 40px;
-        font-weight: 800;
-        font-size: 1.1rem;
-        transition: all 0.3s;
-        box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all .22s;
+        white-space: nowrap;
     }
 
-        .btn-book-now:hover {
+        .btn-book:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(251, 191, 36, 0.6);
+            box-shadow: 0 8px 24px rgba(212,160,23,.4);
+            filter: brightness(1.05);
         }
 
-    /* Responsive */
-    @@media (max-width: 768px) {
-        .carousel-item img {
-            height: 300px;
+    /* Modal overlay */
+    .ov {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.55);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+    }
+
+    .ov-box {
+        background: #fff;
+        border-radius: 10px;
+        overflow: hidden;
+        max-width: 500px;
+        width: 100%;
+        border: 1px solid var(--S);
+        box-shadow: 0 24px 60px rgba(0,0,0,.32);
+    }
+
+    .ov-hd {
+        background: var(--D);
+        padding: 1.1rem 1.4rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .ov-title {
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .ov-close {
+        background: none;
+        border: none;
+        color: var(--M);
+        font-size: 1rem;
+        cursor: pointer;
+    }
+
+    .ov-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: .75rem 1.2rem;
+        border-bottom: 1px solid var(--S);
+    }
+
+    .ov-item-name {
+        font-size: .88rem;
+        font-weight: 600;
+        color: var(--D);
+    }
+
+    .ov-item-sub {
+        font-size: .74rem;
+        color: #8c7a68;
+        margin-top: .1rem;
+    }
+
+    .ov-item-right {
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+    }
+
+    .ov-price {
+        font-weight: 700;
+        color: var(--G);
+    }
+
+    .ov-book {
+        background: linear-gradient(135deg,var(--G),var(--G2));
+        color: var(--D);
+        border: none;
+        padding: .38rem .9rem;
+        border-radius: 5px;
+        font-size: .74rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .ov-ft {
+        padding: .9rem 1.4rem;
+        background: #fdf8f0;
+        border-top: 1px solid var(--S);
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .btn-cancel-sm {
+        background: none;
+        border: 1.5px solid var(--S);
+        padding: .4rem 1.1rem;
+        border-radius: 5px;
+        font-size: .78rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: #8c7a68;
+    }
+
+        .btn-cancel-sm:hover {
+            border-color: var(--D);
+            color: var(--D);
         }
 
-        .facility-title {
-            font-size: 1.5rem;
-        }
-
-        .info-cards {
+    @@media(max-width:1100px) {
+        .hero-wrap {
             grid-template-columns: 1fr;
         }
 
-        .booking-header {
+        .fc .carousel-item img {
+            height: 300px;
+        }
+
+        .i-stats {
+            grid-template-columns: repeat(2,1fr);
+        }
+    }
+
+    @@media(max-width:768px) {
+        .hero-wrap, .bsec, .bc {
+            padding-left: 1.2rem;
+            padding-right: 1.2rem;
+        }
+
+        .tabs {
+            width: 100%;
+        }
+
+        .bcard-hd {
             flex-direction: column;
             align-items: flex-start;
         }
 
-        .court-label {
-            width: 100px;
-            font-size: 0.9rem;
+        .pay-in {
+            flex-direction: column;
+            gap: .8rem;
         }
 
-        .slot-item {
-            width: 70px;
-            height: 60px;
+        .btn-book {
+            width: 100%;
+            justify-content: center;
         }
 
-        .slot-time {
-            font-size: 0.85rem;
-        }
-
-        .payment-bar {
-            padding: 15px 0;
-        }
-
-        .payment-total {
-            font-size: 1.4rem;
-        }
-
-        .btn-book-now {
-            padding: 12px 30px;
-            font-size: 1rem;
+        .pay-tot {
+            font-size: 1.45rem;
         }
     }
 </style>
 
-<div class="container py-4">
-    <!-- Back Button -->
-    <a href="javascript:history.back()" class="back-button">
-        <i class="bi bi-arrow-left"></i> Quay lại danh sách
-    </a>
+<!-- BREADCRUMB -->
+<div class="bc">
+    <a href="@Url.Action("Index", "Facility")"><i class="bi bi-house"></i> Trang chủ</a>
+    <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
+    <a href="@Url.Action("Index", "Facility")">Cơ sở</a>
+    <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
+    <span class="bc-cur">@Model.FacilityName</span>
+</div>
 
-    <!-- Main Content -->
-    <div class="row mb-5">
-        <!-- Image Carousel -->
-        <div class="col-lg-7 mb-4 mb-lg-0">
-            <div id="courtCarousel" class="carousel slide facility-carousel" data-bs-ride="carousel">
-                <div class="carousel-inner">
-                    @for (int i = 0; i < Model.ImageUrls.Count; i++)
-                    {
-                        <div class="carousel-item @(i == 0 ? "active" : "")">
-                            <img src="@Model.ImageUrls[i]" class="d-block w-100" alt="@Model.FacilityName">
-                        </div>
-                    }
-                </div>
-                <button class="carousel-control-prev" type="button" data-bs-target="#courtCarousel" data-bs-slide="prev">
+<!-- HERO -->
+<div class="hero">
+    <div class="hero-wrap">
+        <!-- Carousel -->
+        <div id="fc" class="carousel slide fc" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+                @for (int i = 0; i < Model.ImageUrls.Count; i++)
+                {
+                    <button type="button" data-bs-target="#fc" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")"></button>
+                }
+            </div>
+            <div class="carousel-inner">
+                @for (int i = 0; i < Model.ImageUrls.Count; i++)
+                {
+                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                        <img src="@Model.ImageUrls[i]" class="d-block w-100" alt="@Model.FacilityName" />
+                    </div>
+                }
+            </div>
+            @if (Model.ImageUrls.Count > 1)
+            {
+                <button class="carousel-control-prev" type="button" data-bs-target="#fc" data-bs-slide="prev">
                     <span class="carousel-control-prev-icon"></span>
                 </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#courtCarousel" data-bs-slide="next">
+                <button class="carousel-control-next" type="button" data-bs-target="#fc" data-bs-slide="next">
                     <span class="carousel-control-next-icon"></span>
                 </button>
-            </div>
+            }
         </div>
 
-        <!-- Facility Info -->
-        <div class="col-lg-5">
-            <div class="facility-info">
-                <h1 class="facility-title">@Model.FacilityName</h1>
-                <div class="facility-address">
-                    <i class="bi bi-geo-alt-fill"></i>
-                    @Model.Address
+        <!-- Info block -->
+        <div class="iblock">
+            <div class="i-pills">
+                <div class="i-pill">Badminton Court</div>
+                <div class="i-open"><i class="bi bi-circle-fill" style="font-size:.38rem"></i> Đang mở cửa</div>
+            </div>
+            <h1 class="i-title">@Model.FacilityName</h1>
+            <div class="i-addr"><i class="bi bi-geo-alt-fill"></i>@Model.Address@(!string.IsNullOrEmpty(Model.District) ? ", " + Model.District : "")@(!string.IsNullOrEmpty(Model.City) ? ", " + Model.City : "")</div>
+            <div class="i-stats">
+                <div class="istat">
+                    <div class="sv">@(Model.MinPrice > 0 ? (Model.MinPrice / 1000).ToString("0") + "k" : "---")</div>
+                    <div class="sl">Giá từ</div>
                 </div>
+                <div class="istat">
+                    <div class="sv"><i class="bi bi-star-fill" style="font-size:.7rem;color:var(--G)"></i> @(Model.AverageRating.HasValue? Model.AverageRating.Value.ToString("0.0"):"4.8")</div>
+                    <div class="sl">Đánh giá</div>
+                </div>
+                <div class="istat">
+                    <div class="sv">@Model.TotalCourts</div>
+                    <div class="sl">Số sân</div>
+                </div>
+                <div class="istat">
+                    <div class="sv" style="font-size:.8rem">@(Model.OpenTime?.ToString(@"hh\:mm") ?? "06")–@(Model.CloseTime?.ToString(@"hh\:mm") ?? "23")</div>
+                    <div class="sl">Giờ mở</div>
+                </div>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="i-desc">@Model.Description</div>
+            }
+            <div class="i-chips">
+                @foreach (var a in Model.Amenities.Where(x => x.IsAvailable).Take(6))
+                {
+                    <div class="chip"><i class="bi bi-check-circle-fill"></i> @a.AmenityName</div>
+                }
+                @if (!Model.Amenities.Any())
+                {
+                    <div class="chip"><i class="bi bi-wifi"></i> Wifi</div>
+                    <div class="chip"><i class="bi bi-car-front"></i> Bãi xe</div>
+                    <div class="chip"><i class="bi bi-cup-hot"></i> Canteen</div>
+                    <div class="chip"><i class="bi bi-droplet"></i> Phòng tắm</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
 
-                <div class="info-cards">
-                    <div class="info-card">
-                        <span class="info-card-label">Giá từ</span>
-                        <div class="info-card-value">80.000đ</div>
-                    </div>
-                    <div class="info-card">
-                        <span class="info-card-label">Trạng thái</span>
-                        <div class="info-card-value success">Đang mở</div>
-                    </div>
-                    <div class="info-card">
-                        <span class="info-card-label">Đánh giá</span>
-                        <div class="info-card-value">
-                            <i class="bi bi-star-fill" style="color: #fbbf24;"></i> 4.8
-                        </div>
-                    </div>
-                    <div class="info-card">
-                        <span class="info-card-label">Số sân</span>
-                        <div class="info-card-value">8 sân</div>
-                    </div>
-                </div>
+<!-- BOOKING SECTION -->
+<div class="bsec">
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tb on" data-tab="t-book"><i class="bi bi-calendar-check"></i> Đặt sân</button>
+        <button class="tb" data-tab="t-hist"><i class="bi bi-clock-history"></i> Lịch của tôi</button>
+    </div>
 
-                <div class="facility-description">
-                    @Model.Description
+    <!-- TAB: Booking -->
+    <div class="tp on" id="t-book">
+        <div class="bcard">
+            <div class="bcard-hd">
+                <div class="bcard-title">Chọn khung giờ trống</div>
+                <div class="dpick">
+                    <label><i class="bi bi-calendar3 me-1"></i>Ngày đặt:</label>
+                    <input type="date" id="datePicker"
+                           value="@Model.SelectedDate.ToString("yyyy-MM-dd")"
+                           min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                           onchange="window.location.href='?id=@Model.FacilityId&date='+this.value" />
                 </div>
-
-                <div class="facility-features">
-                    <span class="feature-badge">
-                        <i class="bi bi-wifi"></i> Wifi
-                    </span>
-                    <span class="feature-badge">
-                        <i class="bi bi-car-front"></i> Parking
-                    </span>
-                    <span class="feature-badge">
-                        <i class="bi bi-cup-hot"></i> Canteen
-                    </span>
-                    <span class="feature-badge">
-                        <i class="bi bi-droplet"></i> Shower
-                    </span>
+            </div>
+            <div class="bcard-bd">
+                <div class="leg">
+                    <div class="li"><div class="ld a"></div> Trống</div>
+                    <div class="li"><div class="ld s"></div> Đã chọn</div>
+                    <div class="li"><div class="ld b"></div> Đã đặt</div>
                 </div>
+                @if (!Model.Courts.Any())
+                {
+                    <div class="empty-blk"><i class="bi bi-building-x"></i><p>Cơ sở chưa có sân hoặc chưa cấu hình khung giờ</p></div>
+                }
+                else
+                {
+                    <div class="tscroll">
+                        @foreach (var court in Model.Courts)
+                        {
+                            <div class="crow">
+                                <div class="clbl"><i class="bi bi-grid-3x3-gap"></i>@court.CourtNumber</div>
+                                <div class="srow">
+                                    @if (!court.Slots.Any())
+                                    {
+                                        <span style="font-size:.74rem;color:#8c7a68;font-style:italic">Chưa có khung giờ</span>
+                                    }
+                                    @foreach (var slot in court.Slots)
+                                    {
+                                        <div class="slot @(slot.IsBooked ? "bk" : "")"
+                                             data-cid="@court.CourtId"
+                                             data-cnum="@court.CourtNumber"
+                                             data-st="@slot.StartTime.ToString(@"hh\:mm")"
+                                             data-et="@slot.EndTime.ToString(@"hh\:mm")"
+                                             data-price="@((int)slot.Price)"
+                                             onclick="toggleSlot(this)">
+                                            <span class="slot-t">@slot.StartTime.ToString(@"hh\:mm")</span>
+                                            <span class="slot-p">@((slot.Price / 1000).ToString("0"))k</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
             </div>
         </div>
     </div>
 
-    <!-- Tabs -->
-    <ul class="nav booking-tabs mb-4" id="bookingTabs">
-        <li class="nav-item">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-book">
-                <i class="bi bi-calendar-check me-2"></i>Tìm kiếm & Đặt sân
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-history">
-                <i class="bi bi-clock-history me-2"></i>Lịch đặt của tôi
-            </button>
-        </li>
-    </ul>
-
-    <!-- Tab Content -->
-    <div class="tab-content">
-        <!-- Book Tab -->
-        <div class="tab-pane fade show active" id="tab-book">
-            <div class="booking-card">
-                <div class="booking-header">
-                    <h4 class="booking-title">Chọn khung giờ trống</h4>
-                    <div class="date-picker-wrapper">
-                        <label><i class="bi bi-calendar3 me-2"></i>Ngày:</label>
-                        <input type="date"
-                               class="form-control-sm"
-                               value="@Model.SelectedDate.ToString("yyyy-MM-dd")"
-                               onchange="window.location.href='?id=@Model.FacilityId&date=' + this.value">
-                    </div>
-                </div>
-
-                <div class="timeline-wrapper">
-                    @foreach (var court in Model.Courts)
-                    {
-                        <div class="court-row">
-                            <div class="court-label">
-                                <i class="bi bi-grid-3x3-gap me-2" style="color: var(--primary-purple);"></i>@court.CourtNumber
-                            </div>
-                            <div class="slots-row">
-                                @foreach (var slot in court.Slots)
-                                {
-                                    <div class="slot-item @(slot.IsBooked ? "booked" : "available")"
-                                         data-court="@court.CourtNumber"
-                                         data-time="@slot.TimeRange"
-                                         data-price="@slot.Price"
-                                         onclick="toggleSlot(this)">
-                                        <span class="slot-time">@slot.TimeRange.Split(" - ")[0]</span>
-                                        <span class="slot-price">@(slot.Price / 1000)k</span>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    }
-                </div>
+    <!-- TAB: History -->
+    <div class="tp" id="t-hist">
+        <div class="bcard">
+            <div class="bcard-hd">
+                <div class="bcard-title">Lịch đặt sân của tôi</div>
+                <a asp-controller="Booking" asp-action="MyBookings" style="font-size:.76rem;color:var(--G2);text-decoration:none">
+                    Xem tất cả <i class="bi bi-arrow-right"></i>
+                </a>
             </div>
-        </div>
-
-        <!-- History Tab -->
-        <div class="tab-pane fade" id="tab-history">
-            <div class="booking-card">
-                <table class="table history-table">
-                    <thead>
-                        <tr>
-                            <th>Sân</th>
-                            <th>Ngày đặt</th>
-                            <th>Khung giờ</th>
-                            <th>Trạng thái</th>
-                            <th>Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.UserBookings != null && Model.UserBookings.Any())
-                        {
-                            @foreach (var booking in Model.UserBookings)
+            @if (Model.UserBookings != null && Model.UserBookings.Any())
+            {
+                <div style="overflow-x:auto">
+                    <table class="htbl">
+                        <thead><tr><th>Sân</th><th>Ngày</th><th>Giờ</th><th>Trạng thái</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var b in Model.UserBookings)
                             {
                                 <tr>
-                                    <td><strong>@booking.CourtName</strong></td>
-                                    <td>@booking.Date.ToString("dd/MM/yyyy")</td>
-                                    <td>@booking.Time</td>
-                                    <td>
-                                        <span class="status-badge confirmed">@booking.Status</span>
-                                    </td>
-                                    <td>
-                                        <button class="btn-cancel">
-                                            <i class="bi bi-x-circle me-1"></i>Hủy đặt
-                                        </button>
-                                    </td>
+                                    <td><strong>@b.CourtName</strong></td>
+                                    <td>@b.Date.ToString("dd/MM/yyyy")</td>
+                                    <td>@b.Time</td>
+                                    <td><span class="sb @b.Status.ToLower()">@b.Status</span></td>
+                                    <td><a asp-controller="Booking" asp-action="Details" asp-route-id="@b.BookingId" style="font-size:.76rem;color:var(--G);text-decoration:none">Chi tiết →</a></td>
                                 </tr>
                             }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="5" class="text-center py-5">
-                                    <i class="bi bi-calendar-x" style="font-size: 3rem; color: #cbd5e1;"></i>
-                                    <p class="mt-3 text-muted">Bạn chưa có lịch đặt nào</p>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Payment Bar -->
-<div id="paymentBar" class="payment-bar">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <div class="payment-info">
-                    <div class="payment-slots" id="selectedSlotsText">Đã chọn 0 khung giờ</div>
-                    <h3 class="payment-total" id="totalAmount">0đ</h3>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-            <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <button class="btn-book-now">
-                    <i class="bi bi-check-circle me-2"></i>ĐẶT SÂN NGAY
-                </button>
-            </div>
+            }
+            else
+            {
+                <div class="empty-blk"><i class="bi bi-calendar-x"></i><p>Bạn chưa có lịch đặt nào</p></div>
+            }
         </div>
     </div>
 </div>
 
-<script>
-    let selectedSlots = [];
+<!-- PAY BAR -->
+<div id="payBar" class="paybar">
+    <div class="pay-in">
+        <div class="pay-txt">
+            <div class="pay-lbl" id="payLbl">Đã chọn 0 khung giờ</div>
+            <div class="pay-tot" id="payTot">0đ</div>
+            <div class="pay-meta" id="payMeta"></div>
+        </div>
+        <div class="pay-acts">
+            <button class="btn-clr" onclick="clearAll()" title="Bỏ chọn"><i class="bi bi-x-lg"></i></button>
+            <!-- ✅ ĐÃ FIX: onclick gọi goBook() -->
+            <button class="btn-book" id="btnBook" onclick="goBook()">
+                <i class="bi bi-check-circle-fill"></i> ĐẶT SÂN NGAY
+            </button>
+        </div>
+    </div>
+</div>
 
-    function toggleSlot(element) {
-        if (element.classList.contains('booked')) return;
+@section Scripts {
+    <script>
+        var sel = [];
+        var FAC = @Model.FacilityId;
+        var DATE = '@Model.SelectedDate.ToString("yyyy-MM-dd")';
 
-        const court = element.dataset.court;
-        const time = element.dataset.time;
-        const price = parseInt(element.dataset.price);
-
-        const slotKey = `${court}-${time}`;
-
-        if (element.classList.contains('selected')) {
-            element.classList.remove('selected');
-            selectedSlots = selectedSlots.filter(s => s.key !== slotKey);
-        } else {
-            element.classList.add('selected');
-            selectedSlots.push({ key: slotKey, price: price });
-        }
-
-        updatePaymentBar();
-    }
-
-    function updatePaymentBar() {
-        const paymentBar = document.getElementById('paymentBar');
-        const count = selectedSlots.length;
-        const total = selectedSlots.reduce((sum, slot) => sum + slot.price, 0);
-
-        if (count > 0) {
-            paymentBar.classList.add('show');
-            document.getElementById('selectedSlotsText').textContent = `Đã chọn ${count} khung giờ`;
-            document.getElementById('totalAmount').textContent = total.toLocaleString('vi-VN') + 'đ';
-        } else {
-            paymentBar.classList.remove('show');
-        }
-    }
-
-    // Auto-play carousel
-    document.addEventListener('DOMContentLoaded', function() {
-        const carousel = new bootstrap.Carousel(document.getElementById('courtCarousel'), {
-            interval: 3000,
-            wrap: true
+        /* ── TABS ── */
+        document.querySelectorAll('.tb').forEach(b => {
+            b.addEventListener('click', function(){
+                document.querySelectorAll('.tb').forEach(x=>x.classList.remove('on'));
+                document.querySelectorAll('.tp').forEach(x=>x.classList.remove('on'));
+                this.classList.add('on');
+                document.getElementById(this.dataset.tab).classList.add('on');
+            });
         });
-    });
-</script>
+
+        /* ── SLOT TOGGLE ── */
+        function toggleSlot(el) {
+            if (el.classList.contains('bk')) return;
+            var cid   = +el.dataset.cid;
+            var cnum  = el.dataset.cnum;
+            var st    = el.dataset.st;
+            var et    = el.dataset.et;
+            var price = +el.dataset.price;
+            var key   = cid + '-' + st;
+
+            // 1 slot per court max
+            var prev = sel.find(s => s.cid === cid);
+            if (prev && prev.key !== key) {
+                prev.el.classList.remove('sel');
+                sel = sel.filter(s => s.cid !== cid);
+            }
+
+            if (el.classList.contains('sel')) {
+                el.classList.remove('sel');
+                sel = sel.filter(s => s.key !== key);
+            } else {
+                el.classList.add('sel');
+                sel.push({key,cid,cnum,st,et,price,el});
+            }
+            refreshBar();
+        }
+
+        function clearAll() {
+            sel.forEach(s => s.el.classList.remove('sel'));
+            sel = [];
+            refreshBar();
+        }
+
+        function refreshBar() {
+            var bar   = document.getElementById('payBar');
+            var cnt   = sel.length;
+            var total = sel.reduce((a,s) => a+s.price, 0);
+            if (cnt > 0) {
+                bar.classList.add('show');
+                document.getElementById('payLbl').textContent = 'Đã chọn ' + cnt + ' khung giờ';
+                document.getElementById('payTot').textContent = total.toLocaleString('vi-VN') + 'đ';
+                document.getElementById('payMeta').textContent = sel.map(s => s.cnum+' ('+s.st+'–'+s.et+')').join(', ');
+            } else {
+                bar.classList.remove('show');
+            }
+        }
+
+        /* ── ✅ BOOKING NAVIGATION ── */
+        function goBook() {
+            if (!sel.length) return;
+            if (sel.length === 1) {
+                // Đi thẳng đến Booking/Create
+                var s = sel[0];
+                window.location.href = '/Booking/Create?courtId='+s.cid+'&bookingDate='+DATE+'&startTime='+s.st+'&endTime='+s.et;
+                return;
+            }
+            // Nhiều slot → modal chọn
+            showMultiModal();
+        }
+
+        function showMultiModal() {
+            var existing = document.getElementById('mmodal');
+            if (existing) existing.remove();
+
+            var items = sel.map(function(s, i){
+                return '<div class="ov-item">'+
+                    '<div><div class="ov-item-name">Sân '+s.cnum+'</div><div class="ov-item-sub">'+s.st+' – '+s.et+'</div></div>'+
+                    '<div class="ov-item-right">'+
+                        '<span class="ov-price">'+s.price.toLocaleString('vi-VN')+'đ</span>'+
+                        '<button class="ov-book" onclick="bookOne('+i+')">Đặt sân này</button>'+
+                    '</div>'+
+                '</div>';
+            }).join('');
+
+            var html = '<div id="mmodal" class="ov">'+
+                '<div class="ov-box">'+
+                    '<div class="ov-hd"><span class="ov-title">Chọn sân để đặt</span>'+
+                        '<button class="ov-close" onclick="document.getElementById(\'mmodal\').remove()"><i class="bi bi-x-lg"></i></button></div>'+
+                    '<div style="max-height:360px;overflow-y:auto">'+items+'</div>'+
+                    '<div class="ov-ft"><button class="btn-cancel-sm" onclick="document.getElementById(\'mmodal\').remove()">Đóng</button></div>'+
+                '</div>'+
+            '</div>';
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+
+        function bookOne(idx) {
+            var s = sel[idx];
+            window.location.href = '/Booking/Create?courtId='+s.cid+'&bookingDate='+DATE+'&startTime='+s.st+'&endTime='+s.et;
+        }
+
+        /* carousel */
+        document.addEventListener('DOMContentLoaded', function(){
+            var el = document.getElementById('fc');
+            if (el) new bootstrap.Carousel(el, {interval:3500,wrap:true});
+        });
+    </script>
+}

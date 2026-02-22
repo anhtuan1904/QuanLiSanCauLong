@@ -1,252 +1,788 @@
 ﻿@model List<QuanLiSanCauLong.ViewModels.BookingHistoryViewModel>
-
 @{
     ViewData["Title"] = "Lịch sử đặt sân";
 }
 
-<div class="container my-4">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h3><i class="bi bi-calendar-event"></i> Lịch sử đặt sân</h3>
-            <p class="text-muted">Quản lý tất cả các đơn đặt sân của bạn</p>
-        </div>
-        <div class="col-md-4 text-md-end">
-            <a asp-action="Search" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> Đặt sân mới
-            </a>
-        </div>
-    </div>
+<style>
+    :root {
+        --D: #1a1209;
+        --D2: #231a0e;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --G3: rgba(212,160,23,.1);
+        --W: #f5ede0;
+        --S: #ede5d8;
+        --R: #c94b2a;
+        --GN: #10b981;
+        --M: rgba(255,255,255,.38);
+    }
 
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        background: var(--W);
+    }
+
+    /* Header */
+    .pg-hd {
+        background: var(--D);
+        border-bottom: 1px solid rgba(212,160,23,.18);
+        padding: 1.8rem 2.2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .pg-hd::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 50% 120% at 80% 50%,rgba(212,160,23,.06),transparent);
+        }
+
+    .pg-hd-in {
+        max-width: 1280px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .pg-eyebrow {
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: var(--G);
+        margin-bottom: .35rem;
+    }
+
+    .pg-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0;
+    }
+
+    .pg-sub {
+        font-size: .78rem;
+        color: var(--M);
+        margin-top: .25rem;
+    }
+
+    .btn-new {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        background: linear-gradient(135deg,var(--G),var(--G2));
+        color: var(--D);
+        font-family: 'Outfit',sans-serif;
+        font-size: .82rem;
+        font-weight: 800;
+        padding: .65rem 1.35rem;
+        border-radius: 6px;
+        text-decoration: none;
+        transition: all .22s;
+    }
+
+        .btn-new:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(212,160,23,.38);
+            color: var(--D);
+        }
+
+    /* Wrap */
+    .wrap {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 2rem 2.2rem;
+    }
+
+    /* Filter card */
+    .fc {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1.8rem;
+    }
+
+    .fc-hd {
+        background: var(--D);
+        padding: .85rem 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+        .fc-hd i {
+            color: var(--G);
+        }
+
+    .fc-title {
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        font-size: .9rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .fc-bd {
+        padding: 1.2rem 1.4rem;
+    }
+
+    .filter-g {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: .9rem;
+        align-items: end;
+    }
+
+    .fl {
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: #8c7a68;
+        margin-bottom: .3rem;
+    }
+
+    .fi {
+        width: 100%;
+        padding: .6rem .85rem;
+        border: 1.5px solid var(--S);
+        border-radius: 6px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .82rem;
+        color: var(--D);
+        outline: none;
+        transition: border-color .2s;
+        background: #fff;
+    }
+
+        .fi:focus {
+            border-color: var(--G);
+        }
+
+    .btn-filter {
+        width: 100%;
+        padding: .6rem;
+        background: var(--D);
+        color: var(--G2);
+        border: none;
+        border-radius: 6px;
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        cursor: pointer;
+        transition: background .2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .35rem;
+    }
+
+        .btn-filter:hover {
+            background: var(--D2);
+        }
+
+    /* Booking cards */
+    .bk-card {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: 10px;
+        margin-bottom: 1.1rem;
+        overflow: hidden;
+        transition: box-shadow .2s,transform .2s;
+    }
+
+        .bk-card:hover {
+            box-shadow: 0 4px 24px rgba(212,160,23,.12);
+            transform: translateY(-1px);
+        }
+
+    .bk-top {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+        border-bottom: 1px solid var(--S);
+    }
+
+    .bk-accent {
+        width: 4px;
+        background: linear-gradient(180deg,var(--G),var(--G2));
+        flex-shrink: 0;
+    }
+
+    .bk-main {
+        padding: 1.1rem 1.4rem;
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .bk-left {
+    }
+
+    .bk-header {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        margin-bottom: .65rem;
+    }
+
+    .bk-facility {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--D);
+    }
+
+    .bk-code {
+        font-size: .7rem;
+        font-weight: 700;
+        letter-spacing: .06em;
+        color: #8c7a68;
+        background: var(--S);
+        padding: .2rem .65rem;
+        border-radius: 4px;
+    }
+
+    .bk-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .6rem 1.4rem;
+    }
+
+    .bm {
+        font-size: .8rem;
+        color: #4a3728;
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+    }
+
+        .bm i {
+            color: var(--G);
+            font-size: .78rem;
+        }
+
+        .bm strong {
+            color: var(--D);
+        }
+
+    /* Status badge */
+    .sb {
+        padding: .22rem .72rem;
+        border-radius: 4px;
+        font-size: .65rem;
+        font-weight: 700;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+        .sb.confirmed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .sb.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .sb.cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .sb.playing {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .sb.completed {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+    /* Products attached */
+    .bk-prods {
+        padding: .65rem 1.4rem .65rem 1.8rem;
+        background: #fdfcfa;
+        border-bottom: 1px solid var(--S);
+    }
+
+    .bp-title {
+        font-size: .62rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: #8c7a68;
+        margin-bottom: .4rem;
+    }
+
+    .bp-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .4rem;
+    }
+
+    .bp-tag {
+        background: var(--S);
+        color: #4a3728;
+        font-size: .72rem;
+        font-weight: 500;
+        padding: .18rem .6rem;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+        .bp-tag i {
+            color: var(--G);
+            font-size: .68rem;
+        }
+
+    /* Right: price + actions */
+    .bk-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: .6rem;
+        flex-shrink: 0;
+    }
+
+    .bk-total-lbl {
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: #8c7a68;
+    }
+
+    .bk-total {
+        font-family: 'Outfit',sans-serif;
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: var(--D);
+    }
+
+    .bk-acts {
+        display: flex;
+        gap: .45rem;
+    }
+
+    .btn-det {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .42rem .9rem;
+        background: var(--D);
+        color: var(--G2);
+        border: none;
+        border-radius: 5px;
+        font-size: .74rem;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all .2s;
+    }
+
+        .btn-det:hover {
+            background: var(--G);
+            color: var(--D);
+        }
+
+    .btn-can {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .42rem .9rem;
+        background: rgba(220,38,38,.08);
+        color: #dc2626;
+        border: 1.5px solid rgba(220,38,38,.2);
+        border-radius: 5px;
+        font-size: .74rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .btn-can:hover {
+            background: #dc2626;
+            color: #fff;
+            border-color: #dc2626;
+        }
+
+    .btn-rate {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .42rem .9rem;
+        background: rgba(16,185,129,.08);
+        color: var(--GN);
+        border: 1.5px solid rgba(16,185,129,.2);
+        border-radius: 5px;
+        font-size: .74rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .btn-rate:hover {
+            background: var(--GN);
+            color: #fff;
+        }
+
+    /* Empty */
+    .empty {
+        text-align: center;
+        padding: 5rem 2rem;
+    }
+
+        .empty i {
+            font-size: 3.5rem;
+            color: var(--S);
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        .empty h5 {
+            font-family: 'Playfair Display',serif;
+            font-style: italic;
+            font-size: 1.2rem;
+            color: var(--D);
+            margin-bottom: .4rem;
+        }
+
+        .empty p {
+            font-size: .82rem;
+            color: #8c7a68;
+        }
+
+    /* Cancel modal */
+    .modal-dark .modal-content {
+        border: 1px solid rgba(212,160,23,.18);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .modal-dark .modal-header {
+        background: var(--D);
+        border-bottom: 1px solid rgba(212,160,23,.18);
+    }
+
+    .modal-dark .modal-title {
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        color: #fff;
+        font-size: 1rem;
+    }
+
+    .modal-dark .btn-close {
+        filter: invert(1) opacity(.5);
+    }
+
+    .modal-dark .modal-body {
+        background: #fff;
+        padding: 1.4rem;
+    }
+
+    .modal-dark .modal-footer {
+        background: #fdf8f0;
+        border-top: 1px solid var(--S);
+    }
+
+    .modal-dark textarea {
+        width: 100%;
+        padding: .7rem .95rem;
+        border: 1.5px solid var(--S);
+        border-radius: 7px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .84rem;
+        color: var(--D);
+        outline: none;
+        resize: vertical;
+    }
+
+        .modal-dark textarea:focus {
+            border-color: var(--G);
+        }
+
+    .warn-note {
+        background: rgba(212,160,23,.08);
+        border: 1px solid rgba(212,160,23,.22);
+        border-radius: 6px;
+        padding: .65rem .9rem;
+        margin-top: .9rem;
+        font-size: .76rem;
+        color: #7a5c0a;
+        display: flex;
+        align-items: flex-start;
+        gap: .4rem;
+    }
+
+        .warn-note i {
+            color: var(--G);
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+    .btn-confirm-cancel {
+        padding: .6rem 1.3rem;
+        background: linear-gradient(135deg,#dc2626,#ef4444);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: .8rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .btn-modal-close {
+        padding: .6rem 1.1rem;
+        background: none;
+        border: 1.5px solid var(--S);
+        border-radius: 6px;
+        font-size: .8rem;
+        font-weight: 600;
+        color: #8c7a68;
+        cursor: pointer;
+    }
+
+        .btn-modal-close:hover {
+            border-color: var(--D);
+            color: var(--D);
+        }
+
+    /* Pagination */
+    .pagi {
+        display: flex;
+        justify-content: center;
+        gap: .4rem;
+        margin-top: 1.5rem;
+    }
+
+    .page-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        border: 1.5px solid var(--S);
+        background: #fff;
+        font-size: .8rem;
+        font-weight: 700;
+        color: #4a3728;
+        cursor: pointer;
+        transition: all .2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .page-btn.on {
+            background: var(--D);
+            border-color: var(--D);
+            color: var(--G2);
+        }
+
+        .page-btn:hover:not(.on) {
+            border-color: var(--G);
+            color: var(--G);
+        }
+
+    @@media(max-width:768px) {
+        .pg-hd-in {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .filter-g {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .bk-main {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .bk-right {
+            align-items: flex-start;
+        }
+
+        .wrap, .pg-hd {
+            padding-left: 1.2rem;
+            padding-right: 1.2rem;
+        }
+    }
+</style>
+
+<!-- Page header -->
+<div class="pg-hd">
+    <div class="pg-hd-in">
+        <div>
+            <div class="pg-eyebrow"><i class="bi bi-calendar-event me-1"></i> Quản lý đặt sân</div>
+            <h1 class="pg-title">Lịch sử đặt sân</h1>
+            <div class="pg-sub">Tất cả đơn đặt sân của bạn</div>
+        </div>
+        <a asp-action="Search" class="btn-new"><i class="bi bi-plus-circle-fill"></i> Đặt sân mới</a>
+    </div>
+</div>
+
+<div class="wrap">
     <!-- Filter -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
+    <div class="fc">
+        <div class="fc-hd"><i class="bi bi-funnel"></i><span class="fc-title">Bộ lọc</span></div>
+        <div class="fc-bd">
             <form asp-action="MyBookings" method="get">
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label">Trạng thái</label>
-                        <select name="status" class="form-select">
+                <div class="filter-g">
+                    <div>
+                        <div class="fl">Trạng thái</div>
+                        <select name="status" class="fi">
                             <option value="">Tất cả</option>
                             @if (ViewBag.Statuses != null)
                             {
-                                @foreach (var status in ViewBag.Statuses)
+                                @foreach (var s in ViewBag.Statuses)
                                 {
-                                    <option value="@status">@status</option>
+                                    <option value="@s">@s</option>
                                 }
                             }
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Từ ngày</label>
-                        <input type="date" name="fromDate" class="form-control" />
+                    <div>
+                        <div class="fl">Từ ngày</div>
+                        <input type="date" name="fromDate" class="fi" />
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Đến ngày</label>
-                        <input type="date" name="toDate" class="form-control" />
+                    <div>
+                        <div class="fl">Đến ngày</div>
+                        <input type="date" name="toDate" class="fi" />
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">&nbsp;</label>
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-filter"></i> Lọc
-                        </button>
+                    <div>
+                        <div class="fl">&nbsp;</div>
+                        <button type="submit" class="btn-filter"><i class="bi bi-search"></i> Tìm kiếm</button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Bookings List -->
+    <!-- Results -->
     @if (Model == null || !Model.Any())
     {
-        <div class="alert alert-info text-center py-5">
-            <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+        <div class="empty">
+            <i class="bi bi-inbox"></i>
             <h5>Chưa có đơn đặt sân nào</h5>
-            <p class="mb-3">Hãy đặt sân ngay để bắt đầu chơi cầu lông!</p>
-            <a asp-action="Search" class="btn btn-success">
+            <p>Hãy đặt sân ngay để bắt đầu trải nghiệm!</p>
+            <a asp-action="Search" class="btn-new" style="margin-top:1rem;display:inline-flex">
                 <i class="bi bi-calendar-plus"></i> Đặt sân ngay
             </a>
         </div>
     }
     else
     {
-        <div class="row">
-            @foreach (var booking in Model)
-            {
-                <div class="col-12 mb-3">
-                    <div class="card booking-card shadow-sm">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div>
-                                            <h5 class="mb-1">
-                                                <i class="bi bi-building text-success"></i>
-                                                @booking.FacilityName
-                                            </h5>
-                                            <div class="text-muted mb-2">
-                                                <strong>Mã đơn:</strong> @booking.BookingCode
-                                            </div>
-                                        </div>
-                                        <div>
-                                            @if (booking.Status == "Confirmed")
-                                            {
-                                                <span class="badge bg-success">Đã xác nhận</span>
-                                            }
-                                            else if (booking.Status == "Pending")
-                                            {
-                                                <span class="badge bg-warning">Chờ xác nhận</span>
-                                            }
-                                            else if (booking.Status == "Playing")
-                                            {
-                                                <span class="badge bg-info">Đang chơi</span>
-                                            }
-                                            else if (booking.Status == "Completed")
-                                            {
-                                                <span class="badge bg-secondary">Hoàn thành</span>
-                                            }
-                                            else if (booking.Status == "Cancelled")
-                                            {
-                                                <span class="badge bg-danger">Đã hủy</span>
-                                            }
-                                        </div>
-                                    </div>
-
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <small class="text-muted d-block">Sân</small>
-                                            <strong>
-                                                Sân @booking.CourtNumber
-                                                <span class="badge bg-secondary">@booking.CourtType</span>
-                                            </strong>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <small class="text-muted d-block">Ngày chơi</small>
-                                            <strong>
-                                                <i class="bi bi-calendar"></i>
-                                                @booking.BookingDate.ToString("dd/MM/yyyy")
-                                            </strong>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <small class="text-muted d-block">Giờ chơi</small>
-                                            <strong>
-                                                <i class="bi bi-clock"></i>
-                                                @booking.StartTime.ToString(@"hh\:mm") - @booking.EndTime.ToString(@"hh\:mm")
-                                            </strong>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <small class="text-muted d-block">Đặt lúc</small>
-                                            <strong>@booking.CreatedAt.ToString("dd/MM/yyyy HH:mm")</strong>
-                                        </div>
-                                    </div>
-
-                                    @if (booking.RelatedOrders != null && booking.RelatedOrders.Any())
-                                    {
-                                        <div class="mt-3">
-                                            <small class="text-muted">Sản phẩm đi kèm:</small>
-                                            <ul class="list-unstyled mb-0 mt-1">
-                                                @foreach (var order in booking.RelatedOrders)
-                                                {
-                                                    @foreach (var detail in order.OrderDetails)
-                                                    {
-                                                        <li class="small">
-                                                            <i class="bi bi-box"></i>
-                                                            @detail.ProductName x@detail.Quantity -
-                                                            <span class="text-success">@detail.TotalPrice.ToString("N0")đ</span>
-                                                        </li>
-                                                    }
-                                                }
-                                            </ul>
-                                        </div>
-                                    }
+        @foreach (var b in Model)
+        {
+            <div class="bk-card">
+                <div class="bk-top">
+                    <div class="bk-accent"></div>
+                    <div class="bk-main">
+                        <div class="bk-left">
+                            <div class="bk-header">
+                                <span class="bk-facility">@b.FacilityName</span>
+                                <span class="bk-code">@b.BookingCode</span>
+                                <span class="sb @b.Status.ToLower()">@b.Status</span>
+                            </div>
+                            <div class="bk-meta">
+                                <div class="bm"><i class="bi bi-grid-3x3-gap"></i> <span>Sân <strong>@b.CourtNumber</strong></span> <span style="background:var(--S);color:#4a3728;font-size:.6rem;padding:.1rem .45rem;border-radius:3px">@b.CourtType</span></div>
+                                <div class="bm"><i class="bi bi-calendar3"></i> <strong>@b.BookingDate.ToString("dd/MM/yyyy")</strong></div>
+                                <div class="bm"><i class="bi bi-clock"></i> <strong>@b.StartTime.ToString(@"hh\:mm") – @b.EndTime.ToString(@"hh\:mm")</strong></div>
+                                <div class="bm">
+                                    <i class="bi bi-credit-card"></i> <span>@b.PaymentMethod</span>
+                                    <span class="sb @(b.PaymentStatus?.ToLower() == "paid" ? "confirmed" : "pending")" style="font-size:.6rem">@b.PaymentStatus</span>
                                 </div>
-
-                                <div class="col-md-4 border-start">
-                                    <div class="text-center mb-3">
-                                        <small class="text-muted d-block">Tổng tiền</small>
-                                        <h4 class="text-success mb-0">@booking.GrandTotal.ToString("N0")đ</h4>
-                                    </div>
-
-                                    <div class="d-grid gap-2">
-                                        <a asp-action="Details" asp-route-id="@booking.BookingId"
-                                           class="btn btn-outline-primary btn-sm">
-                                            <i class="bi bi-eye"></i> Chi tiết
-                                        </a>
-
-                                        @if (booking.CanCancel)
-                                        {
-                                            <button type="button" class="btn btn-outline-danger btn-sm"
-                                                    onclick="cancelBooking(@booking.BookingId, '@booking.BookingCode')">
-                                                <i class="bi bi-x-circle"></i> Hủy đơn
-                                            </button>
-                                        }
-
-                                        @if (booking.Status == "Completed")
-                                        {
-                                            <button type="button" class="btn btn-outline-success btn-sm">
-                                                <i class="bi bi-star"></i> Đánh giá
-                                            </button>
-                                        }
-                                    </div>
-                                </div>
+                                <div class="bm"><i class="bi bi-clock-history"></i> <span style="color:#8c7a68">@b.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span></div>
+                            </div>
+                        </div>
+                        <div class="bk-right">
+                            <div class="bk-total-lbl">Tổng tiền</div>
+                            <div class="bk-total">@b.GrandTotal.ToString("N0")đ</div>
+                            <div class="bk-acts">
+                                <a asp-action="Details" asp-route-id="@b.BookingId" class="btn-det">
+                                    <i class="bi bi-eye"></i> Chi tiết
+                                </a>
+                                @if (b.CanCancel)
+                                {
+                                    <button type="button" class="btn-can" onclick="showCancel(@b.BookingId,'@b.BookingCode')">
+                                        <i class="bi bi-x-circle"></i> Hủy
+                                    </button>
+                                }
+                                @if (b.Status == "Completed")
+                                {
+                                    <button type="button" class="btn-rate"><i class="bi bi-star"></i> Đánh giá</button>
+                                }
                             </div>
                         </div>
                     </div>
                 </div>
-            }
-        </div>
-
-        <!-- Pagination -->
+                @if (b.RelatedOrders != null && b.RelatedOrders.Any(o => o.OrderDetails.Any()))
+                {
+                    <div class="bk-prods">
+                        <div class="bp-title"><i class="bi bi-bag me-1"></i> Sản phẩm đi kèm</div>
+                        <div class="bp-items">
+                            @foreach (var o in b.RelatedOrders)
+                            {
+                                @foreach (var d in o.OrderDetails)
+                                {
+                                    <div class="bp-tag"><i class="bi bi-box"></i> @d.ProductName × @d.Quantity</div>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
         @if (Model.Count > 10)
         {
-            <nav aria-label="Pagination" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#"><i class="bi bi-chevron-left"></i></a>
-                    </li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item">
-                        <a class="page-link" href="#"><i class="bi bi-chevron-right"></i></a>
-                    </li>
-                </ul>
-            </nav>
+            <div class="pagi">
+                <button class="page-btn"><i class="bi bi-chevron-left"></i></button>
+                <button class="page-btn on">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn"><i class="bi bi-chevron-right"></i></button>
+            </div>
         }
     }
 </div>
 
 <!-- Cancel Modal -->
-<div class="modal fade" id="cancelModal" tabindex="-1">
-    <div class="modal-dialog">
+<div class="modal fade modal-dark" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Hủy đặt sân</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2" style="color:var(--G)"></i> Hủy đặt sân</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="cancelForm" method="post">
+                @Html.AntiForgeryToken()
                 <div class="modal-body">
-                    <input type="hidden" id="cancelBookingId" name="id" />
-                    <p>Bạn có chắc chắn muốn hủy đơn <strong id="cancelBookingCode"></strong>?</p>
-
-                    <div class="mb-3">
-                        <label for="cancelReason" class="form-label">Lý do hủy</label>
-                        <textarea class="form-control" id="cancelReason" name="cancelReason"
-                                  rows="3" required placeholder="Nhập lý do hủy đơn"></textarea>
+                    <input type="hidden" id="cid" name="id" />
+                    <p style="font-size:.88rem;color:var(--D)">Bạn có chắc chắn muốn hủy đơn <strong id="ccode"></strong>?</p>
+                    <div style="margin-bottom:.5rem">
+                        <div class="fl" style="margin-bottom:.4rem">Lý do hủy *</div>
+                        <textarea id="creason" name="cancelReason" rows="3" required placeholder="Nhập lý do hủy đơn..."></textarea>
                     </div>
-
-                    <div class="alert alert-warning mb-0">
-                        <small>
-                            <i class="bi bi-info-circle"></i>
-                            Lưu ý: Bạn chỉ có thể hủy đơn trước giờ chơi ít nhất 2 giờ
-                        </small>
-                    </div>
+                    <div class="warn-note"><i class="bi bi-info-circle"></i><span>Chỉ có thể hủy trước giờ chơi ít nhất <strong>2 giờ</strong></span></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        Đóng
-                    </button>
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-x-circle"></i> Xác nhận hủy
-                    </button>
+                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn-confirm-cancel"><i class="bi bi-x-circle me-1"></i> Xác nhận hủy</button>
                 </div>
             </form>
         </div>
@@ -255,30 +791,18 @@
 
 @section Scripts {
     <script>
-        function cancelBooking(bookingId, bookingCode) {
-            $('#cancelBookingId').val(bookingId);
-            $('#cancelBookingCode').text(bookingCode);
-            $('#cancelForm').attr('action', '@Url.Action("Cancel", "Booking")');
-
-            const modal = new bootstrap.Modal(document.getElementById('cancelModal'));
-            modal.show();
+        function showCancel(id, code) {
+            document.getElementById('cid').value = id;
+            document.getElementById('ccode').textContent = code;
+            document.getElementById('cancelForm').action = '@Url.Action("Cancel", "Booking")';
+            new bootstrap.Modal(document.getElementById('cancelModal')).show();
         }
-
-        $(document).ready(function() {
-            // Add animation to cards
-            $('.booking-card').each(function(index) {
-                $(this).css('animation', `fadeIn 0.5s ease-in-out ${index * 0.1}s both`);
-            });
-
-            // Form validation
-            $('#cancelForm').on('submit', function(e) {
-                const reason = $('#cancelReason').val().trim();
-                if (!reason) {
-                    e.preventDefault();
-                    showError('Vui lòng nhập lý do hủy đơn');
-                    return false;
-                }
-            });
+        document.getElementById('cancelForm').addEventListener('submit', function(e){
+            if (!document.getElementById('creason').value.trim()) {
+                e.preventDefault();
+                document.getElementById('creason').focus();
+                document.getElementById('creason').style.borderColor = '#dc2626';
+            }
         });
     </script>
 }

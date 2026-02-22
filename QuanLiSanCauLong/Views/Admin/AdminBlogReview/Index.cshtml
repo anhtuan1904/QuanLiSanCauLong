@@ -1,0 +1,605 @@
+﻿@model QuanLiSanCauLong.ViewModels.AdminBlogReviewListViewModel
+@{
+    ViewData["Title"] = "Quản Lý Đánh Giá Bài Viết";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<style>
+:root {
+    --deep:  #1a1209; --gold: #d4a017; --gold2: #f5c842;
+    --cream: #fdf8f0; --warm: #f5ede0; --border: #e8ddd0; --muted: #8a7560;
+}
+
+/* HEADER */
+.arh { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:2rem; flex-wrap:wrap; }
+.arh-title { font-family:'Playfair Display',serif; font-size:1.9rem; font-weight:700; color:var(--deep); }
+.arh-title em { font-style:italic; color:var(--gold); }
+.arh-sub { font-size:.82rem; color:var(--muted); margin-top:.2rem; }
+
+/* STAT STRIP */
+.stat-strip { display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:var(--border);
+    border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-bottom:1.75rem; }
+.stat-box { background:#fff; padding:1.2rem 1.5rem; cursor:pointer; transition:background .2s; position:relative; }
+.stat-box::after { content:''; position:absolute; bottom:0; left:0; width:0; height:3px;
+    background:var(--gold); transition:width .35s; }
+.stat-box:hover { background:var(--cream); }
+.stat-box:hover::after, .stat-box.active::after { width:100%; }
+.stat-box.active { background:var(--cream); }
+.stat-n { font-family:'Playfair Display',serif; font-size:2rem; font-weight:700; color:var(--deep); line-height:1; }
+.stat-l { font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-top:.3rem; }
+.stat-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:.4rem; }
+
+/* TOOLBAR */
+.toolbar { display:flex; align-items:center; gap:.75rem; margin-bottom:1.25rem; flex-wrap:wrap; }
+.tb-search { flex:1; min-width:220px; max-width:340px; position:relative; }
+.tb-search input { width:100%; padding:.65rem 1rem .65rem 2.4rem; border:1px solid var(--border);
+    border-radius:7px; background:#fff; font-size:.84rem; font-family:'Outfit',sans-serif;
+    outline:none; color:var(--deep); transition:border-color .2s; }
+.tb-search input:focus { border-color:var(--gold); }
+.tb-search i { position:absolute; left:.85rem; top:50%; transform:translateY(-50%); color:var(--muted); }
+.tb-sel { padding:.65rem 1rem; border:1px solid var(--border); border-radius:7px; background:#fff;
+    font-size:.84rem; font-family:'Outfit',sans-serif; color:var(--deep); outline:none; cursor:pointer; }
+.tb-sel:focus { border-color:var(--gold); }
+.gold-btn { background:linear-gradient(135deg,var(--gold),var(--gold2)); color:var(--deep);
+    border:none; padding:.65rem 1.4rem; font-weight:700; font-size:.82rem; border-radius:6px;
+    cursor:pointer; display:inline-flex; align-items:center; gap:.45rem; transition:all .2s; }
+.gold-btn:hover { transform:translateY(-1px); box-shadow:0 5px 16px rgba(212,160,23,.35); }
+.dark-btn { background:var(--deep); color:rgba(255,255,255,.82); border:none; padding:.65rem 1.2rem;
+    font-weight:600; font-size:.82rem; border-radius:6px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:.45rem; transition:all .2s; }
+.dark-btn:hover { background:#2e2110; color:var(--gold2); }
+
+/* TABLE */
+.rev-table-wrap { background:#fff; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.rtable { width:100%; border-collapse:collapse; }
+.rtable th { background:var(--warm); padding:.8rem 1rem; font-size:.68rem; font-weight:700;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--muted); text-align:left;
+    border-bottom:1px solid var(--border); white-space:nowrap; }
+.rtable td { padding:.9rem 1rem; border-bottom:1px solid var(--border); font-size:.855rem;
+    vertical-align:middle; color:var(--deep); }
+.rtable tr:last-child td { border-bottom:none; }
+.rtable tr:hover td { background:var(--cream); }
+.rtable tr.selected td { background:rgba(212,160,23,.06); }
+
+/* CELLS */
+.user-cell { display:flex; align-items:center; gap:.65rem; }
+.uav { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold2));
+    display:flex; align-items:center; justify-content:center; color:var(--deep); font-weight:800;
+    font-size:.82rem; flex-shrink:0; font-family:'Playfair Display',serif; }
+.uav.m { background:linear-gradient(135deg,var(--deep),#3d2a10); color:var(--gold2); }
+.u-name { font-weight:600; font-size:.84rem; line-height:1.2; }
+.u-sub  { font-size:.7rem; color:var(--muted); }
+
+.blog-chip { display:inline-flex; align-items:center; gap:.35rem; background:var(--warm);
+    border:1px solid var(--border); padding:.2rem .65rem; border-radius:4px;
+    font-size:.72rem; font-weight:600; color:var(--deep); max-width:160px;
+    overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.blog-chip i { color:var(--gold); flex-shrink:0; }
+
+.stars-cell { display:flex; gap:.1rem; }
+.stars-cell i { font-size:.75rem; }
+.stars-cell .f { color:var(--gold); }
+.stars-cell .e { color:#d4ccc0; }
+.star-score { font-weight:700; font-size:.82rem; color:var(--deep); margin-left:.3rem; }
+
+.rev-snippet { max-width:240px; font-size:.82rem; line-height:1.55; color:#4a3520;
+    font-weight:300; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+
+.spill { display:inline-flex; align-items:center; gap:.3rem; font-size:.66rem; font-weight:700;
+    padding:.28rem .65rem; border-radius:3px; letter-spacing:.06em; text-transform:uppercase;
+    border:none; cursor:pointer; transition:all .2s; }
+.spill.approved { background:rgba(22,163,74,.1);  color:#16a34a; }
+.spill.pending  { background:rgba(212,160,23,.15); color:#92660a; }
+.spill.rejected { background:rgba(201,75,42,.1);  color:#c94b2a; }
+.spill.spam     { background:rgba(138,117,96,.12); color:#8a7560; }
+
+/* ACTION BTNS */
+.act-g { display:flex; gap:.3rem; }
+.act-b { width:30px; height:30px; border-radius:5px; border:1px solid var(--border);
+    background:#fff; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; color:var(--muted); transition:all .2s; font-size:.78rem; }
+.act-b:hover.apv { border-color:#16a34a; color:#16a34a; background:rgba(22,163,74,.07); }
+.act-b:hover.rej { border-color:#c94b2a; color:#c94b2a; background:rgba(201,75,42,.07); }
+.act-b:hover.vw  { border-color:var(--gold); color:var(--gold); background:rgba(212,160,23,.07); }
+.act-b:hover.del { border-color:#c94b2a; color:#c94b2a; background:rgba(201,75,42,.07); }
+
+/* PAGINATION */
+.pag { display:flex; align-items:center; justify-content:space-between;
+    padding:.9rem 1.2rem; border-top:1px solid var(--border); background:var(--warm); }
+.pag-info { font-size:.78rem; color:var(--muted); }
+.pag-btns { display:flex; gap:.35rem; }
+.pag-btn { width:30px; height:30px; border-radius:5px; border:1px solid var(--border);
+    background:#fff; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:.78rem; color:var(--deep); transition:all .2s; }
+.pag-btn.active { background:var(--deep); color:var(--gold2); border-color:var(--deep); }
+.pag-btn:hover:not(.active) { border-color:var(--gold); color:var(--gold); }
+
+/* BULK ACTION BAR */
+.bulk-bar { display:none; position:sticky; bottom:1.5rem; left:0; right:0; z-index:50;
+    background:var(--deep); border-radius:10px; padding:1rem 1.5rem;
+    border:1px solid rgba(212,160,23,.3);
+    box-shadow:0 8px 30px rgba(26,18,9,.4); align-items:center; gap:1rem; flex-wrap:wrap; }
+.bulk-bar.show { display:flex; }
+.bulk-info { color:rgba(255,255,255,.6); font-size:.84rem; }
+.bulk-info strong { color:var(--gold2); }
+.bulk-action-btn { padding:.55rem 1.1rem; border-radius:6px; font-size:.8rem; font-weight:700;
+    cursor:pointer; border:none; transition:all .2s; display:flex; align-items:center; gap:.4rem; }
+.bulk-action-btn.approve { background:rgba(22,163,74,.2); color:#4ade80; }
+.bulk-action-btn.reject  { background:rgba(201,75,42,.2); color:#f87171; }
+.bulk-action-btn.spam    { background:rgba(138,117,96,.2); color:rgba(255,255,255,.5); }
+.bulk-action-btn.del     { background:rgba(201,75,42,.35); color:#fca5a5; }
+
+/* DETAIL MODAL */
+.dm-overlay { position:fixed; inset:0; background:rgba(26,18,9,.88); backdrop-filter:blur(12px);
+    z-index:9999; display:none; align-items:center; justify-content:center; padding:1.5rem; }
+.dm-overlay.open { display:flex; }
+.dm-modal { background:var(--cream); width:100%; max-width:650px; border-radius:14px;
+    overflow:hidden; animation:dmIn .35s cubic-bezier(.25,.46,.45,.94); max-height:90vh; overflow-y:auto; }
+@@keyframes dmIn { from{opacity:0;transform:scale(.96) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+.dm-head { background:var(--deep); padding:1.5rem 2rem; position:relative; }
+.dm-head::after { content:''; position:absolute; top:0; left:0; right:0; height:2px;
+    background:linear-gradient(90deg,var(--gold),var(--gold2)); }
+.dm-title { font-family:'Playfair Display',serif; font-size:1.2rem; color:#fff; font-weight:700; }
+.dm-close { position:absolute; top:1.1rem; right:1.2rem; width:30px; height:30px; border-radius:50%;
+    background:rgba(255,255,255,.1); border:none; color:#fff; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:background .2s; }
+.dm-close:hover { background:rgba(255,255,255,.2); }
+.dm-body { padding:2rem; }
+.dm-grid { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin-bottom:1.25rem; }
+.dm-box { background:var(--warm); border:1px solid var(--border); padding:.8rem 1rem; border-radius:6px; }
+.dm-label { font-size:.65rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:.25rem; }
+.dm-val { font-weight:600; font-size:.88rem; color:var(--deep); }
+.dm-content { background:var(--warm); border:1px solid var(--border); padding:1.1rem;
+    border-radius:6px; font-size:.88rem; line-height:1.8; color:#4a3520; font-weight:300; margin-bottom:1.25rem; }
+.dm-reply-area { width:100%; border:1.5px solid var(--border); border-radius:6px; padding:.8rem 1rem;
+    font-family:'Outfit',sans-serif; font-size:.85rem; outline:none; resize:vertical;
+    min-height:90px; background:var(--warm); color:var(--deep); transition:border-color .2s; }
+.dm-reply-area:focus { border-color:var(--gold); }
+.dm-actions { display:flex; gap:.75rem; justify-content:flex-end; padding-top:1.25rem;
+    border-top:1px solid var(--border); margin-top:1.25rem; }
+.approve-btn { background:linear-gradient(135deg,#16a34a,#22c55e); color:#fff; border:none;
+    padding:.7rem 1.6rem; border-radius:6px; font-weight:700; font-size:.82rem;
+    cursor:pointer; display:flex; align-items:center; gap:.45rem; transition:all .2s; }
+.approve-btn:hover { transform:translateY(-1px); box-shadow:0 5px 16px rgba(22,163,74,.3); }
+.reject-lite { background:rgba(201,75,42,.1); color:#c94b2a; border:1px solid rgba(201,75,42,.3);
+    padding:.7rem 1.4rem; border-radius:6px; font-weight:700; font-size:.82rem;
+    cursor:pointer; display:flex; align-items:center; gap:.45rem; transition:all .2s; }
+.reject-lite:hover { background:rgba(201,75,42,.2); }
+
+@@media(max-width:900px) {
+    .stat-strip { grid-template-columns:repeat(3,1fr); }
+    .rtable th:nth-child(4),.rtable td:nth-child(4),
+    .rtable th:nth-child(7),.rtable td:nth-child(7) { display:none; }
+}
+</style>
+
+<div style="max-width:1400px;">
+
+    <!-- HEADER -->
+    <div class="arh">
+        <div>
+            <div class="arh-title">Đánh Giá <em>Bài Viết</em></div>
+            <div class="arh-sub">Duyệt, quản lý và phản hồi các đánh giá từ người đọc</div>
+        </div>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+            <a asp-action="Stats" class="dark-btn"><i class="bi bi-bar-chart"></i> Thống Kê</a>
+            <button class="gold-btn" onclick="exportExcel()"><i class="bi bi-download"></i> Xuất Excel</button>
+        </div>
+    </div>
+
+    <!-- STAT STRIP -->
+    <div class="stat-strip">
+        <div class="stat-box active" onclick="filterStatus('')">
+            <div class="stat-n">@Model.TotalCount</div>
+            <div class="stat-l">Tất Cả</div>
+        </div>
+        <div class="stat-box" onclick="filterStatus('Pending')">
+            <div class="stat-n" style="color:#92660a;">@Model.PendingCount</div>
+            <div class="stat-l"><span class="stat-dot" style="background:#92660a;"></span>Chờ Duyệt</div>
+        </div>
+        <div class="stat-box" onclick="filterStatus('Approved')">
+            <div class="stat-n" style="color:#16a34a;">@Model.ApprovedCount</div>
+            <div class="stat-l"><span class="stat-dot" style="background:#16a34a;"></span>Đã Duyệt</div>
+        </div>
+        <div class="stat-box" onclick="filterStatus('Rejected')">
+            <div class="stat-n" style="color:#c94b2a;">@Model.RejectedCount</div>
+            <div class="stat-l"><span class="stat-dot" style="background:#c94b2a;"></span>Từ Chối</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-n" style="color:var(--gold);">
+                @Model.OverallAverage.ToString("F1")
+                <span style="font-size:1rem;color:var(--gold);margin-left:.2rem;">★</span>
+            </div>
+            <div class="stat-l">Điểm TB</div>
+        </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <form method="get" id="filterForm">
+        <div class="toolbar">
+            <div class="tb-search">
+                <i class="bi bi-search"></i>
+                <input type="text" name="q" placeholder="Tìm tên, email, nội dung..."
+                       value="@Model.SearchQuery" id="searchInput" />
+            </div>
+
+            @* Trạng thái *@
+            <select name="status" class="tb-sel" onchange="this.form.submit()">
+                <option value="">Tất cả trạng thái</option>
+                @{
+                    string[] statuses = { "Pending", "Approved", "Rejected", "Spam" };
+                    string[] statusLabels = { "Chờ duyệt", "Đã duyệt", "Từ chối", "Spam" };
+                    for (int i = 0; i < statuses.Length; i++)
+                    {
+                        var isSelected = Model.FilterStatus == statuses[i] ? "selected" : "";
+                        <option value="@statuses[i]" selected="@(!string.IsNullOrEmpty(isSelected) ? "selected" : null)">@statusLabels[i]</option>
+                    }
+                }
+            </select>
+
+            @* Đánh giá sao *@
+            <select name="rating" class="tb-sel" onchange="this.form.submit()">
+                <option value="">Tất cả sao</option>
+                @for (int s = 5; s >= 1; s--)
+                {
+                    if (Model.FilterRating == s)
+                    {
+                        <option value="@s" selected="selected">@s sao</option>
+                    }
+                    else
+                    {
+                        <option value="@s">@s sao</option>
+                    }
+                }
+            </select>
+
+            @* Sắp xếp *@
+            <select name="sort" class="tb-sel" onchange="this.form.submit()">
+                @{
+                    var sorts = new Dictionary<string, string> {
+                                {"newest", "Mới nhất"}, {"oldest", "Cũ nhất"},
+                                {"highest", "Sao cao nhất"}, {"lowest", "Sao thấp nhất"},
+                                {"pending", "Chờ duyệt trước"}
+                                };
+                    foreach (var s in sorts)
+                    {
+                        if (Model.SortBy == s.Key)
+                        {
+                            <option value="@s.Key" selected="selected">@s.Value</option>
+                        }
+                        else
+                        {
+                            <option value="@s.Key">@s.Value</option>
+                        }
+                    }
+                }
+            </select>
+
+            <button type="submit" class="dark-btn"><i class="bi bi-funnel"></i> Lọc</button>
+            <a asp-action="Index" class="dark-btn" style="color:rgba(255,255,255,.5);"><i class="bi bi-x"></i> Xóa lọc</a>
+        </div>
+        <input type="hidden" name="status" id="hiddenStatus" value="@Model.FilterStatus" />
+    </form>
+
+    <!-- TABLE -->
+    <div class="rev-table-wrap">
+        <table class="rtable" id="revTable">
+            <thead>
+                <tr>
+                    <th style="width:36px;"><input type="checkbox" id="checkAll" /></th>
+                    <th>Người Đánh Giá</th>
+                    <th>Bài Viết</th>
+                    <th>Điểm</th>
+                    <th>Nội Dung</th>
+                    <th>Thời Gian</th>
+                    <th>Trạng Thái</th>
+                    <th>Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model.Reviews)
+                {
+                    <tr id="row-@r.ReviewId">
+                        <td><input type="checkbox" class="row-check" value="@r.ReviewId" /></td>
+                        <td>
+                            <div class="user-cell">
+                                <div class="uav @(r.IsMember?"m":"")">@r.Initial</div>
+                                <div>
+                                    <div class="u-name">
+                                        @r.DisplayName
+                                        @if (r.IsFeatured) { <i class="bi bi-star-fill" style="color:var(--gold);font-size:.65rem;margin-left:.3rem;" title="Nổi bật"></i> }
+                                        @if (r.IsPinned)   { <i class="bi bi-pin-angle-fill" style="color:#c94b2a;font-size:.65rem;margin-left:.2rem;" title="Ghim"></i> }
+                                    </div>
+                                    <div class="u-sub">@(r.Email ?? (r.IsMember ? "Hội viên" : "Khách"))</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="blog-chip">
+                                <i class="bi bi-newspaper"></i>@r.BlogTitle
+                            </div>
+                        </td>
+                        <td>
+                            <div class="stars-cell">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="bi @(i <= r.Rating ? "bi-star-fill f" : "bi-star e")"></i>
+                                }
+                                <span class="star-score">@r.Rating</span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(r.Reaction))
+                            {
+                                <div style="font-size:.65rem;color:var(--muted);margin-top:.2rem;">
+                                    @(r.Reaction == "helpful" ? "💡 Hữu ích" :
+                                      r.Reaction == "insightful" ? "🔍 Sâu sắc" : "✍️ Viết tốt")
+                                </div>
+                            }
+                        </td>
+                        <td><div class="rev-snippet">@r.Content</div>
+                            @if (r.HasAdminReply) { <div style="font-size:.68rem;color:var(--gold);margin-top:.3rem;"><i class="bi bi-reply"></i> Đã phản hồi</div> }
+                        </td>
+                        <td style="white-space:nowrap;font-size:.78rem;color:var(--muted);">
+                            @r.TimeAgo<br/>
+                            <span style="font-size:.68rem;opacity:.6;">@r.CreatedAt.ToString("dd/MM/yy")</span>
+                        </td>
+                        <td>
+                            <span class="spill @r.Status.ToLower()">
+                                @(r.Status == "Approved" ? "✓" : r.Status == "Pending" ? "⏳" : r.Status == "Rejected" ? "✕" : "⚠") @r.StatusLabel
+                            </span>
+                        </td>
+                        <td>
+                            <div class="act-g">
+                                <button class="act-b vw" title="Xem & Phản hồi"
+                                        onclick="openDetail(@r.ReviewId,'@Html.Raw(r.DisplayName.Replace("'","&#39;"))','@r.BlogTitle','@r.Rating','@Html.Raw(r.Content.Replace("'","&#39;").Replace("\n"," "))','@r.TimeAgo','@r.Status','@(r.Email ?? "")','@Html.Raw((r.Reaction ?? "").Replace("'","&#39;"))')">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="act-b apv" title="Duyệt" onclick="quickApprove(@r.ReviewId)">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                                <button class="act-b rej" title="Từ chối" onclick="quickReject(@r.ReviewId)">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                <button class="act-b del" title="Xóa" onclick="quickDelete(@r.ReviewId)">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Reviews.Any())
+                {
+                    <tr><td colspan="8" style="text-align:center;padding:4rem;color:var(--muted);">
+                        <i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:.75rem;opacity:.4;"></i>
+                        Không có đánh giá nào
+                    </td></tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- PAGINATION -->
+        <div class="pag">
+            <div class="pag-info">Hiển thị @Model.Reviews.Count / @Model.TotalCount đánh giá</div>
+            <div class="pag-btns">
+                @if (Model.CurrentPage > 1)
+                {
+                    <a href="?page=@(Model.CurrentPage-1)&status=@Model.FilterStatus&q=@Model.SearchQuery&sort=@Model.SortBy" class="pag-btn">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                }
+                @for (int p = Math.Max(1, Model.CurrentPage - 2); p <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); p++)
+                {
+                    <a href="?page=@p&status=@Model.FilterStatus&q=@Model.SearchQuery&sort=@Model.SortBy"
+                       class="pag-btn @(p == Model.CurrentPage ? "active" : "")">@p</a>
+                }
+                @if (Model.CurrentPage < Model.TotalPages)
+                {
+                    <a href="?page=@(Model.CurrentPage+1)&status=@Model.FilterStatus&q=@Model.SearchQuery&sort=@Model.SortBy" class="pag-btn">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- BULK ACTION BAR -->
+    <div class="bulk-bar" id="bulkBar">
+        <div class="bulk-info">Đã chọn <strong id="bulkCount">0</strong> đánh giá</div>
+        <button class="bulk-action-btn approve" onclick="bulkAction('approve')"><i class="bi bi-check-all"></i> Duyệt tất cả</button>
+        <button class="bulk-action-btn reject"  onclick="bulkAction('reject')"><i class="bi bi-x-circle"></i> Từ chối</button>
+        <button class="bulk-action-btn spam"    onclick="bulkAction('spam')"><i class="bi bi-exclamation-triangle"></i> Đánh Spam</button>
+        <button class="bulk-action-btn del"     onclick="bulkAction('delete')"><i class="bi bi-trash3"></i> Xóa</button>
+        <button style="margin-left:auto;background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:1.1rem;" onclick="clearSelection()">
+            <i class="bi bi-x"></i>
+        </button>
+    </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="dm-overlay" id="detailModal" onclick="closeDetailModal(event)">
+    <div class="dm-modal">
+        <div class="dm-head">
+            <div class="dm-title">Chi Tiết Đánh Giá</div>
+            <button class="dm-close" onclick="document.getElementById('detailModal').classList.remove('open')">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="dm-body">
+            <div class="dm-grid">
+                <div class="dm-box"><span class="dm-label">Người đánh giá</span><span class="dm-val" id="dm-user"></span></div>
+                <div class="dm-box"><span class="dm-label">Email</span><span class="dm-val" id="dm-email" style="font-size:.8rem;"></span></div>
+                <div class="dm-box"><span class="dm-label">Bài viết</span><span class="dm-val" id="dm-blog"></span></div>
+                <div class="dm-box"><span class="dm-label">Thời gian</span><span class="dm-val" id="dm-time"></span></div>
+                <div class="dm-box"><span class="dm-label">Điểm</span><span class="dm-val" id="dm-stars"></span></div>
+                <div class="dm-box"><span class="dm-label">Trạng thái</span><span class="dm-val" id="dm-status"></span></div>
+            </div>
+            <div style="font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem;">Nội Dung</div>
+            <div class="dm-content" id="dm-content"></div>
+            <div style="font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem;">Phản Hồi Quản Trị</div>
+            <textarea class="dm-reply-area" id="dm-reply" placeholder="Nhập phản hồi (tùy chọn). Sẽ hiển thị công khai bên dưới đánh giá..."></textarea>
+            <div class="dm-actions">
+                <button class="reject-lite" onclick="doReject()"><i class="bi bi-x-circle"></i> Từ Chối</button>
+                <button class="reject-lite" style="background:rgba(138,117,96,.1);color:var(--muted);border-color:rgba(138,117,96,.3);" onclick="doSpam()"><i class="bi bi-exclamation-triangle"></i> Spam</button>
+                <button class="approve-btn" onclick="doApproveReply()"><i class="bi bi-check-circle"></i> Duyệt & Lưu Phản Hồi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let currentReviewId = 0;
+
+    // Stat strip filter
+    function filterStatus(s) {
+        document.querySelectorAll('.stat-box').forEach(b => b.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        document.getElementById('hiddenStatus').value = s;
+        document.getElementById('filterForm').submit();
+    }
+
+    // Select all
+    document.getElementById('checkAll').addEventListener('change', function() {
+        document.querySelectorAll('.row-check').forEach(c => c.checked = this.checked);
+        updateBulkBar();
+    });
+    document.querySelectorAll('.row-check').forEach(c => {
+        c.addEventListener('change', function() {
+            document.getElementById('checkAll').checked =
+                [...document.querySelectorAll('.row-check')].every(x => x.checked);
+            updateBulkBar();
+            const row = this.closest('tr');
+            if (this.checked) row.classList.add('selected');
+            else row.classList.remove('selected');
+        });
+    });
+    function updateBulkBar() {
+        const sel = [...document.querySelectorAll('.row-check:checked')];
+        const bar = document.getElementById('bulkBar');
+        document.getElementById('bulkCount').textContent = sel.length;
+        bar.classList.toggle('show', sel.length > 0);
+    }
+    function clearSelection() {
+        document.querySelectorAll('.row-check, #checkAll').forEach(c => c.checked = false);
+        document.querySelectorAll('tr.selected').forEach(r => r.classList.remove('selected'));
+        document.getElementById('bulkBar').classList.remove('show');
+    }
+    async function bulkAction(action) {
+        const ids = [...document.querySelectorAll('.row-check:checked')].map(c => +c.value);
+        if (!ids.length) return;
+        if (action === 'delete' && !confirm(`Xóa ${ids.length} đánh giá?`)) return;
+        const fd = new FormData();
+        fd.append('action', action);
+        ids.forEach(id => fd.append('ids', id));
+        fd.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+        const res = await fetch('/AdminBlogReview/BulkAction', { method:'POST', body:fd });
+        const data = await res.json();
+        if (data.success) { alert(data.message); location.reload(); }
+        else alert(data.message || 'Lỗi');
+    }
+
+    // Quick actions
+    async function quickApprove(id) {
+        const fd = new FormData();
+        fd.append('__RequestVerificationToken', getToken());
+        const res = await fetch(`/AdminBlogReview/Approve/${id}`, {
+            method:'POST', body:fd, headers:{'X-Requested-With':'XMLHttpRequest'}
+        });
+        const data = await res.json();
+        if (data.success) {
+            const pill = document.querySelector(`#row-${id} .spill`);
+            if (pill) { pill.className='spill approved'; pill.textContent='✓ Đã Duyệt'; }
+        }
+    }
+    async function quickReject(id) {
+        if (!confirm('Từ chối đánh giá này?')) return;
+        const fd = new FormData(); fd.append('__RequestVerificationToken', getToken());
+        const res = await fetch(`/AdminBlogReview/Reject/${id}`, {
+            method:'POST', body:fd, headers:{'X-Requested-With':'XMLHttpRequest'}
+        });
+        const data = await res.json();
+        if (data.success) {
+            const pill = document.querySelector(`#row-${id} .spill`);
+            if (pill) { pill.className='spill rejected'; pill.textContent='✕ Từ Chối'; }
+        }
+    }
+    async function quickDelete(id) {
+        if (!confirm('Xóa đánh giá này? Hành động không thể hoàn tác.')) return;
+        const fd = new FormData(); fd.append('__RequestVerificationToken', getToken());
+        const res = await fetch(`/AdminBlogReview/Delete/${id}`, {
+            method:'POST', body:fd, headers:{'X-Requested-With':'XMLHttpRequest'}
+        });
+        const data = await res.json();
+        if (data.success) {
+            const row = document.getElementById(`row-${id}`);
+            if (row) { row.style.opacity='0'; row.style.transition='opacity .3s'; setTimeout(()=>row.remove(),300); }
+        }
+    }
+
+    // Detail modal
+    function openDetail(id, user, blog, stars, content, time, status, email, reaction) {
+        currentReviewId = id;
+        document.getElementById('dm-user').textContent    = user;
+        document.getElementById('dm-email').textContent   = email || '—';
+        document.getElementById('dm-blog').textContent    = blog;
+        document.getElementById('dm-time').textContent    = time;
+        document.getElementById('dm-content').textContent = content;
+        const stMap = {Approved:'✓ Đã Duyệt', Pending:'⏳ Chờ Duyệt', Rejected:'✕ Từ Chối', Spam:'⚠ Spam'};
+        document.getElementById('dm-status').textContent  = stMap[status] || status;
+        const starsEl = document.getElementById('dm-stars');
+        starsEl.innerHTML = '';
+        for (let i=1;i<=5;i++) {
+            const ic = document.createElement('i');
+            ic.className = 'bi ' + (i<=+stars?'bi-star-fill':'bi-star');
+            ic.style.color = i<=+stars?'#d4a017':'#d4ccc0';
+            ic.style.marginRight='2px'; starsEl.appendChild(ic);
+        }
+        document.getElementById('dm-reply').value = '';
+        document.getElementById('detailModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeDetailModal(e) {
+        if (e.target === document.getElementById('detailModal')) {
+            document.getElementById('detailModal').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+    }
+    async function doApproveReply() {
+        const reply = document.getElementById('dm-reply').value.trim();
+        const fd = new FormData();
+        fd.append('reviewId', currentReviewId);
+        fd.append('replyContent', reply || '');
+        fd.append('__RequestVerificationToken', getToken());
+        await fetch('/AdminBlogReview/Approve/'+currentReviewId, {method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}});
+        if (reply) await fetch('/AdminBlogReview/Reply', {method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}});
+        document.getElementById('detailModal').classList.remove('open');
+        document.body.style.overflow = '';
+        location.reload();
+    }
+    async function doReject() {
+        const fd = new FormData(); fd.append('__RequestVerificationToken', getToken());
+        await fetch(`/AdminBlogReview/Reject/${currentReviewId}`,{method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}});
+        document.getElementById('detailModal').classList.remove('open');
+        document.body.style.overflow = '';
+        location.reload();
+    }
+    async function doSpam() {
+        const fd = new FormData(); fd.append('__RequestVerificationToken', getToken());
+        await fetch(`/AdminBlogReview/MarkSpam/${currentReviewId}`,{method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}});
+        document.getElementById('detailModal').classList.remove('open');
+        document.body.style.overflow = '';
+        location.reload();
+    }
+    document.addEventListener('keydown', e => {
+        if (e.key==='Escape') {
+            document.getElementById('detailModal').classList.remove('open');
+            document.body.style.overflow='';
+        }
+    });
+
+    function getToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    }
+    function exportExcel() { alert('Đang xuất Excel...'); }
+</script>
+@Html.AntiForgeryToken()
+}

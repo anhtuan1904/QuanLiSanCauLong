@@ -1,0 +1,1377 @@
+﻿@model QuanLiSanCauLong.ViewModels.BlogReviewPageViewModel
+@{
+    ViewData["Title"] = $"Đánh Giá - {Model.BlogTitle}";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #fdf8f0;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+    }
+
+    .br-page {
+        background: var(--cream);
+        font-family: 'Outfit',sans-serif;
+        min-height: 100vh;
+    }
+
+    /* HERO */
+    .br-hero {
+        background: var(--deep);
+        padding: 4rem 0 2.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .br-hero::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle,rgba(212,160,23,.1) 0%,transparent 70%);
+            pointer-events: none;
+        }
+
+        .br-hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: var(--cream);
+            clip-path: ellipse(55% 100% at 50% 100%);
+        }
+
+    .br-hero-inner {
+        max-width: 1060px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .br-hero-label {
+        font-size: .7rem;
+        letter-spacing: .22em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+        .br-hero-label::before {
+            content: '';
+            width: 20px;
+            height: 1px;
+            background: var(--gold);
+            display: block;
+        }
+
+    .br-hero-title {
+        font-family: 'Playfair Display',serif;
+        font-size: clamp(2rem,4vw,3.2rem);
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.15;
+        margin-bottom: .75rem;
+    }
+
+        .br-hero-title em {
+            font-style: italic;
+            color: var(--gold2);
+        }
+
+    .br-hero-blog {
+        font-size: .9rem;
+        color: rgba(255,255,255,.45);
+        font-weight: 300;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+
+        .br-hero-blog i {
+            color: var(--gold);
+            opacity: .6;
+        }
+
+    /* SCORE ROW */
+    .br-score-row {
+        max-width: 1060px;
+        margin: 0 auto;
+        padding: 2rem 2rem 0;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 3rem;
+        align-items: center;
+    }
+
+    .brs-big {
+        text-align: center;
+    }
+
+    .brs-num {
+        font-family: 'Playfair Display',serif;
+        font-size: 5rem;
+        font-weight: 700;
+        color: var(--gold);
+        line-height: 1;
+    }
+
+    .brs-stars {
+        display: flex;
+        justify-content: center;
+        gap: .2rem;
+        color: var(--gold);
+        font-size: 1.1rem;
+        margin: .5rem 0;
+    }
+
+    .brs-total {
+        font-size: .78rem;
+        color: var(--muted);
+    }
+
+    .brs-bars {
+        flex: 1;
+    }
+
+    .brs-bar-row {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        margin-bottom: .5rem;
+    }
+
+    .brs-bar-label {
+        font-size: .75rem;
+        width: 12px;
+        text-align: right;
+        color: var(--muted);
+        flex-shrink: 0;
+    }
+
+    .brs-bar-track {
+        flex: 1;
+        height: 7px;
+        background: var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .brs-bar-fill {
+        height: 100%;
+        background: var(--gold);
+        border-radius: 4px;
+        transition: width .6s;
+    }
+
+    .brs-bar-count {
+        font-size: .72rem;
+        color: var(--muted);
+        width: 28px;
+    }
+
+    .brs-reactions {
+        display: flex;
+        flex-direction: column;
+        gap: .6rem;
+    }
+
+    .reaction-chip {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        padding: .6rem .9rem;
+        background: rgba(255,255,255,.05);
+        border: 1px solid rgba(212,160,23,.15);
+        border-radius: 7px;
+    }
+
+    .rc-icon {
+        font-size: 1.1rem;
+    }
+
+    .rc-label {
+        font-size: .75rem;
+        color: rgba(255,255,255,.5);
+        line-height: 1.2;
+    }
+
+    .rc-count {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--gold);
+        margin-left: auto;
+    }
+
+    /* WRITE CTA */
+    .write-cta {
+        max-width: 1060px;
+        margin: 1.5rem auto 0;
+        padding: 0 2rem;
+    }
+
+    .write-cta-inner {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1.4rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .wc-text {
+        font-size: .95rem;
+        font-weight: 600;
+        color: var(--deep);
+    }
+
+    .wc-sub {
+        font-size: .78rem;
+        color: var(--muted);
+        margin-top: .2rem;
+    }
+
+    .write-btn {
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        border: none;
+        padding: .8rem 1.75rem;
+        font-family: 'Outfit',sans-serif;
+        font-size: .86rem;
+        font-weight: 700;
+        border-radius: 7px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        transition: all .25s;
+        flex-shrink: 0;
+    }
+
+        .write-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212,160,23,.35);
+        }
+
+    /* MAIN BODY */
+    .br-body {
+        max-width: 1060px;
+        margin: 0 auto;
+        padding: 2rem 2rem 5rem;
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 2rem;
+        align-items: start;
+    }
+
+    /* SIDEBAR */
+    .br-sidebar {
+        position: sticky;
+        top: 80px;
+    }
+
+    .sb-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    .sb-head {
+        padding: .85rem 1.1rem;
+        border-bottom: 1px solid var(--border);
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: var(--warm);
+    }
+
+    .sb-body {
+        padding: .75rem;
+    }
+
+    .sf-row {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .45rem .6rem;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background .2s;
+        margin-bottom: .2rem;
+    }
+
+        .sf-row:hover {
+            background: var(--warm);
+        }
+
+        .sf-row.active {
+            background: rgba(212,160,23,.08);
+            border: 1.5px solid rgba(212,160,23,.3);
+        }
+
+    .sf-stars {
+        display: flex;
+        gap: .1rem;
+        font-size: .68rem;
+        color: var(--gold);
+    }
+
+    .sf-bar-mini {
+        flex: 1;
+        height: 4px;
+        background: var(--border);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .sf-bar-fill {
+        height: 100%;
+        background: var(--gold);
+    }
+
+    .sf-cnt {
+        font-size: .7rem;
+        color: var(--muted);
+        width: 22px;
+        text-align: right;
+    }
+
+    .sort-row {
+        display: flex;
+        flex-direction: column;
+        gap: .3rem;
+    }
+
+    .sort-opt {
+        padding: .5rem .75rem;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: .82rem;
+        font-weight: 500;
+        color: var(--muted);
+        transition: all .2s;
+    }
+
+        .sort-opt:hover {
+            background: var(--warm);
+            color: var(--deep);
+        }
+
+        .sort-opt.active {
+            background: var(--deep);
+            color: var(--gold2);
+        }
+
+    /* REVIEW CARDS */
+    .sort-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: .75rem;
+    }
+
+    .sort-count {
+        font-size: .88rem;
+        color: var(--muted);
+    }
+
+        .sort-count strong {
+            color: var(--deep);
+            font-weight: 700;
+        }
+
+    /* PINNED */
+    .pinned-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .pinned-label {
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: var(--gold);
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin-bottom: .75rem;
+    }
+
+        .pinned-label::before {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(212,160,23,.25);
+        }
+
+    /* CARD */
+    .rv-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1.6rem;
+        margin-bottom: 1rem;
+        transition: box-shadow .25s;
+        position: relative;
+    }
+
+        .rv-card:hover {
+            box-shadow: 0 5px 22px rgba(26,18,9,.07);
+        }
+
+        .rv-card.pinned {
+            border-color: rgba(212,160,23,.4);
+            background: rgba(253,248,240,.7);
+        }
+
+            .rv-card.pinned::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 2px;
+                background: linear-gradient(90deg,var(--gold),var(--gold2));
+                border-radius: 10px 10px 0 0;
+            }
+
+    .rv-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .rv-user {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .rv-av {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        font-family: 'Playfair Display',serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1rem;
+    }
+
+        .rv-av.guest {
+            background: linear-gradient(135deg,var(--gold),var(--gold2));
+            color: var(--deep);
+        }
+
+        .rv-av.member {
+            background: linear-gradient(135deg,var(--deep),#3d2a10);
+            color: var(--gold2);
+        }
+
+    .rv-name {
+        font-weight: 700;
+        font-size: .9rem;
+        color: var(--deep);
+        line-height: 1.2;
+    }
+
+    .rv-meta {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin-top: .25rem;
+        flex-wrap: wrap;
+    }
+
+    .rv-member-badge {
+        background: rgba(212,160,23,.12);
+        color: #92660a;
+        font-size: .62rem;
+        font-weight: 700;
+        padding: .15rem .5rem;
+        border-radius: 3px;
+        letter-spacing: .05em;
+    }
+
+    .rv-time {
+        font-size: .72rem;
+        color: var(--muted);
+    }
+
+    .rv-reaction {
+        font-size: .7rem;
+        color: var(--muted);
+        background: var(--warm);
+        padding: .15rem .55rem;
+        border-radius: 3px;
+    }
+
+    .rv-right {
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .rv-stars {
+        display: flex;
+        gap: .12rem;
+        justify-content: flex-end;
+    }
+
+        .rv-stars .f {
+            color: var(--gold);
+            font-size: .88rem;
+        }
+
+        .rv-stars .e {
+            color: #d4ccc0;
+            font-size: .88rem;
+        }
+
+    .rv-score {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--gold);
+        margin-top: .2rem;
+    }
+
+    .rv-content {
+        font-size: .9rem;
+        line-height: 1.8;
+        color: #4a3520;
+        font-weight: 300;
+        margin-bottom: 1rem;
+    }
+    /* Admin reply */
+    .rv-reply {
+        background: var(--warm);
+        border-left: 3px solid var(--gold);
+        padding: .9rem 1.1rem;
+        border-radius: 0 6px 6px 0;
+        margin-bottom: 1rem;
+    }
+
+    .rv-reply-head {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin-bottom: .4rem;
+        font-size: .75rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+        .rv-reply-head i {
+            color: var(--gold);
+        }
+
+    .rv-reply-text {
+        font-size: .85rem;
+        color: #4a3520;
+        font-weight: 300;
+        line-height: 1.7;
+    }
+    /* Bottom bar */
+    .rv-bottom {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding-top: .9rem;
+        border-top: 1px solid var(--border);
+        flex-wrap: wrap;
+    }
+
+    .rv-helpful-label {
+        font-size: .77rem;
+        color: var(--muted);
+    }
+
+    .vote-btn {
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .35rem .85rem;
+        border: 1.5px solid var(--border);
+        border-radius: 5px;
+        background: none;
+        font-size: .77rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--muted);
+        transition: all .2s;
+        font-family: 'Outfit',sans-serif;
+    }
+
+        .vote-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .vote-btn.voted {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(212,160,23,.07);
+        }
+
+        .vote-btn.disliked {
+            border-color: #c94b2a;
+            color: #c94b2a;
+            background: rgba(201,75,42,.05);
+        }
+
+    .report-btn {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+        font-size: .72rem;
+        color: var(--muted);
+        cursor: pointer;
+        background: none;
+        border: none;
+        font-family: 'Outfit',sans-serif;
+        transition: color .2s;
+    }
+
+        .report-btn:hover {
+            color: #c94b2a;
+        }
+
+    /* LOAD MORE */
+    .load-more {
+        display: block;
+        width: 100%;
+        padding: 1rem;
+        background: #fff;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .86rem;
+        font-weight: 600;
+        color: var(--muted);
+        cursor: pointer;
+        text-align: center;
+        transition: all .2s;
+        margin-top: 1rem;
+    }
+
+        .load-more:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+    /* WRITE MODAL */
+    .wr-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(26,18,9,.9);
+        backdrop-filter: blur(14px);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+    }
+
+        .wr-overlay.open {
+            display: flex;
+        }
+
+    .wr-modal {
+        background: var(--cream);
+        width: 100%;
+        max-width: 540px;
+        border-radius: 14px;
+        overflow: hidden;
+        animation: wrIn .4s cubic-bezier(.25,.46,.45,.94);
+    }
+    @@keyframes wrIn {
+        from {
+            opacity: 0;
+            transform: translateY(24px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    .wr-head {
+        background: var(--deep);
+        padding: 1.6rem 2rem;
+        position: relative;
+    }
+
+        .wr-head::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,var(--gold),var(--gold2));
+        }
+
+    .wr-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: .25rem;
+    }
+
+    .wr-sub {
+        font-size: .8rem;
+        color: rgba(255,255,255,.4);
+    }
+
+    .wr-close {
+        position: absolute;
+        top: 1.1rem;
+        right: 1.2rem;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.1);
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background .2s;
+    }
+
+        .wr-close:hover {
+            background: rgba(255,255,255,.2);
+        }
+
+    .wr-body {
+        padding: 1.75rem 2rem;
+    }
+
+    .wf-label {
+        font-size: .7rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        display: block;
+        margin-bottom: .5rem;
+    }
+
+        .wf-label .req {
+            color: #c94b2a;
+        }
+
+    .wf-input {
+        width: 100%;
+        border: 1.5px solid var(--border);
+        border-radius: 7px;
+        padding: .75rem 1rem;
+        font-family: 'Outfit',sans-serif;
+        font-size: .86rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
+        transition: border-color .2s;
+    }
+
+        .wf-input:focus {
+            border-color: var(--gold);
+        }
+
+    .wf-textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .wf-row {
+        margin-bottom: 1.1rem;
+    }
+    /* Star picker */
+    .star-picker {
+        display: flex;
+        gap: .4rem;
+    }
+
+    .sp-star {
+        font-size: 2rem;
+        color: var(--border);
+        cursor: pointer;
+        transition: all .15s;
+        line-height: 1;
+    }
+
+        .sp-star.lit {
+            color: var(--gold);
+            transform: scale(1.1);
+        }
+    /* Reactions */
+    .reaction-opts {
+        display: flex;
+        gap: .5rem;
+        flex-wrap: wrap;
+    }
+
+    .react-opt {
+        padding: .4rem .9rem;
+        border: 1.5px solid var(--border);
+        border-radius: 5px;
+        font-size: .78rem;
+        font-weight: 600;
+        color: var(--muted);
+        cursor: pointer;
+        transition: all .2s;
+        font-family: 'Outfit',sans-serif;
+    }
+
+        .react-opt:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .react-opt.selected {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(212,160,23,.08);
+        }
+
+    .wr-submit {
+        width: 100%;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        border: none;
+        padding: 1rem;
+        font-family: 'Outfit',sans-serif;
+        font-size: .9rem;
+        font-weight: 700;
+        border-radius: 7px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .55rem;
+        transition: all .25s;
+        margin-top: 1.5rem;
+    }
+
+        .wr-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212,160,23,.35);
+        }
+
+    .wr-success {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .wr-success-icon {
+        font-size: 3rem;
+        color: var(--gold);
+        margin-bottom: 1rem;
+    }
+
+    .wr-success-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--deep);
+        margin-bottom: .5rem;
+    }
+
+    .wr-success-text {
+        font-size: .88rem;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    /* Validation */
+    .val-msg {
+        font-size: .75rem;
+        color: #c94b2a;
+        margin-top: .3rem;
+        display: none;
+    }
+
+    .wf-input.error {
+        border-color: #c94b2a;
+    }
+
+    @@media(max - width:860px) {
+        .br-body {
+            grid-template-columns: 1fr;
+        }
+
+        .br-sidebar {
+            position: static;
+        }
+
+        .br-score-row {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .brs-reactions {
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+    }
+</style>
+
+<div class="br-page">
+
+    <!-- HERO -->
+    <div class="br-hero">
+        <div class="br-hero-inner">
+            <div class="br-hero-label">Đánh Giá Bài Viết</div>
+            <h1 class="br-hero-title">Cộng Đồng<br /><em>Nhận Xét</em></h1>
+            <div class="br-hero-blog">
+                <i class="bi bi-newspaper"></i>
+                @Model.BlogTitle
+            </div>
+        </div>
+    </div>
+
+    <!-- SCORE ROW -->
+    <div class="br-score-row">
+        <div class="brs-big">
+            <div class="brs-num">@Model.AverageRating.ToString("F1")</div>
+            <div class="brs-stars">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    double filled = Model.AverageRating - i + 1;
+                    <i class="bi @(filled >= 1 ? "bi-star-fill" : filled >= 0.5 ? "bi-star-half" : "bi-star")"></i>
+                }
+            </div>
+            <div class="brs-total">@Model.ApprovedCount đánh giá</div>
+        </div>
+        <div class="brs-bars">
+            @for (int s = 5; s >= 1; s--)
+            {
+                <div class="brs-bar-row">
+                    <span class="brs-bar-label">@s</span>
+                    <i class="bi bi-star-fill" style="font-size:.65rem;color:var(--gold);"></i>
+                    <div class="brs-bar-track">
+                        <div class="brs-bar-fill" style="width:@Model.StarPercent(s)%"></div>
+                    </div>
+                    <span class="brs-bar-count">@Model.StarDistribution.GetValueOrDefault(s, 0)</span>
+                </div>
+            }
+        </div>
+        <div class="brs-reactions">
+            <div class="reaction-chip">
+                <span class="rc-icon">💡</span>
+                <div><div class="rc-label">Hữu ích</div></div>
+                <span class="rc-count">@Model.HelpfulCount</span>
+            </div>
+            <div class="reaction-chip">
+                <span class="rc-icon">🔍</span>
+                <div><div class="rc-label">Sâu sắc</div></div>
+                <span class="rc-count">@Model.InsightfulCount</span>
+            </div>
+            <div class="reaction-chip">
+                <span class="rc-icon">✍️</span>
+                <div><div class="rc-label">Viết tốt</div></div>
+                <span class="rc-count">@Model.WellWrittenCount</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- WRITE CTA -->
+    <div class="write-cta">
+        <div class="write-cta-inner">
+            <div>
+                <div class="wc-text">Bạn đã đọc bài viết này?</div>
+                <div class="wc-sub">Chia sẻ cảm nhận để giúp cộng đồng lựa chọn nội dung phù hợp</div>
+            </div>
+            <button class="write-btn" onclick="openWriteModal()">
+                <i class="bi bi-pencil-square"></i> Viết Đánh Giá
+            </button>
+        </div>
+    </div>
+
+    <!-- BODY -->
+    <div class="br-body">
+
+        <!-- SIDEBAR -->
+        <div class="br-sidebar">
+            <div class="sb-card">
+                <div class="sb-head">Lọc Theo Sao</div>
+                <div class="sb-body">
+                    <div class="sf-row active" onclick="setFilter(null, this)">
+                        <div class="sf-stars">★★★★★</div>
+                        <span style="font-size:.75rem;color:var(--muted);flex:1;">Tất cả</span>
+                        <span class="sf-cnt">@Model.ApprovedCount</span>
+                    </div>
+                    @for (int s = 5; s >= 1; s--)
+                    {
+                        <div class="sf-row" onclick="setFilter(@s, this)">
+                            <div class="sf-stars">
+                                @for (int i = 1; i <= s; i++)
+                                {
+                                    <span>★</span>
+                                }
+                            </div>
+                            <div class="sf-bar-mini">
+                                <div class="sf-bar-fill" style="width:@Model.StarPercent(s)%"></div>
+                            </div>
+                            <span class="sf-cnt">@Model.StarDistribution.GetValueOrDefault(s, 0)</span>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="sb-card">
+                <div class="sb-head">Sắp Xếp</div>
+                <div class="sb-body">
+                    <div class="sort-row">
+                        <div class="sort-opt active" onclick="setSort('newest', this)">Mới nhất</div>
+                        <div class="sort-opt" onclick="setSort('oldest', this)">Cũ nhất</div>
+                        <div class="sort-opt" onclick="setSort('highest', this)">Sao cao nhất</div>
+                        <div class="sort-opt" onclick="setSort('lowest', this)">Sao thấp nhất</div>
+                        <div class="sort-opt" onclick="setSort('helpful', this)">Hữu ích nhất</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REVIEWS -->
+        <div>
+            <div class="sort-bar">
+                <div class="sort-count">
+                    Hiển thị <strong>@Model.Reviews.Count</strong> trong <strong>@Model.ApprovedCount</strong> đánh giá
+                </div>
+            </div>
+
+            <!-- PINNED / FEATURED -->
+            @if (Model.FeaturedReviews.Any())
+            {
+                <div class="pinned-section">
+                    <div class="pinned-label"><i class="bi bi-pin-angle-fill" style="color:var(--gold);"></i> Đánh Giá Nổi Bật</div>
+                    @foreach (var r in Model.FeaturedReviews)
+                    {
+                        <div class="rv-card pinned">
+                            @await Html.PartialAsync("_ReviewCard", r)
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- ALL REVIEWS -->
+            <div id="reviewList">
+                @foreach (var r in Model.Reviews.Where(r => !r.IsPinned))
+                {
+                    <div class="rv-card" id="rcard-@r.ReviewId">
+                        @await Html.PartialAsync("_ReviewCard", r)
+                    </div>
+                }
+            </div>
+
+            @if (!Model.Reviews.Any())
+            {
+                <div style="text-align:center;padding:4rem;color:var(--muted);">
+                    <i class="bi bi-chat-left-text" style="font-size:3rem;display:block;opacity:.3;margin-bottom:1rem;"></i>
+                    <div style="font-size:.95rem;">Chưa có đánh giá nào. Hãy là người đầu tiên!</div>
+                    <button class="write-btn" style="margin:1.5rem auto 0;" onclick="openWriteModal()">
+                        <i class="bi bi-pencil-square"></i> Viết Đánh Giá
+                    </button>
+                </div>
+            }
+
+            @if (Model.CurrentPage < Model.TotalPages)
+            {
+                <button class="load-more" id="loadMoreBtn"
+                        onclick="loadMore(@Model.BlogId, @(Model.CurrentPage + 1), '@Model.SortBy', @(Model.FilterRating?.ToString() ?? "null"))">
+                    <i class="bi bi-arrow-down-circle me-2"></i>
+                    Tải thêm đánh giá (còn @((Model.TotalPages - Model.CurrentPage) * Model.PageSize))
+                </button>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- WRITE MODAL -->
+<div class="wr-overlay" id="writeModal" onclick="closeWriteModal(event)">
+    <div class="wr-modal">
+        <div class="wr-head">
+            <div class="wr-title">Viết Đánh Giá</div>
+            <div class="wr-sub">@Model.BlogTitle</div>
+            <button class="wr-close" onclick="document.getElementById('writeModal').classList.remove('open')">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="wr-body" id="writeFormBody">
+            <input type="hidden" id="wf-blogId" value="@Model.BlogId" />
+            <div class="wf-row">
+                <label class="wf-label">Điểm Đánh Giá <span class="req">*</span></label>
+                <div class="star-picker" id="starPicker">
+                    <span class="sp-star" data-val="1">★</span>
+                    <span class="sp-star" data-val="2">★</span>
+                    <span class="sp-star" data-val="3">★</span>
+                    <span class="sp-star" data-val="4">★</span>
+                    <span class="sp-star" data-val="5">★</span>
+                </div>
+                <div class="val-msg" id="err-rating">Vui lòng chọn số sao</div>
+            </div>
+            <div class="wf-row">
+                <label class="wf-label">Cảm Nhận Nhanh</label>
+                <div class="reaction-opts">
+                    <div class="react-opt" data-val="helpful" onclick="toggleReaction(this)">💡 Hữu ích</div>
+                    <div class="react-opt" data-val="insightful" onclick="toggleReaction(this)">🔍 Sâu sắc</div>
+                    <div class="react-opt" data-val="well-written" onclick="toggleReaction(this)">✍️ Viết tốt</div>
+                </div>
+            </div>
+            <div class="wf-row">
+                <label class="wf-label">Họ Tên <span class="req">*</span></label>
+                <input type="text" class="wf-input" id="wf-name" placeholder="Tên của bạn" maxlength="100" />
+                <div class="val-msg" id="err-name">Vui lòng nhập tên</div>
+            </div>
+            <div class="wf-row">
+                <label class="wf-label">Email (tuỳ chọn)</label>
+                <input type="email" class="wf-input" id="wf-email" placeholder="email@example.com" />
+            </div>
+            <div class="wf-row">
+                <label class="wf-label">Nội Dung Đánh Giá <span class="req">*</span></label>
+                <textarea class="wf-input wf-textarea" id="wf-content"
+                          placeholder="Chia sẻ cảm nhận của bạn về bài viết này... (ít nhất 10 ký tự)"
+                          maxlength="2000" oninput="updateCharCount(this)"></textarea>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.3rem;">
+                    <div class="val-msg" id="err-content" style="position:static;display:inline;">Nội dung phải có ít nhất 10 ký tự</div>
+                    <span style="font-size:.72rem;color:var(--muted);" id="charCount">0 / 2000</span>
+                </div>
+            </div>
+            <button class="wr-submit" onclick="submitReview()">
+                <i class="bi bi-send-fill"></i> Gửi Đánh Giá
+            </button>
+        </div>
+        <!-- SUCCESS -->
+        <div class="wr-success" id="writeSuccess" style="display:none;">
+            <div class="wr-success-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="wr-success-title">Cảm ơn bạn!</div>
+            <div class="wr-success-text">Đánh giá của bạn đã được gửi thành công.<br />Sẽ hiển thị sau khi được kiểm duyệt.</div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let selectedRating   = 0;
+        let selectedReaction = '';
+        let currentSort      = '@Model.SortBy';
+        let currentFilter    = @(Model.FilterRating?.ToString() ?? "null");
+        let isLoading        = false;
+
+        // STAR PICKER
+        const stars = document.querySelectorAll('.sp-star');
+        stars.forEach(s => {
+            s.addEventListener('mouseover', () => {
+                const v = +s.dataset.val;
+                stars.forEach(st => st.classList.toggle('lit', +st.dataset.val <= v));
+            });
+            s.addEventListener('click', () => {
+                selectedRating = +s.dataset.val;
+                stars.forEach(st => st.classList.toggle('lit', +st.dataset.val <= selectedRating));
+            });
+        });
+        document.getElementById('starPicker').addEventListener('mouseleave', () => {
+            stars.forEach(st => st.classList.toggle('lit', +st.dataset.val <= selectedRating));
+        });
+
+        // REACTION
+        function toggleReaction(el) {
+            const val = el.dataset.val;
+            document.querySelectorAll('.react-opt').forEach(r => r.classList.remove('selected'));
+            if (selectedReaction === val) { selectedReaction = ''; }
+            else { selectedReaction = val; el.classList.add('selected'); }
+        }
+
+        // WRITE MODAL
+        function openWriteModal() {
+            document.getElementById('writeModal').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeWriteModal(e) {
+            if (e.target === document.getElementById('writeModal')) {
+                document.getElementById('writeModal').classList.remove('open');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // CHAR COUNT
+        function updateCharCount(el) {
+            document.getElementById('charCount').textContent = el.value.length + ' / 2000';
+        }
+
+        // VALIDATE
+        function validate() {
+            let ok = true;
+            if (!selectedRating) {
+                document.getElementById('err-rating').style.display = 'block'; ok = false;
+            } else {
+                document.getElementById('err-rating').style.display = 'none';
+            }
+            const name = document.getElementById('wf-name').value.trim();
+            if (!name) {
+                document.getElementById('err-name').style.display = 'block';
+                document.getElementById('wf-name').classList.add('error'); ok = false;
+            } else {
+                document.getElementById('err-name').style.display = 'none';
+                document.getElementById('wf-name').classList.remove('error');
+            }
+            const content = document.getElementById('wf-content').value.trim();
+            if (content.length < 10) {
+                document.getElementById('err-content').style.display = 'block';
+                document.getElementById('wf-content').classList.add('error'); ok = false;
+            } else {
+                document.getElementById('err-content').style.display = 'none';
+                document.getElementById('wf-content').classList.remove('error');
+            }
+            return ok;
+        }
+
+        // SUBMIT
+        async function submitReview() {
+            if (!validate()) return;
+            const btn = document.querySelector('.wr-submit');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang gửi...';
+            try {
+                const fd = new FormData();
+                fd.append('BlogId',       document.getElementById('wf-blogId').value);
+                fd.append('ReviewerName', document.getElementById('wf-name').value.trim());
+                fd.append('ReviewerEmail',document.getElementById('wf-email').value.trim());
+                fd.append('Content',      document.getElementById('wf-content').value.trim());
+                fd.append('Rating',       selectedRating);
+                fd.append('Reaction',     selectedReaction);
+                fd.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+                const res  = await fetch('/BlogReview/Submit', { method:'POST', body:fd });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('writeFormBody').style.display = 'none';
+                    document.getElementById('writeSuccess').style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('writeModal').classList.remove('open');
+                        document.body.style.overflow = '';
+                        document.getElementById('writeFormBody').style.display = 'block';
+                        document.getElementById('writeSuccess').style.display = 'none';
+                    }, 2800);
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-send-fill"></i> Gửi Đánh Giá';
+                }
+            } catch {
+                alert('Lỗi kết nối. Vui lòng thử lại.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-send-fill"></i> Gửi Đánh Giá';
+            }
+        }
+
+        // VOTE
+        async function vote(reviewId, isLike) {
+            const fd = new FormData();
+            fd.append('reviewId', reviewId);
+            fd.append('isLike', isLike);
+            fd.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+            const res  = await fetch('/BlogReview/Like', { method:'POST', body:fd });
+            const data = await res.json();
+            if (data.success) {
+                const card = document.getElementById('rcard-' + reviewId);
+                const likeBtn = card?.querySelector('.like-btn');
+                const disBtn  = card?.querySelector('.dislike-btn');
+                if (likeBtn) { likeBtn.innerHTML = `<i class="bi bi-hand-thumbs-up${data.liked?'-fill':''}"></i> ${data.likes}`; likeBtn.classList.toggle('voted', data.liked); }
+                if (disBtn)  { disBtn.innerHTML  = `<i class="bi bi-hand-thumbs-down${data.disliked?'-fill':''}"></i> ${data.dislikes}`; disBtn.classList.toggle('disliked', data.disliked); }
+            }
+        }
+
+        // REPORT
+        async function report(reviewId) {
+            if (!confirm('Báo cáo đánh giá này là không phù hợp?')) return;
+            const fd = new FormData();
+            fd.append('reviewId', reviewId);
+            fd.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+            const res  = await fetch('/BlogReview/Report', { method:'POST', body:fd });
+            const data = await res.json();
+            if (data.success) alert(data.message);
+        }
+
+        // FILTER / SORT
+        function setFilter(rating, el) {
+            document.querySelectorAll('.sf-row').forEach(r => r.classList.remove('active'));
+            el.classList.add('active');
+            currentFilter = rating;
+            reloadReviews();
+        }
+        function setSort(sort, el) {
+            document.querySelectorAll('.sort-opt').forEach(s => s.classList.remove('active'));
+            el.classList.add('active');
+            currentSort = sort;
+            reloadReviews();
+        }
+        async function reloadReviews() {
+            const qs = new URLSearchParams({
+                blogId: @Model.BlogId,
+                page: 1,
+                sort: currentSort,
+                ...(currentFilter ? { filterRating: currentFilter } : {})
+            });
+            const res  = await fetch('/BlogReview/LoadMore?' + qs, { headers:{'X-Requested-With':'XMLHttpRequest'} });
+            const html = await res.text();
+            document.getElementById('reviewList').innerHTML = html;
+        }
+
+        // LOAD MORE
+        async function loadMore(blogId, page, sort, filterRating) {
+            if (isLoading) return;
+            isLoading = true;
+            const btn = document.getElementById('loadMoreBtn');
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang tải...';
+            const qs = new URLSearchParams({ blogId, page, sort, ...(filterRating ? { filterRating } : {}) });
+            const res  = await fetch('/BlogReview/LoadMore?' + qs, { headers:{'X-Requested-With':'XMLHttpRequest'} });
+            const html = await res.text();
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            document.getElementById('reviewList').insertAdjacentHTML('beforeend', div.querySelector('#reviewList')?.innerHTML || html);
+            btn.remove();
+            isLoading = false;
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                document.getElementById('writeModal').classList.remove('open');
+                document.body.style.overflow = '';
+            }
+        });
+    </script>
+    @Html.AntiForgeryToken()
+}

@@ -3,455 +3,636 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Admin Panel</title>
+    <title>@ViewData["Title"] — Admin · Badminton</title>
 
     <script src="~/lib/tinymce/tinymce.min.js"></script>
-
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="~/css/admin.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
         :root {
-            --sidebar-bg: #ffffff;
-            --primary-purple: #6c33f2;
-            --primary-green: #10b981;
-            --sidebar-hover: #f8fafc;
-            --sidebar-active: #f0ebff;
+            --deep: #1a1209;
+            --deep2: #231a0e;
+            --deep3: #2e2110;
+            --gold: #d4a017;
+            --gold2: #f5c842;
+            --gold3: rgba(212,160,23,.12);
+            --cream: #fdf8f0;
+            --warm: #f5ede0;
+            --border: rgba(212,160,23,.18);
+            --muted: rgba(255,255,255,.38);
+            --text: rgba(255,255,255,.82);
+            --sidebar-w: 268px;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
         }
 
         body {
-            background: #f8f9fc;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--warm);
+            font-family: 'Outfit', sans-serif;
+            color: #2a1f10;
+            margin: 0;
+            overflow-x: hidden;
         }
 
-        .wrapper {
-            display: flex;
-            width: 100%;
-            min-height: 100vh;
-        }
-
-        /* Sidebar */
+        /* ── SIDEBAR ──────────────────────────────────── */
         #sidebar {
-            min-width: 270px;
-            max-width: 270px;
-            background: var(--sidebar-bg);
-            color: #2d3748;
-            transition: all 0.3s;
-            box-shadow: 2px 0 15px rgba(0,0,0,0.05);
-            overflow-y: auto;
             position: fixed;
-            height: 100vh;
-            z-index: 999;
-            border-right: 1px solid #e2e8f0;
-        }
-
-            #sidebar.active {
-                margin-left: -270px;
-            }
-
-        .sidebar-header {
-            padding: 2rem 1.5rem;
-            background: linear-gradient(135deg, var(--primary-purple) 0%, #8b5cf6 100%);
-            text-align: center;
-            border-bottom: 3px solid rgba(255,255,255,0.1);
-        }
-
-            .sidebar-header h3 {
-                font-size: 1.4rem;
-                margin: 0;
-                font-weight: 800;
-                color: #fff;
-                letter-spacing: 1px;
-            }
-
-            .sidebar-header .subtitle {
-                font-size: 0.75rem;
-                color: rgba(255,255,255,0.9);
-                margin-top: 5px;
-                font-weight: 600;
-            }
-
-        /* Navigation */
-        .components {
-            padding: 1rem 0;
-        }
-
-        .nav-section {
-            padding: 1rem 1.5rem 0.5rem;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            color: #a0aec0;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            margin-top: 0.5rem;
-        }
-
-        #sidebar ul li {
-            position: relative;
-        }
-
-            #sidebar ul li a {
-                padding: 0.85rem 1.5rem;
-                display: flex;
-                align-items: center;
-                color: #4a5568;
-                text-decoration: none;
-                font-size: 0.9rem;
-                font-weight: 500;
-                transition: all 0.2s;
-                border-left: 3px solid transparent;
-            }
-
-                #sidebar ul li a i {
-                    width: 25px;
-                    margin-right: 12px;
-                    font-size: 1.15rem;
-                    background: linear-gradient(135deg, var(--primary-purple), var(--primary-green));
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                }
-
-                #sidebar ul li a:hover {
-                    color: var(--primary-purple);
-                    background: var(--sidebar-hover);
-                    border-left-color: var(--primary-purple);
-                }
-
-            #sidebar ul li.active > a {
-                color: var(--primary-purple);
-                background: var(--sidebar-active);
-                border-left-color: var(--primary-purple);
-                font-weight: 600;
-            }
-
-        /* Content */
-        #content {
-            width: 100%;
-            margin-left: 270px;
-            transition: all 0.3s;
-        }
-
-        #sidebar.active ~ #content {
-            margin-left: 0;
-        }
-
-        /* Top Navbar */
-        .top-navbar {
-            padding: 1rem 2rem;
-            background: #fff;
-            border-bottom: 1px solid #e3e6f0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-            position: sticky;
+            left: 0;
             top: 0;
-            z-index: 998;
+            width: var(--sidebar-w);
+            height: 100vh;
+            background: var(--deep);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            transition: transform .3s cubic-bezier(.25,.46,.45,.94);
+            overflow: hidden;
         }
 
-        #sidebarCollapse {
-            background: linear-gradient(135deg, var(--primary-purple), #8b5cf6);
-            border: none;
-            padding: 0.6rem 1.2rem;
-            border-radius: 10px;
-            transition: all 0.2s;
-            color: white;
-            font-weight: 600;
-        }
-
-            #sidebarCollapse:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(108, 51, 242, 0.3);
+            #sidebar.collapsed {
+                transform: translateX(calc(-1 * var(--sidebar-w)));
             }
 
-        /* User Section */
-        .user-section {
-            margin-top: auto;
-            padding: 1.5rem;
-            border-top: 1px solid #e2e8f0;
-            background: #f8fafc;
+            /* Decorative gold line top */
+            #sidebar::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: linear-gradient(90deg, var(--gold) 0%, var(--gold2) 50%, transparent 100%);
+            }
+
+        /* Brand header */
+        .sb-brand {
+            padding: 2rem 1.6rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
         }
 
-        .user-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary-purple), var(--primary-green));
+        .sb-brand-logo {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            margin-bottom: .4rem;
+        }
+
+        .sb-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 100%);
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 1rem;
+            font-size: 1.1rem;
+            color: var(--deep);
+            flex-shrink: 0;
         }
 
-        /* Main Content */
+        .sb-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .sb-sub {
+            font-size: .68rem;
+            color: var(--muted);
+            letter-spacing: .15em;
+            text-transform: uppercase;
+            margin-top: .2rem;
+            padding-left: .2rem;
+        }
+
+        /* Nav */
+        .sb-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: .75rem 0;
+            scrollbar-width: thin;
+            scrollbar-color: var(--gold3) transparent;
+        }
+
+            .sb-nav::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            .sb-nav::-webkit-scrollbar-thumb {
+                background: var(--gold3);
+                border-radius: 2px;
+            }
+
+        .sb-section {
+            padding: 1rem 1.4rem .4rem;
+            font-size: .65rem;
+            font-weight: 700;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .sb-link {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: .7rem 1.4rem;
+            color: var(--text);
+            text-decoration: none;
+            font-size: .875rem;
+            font-weight: 400;
+            transition: all .2s;
+            position: relative;
+            border-left: 2px solid transparent;
+        }
+
+            .sb-link:hover {
+                color: var(--gold2);
+                background: var(--gold3);
+                border-left-color: var(--gold);
+            }
+
+            .sb-link.active {
+                color: var(--gold2);
+                background: linear-gradient(90deg, rgba(212,160,23,.18) 0%, transparent 100%);
+                border-left-color: var(--gold);
+                font-weight: 600;
+            }
+
+            .sb-link i {
+                font-size: 1rem;
+                width: 20px;
+                text-align: center;
+                flex-shrink: 0;
+                color: var(--gold);
+                opacity: .7;
+                transition: opacity .2s;
+            }
+
+            .sb-link:hover i, .sb-link.active i {
+                opacity: 1;
+            }
+
+        .sb-badge {
+            margin-left: auto;
+            background: var(--gold);
+            color: var(--deep);
+            font-size: .58rem;
+            font-weight: 800;
+            padding: .15rem .5rem;
+            border-radius: 3px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+            .sb-badge.new {
+                background: var(--gold);
+            }
+
+            .sb-badge.hot {
+                background: #c94b2a;
+                color: #fff;
+            }
+
+        /* User footer */
+        .sb-user {
+            padding: 1.2rem 1.4rem;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: .85rem;
+            background: rgba(0,0,0,.15);
+        }
+
+        .sb-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--gold2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--deep);
+            font-weight: 800;
+            font-size: .95rem;
+            flex-shrink: 0;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .sb-user-name {
+            font-size: .85rem;
+            font-weight: 600;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .sb-user-role {
+            font-size: .68rem;
+            color: var(--muted);
+            letter-spacing: .08em;
+        }
+
+        /* ── CONTENT ──────────────────────────────────── */
+        #content {
+            margin-left: var(--sidebar-w);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: margin-left .3s cubic-bezier(.25,.46,.45,.94);
+        }
+
+            #content.expanded {
+                margin-left: 0;
+            }
+
+        /* TOP NAVBAR */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            background: rgba(253,248,240,.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #e8ddd0;
+            padding: .9rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .top-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .sidebar-toggle {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: var(--deep);
+            border: none;
+            color: var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all .2s;
+            font-size: 1.05rem;
+            flex-shrink: 0;
+        }
+
+            .sidebar-toggle:hover {
+                background: var(--deep3);
+                box-shadow: 0 4px 12px rgba(26,18,9,.25);
+            }
+
+        .top-page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--deep);
+            font-style: italic;
+        }
+
+        .top-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .top-action-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: #fff;
+            border: 1px solid #e8ddd0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #8a7560;
+            transition: all .2s;
+            font-size: .95rem;
+            text-decoration: none;
+        }
+
+            .top-action-btn:hover {
+                border-color: var(--gold);
+                color: var(--gold);
+            }
+
+        .top-user-chip {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            background: var(--deep);
+            padding: .4rem .75rem .4rem .4rem;
+            border-radius: 100px;
+        }
+
+        .top-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--gold2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--deep);
+            font-weight: 800;
+            font-size: .72rem;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .top-user-name {
+            font-size: .78rem;
+            font-weight: 600;
+            color: rgba(255,255,255,.85);
+            white-space: nowrap;
+        }
+
+        /* MAIN */
         main {
             padding: 2rem;
-            min-height: calc(100vh - 80px);
+            flex: 1;
         }
 
-        /* Scrollbar */
-        #sidebar::-webkit-scrollbar {
-            width: 6px;
+        /* ── OVERLAY (mobile) ────────────────────────── */
+        .sb-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(26,18,9,.6);
+            z-index: 999;
+            backdrop-filter: blur(2px);
         }
 
-        #sidebar::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-
-        #sidebar::-webkit-scrollbar-thumb {
-            background: #cbd5e0;
-            border-radius: 3px;
-        }
-
-            #sidebar::-webkit-scrollbar-thumb:hover {
-                background: #a0aec0;
+            .sb-overlay.show {
+                display: block;
             }
 
-        /* Responsive */
-        @@media (max-width: 768px) {
+        /* ── RESPONSIVE ──────────────────────────────── */
+        @@media (max-width: 900px) {
             #sidebar {
-                margin-left: -270px;
+                transform: translateX(calc(-1 * var(--sidebar-w)));
             }
 
-                #sidebar.active {
-                    margin-left: 0;
+                #sidebar.mobile-open {
+                    transform: translateX(0);
                 }
 
             #content {
-                margin-left: 0;
+                margin-left: 0 !important;
+            }
+
+            .top-page-title {
+                display: none;
+            }
+
+            main {
+                padding: 1.25rem;
             }
         }
 
-        /* Badge */
-        .badge-new {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
-            padding: 0.2rem 0.5rem;
+        /* ── GLOBAL ADMIN COMPONENTS ─────────────────── */
+        .admin-card {
+            background: #fff;
+            border: 1px solid #ede5d8;
             border-radius: 10px;
-            font-size: 0.65rem;
-            margin-left: auto;
-            font-weight: 700;
+            overflow: hidden;
+            transition: box-shadow .25s;
         }
+
+            .admin-card:hover {
+                box-shadow: 0 6px 24px rgba(26,18,9,.08);
+            }
+
+        .admin-card-header {
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid #ede5d8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .admin-card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--deep);
+            font-style: italic;
+        }
+
+        .gold-btn {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 100%);
+            color: var(--deep);
+            border: none;
+            padding: .55rem 1.4rem;
+            font-weight: 700;
+            font-size: .82rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            transition: all .2s;
+            text-decoration: none;
+            letter-spacing: .02em;
+        }
+
+            .gold-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 18px rgba(212,160,23,.35);
+                color: var(--deep);
+            }
+
+        .dark-btn {
+            background: var(--deep);
+            color: rgba(255,255,255,.85);
+            border: none;
+            padding: .55rem 1.4rem;
+            font-weight: 600;
+            font-size: .82rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            transition: all .2s;
+            text-decoration: none;
+        }
+
+            .dark-btn:hover {
+                background: var(--deep3);
+                color: var(--gold2);
+            }
     </style>
 </head>
 <body>
-    <div class="wrapper">
-        <nav id="sidebar">
-            <div class="sidebar-header">
-                <h3><i class="bi bi-shuttlecock-fill"></i> BADMINTON</h3>
-                <div class="subtitle">Admin Dashboard</div>
+
+    <!-- Overlay mobile -->
+    <div class="sb-overlay" id="sbOverlay"></div>
+
+    <!-- SIDEBAR -->
+    <nav id="sidebar">
+        <div class="sb-brand">
+            <div class="sb-brand-logo">
+                <div class="sb-icon"><i class="bi bi-trophy-fill"></i></div>
+                <div class="sb-name">Badminton</div>
             </div>
+            <div class="sb-sub">Admin Dashboard</div>
+        </div>
 
-            <ul class="list-unstyled components">
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminDashboard" ? "active" : "")">
-                    <a asp-controller="AdminDashboard" asp-action="Index">
-                        <i class="bi bi-speedometer2"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
+        <div class="sb-nav">
+            <!-- Dashboard -->
+            <a asp-controller="AdminDashboard" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminDashboard" ? "active" : "")">
+                <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+            </a>
 
-                <li class="nav-section">⚙️ QUẢN LÝ CƠ SỞ</li>
+            <div class="sb-section">Quản Lý Cơ Sở</div>
+            <a asp-controller="AdminFacility" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminFacility" ? "active" : "")">
+                <i class="bi bi-building"></i><span>Cơ sở sân</span>
+            </a>
+            <a asp-controller="AdminCourt" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminCourt" ? "active" : "")">
+                <i class="bi bi-grid-3x3"></i><span>Sân cầu lông</span>
+            </a>
+            <a asp-controller="AdminPriceSlot" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminPriceSlot" ? "active" : "")">
+                <i class="bi bi-cash-stack"></i><span>Khung giờ &amp; Giá</span>
+            </a>
+            <a asp-controller="AdminReview" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminReview" ? "active" : "")">
+                <i class="bi bi-star-half"></i><span>Đánh giá</span>
+                <span class="sb-badge new">NEW</span>
+            </a>
 
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminFacility" ? "active" : "")">
-                    <a asp-controller="AdminFacility" asp-action="Index">
-                        <i class="bi bi-building"></i>
-                        <span>Cơ sở sân</span>
-                    </a>
-                </li>
+            <div class="sb-section">Đặt Sân &amp; Đơn Hàng</div>
+            <a asp-controller="AdminBooking" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminBooking" ? "active" : "")">
+                <i class="bi bi-calendar-check"></i><span>Đặt sân</span>
+            </a>
+            <a asp-controller="AdminOrder" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminOrder" ? "active" : "")">
+                <i class="bi bi-receipt"></i><span>Đơn hàng</span>
+            </a>
 
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminCourt" ? "active" : "")">
-                    <a asp-controller="AdminCourt" asp-action="Index">
-                        <i class="bi bi-grid-3x3"></i>
-                        <span>Sân cầu lông</span>
-                    </a>
-                </li>
+            <div class="sb-section">Sản Phẩm</div>
+            <a asp-controller="AdminCategory" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminCategory" ? "active" : "")">
+                <i class="bi bi-tags"></i><span>Danh mục</span>
+            </a>
+            <a asp-controller="AdminProduct" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminProduct" ? "active" : "")">
+                <i class="bi bi-box-seam"></i><span>Sản phẩm</span>
+            </a>
+            <a asp-controller="AdminInventory" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminInventory" ? "active" : "")">
+                <i class="bi bi-boxes"></i><span>Kho hàng</span>
+            </a>
 
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminPriceSlot" ? "active" : "")">
-                    <a asp-controller="AdminPriceSlot" asp-action="Index">
-                        <i class="bi bi-cash-stack"></i>
-                        <span>Khung giờ & Giá</span>
-                    </a>
-                </li>
+            <div class="sb-section">Nội Dung</div>
+            <a asp-controller="AdminBlog" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminBlog" ? "active" : "")">
+                <i class="bi bi-newspaper"></i><span>Bài viết</span>
+            </a>
+            <a asp-controller="AdminService" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminService" ? "active" : "")">
+                <i class="bi bi-stars"></i><span>Dịch vụ</span>
+            </a>
 
-                <li class="nav-section">📅 ĐẶT SÂN & ĐƠN HÀNG</li>
+            <div class="sb-section">Tuyển Dụng &amp; Liên Hệ</div>
+            <a asp-controller="AdminJob" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminJob" ? "active" : "")">
+                <i class="bi bi-briefcase"></i><span>Tuyển dụng</span>
+            </a>
+            <a asp-controller="AdminContact" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminContact" ? "active" : "")">
+                <i class="bi bi-chat-dots"></i><span>Liên hệ</span>
+            </a>
 
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminBooking" ? "active" : "")">
-                    <a asp-controller="AdminBooking" asp-action="Index">
-                        <i class="bi bi-calendar-check"></i>
-                        <span>Đặt sân</span>
-                    </a>
-                </li>
+            <div class="sb-section">Marketing</div>
+            <a asp-controller="AdminVoucher" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminVoucher" ? "active" : "")">
+                <i class="bi bi-ticket-perforated"></i><span>Voucher</span>
+            </a>
 
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminOrder" ? "active" : "")">
-                    <a asp-controller="AdminOrder" asp-action="Index">
-                        <i class="bi bi-receipt"></i>
-                        <span>Đơn hàng</span>
-                    </a>
-                </li>
+            <div class="sb-section">Báo Cáo</div>
+            <a asp-controller="AdminReport" asp-action="Revenue" class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Revenue" ? "active" : "")">
+                <i class="bi bi-graph-up"></i><span>Doanh thu</span>
+            </a>
 
-                <li class="nav-section">🛍️ SẢN PHẨM</li>
+            <div class="sb-section">Hệ Thống</div>
+            <a asp-controller="AdminUser" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminUser" ? "active" : "")">
+                <i class="bi bi-person-badge"></i><span>Người dùng</span>
+            </a>
+            <a asp-controller="Home" asp-action="Index" class="sb-link">
+                <i class="bi bi-house-door"></i><span>Về trang chủ</span>
+            </a>
+        </div>
 
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminCategory" ? "active" : "")">
-                    <a asp-controller="AdminCategory" asp-action="Index">
-                        <i class="bi bi-tags"></i>
-                        <span>Danh mục</span>
-                    </a>
-                </li>
+        <div class="sb-user">
+            <div class="sb-avatar">@User.Identity?.Name?.Substring(0, 1).ToUpper()</div>
+            <div>
+                <div class="sb-user-name">@User.Identity?.Name</div>
+                <div class="sb-user-role">Administrator</div>
+            </div>
+        </div>
+    </nav>
 
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminProduct" ? "active" : "")">
-                    <a asp-controller="AdminProduct" asp-action="Index">
-                        <i class="bi bi-box-seam"></i>
-                        <span>Sản phẩm</span>
-                    </a>
-                </li>
-
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminInventory" ? "active" : "")">
-                    <a asp-controller="AdminInventory" asp-action="Index">
-                        <i class="bi bi-boxes"></i>
-                        <span>Kho hàng</span>
-                    </a>
-                </li>
-
-                <li class="nav-section">📝 NỘI DUNG</li>
-
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminBlog" ? "active" : "")">
-                    <a asp-controller="AdminBlog" asp-action="Index">
-                        <i class="bi bi-newspaper"></i>
-                        <span>Bài viết</span>
-                        <span class="badge-new">NEW</span>
-                    </a>
-                </li>
-
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminService" ? "active" : "")">
-                    <a asp-controller="AdminService" asp-action="Index">
-                        <i class="bi bi-stars"></i>
-                        <span>Dịch vụ</span>
-                        <span class="badge-new">NEW</span>
-                    </a>
-                </li>
-
-                <li class="nav-section">💼 TUYỂN DỤNG & LIÊN HỆ</li>
-
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminJob" ? "active" : "")">
-                    <a asp-controller="AdminJob" asp-action="Index">
-                        <i class="bi bi-briefcase"></i>
-                        <span>Tuyển dụng</span>
-                        <span class="badge-new">NEW</span>
-                    </a>
-                </li>
-
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminContact" ? "active" : "")">
-                    <a asp-controller="AdminContact" asp-action="Index">
-                        <i class="bi bi-chat-dots"></i>
-                        <span>Liên hệ</span>
-                        <span class="badge-new">NEW</span>
-                    </a>
-                </li>
-
-                <li class="nav-section">🎁 MARKETING</li>
-
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminVoucher" ? "active" : "")">
-                    <a asp-controller="AdminVoucher" asp-action="Index">
-                        <i class="bi bi-ticket-perforated"></i>
-                        <span>Voucher</span>
-                    </a>
-                </li>
-
-                <li class="nav-section">📊 BÁO CÁO</li>
-
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Revenue" ? "active" : "")">
-                    <a asp-controller="AdminReport" asp-action="Revenue">
-                        <i class="bi bi-graph-up"></i>
-                        <span>Doanh thu</span>
-                    </a>
-                </li>
-
-                <li class="nav-section">🔧 HỆ THỐNG</li>
-
-                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminUser" ? "active" : "")">
-                    <a asp-controller="AdminUser" asp-action="Index">
-                        <i class="bi bi-person-badge"></i>
-                        <span>Người dùng</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a asp-controller="Home" asp-action="Index">
-                        <i class="bi bi-house-door"></i>
-                        <span>Về trang chủ</span>
-                    </a>
-                </li>
-            </ul>
-
-            <div class="user-section">
-                <div class="d-flex align-items-center">
-                    <div class="user-avatar me-3">
-                        @User.Identity.Name?.Substring(0, 1).ToUpper()
+    <!-- CONTENT -->
+    <div id="content">
+        <nav class="top-nav">
+            <div class="top-nav-left">
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="bi bi-list"></i>
+                </button>
+                <span class="top-page-title">@ViewData["Title"]</span>
+            </div>
+            <div class="top-nav-right">
+                <a asp-controller="Home" asp-action="Index" class="top-action-btn" title="Trang chủ" target="_blank">
+                    <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+                <div class="top-action-btn"><i class="bi bi-bell"></i></div>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="top-user-chip">
+                        <div class="top-avatar">@User.Identity.Name?.Substring(0, 1).ToUpper()</div>
+                        <span class="top-user-name">@User.Identity.Name</span>
                     </div>
-                    <div style="line-height: 1.3;">
-                        <div class="fw-bold text-dark" style="font-size: 0.9rem;">@User.Identity.Name</div>
-                        <small class="text-muted" style="font-size: 0.75rem;">Administrator</small>
-                    </div>
-                </div>
+                }
             </div>
         </nav>
 
-        <div id="content">
-            <nav class="top-navbar">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center gap-3">
-                        <button type="button" id="sidebarCollapse" class="btn">
-                            <i class="bi bi-list fs-5"></i>
-                        </button>
-                        <h5 class="mb-0 fw-bold text-dark">@ViewData["Title"]</h5>
-                    </div>
-
-                    <div class="d-flex align-items-center gap-3">
-                        @if (User.Identity.IsAuthenticated)
-                        {
-                            <div class="d-none d-md-flex align-items-center gap-2">
-                                <div class="user-avatar" style="width: 38px; height: 38px; font-size: 0.9rem;">
-                                    @User.Identity.Name?.Substring(0, 1).ToUpper()
-                                </div>
-                                <div class="text-end">
-                                    <div class="fw-semibold text-dark" style="font-size: 0.85rem;">@User.Identity.Name</div>
-                                    <small class="text-muted" style="font-size: 0.7rem;">Admin</small>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
-            </nav>
-
-            <main>
-                @RenderBody()
-            </main>
-        </div>
+        <main>@RenderBody()</main>
     </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        $(document).ready(function () {
-            // Xử lý đóng mở sidebar
-            $('#sidebarCollapse').on('click', function () {
-                $('#sidebar').toggleClass('active');
-            });
+        const sidebar   = document.getElementById('sidebar');
+        const content   = document.getElementById('content');
+        const overlay   = document.getElementById('sbOverlay');
+        const toggle    = document.getElementById('sidebarToggle');
+        const isMobile  = () => window.innerWidth <= 900;
 
-            $(document).on('click', function(e) {
-                if ($(window).width() <= 768) {
-                    if (!$(e.target).closest('#sidebar, #sidebarCollapse').length) {
-                        $('#sidebar').addClass('active');
-                    }
-                }
-            });
+        toggle.addEventListener('click', () => {
+            if (isMobile()) {
+                sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('show');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                content.classList.toggle('expanded');
+            }
+        });
 
-            // FIX: Cho phép focus vào TinyMCE trong Bootstrap Modal
-            // Cách này hoạt động ngay cả khi Modal được nạp sau bằng Ajax
-            $(document).on('focusin', function(e) {
-                if (e.target.closest(".tox-tinymce-aux, .moxman-window, .tam-assetmanager-root") !== null) {
-                    e.stopImmediatePropagation();
-                }
-            });
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('show');
+        });
+
+        // TinyMCE modal fix
+        $(document).on('focusin', function(e) {
+            if (e.target.closest(".tox-tinymce-aux, .moxman-window, .tam-assetmanager-root") !== null) {
+                e.stopImmediatePropagation();
+            }
         });
     </script>
     @await RenderSectionAsync("Scripts", required: false)

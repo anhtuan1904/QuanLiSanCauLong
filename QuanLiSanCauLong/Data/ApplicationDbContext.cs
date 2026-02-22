@@ -50,6 +50,8 @@ namespace QuanLiSanCauLong.Data
         public DbSet<Course> Courses { get; set; }
         public DbSet<StringingService> StringingServices { get; set; }
         public DbSet<Tournament> Tournaments { get; set; }
+        public DbSet<BlogReview> BlogReviews { get; set; }
+        public DbSet<BlogReviewLike> BlogReviewLikes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -88,6 +90,37 @@ namespace QuanLiSanCauLong.Data
                 entity.Property(e => e.Status).HasDefaultValue("Upcoming");
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
             });
+            modelBuilder.Entity<BlogReview>(entity =>
+            {
+                entity.HasIndex(r => r.BlogId);
+                entity.HasIndex(r => r.Status);
+                entity.HasIndex(r => r.CreatedAt);
+                entity.HasIndex(r => new { r.BlogId, r.Status });
+
+                entity.Property(r => r.Content)
+                      .HasMaxLength(2000);
+
+                entity.Property(r => r.Status)
+                      .HasDefaultValue("Pending");
+
+                entity.Property(r => r.Rating)
+                      .HasDefaultValue(5);
+            });
+
+            // ── BlogReviewLike ────────────────────────────
+            modelBuilder.Entity<BlogReviewLike>(entity =>
+            {
+                // Mỗi user/IP chỉ like 1 lần 1 review
+                entity.HasIndex(l => new { l.ReviewId, l.UserId })
+                      .IsUnique()
+                      .HasFilter("[UserId] IS NOT NULL");
+
+                entity.HasOne(l => l.Review)
+                      .WithMany(r => r.Likes)
+                      .HasForeignKey(l => l.ReviewId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
 
             // --- Cấu hình Precision cho các trường Decimal hệ thống mới ---
             modelBuilder.Entity<JobPosting>().Property(j => j.SalaryMin).HasPrecision(18, 2);
@@ -236,6 +269,7 @@ namespace QuanLiSanCauLong.Data
                 .HasForeignKey(fi => fi.FacilityId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
+
 
         public static ApplicationDbContext Create(DbContextOptions<ApplicationDbContext> options)
         {

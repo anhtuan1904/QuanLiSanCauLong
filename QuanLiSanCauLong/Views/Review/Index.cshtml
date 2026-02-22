@@ -1,0 +1,798 @@
+﻿@* Đặt file tại: Views/Review/Index.cshtml (hoặc Views/Facility/Reviews.cshtml) *@
+@{
+    ViewData["Title"] = "Đánh Giá Cơ Sở";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --deep:  #1a1209;
+    --gold:  #d4a017;
+    --gold2: #f5c842;
+    --cream: #fdf8f0;
+    --warm:  #f5ede0;
+    --border:#e8ddd0;
+    --muted: #8a7560;
+    --white: #ffffff;
+}
+
+.review-page { background: var(--cream); font-family: 'Outfit', sans-serif; min-height: 100vh; }
+
+/* ── HERO ─────────────────────────────────────── */
+.rv-hero {
+    background: var(--deep);
+    padding: 5rem 0 3rem;
+    position: relative;
+    overflow: hidden;
+}
+.rv-hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: var(--cream);
+    clip-path: ellipse(60% 100% at 50% 100%);
+}
+.rv-hero::before {
+    content: '';
+    position: absolute;
+    top: -100px; right: -100px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(212,160,23,.12) 0%, transparent 70%);
+    pointer-events: none;
+}
+.rv-hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 3rem;
+}
+.rv-hero-label {
+    font-size: .72rem;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+}
+.rv-hero-label::before { content: ''; width: 24px; height: 1px; background: var(--gold); display: block; }
+.rv-hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+}
+.rv-hero-title em { font-style: italic; color: var(--gold2); }
+.rv-hero-desc { color: rgba(255,255,255,.5); font-size: .95rem; font-weight: 300; max-width: 440px; line-height: 1.8; }
+.rv-score-panel {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(212,160,23,.2);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    min-width: 200px;
+    flex-shrink: 0;
+}
+.rv-big-score {
+    font-family: 'Playfair Display', serif;
+    font-size: 4.5rem;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: .5rem;
+}
+.rv-stars-big { display: flex; justify-content: center; gap: .2rem; color: var(--gold); font-size: 1.2rem; margin-bottom: .75rem; }
+.rv-total { font-size: .8rem; color: rgba(255,255,255,.4); letter-spacing: .08em; }
+
+/* ── WRITE REVIEW CTA ─────────────────────────── */
+.write-cta {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem 2rem;
+    margin: 2rem auto;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+.cta-text { font-size: 1rem; font-weight: 600; color: var(--deep); }
+.cta-sub { font-size: .82rem; color: var(--muted); margin-top: .2rem; }
+.write-btn {
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    color: var(--deep);
+    border: none;
+    padding: .85rem 2rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: .88rem;
+    font-weight: 700;
+    border-radius: 7px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    transition: all .25s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.write-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(212,160,23,.35); }
+
+/* ── MAIN LAYOUT ──────────────────────────────── */
+.rv-body {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 2rem 5rem;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+/* ── SIDEBAR FILTERS ──────────────────────────── */
+.rv-sidebar {
+    position: sticky;
+    top: 80px;
+}
+.sidebar-section {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+.sidebar-head {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+    font-size: .82rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--warm);
+}
+.sidebar-body { padding: 1rem; }
+
+/* Facility selector */
+.fac-option {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .65rem .85rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all .2s;
+    border: 1.5px solid transparent;
+    margin-bottom: .4rem;
+}
+.fac-option:last-child { margin-bottom: 0; }
+.fac-option:hover { background: var(--warm); }
+.fac-option.active { border-color: var(--gold); background: rgba(212,160,23,.06); }
+.fac-icon {
+    width: 34px; height: 34px;
+    border-radius: 7px;
+    background: var(--warm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .95rem;
+    color: var(--gold);
+    flex-shrink: 0;
+    transition: background .2s;
+}
+.fac-option.active .fac-icon { background: var(--gold); color: var(--deep); }
+.fac-label { font-size: .84rem; font-weight: 500; color: var(--deep); line-height: 1.2; }
+.fac-count { font-size: .72rem; color: var(--muted); }
+
+/* Star filter */
+.star-filter-row {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .5rem .5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background .2s;
+    margin-bottom: .25rem;
+}
+.star-filter-row:hover { background: var(--warm); }
+.sf-label { font-size: .8rem; width: 20px; color: var(--muted); }
+.sf-stars { display: flex; gap: .1rem; color: var(--gold); font-size: .75rem; }
+.sf-bar { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.sf-fill { height: 100%; background: var(--gold); border-radius: 3px; }
+.sf-count { font-size: .72rem; color: var(--muted); width: 28px; text-align: right; }
+
+/* ── REVIEW CARDS ─────────────────────────────── */
+.rv-sort-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+.rv-count-text { font-size: .9rem; color: var(--muted); }
+.rv-count-text strong { color: var(--deep); font-weight: 700; }
+.sort-pills { display: flex; gap: .4rem; flex-wrap: wrap; }
+.sort-pill {
+    padding: .4rem 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 5px;
+    background: var(--white);
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all .2s;
+    font-family: 'Outfit', sans-serif;
+}
+.sort-pill.active { border-color: var(--gold); color: var(--gold); background: rgba(212,160,23,.06); }
+.sort-pill:hover:not(.active) { border-color: var(--deep); color: var(--deep); }
+
+/* REVIEW CARD */
+.rv-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.75rem;
+    margin-bottom: 1rem;
+    transition: box-shadow .25s;
+    position: relative;
+}
+.rv-card:hover { box-shadow: 0 6px 24px rgba(26,18,9,.07); }
+.rv-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.rv-user-row { display: flex; align-items: center; gap: .85rem; }
+.rv-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--deep);
+    font-weight: 800;
+    font-size: 1.1rem;
+    font-family: 'Playfair Display', serif;
+    flex-shrink: 0;
+}
+.rv-avatar.alt { background: linear-gradient(135deg, var(--deep), #3d2a10); color: var(--gold2); }
+.rv-user-name { font-weight: 700; font-size: .95rem; color: var(--deep); }
+.rv-user-type {
+    font-size: .7rem;
+    color: var(--muted);
+    background: var(--warm);
+    padding: .15rem .6rem;
+    border-radius: 3px;
+    margin-top: .2rem;
+    display: inline-block;
+}
+.rv-right { text-align: right; flex-shrink: 0; }
+.rv-stars { display: flex; gap: .15rem; justify-content: flex-end; margin-bottom: .3rem; }
+.rv-stars i { font-size: .9rem; }
+.rv-stars .f { color: var(--gold); }
+.rv-stars .e { color: #d4ccc0; }
+.rv-date { font-size: .75rem; color: var(--muted); }
+.rv-target-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    background: rgba(212,160,23,.08);
+    border: 1px solid rgba(212,160,23,.25);
+    padding: .25rem .75rem;
+    border-radius: 4px;
+    font-size: .75rem;
+    font-weight: 600;
+    color: #92660a;
+    margin-bottom: .75rem;
+}
+.rv-target-chip i { color: var(--gold); }
+.rv-text {
+    font-size: .9rem;
+    line-height: 1.75;
+    color: #4a3520;
+    font-weight: 300;
+    margin-bottom: 1rem;
+}
+/* Admin reply */
+.rv-reply {
+    background: var(--warm);
+    border-left: 3px solid var(--gold);
+    padding: 1rem 1.25rem;
+    border-radius: 0 6px 6px 0;
+    margin-top: 1rem;
+}
+.rv-reply-head {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .5rem;
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--deep);
+}
+.rv-reply-head i { color: var(--gold); }
+.rv-reply-text { font-size: .85rem; color: #4a3520; font-weight: 300; line-height: 1.7; }
+.rv-helpful {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+.rv-helpful-text { font-size: .78rem; color: var(--muted); }
+.helpful-btn {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .35rem .85rem;
+    border: 1.5px solid var(--border);
+    border-radius: 5px;
+    background: none;
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all .2s;
+    font-family: 'Outfit', sans-serif;
+}
+.helpful-btn:hover { border-color: var(--gold); color: var(--gold); }
+.helpful-btn.voted { border-color: var(--gold); color: var(--gold); background: rgba(212,160,23,.06); }
+
+/* WRITE REVIEW MODAL */
+.wr-overlay {
+    position: fixed; inset: 0;
+    background: rgba(26,18,9,.88);
+    backdrop-filter: blur(12px);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+.wr-overlay.open { display: flex; }
+.wr-modal {
+    background: var(--cream);
+    width: 100%;
+    max-width: 560px;
+    border-radius: 14px;
+    overflow: hidden;
+    animation: wrIn .4s cubic-bezier(.25,.46,.45,.94);
+}
+@@keyframes wrIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.wr-head {
+    background: var(--deep);
+    padding: 1.75rem 2rem;
+    position: relative;
+}
+.wr-head::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--gold2));
+}
+.wr-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: .3rem;
+}
+.wr-sub { font-size: .82rem; color: rgba(255,255,255,.45); }
+.wr-close {
+    position: absolute;
+    top: 1.2rem; right: 1.2rem;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.1);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .2s;
+}
+.wr-close:hover { background: rgba(255,255,255,.2); }
+.wr-body { padding: 2rem; }
+.wr-field { margin-bottom: 1.25rem; }
+.wr-label { font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: .5rem; }
+.wr-select, .wr-textarea {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    padding: .8rem 1rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: .88rem;
+    color: var(--deep);
+    background: var(--white);
+    outline: none;
+    transition: border-color .2s;
+}
+.wr-select:focus, .wr-textarea:focus { border-color: var(--gold); }
+.wr-textarea { resize: vertical; min-height: 100px; }
+
+/* Star picker */
+.star-picker {
+    display: flex;
+    gap: .5rem;
+}
+.star-pick {
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: var(--border);
+    transition: all .15s;
+    line-height: 1;
+}
+.star-pick.lit { color: var(--gold); transform: scale(1.1); }
+.star-pick:hover { transform: scale(1.2); }
+
+.wr-submit {
+    width: 100%;
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    color: var(--deep);
+    border: none;
+    padding: 1rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: .9rem;
+    font-weight: 700;
+    border-radius: 7px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .6rem;
+    transition: all .25s;
+    margin-top: 1.5rem;
+}
+.wr-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(212,160,23,.35); }
+
+/* LOAD MORE */
+.load-more-btn {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'Outfit', sans-serif;
+    font-size: .88rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    text-align: center;
+    transition: all .2s;
+    margin-top: 1rem;
+}
+.load-more-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+@@media (max-width: 900px) {
+    .rv-body { grid-template-columns: 1fr; }
+    .rv-sidebar { position: static; }
+    .rv-hero-inner { grid-template-columns: 1fr; }
+    .rv-score-panel { display: none; }
+}
+</style>
+
+<div class="review-page">
+
+    <!-- HERO -->
+    <div class="rv-hero">
+        <div class="rv-hero-inner">
+            <div>
+                <div class="rv-hero-label">Badminton Club Reviews</div>
+                <h1 class="rv-hero-title">Đánh Giá<br/><em>Cơ Sở Sân</em></h1>
+                <p class="rv-hero-desc">Những đánh giá thực tế từ cộng đồng lông thủ — giúp bạn lựa chọn cơ sở sân phù hợp nhất.</p>
+            </div>
+            <div class="rv-score-panel">
+                <div class="rv-big-score">4.8</div>
+                <div class="rv-stars-big">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-half"></i>
+                </div>
+                <div class="rv-total">248 đánh giá · 6 cơ sở</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WRITE CTA -->
+    <div style="max-width:1100px;margin:2rem auto;padding:0 2rem;">
+        <div class="write-cta">
+            <div>
+                <div class="cta-text">Bạn đã trải nghiệm tại cơ sở của chúng tôi?</div>
+                <div class="cta-sub">Chia sẻ cảm nhận của bạn để giúp cộng đồng lựa chọn tốt hơn</div>
+            </div>
+            <button class="write-btn" onclick="document.getElementById('writeOverlay').classList.add('open')">
+                <i class="bi bi-pencil-square"></i> Viết Đánh Giá
+            </button>
+        </div>
+    </div>
+
+    <!-- BODY GRID -->
+    <div class="rv-body">
+
+        <!-- SIDEBAR -->
+        <div class="rv-sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-head">Chọn Cơ Sở</div>
+                <div class="sidebar-body">
+                    @{
+                        var facilities = new[] {
+                            new { Name="Tất cả cơ sở", Sub="248 đánh giá", Icon="bi-building", Active=true },
+                            new { Name="Cơ Sở Hoàng Mai", Sub="62 đánh giá", Icon="bi-building", Active=false },
+                            new { Name="Cơ Sở Tây Hồ", Sub="48 đánh giá", Icon="bi-building", Active=false },
+                            new { Name="Cơ Sở Đống Đa", Sub="55 đánh giá", Icon="bi-building", Active=false },
+                            new { Name="Cơ Sở Cầu Giấy", Sub="41 đánh giá", Icon="bi-building", Active=false },
+                            new { Name="Cơ Sở Thanh Xuân", Sub="42 đánh giá", Icon="bi-building", Active=false },
+                        };
+                    }
+                    @foreach (var f in facilities)
+                    {
+                        <div class="fac-option @(f.Active ? "active" : "")" onclick="selectFac(this)">
+                            <div class="fac-icon"><i class="bi @f.Icon"></i></div>
+                            <div>
+                                <div class="fac-label">@f.Name</div>
+                                <div class="fac-count">@f.Sub</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-head">Lọc Theo Sao</div>
+                <div class="sidebar-body">
+                    @{
+                        var starBars = new[] { (5, 75, 186), (4, 17, 42), (3, 5, 12), (2, 2, 5), (1, 1, 3) };
+                    }
+                    @foreach (var (star, pct, cnt) in starBars)
+                    {
+                        <div class="star-filter-row" onclick="filterByStar(@star, this)">
+                            <span class="sf-label">@star</span>
+                            <div class="sf-stars">
+                                @for (int i = 0; i < star; i++) { <i class="bi bi-star-fill"></i> }
+                            </div>
+                            <div class="sf-bar"><div class="sf-fill" style="width:@pct%"></div></div>
+                            <span class="sf-count">@cnt</span>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-head">Loại Đánh Giá</div>
+                <div class="sidebar-body" style="display:flex;flex-direction:column;gap:.4rem;">
+                    <div class="fac-option active" onclick="selectFac(this)" style="border-radius:6px;">
+                        <div class="fac-icon"><i class="bi bi-building"></i></div>
+                        <div><div class="fac-label">Cơ Sở</div><div class="fac-count">162 đánh giá</div></div>
+                    </div>
+                    <div class="fac-option" onclick="selectFac(this)" style="border-radius:6px;">
+                        <div class="fac-icon"><i class="bi bi-grid-3x3"></i></div>
+                        <div><div class="fac-label">Sân Cầu Lông</div><div class="fac-count">86 đánh giá</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REVIEWS LIST -->
+        <div>
+            <div class="rv-sort-bar">
+                <div class="rv-count-text">Hiển thị <strong>248</strong> đánh giá</div>
+                <div class="sort-pills">
+                    <button class="sort-pill active">Mới nhất</button>
+                    <button class="sort-pill">Sao cao nhất</button>
+                    <button class="sort-pill">Sao thấp nhất</button>
+                    <button class="sort-pill">Hữu ích nhất</button>
+                </div>
+            </div>
+
+            @{
+                var reviews = new[] {
+                    new { User="Nguyễn Văn An", Initial="N", Alt=false, Type="Hội viên", Target="Cơ Sở Hoàng Mai", TargetIcon="bi-building", Stars=5, Date="15/02/2026", Text="Sân rất đẹp, sạch sẽ và được bảo dưỡng thường xuyên. Nhân viên tại quầy lễ tân rất nhiệt tình và hỗ trợ đặt sân nhanh chóng. Hệ thống đèn chiếu sáng rất tốt, phù hợp cho thi đấu buổi tối. Mình đã là hội viên 6 tháng và rất hài lòng.", Reply="Cảm ơn anh An đã tin tưởng và đồng hành cùng Badminton Club! Chúng tôi sẽ tiếp tục duy trì chất lượng dịch vụ tốt nhất.", Helpful=24 },
+                    new { User="Trần Thị Bích", Initial="T", Alt=true, Type="Khách vãng lai", Target="Sân A1 - Đống Đa", TargetIcon="bi-grid-3x3", Stars=4, Date="14/02/2026", Text="Sân tốt, mặt sân mịn và lưới chắc. Nhược điểm duy nhất là hệ thống đèn hơi yếu ở góc sân bên phải, có thể gây ảnh hưởng đến thi đấu. Bãi đậu xe rộng rãi. Sẽ quay lại!", Reply="", Helpful=12 },
+                    new { User="Lê Văn Cường", Initial="L", Alt=false, Type="Hội viên VIP", Target="Cơ Sở Tây Hồ", TargetIcon="bi-building", Stars=5, Date="13/02/2026", Text="Cơ sở Tây Hồ là lựa chọn hàng đầu của mình. View nhìn ra hồ rất đẹp, không gian thoáng mát, sân rộng. Dịch vụ cho thuê vợt và cầu cũng rất tốt, giá cả hợp lý so với chất lượng.", Reply="Cảm ơn anh Cường! View hồ Tây là điểm đặc biệt mà chúng tôi rất tự hào. Hẹn gặp lại anh tại sân!", Helpful=31 },
+                    new { User="Phạm Đức Minh", Initial="P", Alt=true, Type="Khách vãng lai", Target="Sân B3 - Cầu Giấy", TargetIcon="bi-grid-3x3", Stars=3, Date="12/02/2026", Text="Sân ổn, chất lượng tương đối tốt. Điều làm mình không hài lòng là bãi đậu xe quá chật, giờ cao điểm rất khó tìm chỗ. Ngoài ra giờ đặt sân online đôi khi không khớp với thực tế tại quầy.", Reply="Cảm ơn anh Minh đã phản hồi thẳng thắn. Chúng tôi đang trong quá trình mở rộng bãi đậu xe và cải thiện hệ thống đặt sân online. Mong anh thông cảm!", Helpful=8 },
+                };
+            }
+
+            @foreach (var r in reviews)
+            {
+                <div class="rv-card">
+                    <div class="rv-card-top">
+                        <div class="rv-user-row">
+                            <div class="rv-avatar @(r.Alt ? "alt" : "")">@r.Initial</div>
+                            <div>
+                                <div class="rv-user-name">@r.User</div>
+                                <div class="rv-user-type">@r.Type</div>
+                            </div>
+                        </div>
+                        <div class="rv-right">
+                            <div class="rv-stars">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="bi @(i <= r.Stars ? "bi-star-fill f" : "bi-star e")"></i>
+                                }
+                            </div>
+                            <div class="rv-date">@r.Date</div>
+                        </div>
+                    </div>
+                    <div class="rv-target-chip">
+                        <i class="bi @r.TargetIcon"></i>
+                        @r.Target
+                    </div>
+                    <div class="rv-text">@r.Text</div>
+                    @if (!string.IsNullOrEmpty(r.Reply))
+                    {
+                        <div class="rv-reply">
+                            <div class="rv-reply-head"><i class="bi bi-shield-check"></i> Phản hồi từ Ban Quản Lý</div>
+                            <div class="rv-reply-text">@r.Reply</div>
+                        </div>
+                    }
+                    <div class="rv-helpful">
+                        <span class="rv-helpful-text">Đánh giá này có hữu ích không?</span>
+                        @* Sửa HelpfulCount thành Helpful và kiểm tra lại tham số hàm *@
+                        <button class="helpful-btn" onclick="voteHelpful(this, '@r.User')">
+                            <i class="bi bi-hand-thumbs-up"></i> @r.Helpful
+                        </button>
+
+                        @* Sửa lỗi nháy đơn/nháy kép lồng nhau gây lỗi báo đỏ *@
+                        <button class="helpful-btn" onclick="handleReport(this)">
+                            <i class="bi bi-flag"></i> Báo cáo
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <button class="load-more-btn" onclick="loadMore(this)">
+                <i class="bi bi-arrow-down-circle me-2"></i> Tải thêm 10 đánh giá (còn 244)
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- WRITE REVIEW MODAL -->
+<div class="wr-overlay" id="writeOverlay" onclick="closeWrite(event)">
+    <div class="wr-modal">
+        <div class="wr-head">
+            <div class="wr-title">Viết Đánh Giá</div>
+            <div class="wr-sub">Chia sẻ trải nghiệm của bạn</div>
+            <button class="wr-close" onclick="document.getElementById('writeOverlay').classList.remove('open')">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="wr-body">
+            <div class="wr-field">
+                <label class="wr-label">Chọn Cơ Sở / Sân</label>
+                <select class="wr-select">
+                    <optgroup label="Cơ Sở Sân">
+                        <option>Cơ Sở Hoàng Mai</option>
+                        <option>Cơ Sở Tây Hồ</option>
+                        <option>Cơ Sở Đống Đa</option>
+                        <option>Cơ Sở Cầu Giấy</option>
+                        <option>Cơ Sở Thanh Xuân</option>
+                    </optgroup>
+                    <optgroup label="Sân Cụ Thể">
+                        <option>Sân A1 - Đống Đa</option>
+                        <option>Sân B3 - Cầu Giấy</option>
+                        <option>Sân C2 - Tây Hồ</option>
+                        <option>Sân A4 - Hoàng Mai</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="wr-field">
+                <label class="wr-label">Điểm Đánh Giá</label>
+                <div class="star-picker" id="starPicker">
+                    <span class="star-pick" data-val="1">★</span>
+                    <span class="star-pick" data-val="2">★</span>
+                    <span class="star-pick" data-val="3">★</span>
+                    <span class="star-pick" data-val="4">★</span>
+                    <span class="star-pick" data-val="5">★</span>
+                </div>
+            </div>
+            <div class="wr-field">
+                <label class="wr-label">Nội Dung Đánh Giá <span style="color:#c94b2a">*</span></label>
+                <textarea class="wr-textarea" placeholder="Chia sẻ trải nghiệm chi tiết của bạn: chất lượng sân, nhân viên, tiện nghi, giá cả... (tối thiểu 30 ký tự)" rows="4"></textarea>
+            </div>
+            <div class="wr-field">
+                <label class="wr-label">Họ Tên (tuỳ chọn)</label>
+                <input type="text" class="wr-select" placeholder="Tên của bạn" style="border-radius:7px;" />
+            </div>
+            <button class="wr-submit" onclick="submitReview()">
+                <i class="bi bi-send-fill"></i> Gửi Đánh Giá
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Sidebar fac select
+    function selectFac(el) {
+        el.closest('.sidebar-body').querySelectorAll('.fac-option').forEach(o => o.classList.remove('active'));
+        el.classList.add('active');
+    }
+    // Star filter
+    function filterByStar(star, el) {
+        el.closest('.sidebar-body').querySelectorAll('.star-filter-row').forEach(r => r.style.background = '');
+        el.style.background = 'rgba(212,160,23,.06)';
+    }
+    // Sort pills
+    document.querySelectorAll('.sort-pill').forEach(p => {
+        p.addEventListener('click', function() {
+            document.querySelectorAll('.sort-pill').forEach(s => s.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+    // Helpful vote
+    function voteHelpful(btn, count) {
+        if (btn.classList.contains('voted')) return;
+        btn.classList.add('voted');
+        btn.innerHTML = `<i class="bi bi-hand-thumbs-up-fill"></i> ${count + 1}`;
+    }
+    // Load more
+    function loadMore(btn) {
+        btn.innerHTML = '<div class="spinner-border spinner-border-sm me-2"></div> Đang tải...';
+        setTimeout(() => { btn.innerHTML = '<i class="bi bi-check-circle me-2"></i> Đã tải tất cả đánh giá'; btn.disabled = true; }, 1200);
+    }
+    // Close write modal
+    function closeWrite(e) {
+        if (e.target === document.getElementById('writeOverlay')) {
+            document.getElementById('writeOverlay').classList.remove('open');
+        }
+    }
+    // Star picker
+    const stars = document.querySelectorAll('.star-pick');
+    let selectedStar = 0;
+    stars.forEach(s => {
+        s.addEventListener('mouseover', function() {
+            const v = +this.dataset.val;
+            stars.forEach(st => st.classList.toggle('lit', +st.dataset.val <= v));
+        });
+        s.addEventListener('click', function() {
+            selectedStar = +this.dataset.val;
+        });
+        s.addEventListener('mouseleave', function() {
+            stars.forEach(st => st.classList.toggle('lit', +st.dataset.val <= selectedStar));
+        });
+    });
+    document.querySelector('.star-picker').addEventListener('mouseleave', function() {
+        stars.forEach(st => st.classList.toggle('lit', +st.dataset.val <= selectedStar));
+    });
+    // Submit review
+    function submitReview() {
+        if (selectedStar === 0) { alert('Vui lòng chọn số sao đánh giá!'); return; }
+        const text = document.querySelector('.wr-textarea').value;
+        if (text.length < 30) { alert('Nội dung đánh giá phải có ít nhất 30 ký tự!'); return; }
+        document.getElementById('writeOverlay').classList.remove('open');
+        alert('Cảm ơn bạn đã đánh giá! Đánh giá sẽ được hiển thị sau khi được kiểm duyệt.');
+    }
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            document.getElementById('writeOverlay').classList.remove('open');
+        }
+    });
+</script>
+}

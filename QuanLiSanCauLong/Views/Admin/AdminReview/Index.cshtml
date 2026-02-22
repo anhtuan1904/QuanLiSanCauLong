@@ -1,0 +1,1056 @@
+﻿@* Đặt file tại: Views/AdminReview/Index.cshtml *@
+@{
+    ViewData["Title"] = "Quản Lý Đánh Giá";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #fdf8f0;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+    }
+
+    /* HEADER */
+    .rev-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .rev-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+        .rev-title span {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    /* SCORE PANEL */
+    .score-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .score-card {
+        background: var(--deep);
+        border-radius: 10px;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+        .score-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gold), var(--gold2));
+        }
+
+    .score-num {
+        font-family: 'Playfair Display', serif;
+        font-size: 3.5rem;
+        font-weight: 700;
+        color: var(--gold);
+        line-height: 1;
+        flex-shrink: 0;
+    }
+
+    .score-info {
+        flex: 1;
+    }
+
+    .score-stars {
+        display: flex;
+        gap: .2rem;
+        color: var(--gold);
+        margin-bottom: .5rem;
+    }
+
+    .score-label {
+        color: rgba(255,255,255,.5);
+        font-size: .78rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .score-count {
+        color: #fff;
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-top: .25rem;
+    }
+
+    .score-bars {
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    .sbar-row {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        margin-bottom: .4rem;
+    }
+
+    .sbar-star {
+        font-size: .68rem;
+        color: var(--gold);
+        width: 10px;
+        text-align: center;
+    }
+
+    .sbar-track {
+        flex: 1;
+        height: 4px;
+        background: rgba(255,255,255,.1);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .sbar-fill {
+        height: 100%;
+        background: var(--gold);
+        border-radius: 2px;
+    }
+
+    .sbar-n {
+        font-size: .65rem;
+        color: rgba(255,255,255,.35);
+        width: 24px;
+    }
+
+    /* TABS */
+    .rev-tabs {
+        display: flex;
+        gap: 0;
+        background: var(--warm);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: .3rem;
+        width: fit-content;
+        margin-bottom: 1.5rem;
+    }
+
+    .rtab {
+        padding: .55rem 1.5rem;
+        border-radius: 6px;
+        border: none;
+        background: none;
+        font-family: 'Outfit', sans-serif;
+        font-size: .84rem;
+        font-weight: 600;
+        color: var(--muted);
+        cursor: pointer;
+        transition: all .2s;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+        .rtab.active {
+            background: var(--deep);
+            color: var(--gold2);
+        }
+
+    .rtab-count {
+        background: var(--gold);
+        color: var(--deep);
+        font-size: .62rem;
+        font-weight: 800;
+        padding: .1rem .45rem;
+        border-radius: 10px;
+    }
+
+    .rtab.active .rtab-count {
+        background: var(--gold2);
+    }
+
+    /* FILTER ROW */
+    .filter-strip {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .fsearch {
+        flex: 1;
+        max-width: 320px;
+        position: relative;
+    }
+
+        .fsearch input {
+            width: 100%;
+            padding: .65rem 1rem .65rem 2.5rem;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: #fff;
+            font-size: .85rem;
+            font-family: 'Outfit', sans-serif;
+            outline: none;
+            color: var(--deep);
+            transition: border-color .2s;
+        }
+
+            .fsearch input:focus {
+                border-color: var(--gold);
+            }
+
+        .fsearch i {
+            position: absolute;
+            left: .85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: .85rem;
+        }
+
+    .fselect {
+        padding: .65rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        background: #fff;
+        font-size: .85rem;
+        font-family: 'Outfit', sans-serif;
+        color: var(--deep);
+        outline: none;
+        cursor: pointer;
+        transition: border-color .2s;
+    }
+
+        .fselect:focus {
+            border-color: var(--gold);
+        }
+
+    /* REVIEW TABLE */
+    .rev-table-wrap {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .rtable {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .rtable th {
+            background: var(--warm);
+            padding: .85rem 1.2rem;
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .rtable td {
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid var(--border);
+            font-size: .875rem;
+            vertical-align: top;
+            color: var(--deep);
+        }
+
+        .rtable tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rtable tr:hover td {
+            background: var(--cream);
+        }
+
+    /* USER INFO CELL */
+    .user-cell {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .user-av {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--gold), var(--gold2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--deep);
+        font-weight: 800;
+        font-size: .85rem;
+        flex-shrink: 0;
+        font-family: 'Playfair Display', serif;
+    }
+
+        .user-av.alt {
+            background: linear-gradient(135deg, var(--deep), #3d2a10);
+            color: var(--gold2);
+        }
+
+    .user-name {
+        font-weight: 600;
+        font-size: .88rem;
+        line-height: 1.2;
+    }
+
+    .user-sub {
+        font-size: .72rem;
+        color: var(--muted);
+    }
+
+    /* STAR DISPLAY */
+    .star-display {
+        display: flex;
+        gap: .15rem;
+        align-items: center;
+    }
+
+        .star-display i {
+            font-size: .8rem;
+        }
+
+        .star-display .filled {
+            color: var(--gold);
+        }
+
+        .star-display .empty {
+            color: #d4ccc0;
+        }
+
+    .star-score {
+        font-weight: 700;
+        font-size: .9rem;
+        color: var(--deep);
+        margin-left: .4rem;
+    }
+
+    /* REVIEW TEXT */
+    .rev-text {
+        max-width: 280px;
+        font-size: .85rem;
+        line-height: 1.6;
+        color: #4a3520;
+        font-weight: 300;
+    }
+
+        .rev-text.clamp {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+    /* STATUS BADGE */
+    .rev-status {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        font-size: .68rem;
+        font-weight: 700;
+        padding: .3rem .7rem;
+        border-radius: 3px;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        cursor: pointer;
+        border: none;
+        transition: all .2s;
+    }
+
+        .rev-status.approved {
+            background: rgba(22,163,74,.1);
+            color: #16a34a;
+        }
+
+        .rev-status.pending {
+            background: rgba(212,160,23,.15);
+            color: #92660a;
+        }
+
+        .rev-status.rejected {
+            background: rgba(201,75,42,.1);
+            color: #c94b2a;
+        }
+
+    /* ACTION BUTTONS */
+    .action-group {
+        display: flex;
+        gap: .4rem;
+        flex-wrap: wrap;
+    }
+
+    .act-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--muted);
+        transition: all .2s;
+        font-size: .8rem;
+    }
+
+        .act-btn:hover.approve {
+            border-color: #16a34a;
+            color: #16a34a;
+            background: rgba(22,163,74,.08);
+        }
+
+        .act-btn:hover.reject {
+            border-color: #c94b2a;
+            color: #c94b2a;
+            background: rgba(201,75,42,.08);
+        }
+
+        .act-btn:hover.view {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(212,160,23,.08);
+        }
+
+        .act-btn:hover.delete {
+            border-color: #c94b2a;
+            color: #c94b2a;
+            background: rgba(201,75,42,.08);
+        }
+
+    /* FACILITY CHIP */
+    .fac-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        background: var(--warm);
+        border: 1px solid var(--border);
+        padding: .25rem .75rem;
+        border-radius: 4px;
+        font-size: .75rem;
+        font-weight: 600;
+        color: var(--deep);
+        max-width: 180px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+        .fac-chip i {
+            color: var(--gold);
+            flex-shrink: 0;
+        }
+
+    /* PAGINATION */
+    .rev-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border);
+        background: var(--warm);
+    }
+
+    .page-info {
+        font-size: .8rem;
+        color: var(--muted);
+    }
+
+    .page-btns {
+        display: flex;
+        gap: .4rem;
+    }
+
+    .page-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: .8rem;
+        color: var(--deep);
+        transition: all .2s;
+    }
+
+        .page-btn.active {
+            background: var(--deep);
+            color: var(--gold2);
+            border-color: var(--deep);
+        }
+
+        .page-btn:hover:not(.active) {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+    /* DETAIL MODAL */
+    .rev-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(26,18,9,.85);
+        backdrop-filter: blur(10px);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+        .rev-modal-overlay.open {
+            display: flex;
+        }
+
+    .rev-modal {
+        background: var(--cream);
+        width: 100%;
+        max-width: 620px;
+        border-radius: 12px;
+        overflow: hidden;
+        animation: revIn .35s cubic-bezier(.25,.46,.45,.94);
+    }
+    @@keyframes revIn {
+        from {
+            opacity: 0;
+            transform: scale(.96) translateY(12px);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    .rev-modal-head {
+        background: var(--deep);
+        padding: 1.5rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .rev-modal-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .rev-modal-close {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.1);
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background .2s;
+    }
+
+        .rev-modal-close:hover {
+            background: rgba(255,255,255,.2);
+        }
+
+    .rev-modal-body {
+        padding: 2rem;
+    }
+
+    .rev-modal-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .rev-info-box {
+        background: var(--warm);
+        border: 1px solid var(--border);
+        padding: .85rem 1rem;
+        border-radius: 6px;
+    }
+
+    .rev-info-label {
+        font-size: .65rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        display: block;
+        margin-bottom: .3rem;
+    }
+
+    .rev-info-val {
+        font-weight: 600;
+        font-size: .9rem;
+        color: var(--deep);
+    }
+
+    .rev-modal-text {
+        background: var(--warm);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 1.2rem;
+        font-size: .9rem;
+        line-height: 1.8;
+        color: #4a3520;
+        font-weight: 300;
+        margin-bottom: 1.5rem;
+    }
+
+    .rev-modal-actions {
+        display: flex;
+        gap: .75rem;
+        justify-content: flex-end;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .approve-btn {
+        background: linear-gradient(135deg, #16a34a, #22c55e);
+        color: #fff;
+        border: none;
+        padding: .7rem 1.75rem;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: .82rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        transition: all .2s;
+    }
+
+        .approve-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(22,163,74,.3);
+        }
+
+    .reject-btn {
+        background: rgba(201,75,42,.1);
+        color: #c94b2a;
+        border: 1px solid rgba(201,75,42,.3);
+        padding: .7rem 1.75rem;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: .82rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        transition: all .2s;
+    }
+
+        .reject-btn:hover {
+            background: rgba(201,75,42,.2);
+        }
+
+    @@media (max-width: 900px) {
+        .score-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .rtable th:nth-child(4), .rtable td:nth-child(4) {
+            display: none;
+        }
+    }
+</style>
+
+<div style="max-width:1400px;">
+
+    <!-- HEADER -->
+    <div class="rev-header">
+        <div>
+            <div class="rev-title">Quản Lý <span>Đánh Giá</span></div>
+            <div style="font-size:.82rem;color:var(--muted);margin-top:.25rem;">Duyệt và quản lý đánh giá của khách hàng về cơ sở sân và dịch vụ</div>
+        </div>
+        <div style="display:flex;gap:.75rem;">
+            <button class="dark-btn" onclick="exportReviews()"><i class="bi bi-download"></i> Xuất Excel</button>
+            <button class="gold-btn" onclick="openSettings()"><i class="bi bi-gear"></i> Cài Đặt</button>
+        </div>
+    </div>
+
+    <!-- SCORE CARDS -->
+    <div class="score-grid">
+        @{
+            var scoreData = new[] {
+                new { Title = "Cơ Sở Sân", Score = "4.8", Count = "162 đánh giá",
+                Bars = new[] { (5,78), (4,14), (3,5), (2,2), (1,1) } },
+                new { Title = "Sân Cầu Lông", Score = "4.7", Count = "86 đánh giá",
+                Bars = new[] { (5,70), (4,20), (3,6), (2,3), (1,1) } },
+                new { Title = "Tổng Thể", Score = "4.8", Count = "248 đánh giá",
+                Bars = new[] { (5,75), (4,17), (3,5), (2,2), (1,1) } },
+                };
+        }
+        @foreach (var s in scoreData)
+        {
+            <div class="score-card">
+                <div>
+                    <div class="score-label">@s.Title</div>
+                    <div class="score-num">@s.Score</div>
+                    <div class="score-stars">
+                        @for (int i = 0; i < 5; i++)
+                        {
+                            <i class="bi @(i < 5 ? "bi-star-fill" : "bi-star")"></i>
+                        }
+                    </div>
+                    <div class="score-count">@s.Count</div>
+                </div>
+                <div class="score-bars">
+                    @foreach (var (star, pct) in s.Bars)
+                    {
+                        <div class="sbar-row">
+                            <span class="sbar-star">@star</span>
+                            <div class="sbar-track"><div class="sbar-fill" style="width:@pct%"></div></div>
+                            <span class="sbar-n">@(s.Count.Replace(" đánh giá", "") == "162" ? (int)(162 * pct / 100) : s.Count.Replace(" đánh giá", "") == "86" ? (int)(86 * pct / 100) : (int)(248 * pct / 100))</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- TABS -->
+    <div class="rev-tabs">
+        <button class="rtab active" data-tab="all">
+            Tất Cả <span class="rtab-count">248</span>
+        </button>
+        <button class="rtab" data-tab="facility">
+            <i class="bi bi-building"></i> Cơ Sở Sân <span class="rtab-count">162</span>
+        </button>
+        <button class="rtab" data-tab="court">
+            <i class="bi bi-grid-3x3"></i> Sân Cầu Lông <span class="rtab-count">86</span>
+        </button>
+        <button class="rtab" data-tab="pending">
+            <i class="bi bi-clock"></i> Chờ Duyệt <span class="rtab-count" style="background:#c94b2a;color:#fff;">12</span>
+        </button>
+    </div>
+
+    <!-- FILTER STRIP -->
+    <div class="filter-strip">
+        <div class="fsearch">
+            <i class="bi bi-search"></i>
+            <input type="text" placeholder="Tìm theo tên khách hàng, nội dung..." id="searchReview" />
+        </div>
+        <select class="fselect" id="filterStar">
+            <option value="">Tất cả sao</option>
+            <option value="5">★★★★★  5 sao</option>
+            <option value="4">★★★★☆  4 sao</option>
+            <option value="3">★★★☆☆  3 sao</option>
+            <option value="2">★★☆☆☆  2 sao</option>
+            <option value="1">★☆☆☆☆  1 sao</option>
+        </select>
+        <select class="fselect" id="filterStatus">
+            <option value="">Tất cả trạng thái</option>
+            <option value="approved">Đã duyệt</option>
+            <option value="pending">Chờ duyệt</option>
+            <option value="rejected">Đã từ chối</option>
+        </select>
+        <select class="fselect" id="filterSort">
+            <option value="newest">Mới nhất</option>
+            <option value="oldest">Cũ nhất</option>
+            <option value="highest">Sao cao nhất</option>
+            <option value="lowest">Sao thấp nhất</option>
+        </select>
+    </div>
+
+    <!-- TABLE -->
+    <div class="rev-table-wrap">
+        <table class="rtable" id="reviewTable">
+            <thead>
+                <tr>
+                    <th>Khách Hàng</th>
+                    <th>Cơ Sở / Sân</th>
+                    <th>Đánh Giá</th>
+                    <th>Nội Dung</th>
+                    <th>Ngày Đánh Giá</th>
+                    <th>Trạng Thái</th>
+                    <th>Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var reviews = new[] {
+                                new { User="Nguyễn Văn A", Initial="N", Email="nguyenvana@gmail.com", Target="Cơ Sở Hoàng Mai", TargetType="facility", Stars=5, Text="Sân rất đẹp, sạch sẽ, nhân viên phục vụ nhiệt tình. Mình sẽ quay lại!", Date="15/02/2026", Status="approved" },
+                                new { User="Trần Thị B", Initial="T", Email="tranthib@gmail.com", Target="Sân A1 - Đống Đa", TargetType="court", Stars=4, Text="Sân tốt nhưng hệ thống đèn hơi yếu vào buổi tối. Tổng thể vẫn ổn.", Date="14/02/2026", Status="approved" },
+                                new { User="Lê Văn Cường", Initial="L", Email="levanc@gmail.com", Target="Cơ Sở Tây Hồ", TargetType="facility", Stars=5, Text="Chất lượng dịch vụ tuyệt vời, giá cả hợp lý. Rất hài lòng!", Date="13/02/2026", Status="pending" },
+                                new { User="Phạm Minh Đức", Initial="P", Email="phamd@gmail.com", Target="Sân B3 - Cầu Giấy", TargetType="court", Stars=3, Text="Sân ổn nhưng bãi gửi xe hơi chật, khó tìm chỗ đậu xe vào giờ cao điểm.", Date="12/02/2026", Status="approved" },
+                                new { User="Hoàng Thị E", Initial="H", Email="hoangte@gmail.com", Target="Cơ Sở Đống Đa", TargetType="facility", Stars=2, Text="Nhà vệ sinh không sạch, điều hòa hỏng không được sửa kịp thời. Cần cải thiện.", Date="11/02/2026", Status="pending" },
+                                new { User="Vũ Quốc Hùng", Initial="V", Email="vuhuong@gmail.com", Target="Sân C2 - Tây Hồ", TargetType="court", Stars=5, Text="Tuyệt vời! Sân mới được sửa, mặt sân láng mịn, lưới chắc chắn. 10 điểm!", Date="10/02/2026", Status="approved" },
+                                new { User="Ngô Thị G", Initial="N", Email="ngog@gmail.com", Target="Cơ Sở Thanh Xuân", TargetType="facility", Stars=1, Text="Dịch vụ kém, nhân viên không nhiệt tình, sân bẩn. Không recommend.", Date="09/02/2026", Status="rejected" },
+                                new { User="Đinh Công H", Initial="Đ", Email="dinhh@gmail.com", Target="Sân A4 - Hoàng Mai", TargetType="court", Stars=4, Text="Sân rộng rãi, thoáng mát. Giá đặt sân hợp lý so với mặt bằng chung.", Date="08/02/2026", Status="approved" },
+                                };
+                }
+                @foreach (var r in reviews)
+                {
+                    <tr class="review-row" data-type="@r.TargetType" data-status="@r.Status" data-stars="@r.Stars">
+                        <td>
+                            <div class="user-cell">
+                                <div class="user-av @(r.TargetType == "court" ? "alt" : "")">@r.Initial</div>
+                                <div>
+                                    <div class="user-name">@r.User</div>
+                                    <div class="user-sub">@r.Email</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fac-chip">
+                                <i class="bi @(r.TargetType == "facility" ? "bi-building" : "bi-grid-3x3")"></i>
+                                @r.Target
+                            </div>
+                        </td>
+                        <td>
+                            <div class="star-display">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="bi @(i <= r.Stars ? "bi-star-fill filled" : "bi-star empty")"></i>
+                                }
+                                <span class="star-score">@r.Stars.0</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="rev-text clamp">@r.Text</div>
+                        </td>
+                        <td style="white-space:nowrap;color:var(--muted);font-size:.82rem;">@r.Date</td>
+                        <td>
+                            <button class="rev-status @r.Status" onclick="toggleStatus(this, '@r.Status')">
+                                @(r.Status == "approved" ? "✓ Đã duyệt" : r.Status == "pending" ? "⏳ Chờ duyệt" : "✕ Từ chối")
+                            </button>
+                        </td>
+                        <td>
+                            <div class="action-group">
+                                <button class="act-btn view" title="Xem chi tiết"
+                                        onclick="viewDetail('@r.User','@r.Target','@r.Stars','@r.Text.Replace("'", "&#39;")','@r.Date','@r.Status','@r.Email')">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="act-btn approve" title="Duyệt" onclick="approveReview(this)">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                                <button class="act-btn reject" title="Từ chối" onclick="rejectReview(this)">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                <button class="act-btn delete" title="Xóa" onclick="deleteReview(this)">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="rev-pagination">
+            <div class="page-info">Hiển thị 1–8 / 248 đánh giá</div>
+            <div class="page-btns">
+                <button class="page-btn"><i class="bi bi-chevron-left"></i></button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <span style="padding:.5rem .3rem;color:var(--muted);">...</span>
+                <button class="page-btn">31</button>
+                <button class="page-btn"><i class="bi bi-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="rev-modal-overlay" id="revModal" onclick="closeModal(event)">
+    <div class="rev-modal">
+        <div class="rev-modal-head">
+            <div class="rev-modal-title">Chi Tiết Đánh Giá</div>
+            <button class="rev-modal-close" onclick="document.getElementById('revModal').classList.remove('open')">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="rev-modal-body">
+            <div class="rev-modal-info-grid">
+                <div class="rev-info-box">
+                    <span class="rev-info-label">Khách hàng</span>
+                    <span class="rev-info-val" id="md-user"></span>
+                </div>
+                <div class="rev-info-box">
+                    <span class="rev-info-label">Email</span>
+                    <span class="rev-info-val" id="md-email" style="font-size:.82rem;"></span>
+                </div>
+                <div class="rev-info-box">
+                    <span class="rev-info-label">Đối tượng đánh giá</span>
+                    <span class="rev-info-val" id="md-target"></span>
+                </div>
+                <div class="rev-info-box">
+                    <span class="rev-info-label">Ngày đánh giá</span>
+                    <span class="rev-info-val" id="md-date"></span>
+                </div>
+                <div class="rev-info-box">
+                    <span class="rev-info-label">Điểm đánh giá</span>
+                    <span class="rev-info-val" id="md-stars"></span>
+                </div>
+                <div class="rev-info-box">
+                    <span class="rev-info-label">Trạng thái</span>
+                    <span class="rev-info-val" id="md-status"></span>
+                </div>
+            </div>
+            <div style="font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem;">Nội dung đánh giá</div>
+            <div class="rev-modal-text" id="md-text"></div>
+            <div style="font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem;">Phản hồi quản lý (tuỳ chọn)</div>
+            <textarea id="md-reply" placeholder="Nhập phản hồi của quản lý..." rows="3"
+                      style="width:100%;border:1px solid var(--border);border-radius:6px;padding:.8rem 1rem;font-family:'Outfit',sans-serif;font-size:.85rem;outline:none;resize:vertical;background:var(--warm);color:var(--deep);"></textarea>
+            <div class="rev-modal-actions">
+                <button class="reject-btn" onclick="document.getElementById('revModal').classList.remove('open')">Đóng</button>
+                <button class="reject-btn" style="background:rgba(201,75,42,.1);" onclick="rejectFromModal()"><i class="bi bi-x-circle"></i> Từ Chối</button>
+                <button class="approve-btn" onclick="approveFromModal()"><i class="bi bi-check-circle"></i> Duyệt Đánh Giá</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Tab switching
+        document.querySelectorAll('.rtab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.rtab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                const f = this.dataset.tab;
+                document.querySelectorAll('.review-row').forEach(row => {
+                    let show = true;
+                    if (f === 'facility') show = row.dataset.type === 'facility';
+                    else if (f === 'court')    show = row.dataset.type === 'court';
+                    else if (f === 'pending')  show = row.dataset.status === 'pending';
+                    row.style.display = show ? '' : 'none';
+                });
+            });
+        });
+
+        // Search filter
+        document.getElementById('searchReview').addEventListener('input', function() {
+            const q = this.value.toLowerCase();
+            document.querySelectorAll('.review-row').forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(q) ? '' : 'none';
+            });
+        });
+
+        // Star filter
+        document.getElementById('filterStar').addEventListener('change', function() {
+            const v = this.value;
+            document.querySelectorAll('.review-row').forEach(row => {
+                row.style.display = (!v || row.dataset.stars === v) ? '' : 'none';
+            });
+        });
+
+        // Status filter
+        document.getElementById('filterStatus').addEventListener('change', function() {
+            const v = this.value;
+            document.querySelectorAll('.review-row').forEach(row => {
+                row.style.display = (!v || row.dataset.status === v) ? '' : 'none';
+            });
+        });
+
+        // Toggle status
+        function toggleStatus(btn, current) {
+            const next = current === 'pending' ? 'approved' : current === 'approved' ? 'rejected' : 'pending';
+            const labels = { approved: '✓ Đã duyệt', pending: '⏳ Chờ duyệt', rejected: '✕ Từ chối' };
+            btn.className = 'rev-status ' + next;
+            btn.textContent = labels[next];
+            btn.closest('tr').dataset.status = next;
+            btn.setAttribute('onclick', `toggleStatus(this, '${next}')`);
+        }
+
+        // View detail modal
+        function viewDetail(user, target, stars, text, date, status, email) {
+            document.getElementById('md-user').textContent = user;
+            document.getElementById('md-email').textContent = email;
+            document.getElementById('md-target').textContent = target;
+            document.getElementById('md-date').textContent = date;
+            document.getElementById('md-text').textContent = text;
+            const stLabels = { approved:'✓ Đã duyệt', pending:'⏳ Chờ duyệt', rejected:'✕ Từ chối' };
+            document.getElementById('md-status').textContent = stLabels[status];
+            const starsEl = document.getElementById('md-stars');
+            starsEl.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const ic = document.createElement('i');
+                ic.className = 'bi ' + (i <= stars ? 'bi-star-fill' : 'bi-star');
+                ic.style.color = i <= stars ? '#d4a017' : '#d4ccc0';
+                ic.style.marginRight = '2px';
+                starsEl.appendChild(ic);
+            }
+            document.getElementById('revModal').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeModal(e) {
+            if (e.target === document.getElementById('revModal')) {
+                document.getElementById('revModal').classList.remove('open');
+                document.body.style.overflow = '';
+            }
+        }
+        function approveFromModal() {
+            alert('Đánh giá đã được duyệt!');
+            document.getElementById('revModal').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+        function rejectFromModal() {
+            if (confirm('Bạn có chắc muốn từ chối đánh giá này?')) {
+                document.getElementById('revModal').classList.remove('open');
+                document.body.style.overflow = '';
+            }
+        }
+        function approveReview(btn) {
+            const row = btn.closest('tr');
+            const statusBtn = row.querySelector('.rev-status');
+            statusBtn.className = 'rev-status approved';
+            statusBtn.textContent = '✓ Đã duyệt';
+            row.dataset.status = 'approved';
+        }
+        function rejectReview(btn) {
+            if (confirm('Từ chối đánh giá này?')) {
+                const row = btn.closest('tr');
+                const statusBtn = row.querySelector('.rev-status');
+                statusBtn.className = 'rev-status rejected';
+                statusBtn.textContent = '✕ Từ chối';
+                row.dataset.status = 'rejected';
+            }
+        }
+        function deleteReview(btn) {
+            if (confirm('Xóa đánh giá này? Hành động không thể hoàn tác.')) {
+                btn.closest('tr').style.opacity = '0';
+                setTimeout(() => btn.closest('tr').remove(), 300);
+            }
+        }
+        function exportReviews() { alert('Đang xuất Excel...'); }
+        function openSettings() { alert('Cài đặt hiển thị đánh giá'); }
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                document.getElementById('revModal').classList.remove('open');
+                document.body.style.overflow = '';
+            }
+        });
+    </script>
+}

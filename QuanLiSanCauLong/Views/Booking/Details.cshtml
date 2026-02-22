@@ -1,784 +1,856 @@
-﻿@model QuanLiSanCauLong.ViewModels.FacilityDetailsViewModel
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+﻿@model QuanLiSanCauLong.ViewModels.BookingHistoryViewModel
+@{
+    ViewData["Title"] = "Chi tiết đặt sân #" + Model.BookingCode;
+}
 
 <style>
     :root {
-        --primary-purple: #6c33f2;
-        --secondary-purple: #8b5cf6;
-        --bg-light: #f8fafc;
-        --text-dark: #1e293b;
+        --D: #1a1209;
+        --D2: #231a0e;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --G3: rgba(212,160,23,.1);
+        --W: #f5ede0;
+        --S: #ede5d8;
+        --R: #c94b2a;
+        --GN: #10b981;
+        --M: rgba(255,255,255,.38);
+    }
+
+    * {
+        box-sizing: border-box;
     }
 
     body {
-        background-color: var(--bg-light);
+        background: var(--W);
     }
 
-    /* Back Button */
-    .back-button {
-        display: inline-flex;
+    .pghd {
+        background: var(--D);
+        border-bottom: 1px solid rgba(212,160,23,.18);
+        padding: .78rem 2rem;
+        display: flex;
         align-items: center;
-        color: var(--text-dark);
-        font-weight: 600;
-        text-decoration: none;
-        margin-bottom: 20px;
-        transition: all 0.3s;
-    }
-
-        .back-button:hover {
-            color: var(--primary-purple);
-            transform: translateX(-5px);
-        }
-
-        .back-button i {
-            margin-right: 8px;
-        }
-
-    /* Image Carousel */
-    .facility-carousel {
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        gap: .6rem;
         position: relative;
     }
 
-    .carousel-inner {
-        border-radius: 20px;
+        .pghd::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,var(--G),var(--G2),transparent);
+        }
+
+        .pghd a {
+            color: var(--G2);
+            text-decoration: none;
+            font-size: .78rem;
+            font-weight: 600;
+            opacity: .8;
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+        }
+
+            .pghd a:hover {
+                opacity: 1;
+            }
+
+        .pghd .sep {
+            color: var(--M);
+            font-size: .65rem;
+        }
+
+        .pghd .cur {
+            color: var(--M);
+            font-size: .78rem;
+            font-style: italic;
+        }
+
+    .pw {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 2rem;
     }
 
-    .carousel-item img {
-        height: 450px;
-        object-fit: cover;
-    }
-
-    .carousel-control-prev,
-    .carousel-control-next {
-        width: 50px;
-        height: 50px;
-        background: rgba(255,255,255,0.9);
-        border-radius: 50%;
-        top: 50%;
-        transform: translateY(-50%);
-        opacity: 0;
-        transition: all 0.3s;
-    }
-
-    .facility-carousel:hover .carousel-control-prev,
-    .facility-carousel:hover .carousel-control-next {
-        opacity: 1;
-    }
-
-    .carousel-control-prev {
-        left: 20px;
-    }
-
-    .carousel-control-next {
-        right: 20px;
-    }
-
-    .carousel-control-prev-icon,
-    .carousel-control-next-icon {
-        filter: invert(1);
-    }
-
-    /* Info Section */
-    .facility-info {
-        background: white;
-        padding: 30px;
-        border-radius: 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-        height: 100%;
-    }
-
-    .facility-title {
-        font-size: 2rem;
-        font-weight: 800;
-        color: var(--text-dark);
-        margin-bottom: 15px;
-    }
-
-    .facility-address {
-        color: #64748b;
-        font-size: 1rem;
-        margin-bottom: 25px;
+    /* Hero banner */
+    .d-hero {
+        background: var(--D);
+        border: 1px solid rgba(212,160,23,.18);
+        border-radius: 10px;
+        padding: 1.8rem 2rem;
+        margin-bottom: 1.4rem;
         display: flex;
         align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1.2rem;
+        position: relative;
+        overflow: hidden;
     }
 
-        .facility-address i {
-            color: #ef4444;
-            margin-right: 8px;
+        .d-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 55% 100% at 80% 50%,rgba(212,160,23,.06),transparent);
         }
 
-    .info-cards {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-        margin-bottom: 25px;
+    .d-hero-left {
+        position: relative;
+        z-index: 1;
     }
 
-    .info-card {
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        padding: 20px;
-        border-radius: 16px;
+    .d-code {
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: var(--G);
+        margin-bottom: .3rem;
+    }
+
+    .d-name {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: .4rem;
+    }
+
+    .d-addr {
+        font-size: .78rem;
+        color: var(--M);
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+    }
+
+        .d-addr i {
+            color: var(--R);
+        }
+
+    .d-hero-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .d-stat {
         text-align: center;
-        border: 2px solid #e2e8f0;
-        transition: all 0.3s;
+        padding: 1rem 1.2rem;
+        background: rgba(255,255,255,.04);
+        border: 1px solid rgba(212,160,23,.18);
+        border-radius: 8px;
     }
 
-        .info-card:hover {
-            border-color: var(--primary-purple);
-            transform: translateY(-3px);
-        }
-
-    .info-card-label {
-        font-size: 0.85rem;
-        color: #64748b;
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-    }
-
-    .info-card-value {
+    .d-sv {
+        font-family: 'Outfit',sans-serif;
         font-size: 1.3rem;
         font-weight: 800;
-        color: var(--primary-purple);
+        color: var(--G2);
+        margin-bottom: .22rem;
     }
 
-        .info-card-value.success {
-            color: #10b981;
+    .d-sl {
+        font-size: .58rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--M);
+    }
+
+    /* Cards */
+    .c {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1.2rem;
+    }
+
+    .c-hd {
+        background: var(--D);
+        padding: .85rem 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+        .c-hd i {
+            color: var(--G);
         }
 
-    .facility-description {
-        color: #475569;
-        line-height: 1.8;
-        margin-bottom: 20px;
+    .c-title {
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        font-size: .9rem;
+        font-weight: 700;
+        color: #fff;
     }
 
-    .facility-features {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 20px;
+    .c-bd {
+        padding: 1.3rem 1.4rem;
     }
 
-    .feature-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 8px 16px;
-        background: #f1f5f9;
-        border-radius: 20px;
-        color: var(--text-dark);
-        font-size: 0.9rem;
+    /* Info grid */
+    .ig {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: 1rem;
+    }
+
+    .ig2 {
+        grid-template-columns: repeat(2,1fr);
+    }
+
+    .ig-item {
+    }
+
+    .ig-lbl {
+        font-size: .62rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: #8c7a68;
+        margin-bottom: .28rem;
+    }
+
+    .ig-val {
+        font-size: .9rem;
         font-weight: 600;
-    }
-
-        .feature-badge i {
-            margin-right: 6px;
-            color: var(--primary-purple);
-        }
-
-    /* Tabs */
-    .booking-tabs {
-        background: white;
-        padding: 6px;
-        border-radius: 50px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-        display: inline-flex;
-        margin-bottom: 30px;
-    }
-
-        .booking-tabs .nav-link {
-            border: none;
-            border-radius: 40px;
-            padding: 12px 30px;
-            color: #64748b;
-            font-weight: 700;
-            transition: all 0.3s;
-        }
-
-            .booking-tabs .nav-link.active {
-                background: linear-gradient(135deg, var(--primary-purple) 0%, var(--secondary-purple) 100%);
-                color: white;
-                box-shadow: 0 4px 15px rgba(108, 51, 242, 0.3);
-            }
-
-    /* Booking Card */
-    .booking-card {
-        background: white;
-        border: none;
-        border-radius: 20px;
-        padding: 30px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-    }
-
-    .booking-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 30px;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-
-    .booking-title {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--text-dark);
-        margin: 0;
-    }
-
-    .date-picker-wrapper {
+        color: var(--D);
         display: flex;
         align-items: center;
-        gap: 12px;
-        background: #f8fafc;
-        padding: 10px 20px;
-        border-radius: 12px;
-        border: 2px solid #e2e8f0;
+        gap: .35rem;
     }
 
-        .date-picker-wrapper label {
-            font-weight: 600;
-            color: var(--text-dark);
-            margin: 0;
+        .ig-val i {
+            color: var(--G);
         }
 
-        .date-picker-wrapper input {
-            border: none;
-            background: transparent;
-            color: var(--primary-purple);
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-            .date-picker-wrapper input:focus {
-                outline: none;
-            }
-
-    /* Court Timeline */
-    .timeline-wrapper {
-        overflow-x: auto;
-        padding-bottom: 20px;
-    }
-
-        .timeline-wrapper::-webkit-scrollbar {
-            height: 8px;
-        }
-
-        .timeline-wrapper::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 10px;
-        }
-
-        .timeline-wrapper::-webkit-scrollbar-thumb {
-            background: var(--primary-purple);
-            border-radius: 10px;
-        }
-
-    .court-row {
-        display: flex;
-        align-items: center;
-        margin-bottom: 20px;
-        min-width: 1200px;
-    }
-
-    .court-label {
-        width: 140px;
+    .vtag {
+        background: var(--S);
+        color: #4a3728;
+        font-size: .6rem;
         font-weight: 700;
-        color: var(--text-dark);
-        font-size: 1rem;
-        padding-right: 20px;
-        flex-shrink: 0;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        padding: .14rem .5rem;
+        border-radius: 3px;
     }
 
-    .slots-row {
-        display: flex;
-        gap: 10px;
-        flex: 1;
-    }
-
-    /* Slot Item */
-    .slot-item {
-        width: 85px;
-        height: 70px;
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.3s;
-        background: white;
-        position: relative;
-        flex-shrink: 0;
-    }
-
-        .slot-item:hover:not(.booked) {
-            border-color: var(--primary-purple);
-            background: #f3f0ff;
-            transform: translateY(-3px);
-            box-shadow: 0 4px 12px rgba(108, 51, 242, 0.2);
-        }
-
-        .slot-item.booked {
-            background: #fee2e2;
-            color: #dc2626;
-            cursor: not-allowed;
-            border-color: #fecaca;
-        }
-
-            .slot-item.booked::after {
-                content: 'Đã đặt';
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                font-size: 0.7rem;
-                font-weight: 700;
-                opacity: 0.8;
-            }
-
-        .slot-item.selected {
-            background: linear-gradient(135deg, var(--primary-purple) 0%, var(--secondary-purple) 100%);
-            color: white;
-            border-color: var(--primary-purple);
-            box-shadow: 0 4px 15px rgba(108, 51, 242, 0.4);
-        }
-
-    .slot-time {
+    /* Status badge */
+    .sb {
+        padding: .24rem .75rem;
+        border-radius: 4px;
+        font-size: .66rem;
         font-weight: 700;
-        font-size: 0.95rem;
-        margin-bottom: 2px;
+        letter-spacing: .06em;
+        text-transform: uppercase;
     }
 
-    .slot-price {
-        font-size: 0.8rem;
-        opacity: 0.8;
-        font-weight: 600;
-    }
-
-    .slot-item.booked .slot-time,
-    .slot-item.booked .slot-price {
-        opacity: 0;
-    }
-
-    /* History Table */
-    .history-table {
-        background: white;
-    }
-
-        .history-table thead {
-            background: #f8fafc;
-        }
-
-        .history-table th {
-            border: none;
-            color: var(--text-dark);
-            font-weight: 700;
-            padding: 15px;
-            font-size: 0.9rem;
-        }
-
-        .history-table td {
-            border: none;
-            border-bottom: 1px solid #f1f5f9;
-            padding: 18px 15px;
-            vertical-align: middle;
-        }
-
-        .history-table tbody tr:hover {
-            background: #f8fafc;
-        }
-
-    .status-badge {
-        padding: 6px 16px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 700;
-    }
-
-        .status-badge.confirmed {
+        .sb.confirmed {
             background: #d1fae5;
             color: #065f46;
         }
 
-        .status-badge.pending {
+        .sb.pending {
             background: #fef3c7;
             color: #92400e;
         }
 
-        .status-badge.cancelled {
+        .sb.cancelled {
             background: #fee2e2;
             color: #991b1b;
         }
 
-    .btn-cancel {
-        padding: 8px 20px;
-        border-radius: 10px;
-        border: 2px solid #fecaca;
-        background: white;
-        color: #dc2626;
-        font-weight: 700;
-        transition: all 0.3s;
-        font-size: 0.85rem;
-    }
-
-        .btn-cancel:hover {
-            background: #dc2626;
-            color: white;
-            border-color: #dc2626;
+        .sb.playing {
+            background: #dbeafe;
+            color: #1e40af;
         }
 
-    /* Payment Bar */
-    .payment-bar {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-        color: white;
-        padding: 20px 0;
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
-        z-index: 1000;
-        transform: translateY(100%);
-        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-        .payment-bar.show {
-            transform: translateY(0);
+        .sb.completed {
+            background: #f0fdf4;
+            color: #166534;
         }
 
-    .payment-info {
+    /* Timeline */
+    .timeline {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        padding: 1rem 0;
+        overflow-x: auto;
+    }
+
+    .tstep {
         display: flex;
         flex-direction: column;
-        gap: 5px;
+        align-items: center;
+        gap: .3rem;
+        flex-shrink: 0;
     }
 
-    .payment-slots {
-        font-size: 0.95rem;
-        opacity: 0.9;
+    .tstep-dot {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 2px solid var(--S);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .78rem;
+        color: #8c7a68;
+        transition: all .2s;
     }
 
-    .payment-total {
-        font-size: 1.8rem;
-        font-weight: 800;
-        color: #fbbf24;
-        margin: 0;
+        .tstep-dot.done {
+            background: var(--G);
+            border-color: var(--G);
+            color: var(--D);
+        }
+
+        .tstep-dot.cur {
+            background: var(--D);
+            border-color: var(--G);
+            color: var(--G2);
+        }
+
+    .tstep-lbl {
+        font-size: .62rem;
+        font-weight: 600;
+        color: #8c7a68;
+        text-align: center;
     }
 
-    .btn-book-now {
-        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-        color: #1e293b;
+        .tstep-lbl.done {
+            color: var(--D);
+        }
+
+        .tstep-lbl.cur {
+            color: var(--G);
+        }
+
+    .tline {
+        height: 2px;
+        flex: 1;
+        background: var(--S);
+        min-width: 32px;
+    }
+
+        .tline.done {
+            background: linear-gradient(90deg,var(--G),var(--G2));
+        }
+
+    /* Product table */
+    .ptbl {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .ptbl th {
+            background: var(--D2);
+            padding: .7rem .9rem;
+            font-size: .64rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--G);
+            text-align: left;
+            border: none;
+        }
+
+        .ptbl td {
+            padding: .75rem .9rem;
+            font-size: .84rem;
+            border-bottom: 1px solid var(--S);
+            vertical-align: middle;
+        }
+
+        .ptbl tbody tr:hover {
+            background: #fdfcfa;
+        }
+
+        .ptbl tfoot td {
+            padding: .8rem .9rem;
+            font-size: .88rem;
+            font-weight: 700;
+            border-top: 2px solid var(--S);
+        }
+
+    .no-prod {
+        text-align: center;
+        padding: 2rem;
+        color: #8c7a68;
+        font-size: .82rem;
+    }
+
+    /* Price summary */
+    .ps-rows {
+        display: flex;
+        flex-direction: column;
+        gap: .4rem;
+    }
+
+    .psr {
+        display: flex;
+        justify-content: space-between;
+        font-size: .88rem;
+        padding: .38rem 0;
+    }
+
+        .psr + .psr {
+            border-top: 1px solid var(--S);
+        }
+
+    .psr-lbl {
+        color: #8c7a68;
+    }
+
+    .psr-val {
+        font-weight: 600;
+        color: var(--D);
+    }
+
+        .psr-val.gn {
+            color: var(--GN);
+        }
+
+        .psr-val.rd {
+            color: #dc2626;
+        }
+
+    .psr-div {
         border: none;
-        border-radius: 50px;
-        padding: 15px 40px;
-        font-weight: 800;
-        font-size: 1.1rem;
-        transition: all 0.3s;
-        box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+        border-top: 2px solid var(--S);
+        margin: .5rem 0;
     }
 
-        .btn-book-now:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(251, 191, 36, 0.6);
+    .psr-tot {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+    }
+
+    .psr-tot-lbl {
+        font-size: .9rem;
+        font-weight: 700;
+        color: var(--D);
+    }
+
+    .psr-tot-val {
+        font-family: 'Outfit',sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--D);
+    }
+
+    /* Actions */
+    .act-row {
+        display: flex;
+        gap: .65rem;
+        flex-wrap: wrap;
+        margin-top: 1.4rem;
+    }
+
+    .btn-a {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .62rem 1.2rem;
+        border-radius: 6px;
+        font-size: .8rem;
+        font-weight: 700;
+        cursor: pointer;
+        border: none;
+        text-decoration: none;
+        transition: all .2s;
+    }
+
+        .btn-a.prim {
+            background: linear-gradient(135deg,var(--G),var(--G2));
+            color: var(--D);
         }
 
-    /* Responsive */
-    @@media (max-width: 768px) {
-        .carousel-item img {
-            height: 300px;
+            .btn-a.prim:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 18px rgba(212,160,23,.35);
+                color: var(--D);
+            }
+
+        .btn-a.sec {
+            background: none;
+            border: 1.5px solid var(--S);
+            color: #4a3728;
         }
 
-        .facility-title {
-            font-size: 1.5rem;
+            .btn-a.sec:hover {
+                border-color: var(--D);
+                color: var(--D);
+            }
+
+        .btn-a.dan {
+            background: rgba(220,38,38,.08);
+            border: 1.5px solid rgba(220,38,38,.2);
+            color: #dc2626;
         }
 
-        .info-cards {
+            .btn-a.dan:hover {
+                background: #dc2626;
+                color: #fff;
+            }
+
+    /* Cancel modal */
+    .modal-dark .modal-content {
+        border: 1px solid rgba(212,160,23,.18);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .modal-dark .modal-header {
+        background: var(--D);
+        border-bottom: 1px solid rgba(212,160,23,.18);
+    }
+
+    .modal-dark .modal-title {
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        color: #fff;
+        font-size: 1rem;
+    }
+
+    .modal-dark .btn-close {
+        filter: invert(1) opacity(.5);
+    }
+
+    .modal-dark .modal-body {
+        background: #fff;
+        padding: 1.4rem;
+    }
+
+    .modal-dark .modal-footer {
+        background: #fdf8f0;
+        border-top: 1px solid var(--S);
+    }
+
+    .modal-dark textarea {
+        width: 100%;
+        padding: .7rem .95rem;
+        border: 1.5px solid var(--S);
+        border-radius: 7px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .84rem;
+        color: var(--D);
+        outline: none;
+        resize: vertical;
+    }
+
+        .modal-dark textarea:focus {
+            border-color: var(--G);
+        }
+
+    .warn-note {
+        background: rgba(212,160,23,.08);
+        border: 1px solid rgba(212,160,23,.22);
+        border-radius: 6px;
+        padding: .65rem .9rem;
+        margin-top: .9rem;
+        font-size: .76rem;
+        color: #7a5c0a;
+        display: flex;
+        align-items: flex-start;
+        gap: .4rem;
+    }
+
+        .warn-note i {
+            color: var(--G);
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+    .btn-confirm-cancel {
+        padding: .6rem 1.3rem;
+        background: linear-gradient(135deg,#dc2626,#ef4444);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: .8rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .btn-modal-close {
+        padding: .6rem 1.1rem;
+        background: none;
+        border: 1.5px solid var(--S);
+        border-radius: 6px;
+        font-size: .8rem;
+        font-weight: 600;
+        color: #8c7a68;
+        cursor: pointer;
+    }
+
+        .btn-modal-close:hover {
+            border-color: var(--D);
+            color: var(--D);
+        }
+
+    .note-box {
+        background: #fdf8f0;
+        border: 1px solid rgba(212,160,23,.2);
+        border-left: 3px solid var(--G);
+        border-radius: 6px;
+        padding: .75rem 1rem;
+        font-size: .84rem;
+        color: #4a3728;
+    }
+
+    @@media(max-width:900px) {
+        .ig {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .d-hero {
+            flex-direction: column;
+        }
+
+        .d-hero-right {
+            flex-direction: row;
+            width: 100%;
+        }
+
+        .pw, .pghd {
+            padding-left: 1.2rem;
+            padding-right: 1.2rem;
+        }
+    }
+
+    @@media(max-width:600px) {
+        .ig {
             grid-template-columns: 1fr;
         }
 
-        .booking-header {
+        .ig2 {
+            grid-template-columns: 1fr;
+        }
+
+        .act-row {
             flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .court-label {
-            width: 100px;
-            font-size: 0.9rem;
-        }
-
-        .slot-item {
-            width: 70px;
-            height: 60px;
-        }
-
-        .slot-time {
-            font-size: 0.85rem;
-        }
-
-        .payment-bar {
-            padding: 15px 0;
-        }
-
-        .payment-total {
-            font-size: 1.4rem;
-        }
-
-        .btn-book-now {
-            padding: 12px 30px;
-            font-size: 1rem;
         }
     }
 </style>
 
-<div class="container py-4">
-    <!-- Back Button -->
-    <a href="javascript:history.back()" class="back-button">
-        <i class="bi bi-arrow-left"></i> Quay lại danh sách
-    </a>
+<div class="pghd">
+    <a asp-action="MyBookings"><i class="bi bi-arrow-left"></i> Lịch đặt sân</a>
+    <span class="sep"><i class="bi bi-chevron-right"></i></span>
+    <span class="cur">@Model.BookingCode</span>
+</div>
 
-    <!-- Main Content -->
-    <div class="row mb-5">
-        <!-- Image Carousel -->
-        <div class="col-lg-7 mb-4 mb-lg-0">
-            <div id="courtCarousel" class="carousel slide facility-carousel" data-bs-ride="carousel">
-                <div class="carousel-inner">
-                    @for (int i = 0; i < Model.ImageUrls.Count; i++)
-                    {
-                        <div class="carousel-item @(i == 0 ? "active" : "")">
-                            <img src="@Model.ImageUrls[i]" class="d-block w-100" alt="@Model.FacilityName">
-                        </div>
-                    }
-                </div>
-                <button class="carousel-control-prev" type="button" data-bs-target="#courtCarousel" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon"></span>
-                </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#courtCarousel" data-bs-slide="next">
-                    <span class="carousel-control-next-icon"></span>
-                </button>
-            </div>
+<div class="pw">
+
+    <!-- Hero -->
+    <div class="d-hero">
+        <div class="d-hero-left">
+            <div class="d-code"><i class="bi bi-hash"></i> Mã đơn: @Model.BookingCode</div>
+            <div class="d-name">@Model.FacilityName</div>
+            <div class="d-addr"><i class="bi bi-geo-alt-fill"></i> Chi tiết đặt sân cầu lông</div>
         </div>
-
-        <!-- Facility Info -->
-        <div class="col-lg-5">
-            <div class="facility-info">
-                <h1 class="facility-title">@Model.FacilityName</h1>
-                <div class="facility-address">
-                    <i class="bi bi-geo-alt-fill"></i>
-                    @Model.Address
-                </div>
-
-                <div class="info-cards">
-                    <div class="info-card">
-                        <span class="info-card-label">Giá từ</span>
-                        <div class="info-card-value">80.000đ</div>
-                    </div>
-                    <div class="info-card">
-                        <span class="info-card-label">Trạng thái</span>
-                        <div class="info-card-value success">Đang mở</div>
-                    </div>
-                    <div class="info-card">
-                        <span class="info-card-label">Đánh giá</span>
-                        <div class="info-card-value">
-                            <i class="bi bi-star-fill" style="color: #fbbf24;"></i> 4.8
-                        </div>
-                    </div>
-                    <div class="info-card">
-                        <span class="info-card-label">Số sân</span>
-                        <div class="info-card-value">8 sân</div>
-                    </div>
-                </div>
-
-                <div class="facility-description">
-                    @Model.Description
-                </div>
-
-                <div class="facility-features">
-                    <span class="feature-badge">
-                        <i class="bi bi-wifi"></i> Wifi
-                    </span>
-                    <span class="feature-badge">
-                        <i class="bi bi-car-front"></i> Parking
-                    </span>
-                    <span class="feature-badge">
-                        <i class="bi bi-cup-hot"></i> Canteen
-                    </span>
-                    <span class="feature-badge">
-                        <i class="bi bi-droplet"></i> Shower
-                    </span>
-                </div>
+        <div class="d-hero-right">
+            <div class="d-stat">
+                <div class="d-sv"><span class="sb @Model.Status.ToLower()">@Model.Status</span></div>
+                <div class="d-sl">Trạng thái</div>
+            </div>
+            <div class="d-stat">
+                <div class="d-sv">@Model.GrandTotal.ToString("N0")đ</div>
+                <div class="d-sl">Tổng tiền</div>
+            </div>
+            <div class="d-stat">
+                <div class="d-sv">@Model.BookingDate.ToString("dd/MM")</div>
+                <div class="d-sl">Ngày chơi</div>
             </div>
         </div>
     </div>
 
-    <!-- Tabs -->
-    <ul class="nav booking-tabs mb-4" id="bookingTabs">
-        <li class="nav-item">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-book">
-                <i class="bi bi-calendar-check me-2"></i>Tìm kiếm & Đặt sân
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-history">
-                <i class="bi bi-clock-history me-2"></i>Lịch đặt của tôi
-            </button>
-        </li>
-    </ul>
-
-    <!-- Tab Content -->
-    <div class="tab-content">
-        <!-- Book Tab -->
-        <div class="tab-pane fade show active" id="tab-book">
-            <div class="booking-card">
-                <div class="booking-header">
-                    <h4 class="booking-title">Chọn khung giờ trống</h4>
-                    <div class="date-picker-wrapper">
-                        <label><i class="bi bi-calendar3 me-2"></i>Ngày:</label>
-                        <input type="date"
-                               class="form-control-sm"
-                               value="@Model.SelectedDate.ToString("yyyy-MM-dd")"
-                               onchange="window.location.href='?id=@Model.FacilityId&date=' + this.value">
+    <!-- Status Timeline -->
+    <div class="c">
+        <div class="c-hd"><i class="bi bi-arrow-right-circle"></i><span class="c-title">Tiến trình đơn đặt</span></div>
+        <div class="c-bd">
+            @{
+                var steps = new[] { ("Pending", "Chờ xác nhận", "bi-hourglass"), ("Confirmed", "Đã xác nhận", "bi-check-circle"), ("Playing", "Đang chơi", "bi-controller"), ("Completed", "Hoàn thành", "bi-trophy") };
+                var statusOrder = new[] { "Pending", "Confirmed", "Playing", "Completed" };
+                int curIdx = Array.IndexOf(statusOrder, Model.Status);
+            }
+            <div class="timeline">
+                @for (int si = 0; si < steps.Length; si++)
+                {
+                    var (sv, sl, icon) = steps[si];
+                    bool done = curIdx > si || Model.Status == sv;
+                    bool cur = Model.Status == sv;
+                    <div class="tstep">
+                        <div class="tstep-dot @(done ? "done" : "") @(cur ? "cur" : "")"><i class="bi @icon"></i></div>
+                        <div class="tstep-lbl @(done ? "done" : "") @(cur ? "cur" : "")">@sl</div>
                     </div>
-                </div>
-
-                <div class="timeline-wrapper">
-                    @foreach (var court in Model.Courts)
+                    if (si < steps.Length - 1)
                     {
-                        <div class="court-row">
-                            <div class="court-label">
-                                <i class="bi bi-grid-3x3-gap me-2" style="color: var(--primary-purple);"></i>@court.CourtNumber
-                            </div>
-                            <div class="slots-row">
-                                @foreach (var slot in court.Slots)
-                                {
-                                    <div class="slot-item @(slot.IsBooked ? "booked" : "available")"
-                                         data-court="@court.CourtNumber"
-                                         data-time="@slot.TimeRange"
-                                         data-price="@slot.Price"
-                                         onclick="toggleSlot(this)">
-                                        <span class="slot-time">@slot.TimeRange.Split(" - ")[0]</span>
-                                        <span class="slot-price">@(slot.Price / 1000)k</span>
-                                    </div>
-                                }
-                            </div>
-                        </div>
+                        <div class="tline @(curIdx > si ? "done" : "")"></div>
                     }
-                </div>
+                }
+                @if (Model.Status == "Cancelled")
+                {
+                    <div style="margin-left:.8rem;display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:#dc2626;font-weight:600">
+                        <i class="bi bi-x-circle"></i> Đã hủy
+                    </div>
+                }
             </div>
         </div>
+    </div>
 
-        <!-- History Tab -->
-        <div class="tab-pane fade" id="tab-history">
-            <div class="booking-card">
-                <table class="table history-table">
-                    <thead>
-                        <tr>
-                            <th>Sân</th>
-                            <th>Ngày đặt</th>
-                            <th>Khung giờ</th>
-                            <th>Trạng thái</th>
-                            <th>Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.UserBookings != null && Model.UserBookings.Any())
-                        {
-                            @foreach (var booking in Model.UserBookings)
+    <!-- Booking Info -->
+    <div class="c">
+        <div class="c-hd"><i class="bi bi-calendar-check"></i><span class="c-title">Thông tin đặt sân</span></div>
+        <div class="c-bd">
+            <div class="ig">
+                <div class="ig-item">
+                    <div class="ig-lbl">Cơ sở</div>
+                    <div class="ig-val"><i class="bi bi-building"></i> @Model.FacilityName</div>
+                </div>
+                <div class="ig-item">
+                    <div class="ig-lbl">Sân</div>
+                    <div class="ig-val"><i class="bi bi-grid-3x3-gap"></i> @Model.CourtNumber <span class="vtag">@Model.CourtType</span></div>
+                </div>
+                <div class="ig-item">
+                    <div class="ig-lbl">Ngày chơi</div>
+                    <div class="ig-val"><i class="bi bi-calendar3"></i> @Model.BookingDate.ToString("dd/MM/yyyy") <span style="color:#8c7a68;font-size:.74rem">(@Model.BookingDate.ToString("dddd", new System.Globalization.CultureInfo("vi-VN")))</span></div>
+                </div>
+                <div class="ig-item">
+                    <div class="ig-lbl">Giờ chơi</div>
+                    <div class="ig-val"><i class="bi bi-clock"></i> @Model.StartTime.ToString(@"hh\:mm") – @Model.EndTime.ToString(@"hh\:mm") <span style="color:#8c7a68;font-size:.74rem">(@Model.Duration phút)</span></div>
+                </div>
+                <div class="ig-item">
+                    <div class="ig-lbl">Thanh toán</div>
+                    <div class="ig-val"><i class="bi bi-credit-card"></i> @Model.PaymentMethod <span class="sb @(Model.PaymentStatus?.ToLower() == "paid" ? "confirmed" : "pending")" style="font-size:.62rem">@Model.PaymentStatus</span></div>
+                </div>
+                <div class="ig-item">
+                    <div class="ig-lbl">Đặt lúc</div>
+                    <div class="ig-val" style="font-size:.82rem"><i class="bi bi-clock-history"></i> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.Note))
+            {
+                <div style="margin-top:1rem">
+                    <div style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8c7a68;margin-bottom:.3rem">Ghi chú</div>
+                    <div class="note-box">@Model.Note</div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Products -->
+    @if (Model.RelatedOrders != null && Model.RelatedOrders.Any())
+    {
+        <div class="c">
+            <div class="c-hd"><i class="bi bi-bag-check"></i><span class="c-title">Sản phẩm đi kèm</span></div>
+            <div style="overflow-x:auto">
+                @foreach (var order in Model.RelatedOrders)
+                {
+                    <table class="ptbl">
+                        <thead>
+                            <tr><th>Sản phẩm</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var d in order.OrderDetails)
                             {
                                 <tr>
-                                    <td><strong>@booking.CourtName</strong></td>
-                                    <td>@booking.Date.ToString("dd/MM/yyyy")</td>
-                                    <td>@booking.Time</td>
-                                    <td>
-                                        <span class="status-badge confirmed">@booking.Status</span>
-                                    </td>
-                                    <td>
-                                        <button class="btn-cancel">
-                                            <i class="bi bi-x-circle me-1"></i>Hủy đặt
-                                        </button>
-                                    </td>
+                                    <td><strong>@d.ProductName</strong> <span style="color:#8c7a68;font-size:.76rem">@d.Unit</span></td>
+                                    <td><span style="font-weight:700">×@d.Quantity</span></td>
+                                    <td>@d.UnitPrice.ToString("N0")đ</td>
+                                    <td style="font-weight:700;color:var(--G)">@d.TotalPrice.ToString("N0")đ</td>
                                 </tr>
                             }
-                        }
-                        else
-                        {
+                        </tbody>
+                        <tfoot>
                             <tr>
-                                <td colspan="5" class="text-center py-5">
-                                    <i class="bi bi-calendar-x" style="font-size: 3rem; color: #cbd5e1;"></i>
-                                    <p class="mt-3 text-muted">Bạn chưa có lịch đặt nào</p>
-                                </td>
+                                <td colspan="3" style="text-align:right;color:#8c7a68">Tổng đơn hàng:</td>
+                                <td style="color:var(--GN)">@order.TotalAmount.ToString("N0")đ</td>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </tfoot>
+                    </table>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Payment summary -->
+    <div class="c">
+        <div class="c-hd"><i class="bi bi-receipt"></i><span class="c-title">Chi tiết thanh toán</span></div>
+        <div class="c-bd" style="max-width:380px">
+            <div class="ps-rows">
+                <div class="psr"><span class="psr-lbl">Giá sân</span><span class="psr-val gn">@Model.TotalPrice.ToString("N0")đ</span></div>
+                @if (Model.RelatedOrders != null && Model.RelatedOrders.Any())
+                {
+                    <div class="psr"><span class="psr-lbl">Sản phẩm</span><span class="psr-val">@Model.RelatedOrders.Sum(o => o.TotalAmount).ToString("N0")đ</span></div>
+                }
+                <hr class="psr-div" />
+                <div class="psr-tot"><span class="psr-tot-lbl">Tổng cộng</span><span class="psr-tot-val">@Model.GrandTotal.ToString("N0")đ</span></div>
             </div>
         </div>
     </div>
+
+    <!-- Actions -->
+    <div class="act-row">
+        <a asp-action="MyBookings" class="btn-a sec"><i class="bi bi-arrow-left"></i> Quay lại</a>
+        @if (Model.CanCancel)
+        {
+            <button type="button" class="btn-a dan" onclick="document.getElementById('cancelModal').querySelector('.modal').show?.() || new bootstrap.Modal(document.getElementById('cancelModal')).show()">
+                <i class="bi bi-x-circle"></i> Hủy đơn này
+            </button>
+        }
+        @if (Model.Status == "Completed")
+        {
+            <button type="button" class="btn-a prim"><i class="bi bi-star"></i> Viết đánh giá</button>
+        }
+    </div>
 </div>
 
-<!-- Payment Bar -->
-<div id="paymentBar" class="payment-bar">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <div class="payment-info">
-                    <div class="payment-slots" id="selectedSlotsText">Đã chọn 0 khung giờ</div>
-                    <h3 class="payment-total" id="totalAmount">0đ</h3>
+<!-- Cancel Modal -->
+<div class="modal fade modal-dark" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2" style="color:var(--G)"></i> Hủy đặt sân</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="Cancel" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" name="id" value="@Model.BookingId" />
+                    <p style="font-size:.88rem;color:var(--D)">Hủy đơn <strong>@Model.BookingCode</strong>?</p>
+                    <div>
+                        <div style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8c7a68;margin-bottom:.35rem">Lý do hủy *</div>
+                        <textarea name="cancelReason" rows="3" required placeholder="Nhập lý do hủy..."></textarea>
+                    </div>
+                    <div class="warn-note"><i class="bi bi-info-circle"></i><span>Chỉ có thể hủy trước giờ chơi ít nhất <strong>2 giờ</strong></span></div>
                 </div>
-            </div>
-            <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <button class="btn-book-now">
-                    <i class="bi bi-check-circle me-2"></i>ĐẶT SÂN NGAY
-                </button>
-            </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn-confirm-cancel"><i class="bi bi-x-circle me-1"></i> Xác nhận hủy</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<script>
-    let selectedSlots = [];
-
-    function toggleSlot(element) {
-        if (element.classList.contains('booked')) return;
-
-        const court = element.dataset.court;
-        const time = element.dataset.time;
-        const price = parseInt(element.dataset.price);
-
-        const slotKey = `${court}-${time}`;
-
-        if (element.classList.contains('selected')) {
-            element.classList.remove('selected');
-            selectedSlots = selectedSlots.filter(s => s.key !== slotKey);
-        } else {
-            element.classList.add('selected');
-            selectedSlots.push({ key: slotKey, price: price });
-        }
-
-        updatePaymentBar();
-    }
-
-    function updatePaymentBar() {
-        const paymentBar = document.getElementById('paymentBar');
-        const count = selectedSlots.length;
-        const total = selectedSlots.reduce((sum, slot) => sum + slot.price, 0);
-
-        if (count > 0) {
-            paymentBar.classList.add('show');
-            document.getElementById('selectedSlotsText').textContent = `Đã chọn ${count} khung giờ`;
-            document.getElementById('totalAmount').textContent = total.toLocaleString('vi-VN') + 'đ';
-        } else {
-            paymentBar.classList.remove('show');
-        }
-    }
-
-    // Auto-play carousel
-    document.addEventListener('DOMContentLoaded', function() {
-        const carousel = new bootstrap.Carousel(document.getElementById('courtCarousel'), {
-            interval: 3000,
-            wrap: true
+@section Scripts {
+    <script>
+        document.querySelector('.btn-a.dan')?.addEventListener('click', function(){
+            new bootstrap.Modal(document.getElementById('cancelModal')).show();
         });
-    });
-</script>
+    </script>
+}

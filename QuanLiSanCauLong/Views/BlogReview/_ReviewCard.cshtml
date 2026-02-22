@@ -1,0 +1,75 @@
+﻿@model QuanLiSanCauLong.ViewModels.BlogReviewItemViewModel
+
+<div class="rv-top">
+    <div class="rv-user">
+        <div class="rv-av @(Model.IsMember ? "member" : "guest")">@Model.Initial</div>
+        <div>
+            <div class="rv-name">@Model.DisplayName</div>
+            <div class="rv-meta">
+                @if (Model.IsMember)
+                {
+                    <span class="rv-member-badge"><i class="bi bi-check-circle-fill"></i> Hội Viên</span>
+                }
+                @if (Model.IsPinned)
+                {
+                    <span class="rv-member-badge" style="background:rgba(201,75,42,.1);color:#c94b2a;">
+                        <i class="bi bi-pin-angle-fill"></i> Ghim
+                    </span>
+                }
+                <span class="rv-time">@Model.TimeAgo</span>
+                @if (!string.IsNullOrEmpty(Model.Reaction))
+                {
+                    <span class="rv-reaction">
+                        @(Model.Reaction == "helpful" ? "💡 Hữu ích" :
+                                            Model.Reaction == "insightful" ? "🔍 Sâu sắc" : "✍️ Viết tốt")
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="rv-right">
+        <div class="rv-stars">
+            @for (int i = 1; i <= 5; i++)
+            {
+                <i class="bi @(i <= Model.Rating ? "bi-star-fill f" : "bi-star e")"></i>
+            }
+        </div>
+        <div class="rv-score">@Model.Rating.0 / 5</div>
+    </div>
+</div>
+
+<div class="rv-content">@Model.Content</div>
+
+@if (Model.HasAdminReply)
+{
+    <div class="rv-reply">
+        <div class="rv-reply-head">
+            <i class="bi bi-shield-check"></i>
+            Phản hồi từ Ban Quản Lý
+            @if (Model.AdminRepliedAt.HasValue)
+            {
+                <span style="font-size:.68rem;color:var(--muted);font-weight:400;">
+                    · @Model.AdminRepliedAt.Value.ToString("dd/MM/yyyy")
+                </span>
+            }
+        </div>
+        <div class="rv-reply-text">@Model.AdminReply</div>
+    </div>
+}
+
+<div class="rv-bottom">
+    <span class="rv-helpful-label">Hữu ích không?</span>
+    <button class="vote-btn like-btn @(Model.UserHasLiked ? "voted" : "")"
+            onclick="vote(@Model.ReviewId, true)">
+        <i class="bi bi-hand-thumbs-up@(Model.UserHasLiked ? "-fill" : "")"></i>
+        @Model.LikeCount
+    </button>
+    <button class="vote-btn dislike-btn @(Model.UserHasDisliked ? "disliked" : "")"
+            onclick="vote(@Model.ReviewId, false)">
+        <i class="bi bi-hand-thumbs-down@(Model.UserHasDisliked ? "-fill" : "")"></i>
+        @Model.DislikeCount
+    </button>
+    <button class="report-btn" onclick="report(@Model.ReviewId)">
+        <i class="bi bi-flag"></i> Báo cáo
+    </button>
+</div>
