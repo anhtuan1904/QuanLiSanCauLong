@@ -653,54 +653,35 @@ namespace QuanLiSanCauLong.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<int>("FacilityId")
                         .HasColumnType("int");
 
                     b.Property<string>("FloorNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<bool>("HasAC")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("HasCanteen")
                         .HasColumnType("bit");
 
                     b.Property<bool>("HasLighting")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("HasParking")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("HasShower")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("HasWifi")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal>("HourlyRate")
+                    b.Property<decimal?>("HourlyRate")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("ImagePath")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal?>("PeakHourPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("RegularPrice")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SurfaceType")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal?>("WeekendPrice")
-                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("CourtId");
 
@@ -752,6 +733,10 @@ namespace QuanLiSanCauLong.Migrations
                     b.Property<string>("Address")
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Amenities")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("City")
                         .HasMaxLength(100)
@@ -1240,6 +1225,10 @@ namespace QuanLiSanCauLong.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PriceSlotId"));
 
+                    b.Property<string>("AppliedDays")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<int>("CourtId")
                         .HasColumnType("int");
 
@@ -1248,7 +1237,12 @@ namespace QuanLiSanCauLong.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("DayOfWeek")
+                    b.Property<string>("CustomerType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("DayOfWeek")
                         .HasColumnType("int");
 
                     b.Property<TimeSpan>("EndTime")
@@ -1267,8 +1261,22 @@ namespace QuanLiSanCauLong.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("RoundingMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SlotName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<TimeSpan>("StartTime")
                         .HasColumnType("time");
+
+                    b.Property<decimal>("Surcharge")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("SurchargeNote")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("PriceSlotId");
 

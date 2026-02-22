@@ -13,8 +13,6 @@ namespace QuanLiSanCauLong.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _environment;
 
-        // ✅ Số sân tối đa mặc định — thay đổi con số này tùy ý
-        // Sau khi thêm MaxCourts vào Facility model: xem comment trong CheckCapacityAsync()
         private const int DEFAULT_MAX_COURTS = 6;
 
         public AdminCourtController(ApplicationDbContext context, IWebHostEnvironment environment)
@@ -23,41 +21,26 @@ namespace QuanLiSanCauLong.Controllers
             _environment = environment;
         }
 
-        // ─── Helper: Đếm số sân hiện tại ────────────────────────────
+        // ─── Helper: Đếm số sân hiện tại ──────────────────────────
         private async Task<int> GetCourtCountAsync(int facilityId, int excludeCourtId = 0)
             => await _context.Courts.CountAsync(c =>
                    c.FacilityId == facilityId &&
                    (excludeCourtId == 0 || c.CourtId != excludeCourtId));
 
-        // ─── Helper: Kiểm tra còn slot không ────────────────────────
+        // ─── Helper: Kiểm tra còn slot không ──────────────────────
         private async Task<(bool canAdd, int current, int max)> CheckCapacityAsync(
             int facilityId, int excludeCourtId = 0)
         {
             var current = await GetCourtCountAsync(facilityId, excludeCourtId);
-
-            // ─── NÂNG CẤP (tuỳ chọn): Dùng MaxCourts từ DB ──────────
-            // Bước 1: Thêm vào Models/Facility.cs:
-            //   public int MaxCourts { get; set; } = 0;
-            // Bước 2: Chạy migration:
-            //   Add-Migration AddMaxCourtsToFacility  +  Update-Database
-            // Bước 3: Bỏ comment đoạn dưới, xóa dòng "int max = DEFAULT_MAX_COURTS"
-            // ─────────────────────────────────────────────────────────
-            // var facility = await _context.Facilities
-            //     .AsNoTracking()
-            //     .FirstOrDefaultAsync(f => f.FacilityId == facilityId);
-            // int max = (facility?.MaxCourts > 0) ? facility.MaxCourts : DEFAULT_MAX_COURTS;
-            // ─────────────────────────────────────────────────────────
-
-            int max = DEFAULT_MAX_COURTS; // ← xóa dòng này khi dùng MaxCourts từ DB
-
+            int max = DEFAULT_MAX_COURTS;
             return (current < max, current, max);
         }
 
-        // ════════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════
         //  INDEX
-        // ════════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════
         [HttpGet]
-        public async Task<IActionResult> Index(int? facilityId, string courtType, string status)
+        public async Task<IActionResult> Index(int? facilityId, string? courtType, string? status)
         {
             var query = _context.Courts
                 .Include(c => c.Facility)
@@ -70,7 +53,7 @@ namespace QuanLiSanCauLong.Controllers
             if (!string.IsNullOrEmpty(status)) query = query.Where(c => c.Status == status);
 
             var courts = await query
-                .OrderBy(c => c.Facility.FacilityName)
+                .OrderBy(c => c.Facility!.FacilityName)
                 .ThenBy(c => c.CourtNumber)
                 .ToListAsync();
 
@@ -83,14 +66,21 @@ namespace QuanLiSanCauLong.Controllers
             return View(courts);
         }
 
-        // ════════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════
         //  CREATE
-        // ════════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> Create()
         {
             ViewBag.Facilities = await _context.Facilities.Where(f => f.IsActive).ToListAsync();
             ViewBag.MaxCourts = DEFAULT_MAX_COURTS;
+            // SỬA TẠI ĐÂY: Truyền một object mới vào View
+            var model = new Court
+            {
+                CourtType = "Indoor", // Thiết lập mặc định để khớp với UI của bạn
+                SurfaceType = "PVC",
+                Status = "Available"
+            };
             return View();
         }
 
@@ -107,7 +97,6 @@ namespace QuanLiSanCauLong.Controllers
             {
                 try
                 {
-                    // ✅ Kiểm tra giới hạn số sân
                     var (canAdd, current, max) = await CheckCapacityAsync(model.FacilityId);
                     if (!canAdd)
                     {
@@ -121,18 +110,16 @@ namespace QuanLiSanCauLong.Controllers
                             c.FacilityId == model.FacilityId && c.CourtNumber == model.CourtNumber);
 
                         if (isExist)
-                        {
-                            ModelState.AddModelError("CourtNumber", "Số sân này đã tồn tại ở cơ sở này!");
-                        }
+                            ModelState.AddModelError("CourtNumber", "Tên sân này đã tồn tại ở cơ sở này!");
                         else
                         {
                             model.CreatedAt = DateTime.Now;
-                            model.Status = model.Status ?? "Available";
+                            model.Status ??= "Available";
 
                             _context.Courts.Add(model);
                             await _context.SaveChangesAsync();
 
-                            if (CourtImages != null && CourtImages.Count > 0)
+                            if (CourtImages?.Count > 0)
                                 await SaveCourtImagesAsync(model.CourtId, CourtImages, PrimaryImageIndex, model);
 
                             TempData["SuccessMessage"] =
@@ -152,9 +139,9 @@ namespace QuanLiSanCauLong.Controllers
             return View(model);
         }
 
-        // ════════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════
         //  EDIT
-        // ════════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
@@ -199,7 +186,7 @@ namespace QuanLiSanCauLong.Controllers
                 {
                     try
                     {
-                        // ✅ Kiểm tra giới hạn nếu chuyển sang facility khác
+                        // Kiểm tra giới hạn nếu chuyển sang facility khác
                         if (court.FacilityId != model.FacilityId)
                         {
                             var (canAdd, current, max) =
@@ -219,20 +206,20 @@ namespace QuanLiSanCauLong.Controllers
                             c.CourtId != model.CourtId);
 
                         if (isExist)
-                        {
-                            ModelState.AddModelError("CourtNumber", "Số sân này đã tồn tại ở cơ sở này!");
-                        }
+                            ModelState.AddModelError("CourtNumber", "Tên sân này đã tồn tại ở cơ sở này!");
                         else
                         {
                             court.FacilityId = model.FacilityId;
                             court.CourtNumber = model.CourtNumber;
                             court.CourtType = model.CourtType;
+                            court.SurfaceType = model.SurfaceType;
                             court.Status = model.Status;
-                            court.HourlyRate = model.HourlyRate;
+                            court.FloorNumber = model.FloorNumber;
                             court.HasLighting = model.HasLighting;
                             court.HasAC = model.HasAC;
+                            court.Description = model.Description;
 
-                            // Xóa ảnh
+                            // Xóa ảnh được chọn
                             if (!string.IsNullOrEmpty(DeletedImageIds))
                             {
                                 var idsToDelete = DeletedImageIds.Split(',')
@@ -243,18 +230,15 @@ namespace QuanLiSanCauLong.Controllers
                                     .Where(img => idsToDelete.Contains(img.ImageId)).ToList();
 
                                 if (toDelete != null)
-                                {
                                     foreach (var img in toDelete)
                                     {
                                         DeletePhysicalFile(img.ImagePath);
                                         _context.CourtImages.Remove(img);
                                     }
-                                }
                             }
 
                             // Đổi ảnh chính
-                            if (NewPrimaryImageId.HasValue && NewPrimaryImageId.Value > 0
-                                && court.CourtImages != null)
+                            if (NewPrimaryImageId > 0 && court.CourtImages != null)
                             {
                                 foreach (var img in court.CourtImages) img.IsPrimary = false;
                                 var primary = court.CourtImages
@@ -267,7 +251,7 @@ namespace QuanLiSanCauLong.Controllers
                             }
 
                             // Upload ảnh mới
-                            if (CourtImages != null && CourtImages.Count > 0)
+                            if (CourtImages?.Count > 0)
                             {
                                 int maxOrder = court.CourtImages?.Any() == true
                                     ? court.CourtImages.Max(img => img.DisplayOrder) : -1;
@@ -279,9 +263,9 @@ namespace QuanLiSanCauLong.Controllers
                                     if (file.Length <= 0) continue;
 
                                     string fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-                                    using (var stream = new FileStream(
-                                        Path.Combine(folder, fileName), FileMode.Create))
-                                        await file.CopyToAsync(stream);
+                                    using var stream = new FileStream(
+                                        Path.Combine(folder, fileName), FileMode.Create);
+                                    await file.CopyToAsync(stream);
 
                                     _context.CourtImages.Add(new CourtImage
                                     {
@@ -328,9 +312,9 @@ namespace QuanLiSanCauLong.Controllers
             return View(model);
         }
 
-        // ════════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════
         //  DETAILS
-        // ════════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
@@ -345,9 +329,9 @@ namespace QuanLiSanCauLong.Controllers
             return View(court);
         }
 
-        // ════════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════
         //  AJAX APIs
-        // ════════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════
 
         [HttpGet]
         public async Task<IActionResult> GetCourtData(int id)
@@ -369,17 +353,18 @@ namespace QuanLiSanCauLong.Controllers
                     courtId = court.CourtId,
                     courtNumber = court.CourtNumber,
                     courtType = court.CourtType,
+                    surfaceType = court.SurfaceType,
                     facilityId = court.FacilityId,
-                    hourlyRate = court.HourlyRate,
                     status = court.Status,
+                    floorNumber = court.FloorNumber,
                     hasLighting = court.HasLighting,
                     hasAC = court.HasAC,
+                    description = court.Description,
                     imagePath = primary?.ImagePath ?? court.ImagePath
                 }
             });
         }
 
-        // ✅ API: Kiểm tra capacity (dùng khi admin chọn facility trong form tạo sân)
         [HttpGet]
         public async Task<IActionResult> GetCourtCapacity(int facilityId)
         {
@@ -403,7 +388,7 @@ namespace QuanLiSanCauLong.Controllers
             });
         }
 
-        // ✅ API: Tạo sân qua Ajax/Modal
+        // API: Tạo sân qua Ajax (không kèm ảnh)
         [HttpPost]
         public async Task<IActionResult> CreateAjax([FromBody] Court model)
         {
@@ -415,24 +400,22 @@ namespace QuanLiSanCauLong.Controllers
                 if (model.FacilityId <= 0)
                     return Json(new { success = false, message = "Vui lòng chọn cơ sở!" });
 
-                // ✅ Kiểm tra giới hạn số sân
                 var (canAdd, current, max) = await CheckCapacityAsync(model.FacilityId);
                 if (!canAdd)
                     return Json(new
                     {
                         success = false,
-                        message = $"Cơ sở này đã đạt giới hạn tối đa {max} sân " +
-                                  $"(hiện có {current} sân). Không thể thêm sân mới."
+                        message = $"Cơ sở này đã đạt giới hạn tối đa {max} sân ({current} sân). Không thể thêm."
                     });
 
                 var isExist = await _context.Courts.AnyAsync(c =>
                     c.FacilityId == model.FacilityId && c.CourtNumber == model.CourtNumber);
 
                 if (isExist)
-                    return Json(new { success = false, message = "Số sân này đã tồn tại ở cơ sở này!" });
+                    return Json(new { success = false, message = "Tên sân này đã tồn tại ở cơ sở này!" });
 
                 model.CreatedAt = DateTime.Now;
-                model.Status = model.Status ?? "Available";
+                model.Status ??= "Available";
 
                 _context.Courts.Add(model);
                 await _context.SaveChangesAsync();
@@ -452,7 +435,7 @@ namespace QuanLiSanCauLong.Controllers
             }
         }
 
-        // ✅ API: Sửa sân qua Ajax
+        // API: Sửa sân qua Ajax
         [HttpPost]
         public async Task<IActionResult> EditAjax([FromBody] Court model)
         {
@@ -464,7 +447,7 @@ namespace QuanLiSanCauLong.Controllers
 
                 if (court.FacilityId != model.FacilityId)
                 {
-                    var (canAdd, current, max) =
+                    var (canAdd, _, max) =
                         await CheckCapacityAsync(model.FacilityId, excludeCourtId: model.CourtId);
 
                     if (!canAdd)
@@ -481,16 +464,17 @@ namespace QuanLiSanCauLong.Controllers
                     c.CourtId != model.CourtId);
 
                 if (isExist)
-                    return Json(new { success = false, message = "Số sân này đã tồn tại ở cơ sở này!" });
+                    return Json(new { success = false, message = "Tên sân này đã tồn tại ở cơ sở này!" });
 
                 court.FacilityId = model.FacilityId;
                 court.CourtNumber = model.CourtNumber;
                 court.CourtType = model.CourtType;
+                court.SurfaceType = model.SurfaceType;
                 court.Status = model.Status;
-                court.HourlyRate = model.HourlyRate;
+                court.FloorNumber = model.FloorNumber;
                 court.HasLighting = model.HasLighting;
                 court.HasAC = model.HasAC;
-                court.ImagePath = model.ImagePath;
+                court.Description = model.Description;
 
                 await _context.SaveChangesAsync();
                 return Json(new { success = true, message = "Cập nhật sân thành công!" });
@@ -501,7 +485,7 @@ namespace QuanLiSanCauLong.Controllers
             }
         }
 
-        // ✅ API: Xóa sân
+        // API: Xóa sân
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
@@ -517,7 +501,7 @@ namespace QuanLiSanCauLong.Controllers
             if (court == null)
                 return Json(new { success = false, message = "Không tìm thấy sân!" });
 
-            if (court.Bookings != null && court.Bookings.Any())
+            if (court.Bookings?.Any() == true)
                 return Json(new { success = false, message = "Không thể xóa sân đã có lịch đặt!" });
 
             try
@@ -536,13 +520,20 @@ namespace QuanLiSanCauLong.Controllers
             }
         }
 
-        // ✅ API: Lấy danh sách sân theo facility
+        // API: Danh sách sân theo facility (cho dropdown đặt sân)
         [HttpGet]
         public async Task<IActionResult> GetByFacility(int facilityId)
         {
             var courts = await _context.Courts
-                .Where(c => c.FacilityId == facilityId && c.Status == "Available")
-                .Select(c => new { c.CourtId, c.CourtNumber, c.CourtType })
+                .Where(c => c.FacilityId == facilityId && c.Status != "Maintenance")
+                .Select(c => new
+                {
+                    c.CourtId,
+                    c.CourtNumber,
+                    c.CourtType,
+                    c.SurfaceType,
+                    c.Status
+                })
                 .ToListAsync();
 
             var (canAdd, current, max) = await CheckCapacityAsync(facilityId);
@@ -557,9 +548,9 @@ namespace QuanLiSanCauLong.Controllers
             });
         }
 
-        // ════════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════
         //  PRIVATE HELPERS
-        // ════════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════
 
         private string GetCourtImageFolder()
         {
@@ -586,8 +577,8 @@ namespace QuanLiSanCauLong.Controllers
                 if (file.Length <= 0) continue;
 
                 string fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-                using (var stream = new FileStream(Path.Combine(folder, fileName), FileMode.Create))
-                    await file.CopyToAsync(stream);
+                using var stream = new FileStream(Path.Combine(folder, fileName), FileMode.Create);
+                await file.CopyToAsync(stream);
 
                 var img = new CourtImage
                 {

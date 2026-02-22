@@ -263,10 +263,117 @@
                 color: var(--deep) !important;
             }
 
-        /* Login partial wrapper */
+        /* ── AUTH BUTTONS ────────────────────────────── */
         .nav-auth {
             display: flex;
             align-items: center;
+            gap: .5rem;
+        }
+
+        /* Nút Đăng nhập — viền vàng, text vàng */
+        .btn-login {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .42rem 1.1rem;
+            border-radius: 6px;
+            border: 1.5px solid var(--gold);
+            background: transparent;
+            color: var(--gold2) !important;
+            font-family: 'Outfit', sans-serif;
+            font-size: .8rem;
+            font-weight: 600;
+            letter-spacing: .03em;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: all .2s;
+        }
+
+            .btn-login:hover {
+                background: var(--gold3);
+                border-color: var(--gold2);
+                color: #fff !important;
+                transform: translateY(-1px);
+            }
+
+        /* Nút Đăng ký — nền vàng đặc, text đen */
+        .btn-register {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .42rem 1.1rem;
+            border-radius: 6px;
+            border: 1.5px solid transparent;
+            background: linear-gradient(135deg, var(--gold), var(--gold2));
+            color: var(--deep) !important;
+            font-family: 'Outfit', sans-serif;
+            font-size: .8rem;
+            font-weight: 700;
+            letter-spacing: .03em;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: all .2s;
+        }
+
+            .btn-register:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 14px rgba(212,160,23,.45);
+                color: var(--deep) !important;
+                filter: brightness(1.08);
+            }
+
+        /* User chip khi đã đăng nhập */
+        .nav-user-chip {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            background: rgba(255,255,255,.07);
+            border: 1px solid var(--border);
+            padding: .35rem .85rem .35rem .4rem;
+            border-radius: 100px;
+            text-decoration: none;
+            transition: all .2s;
+            position: relative;
+        }
+
+            .nav-user-chip:hover {
+                background: var(--gold3);
+                border-color: var(--gold);
+            }
+
+        .nav-user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--gold2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--deep);
+            font-weight: 800;
+            font-size: .72rem;
+            font-family: 'Playfair Display', serif;
+            flex-shrink: 0;
+        }
+
+        .nav-user-name {
+            font-size: .8rem;
+            font-weight: 600;
+            color: rgba(255,255,255,.88);
+            white-space: nowrap;
+        }
+
+        /* Dropdown user menu */
+        .nav-user-chip .nav-dropdown-menu {
+            right: 0;
+            left: auto;
+            min-width: 180px;
+        }
+
+        .nav-user-chip:hover .nav-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
         }
 
         /* Mobile toggle */
@@ -330,6 +437,18 @@
             padding: .8rem 1rem .3rem;
             font-weight: 700;
         }
+
+        .mob-auth-row {
+            display: flex;
+            gap: .5rem;
+            padding: .75rem 1rem .5rem;
+        }
+
+            .mob-auth-row .btn-login,
+            .mob-auth-row .btn-register {
+                flex: 1;
+                justify-content: center;
+            }
 
         /* ── FOOTER ─────────────────────────────────── */
         .site-footer {
@@ -534,6 +653,10 @@
             .nav-hamburger {
                 display: flex;
             }
+
+            .nav-auth {
+                display: none;
+            }
         }
 
         @@media (max-width: 600px) {
@@ -617,12 +740,46 @@
                             <i class="bi bi-shield-fill-check"></i> Admin
                         </a>
                     }
+
                     <a asp-controller="Booking" asp-action="Search" class="nav-icon-btn" title="Giỏ hàng">
                         <i class="bi bi-bag"></i>
                     </a>
-                    <div class="nav-auth">
-                        <partial name="_LoginPartial" />
-                    </div>
+
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <!-- Đã đăng nhập: hiện chip tên + dropdown -->
+                        <div class="nav-user-chip nav-dropdown">
+                            <div class="nav-user-avatar">@User.Identity.Name?.Substring(0, 1).ToUpper()</div>
+                            <span class="nav-user-name">@User.Identity.Name</span>
+                            <i class="bi bi-chevron-down ms-1" style="font-size:.6rem;color:var(--muted)"></i>
+                            <div class="nav-dropdown-menu">
+                                <a class="nav-dd-item" asp-controller="Account" asp-action="Profile">
+                                    <i class="bi bi-person"></i>Tài khoản
+                                </a>
+                                <a class="nav-dd-item" asp-controller="Booking" asp-action="MyBookings">
+                                    <i class="bi bi-calendar-check"></i>Đặt sân của tôi
+                                </a>
+                                <div class="nav-dd-divider"></div>
+                                <a class="nav-dd-item" asp-controller="Account" asp-action="Logout"
+                                   style="color:#ff6b6b !important;">
+                                    <i class="bi bi-box-arrow-right" style="color:#ff6b6b;opacity:1"></i>Đăng xuất
+                                </a>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Chưa đăng nhập: 2 nút tách biệt -->
+                        <div class="nav-auth">
+                            <a asp-controller="Account" asp-action="Login" class="btn-login">
+                                <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+                            </a>
+                            <a asp-controller="Account" asp-action="Register" class="btn-register">
+                                <i class="bi bi-person-plus"></i> Đăng ký
+                            </a>
+                        </div>
+                    }
+
                     <button class="nav-hamburger" id="mobileToggle" aria-label="Menu">
                         <i class="bi bi-list"></i>
                     </button>
@@ -645,6 +802,24 @@
                 <a class="mob-link" asp-controller="Home" asp-action="About"><i class="bi bi-building"></i>Giới thiệu</a>
                 <a class="mob-link" asp-controller="Home" asp-action="Contact"><i class="bi bi-headset"></i>Liên hệ</a>
                 <a class="mob-link" asp-controller="Home" asp-action="Recruitment"><i class="bi bi-briefcase"></i>Tuyển dụng</a>
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <span class="mob-section">Tài khoản</span>
+                    <a class="mob-link" asp-controller="Account" asp-action="Profile"><i class="bi bi-person"></i>@User.Identity.Name</a>
+                    <a class="mob-link" asp-controller="Account" asp-action="Logout" style="color:#ff8080"><i class="bi bi-box-arrow-right"></i>Đăng xuất</a>
+                }
+                else
+                {
+                    <div class="mob-auth-row">
+                        <a asp-controller="Account" asp-action="Login" class="btn-login">
+                            <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+                        </a>
+                        <a asp-controller="Account" asp-action="Register" class="btn-register">
+                            <i class="bi bi-person-plus"></i> Đăng ký
+                        </a>
+                    </div>
+                }
             </div>
         </nav>
     </header>
@@ -656,11 +831,11 @@
                 document.addEventListener("DOMContentLoaded", function () {
                     @if (TempData["SuccessMessage"] != null)
                     {
-                                <text>toastr.success('@TempData["SuccessMessage"]');</text>
+                                    <text>toastr.success('@TempData["SuccessMessage"]');</text>
                     }
                     @if (TempData["ErrorMessage"] != null)
                     {
-                                <text>toastr.error('@TempData["ErrorMessage"]');</text>
+                                    <text>toastr.error('@TempData["ErrorMessage"]');</text>
                     }
                 });
             </script>

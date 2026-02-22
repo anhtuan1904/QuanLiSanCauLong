@@ -8,8 +8,8 @@
 <div class="container-fluid pb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h3 class="fw-bold"><i class="bi bi-currency-dollar text-primary"></i> Cấu hình giá sân</h3>
-            <p class="text-muted small">Thiết lập quy tắc giá và khung giờ cho các sân cầu lông</p>
+            <h3 class="fw-bold"><i class="bi bi-currency-dollar text-primary me-2"></i>Cấu hình giá sân</h3>
+            <p class="text-muted small mb-0">Thiết lập quy tắc giá và khung giờ cho các sân cầu lông</p>
         </div>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
@@ -19,26 +19,38 @@
         </nav>
     </div>
 
-    <form asp-action="Create" method="post">
-        <div asp-validation-summary="ModelOnly" class="alert alert-danger shadow-sm border-0 mb-4" style="border-radius: 12px;"></div>
+    <form asp-action="Create" method="post" id="createForm">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger shadow-sm border-0 mb-4" style="border-radius:12px;"></div>
 
         <div class="row g-4">
+
+            <!-- ══ CỘT TRÁI ══ -->
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-                    <div class="card-header bg-white py-3 border-bottom-0">
-                        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-info-circle me-2"></i>Cấu hình cơ bản</h5>
+
+                <!-- CARD 1: Đối tượng áp dụng -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h5 class="mb-0 fw-bold"><span class="badge bg-primary me-2">1</span>Đối tượng áp dụng</h5>
                     </div>
-                    <div class="card-body pt-0">
+                    <div class="card-body">
                         <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="SlotName" class="form-label fw-semibold">
+                                    Tên bảng giá <span class="text-muted fw-normal">(tuỳ chọn)</span>
+                                </label>
+                                <input asp-for="SlotName" class="form-control shadow-none"
+                                       placeholder="Ví dụ: Giá ngày thường, Giá cuối tuần, Giá lễ..." />
+                            </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Cơ sở <span class="text-danger">*</span></label>
                                 <select id="FacilitySelect" asp-for="FacilityId" class="form-select shadow-none" required>
                                     <option value="">-- Chọn cơ sở --</option>
                                     @if (ViewBag.Facilities != null)
                                     {
-                                        foreach (var facility in ViewBag.Facilities as IEnumerable<QuanLiSanCauLong.Models.Facility>)
+                                        foreach (var f in ViewBag.Facilities as IEnumerable<QuanLiSanCauLong.Models.Facility>)
                                         {
-                                            <option value="@facility.FacilityId">@facility.FacilityName</option>
+                                            <option value="@f.FacilityId">@f.FacilityName</option>
                                         }
                                     }
                                 </select>
@@ -46,12 +58,12 @@
                             <div class="col-md-6">
                                 <label asp-for="CourtId" class="form-label fw-semibold">Sân cụ thể <span class="text-danger">*</span></label>
                                 <select asp-for="CourtId" id="CourtSelect" class="form-select shadow-none" required>
-                                    <option value="">-- Vui lòng chọn cơ sở trước --</option>
+                                    <option value="">-- Chọn cơ sở trước --</option>
                                 </select>
                                 <span asp-validation-for="CourtId" class="text-danger small"></span>
                             </div>
                             <div class="col-md-6">
-                                <label asp-for="CourtType" class="form-label fw-semibold">Loại sân áp dụng <span class="text-danger">*</span></label>
+                                <label asp-for="CourtType" class="form-label fw-semibold">Loại sân <span class="text-danger">*</span></label>
                                 <select asp-for="CourtType" class="form-select shadow-none">
                                     <option value="Standard">Sân tiêu chuẩn (Standard)</option>
                                     <option value="Professional">Sân chuyên nghiệp (Professional)</option>
@@ -59,52 +71,150 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label asp-for="DayOfWeek" class="form-label fw-semibold">Ngày trong tuần <span class="text-danger">*</span></label>
-                                <select asp-for="DayOfWeek" class="form-select shadow-none">
-                                    <option value="Monday">Thứ Hai</option>
-                                    <option value="Tuesday">Thứ Ba</option>
-                                    <option value="Wednesday">Thứ Tư</option>
-                                    <option value="Thursday">Thứ Năm</option>
-                                    <option value="Friday">Thứ Sáu</option>
-                                    <option value="Saturday">Thứ Bảy</option>
-                                    <option value="Sunday">Chủ Nhật</option>
+                                <label asp-for="CustomerType" class="form-label fw-semibold">Loại khách hàng</label>
+                                <select asp-for="CustomerType" class="form-select shadow-none">
+                                    <option value="All">Tất cả loại khách</option>
+                                    <option value="Retail">Khách vãng lai (Lẻ)</option>
+                                    <option value="Member">Khách cố định (Tháng)</option>
                                 </select>
+                                <div class="form-text" style="font-size:.75rem;">Giá cố định/tháng thường thấp hơn giá vãng lai</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-                    <div class="card-header bg-white py-3 border-bottom-0">
-                        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-clock-history me-2"></i>Khung giờ & Giá</h5>
+                <!-- CARD 2: Ngày áp dụng -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h5 class="mb-0 fw-bold"><span class="badge bg-primary me-2">2</span>Ngày áp dụng</h5>
                     </div>
-                    <div class="card-body pt-0">
+                    <div class="card-body">
+                        <div class="d-flex gap-2 mb-3 flex-wrap">
+                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill"
+                                    onclick="selectDays([1,2,3,4,5])">
+                                <i class="bi bi-calendar-week me-1"></i>Thứ 2 – Thứ 6
+                            </button>
+                            <button type="button" class="btn btn-outline-warning btn-sm rounded-pill"
+                                    onclick="selectDays([6,0])">
+                                <i class="bi bi-sun me-1"></i>Thứ 7 &amp; CN
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-sm rounded-pill"
+                                    onclick="selectDays([0,1,2,3,4,5,6])">
+                                <i class="bi bi-check-all me-1"></i>Tất cả ngày
+                            </button>
+                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill"
+                                    onclick="selectDays([])">
+                                <i class="bi bi-x me-1"></i>Bỏ chọn
+                            </button>
+                        </div>
+
+                        <div class="row g-2">
+                            @{
+                                var days = new[] {
+                                                        (1, "Thứ Hai"),
+                                                        (2, "Thứ Ba"),
+                                                        (3, "Thứ Tư"),
+                                                        (4, "Thứ Năm"),
+                                                        (5, "Thứ Sáu"),
+                                                        (6, "Thứ Bảy"),
+                                                        (0, "Chủ Nhật"),
+                                                        };
+                            }
+                            @foreach (var (val, label) in days)
+                            {
+                                var isWeekend = val == 0 || val == 6;
+                                <div class="col-6 col-md-3">
+                                    <label class="day-label d-flex align-items-center gap-2 p-2 border rounded-3"
+                                           style="cursor:pointer; transition:.15s;">
+                                        <input type="checkbox" class="day-check form-check-input m-0"
+                                               value="@val" />
+                                        <span class="small fw-semibold @(isWeekend ? "text-warning" : "")">@label</span>
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                        <input type="hidden" name="AppliedDays" id="appliedDaysInput" />
+                        <div class="form-text mt-2" style="font-size:.75rem;">
+                            <i class="bi bi-info-circle me-1 text-primary"></i>
+                            Hệ thống sẽ tạo bản ghi riêng cho từng ngày được chọn.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 3: Khung giờ & Giá -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h5 class="mb-0 fw-bold"><span class="badge bg-primary me-2">3</span>Khung giờ &amp; Đơn giá</h5>
+                    </div>
+                    <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-4">
-                                <label asp-for="StartTime" class="form-label fw-semibold">Giờ bắt đầu</label>
+                                <label asp-for="StartTime" class="form-label fw-semibold">Giờ bắt đầu <span class="text-danger">*</span></label>
                                 <input asp-for="StartTime" class="form-control shadow-none" type="time" />
                                 <span asp-validation-for="StartTime" class="text-danger small"></span>
                             </div>
                             <div class="col-md-4">
-                                <label asp-for="EndTime" class="form-label fw-semibold">Giờ kết thúc</label>
+                                <label asp-for="EndTime" class="form-label fw-semibold">Giờ kết thúc <span class="text-danger">*</span></label>
                                 <input asp-for="EndTime" class="form-control shadow-none" type="time" />
                                 <span asp-validation-for="EndTime" class="text-danger small"></span>
                             </div>
                             <div class="col-md-4">
-                                <label asp-for="Price" class="form-label fw-semibold">Giá thuê (VNĐ/Giờ)</label>
+                                <label asp-for="RoundingMinutes" class="form-label fw-semibold">Đơn vị làm tròn</label>
+                                <select asp-for="RoundingMinutes" class="form-select shadow-none">
+                                    <option value="15">15 phút</option>
+                                    <option value="30">30 phút</option>
+                                    <option value="60" selected>60 phút (1 giờ)</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Price" class="form-label fw-semibold">Đơn giá (VNĐ/giờ) <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0">₫</span>
-                                    <input asp-for="Price" class="form-control border-start-0 shadow-none" type="number" step="1000" placeholder="100,000" />
+                                    <input asp-for="Price" class="form-control border-start-0 shadow-none"
+                                           type="number" step="1000" placeholder="100000" id="priceInput"
+                                           oninput="updatePricePreview()" />
                                 </div>
                                 <span asp-validation-for="Price" class="text-danger small"></span>
                             </div>
-                            <div class="col-12 mt-4">
+
+                            <div class="col-md-6">
+                                <label asp-for="Surcharge" class="form-label fw-semibold">Phụ phí/giờ (VNĐ)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">₫</span>
+                                    <input asp-for="Surcharge" class="form-control border-start-0 shadow-none"
+                                           type="number" step="1000" placeholder="0" id="surchargeInput"
+                                           oninput="updatePricePreview()" />
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="SurchargeNote" class="form-label fw-semibold">
+                                    Mô tả phụ phí <span class="text-muted fw-normal">(tuỳ chọn)</span>
+                                </label>
+                                <input asp-for="SurchargeNote" class="form-control shadow-none"
+                                       placeholder="Ví dụ: Phí bật đèn 30.000đ/giờ, Phí nước uống đi kèm..." />
+                            </div>
+
+                            <!-- Preview tổng giá -->
+                            <div class="col-12">
+                                <div class="p-3 bg-success bg-opacity-10 border border-success-subtle rounded-3">
+                                    <div class="small text-muted mb-1">Giá khách trả thực tế mỗi giờ (đơn giá + phụ phí)</div>
+                                    <div class="fs-4 fw-bold text-success" id="totalPricePreview">0 ₫</div>
+                                    <div class="small text-muted" id="priceBreakdown"></div>
+                                </div>
+                            </div>
+
+                            <!-- Giờ cao điểm -->
+                            <div class="col-12">
                                 <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between border">
                                     <div>
-                                        <h6 class="mb-1 fw-bold">Thiết lập giờ cao điểm (Peak Hour)</h6>
-                                        <p class="text-muted small mb-0">Áp dụng giá cao hơn cho khung giờ đông đúc (thường 17h-22h)</p>
+                                        <h6 class="mb-1 fw-bold">
+                                            <i class="bi bi-fire text-danger me-1"></i>Giờ cao điểm (Peak Hour)
+                                        </h6>
+                                        <p class="text-muted small mb-0">Thường 17:00 – 22:00 các ngày trong tuần</p>
                                     </div>
-                                    <div class="form-check form-switch fs-4">
+                                    <div class="form-check form-switch fs-4 mb-0">
                                         <input asp-for="IsPeakHour" class="form-check-input" type="checkbox" role="switch">
                                     </div>
                                 </div>
@@ -115,31 +225,37 @@
 
                 <div class="d-flex gap-3 justify-content-end">
                     <a asp-action="Index" class="btn btn-light px-4 py-2 fw-semibold border shadow-sm">Hủy bỏ</a>
-                    <button type="submit" class="btn btn-dark px-5 py-2 fw-semibold shadow-sm">
+                    <button type="submit" class="btn btn-dark px-5 py-2 fw-semibold shadow-sm"
+                            onclick="return validateAndPrepare()">
                         <i class="bi bi-check-circle me-2"></i>Lưu cấu hình
                     </button>
                 </div>
             </div>
 
+            <!-- ══ CỘT PHẢI ══ -->
             <div class="col-lg-4">
-                <div class="card border-0 shadow-sm bg-primary text-white mb-4" style="border-radius: 12px;">
-                    <div class="card-body p-4">
-                        <h5 class="fw-bold mb-3"><i class="bi bi-lightbulb me-2"></i>Hướng dẫn</h5>
-                        <ul class="list-unstyled mb-0 small opacity-90">
-                            <li class="mb-2"><i class="bi bi-check2-circle me-2"></i>Chọn <strong>Cơ sở</strong> trước khi chọn sân cụ thể.</li>
-                            <li class="mb-2"><i class="bi bi-check2-circle me-2"></i><strong>Giờ bắt đầu</strong> phải nhỏ hơn <strong>Giờ kết thúc</strong>.</li>
-                            <li class="mb-2"><i class="bi bi-check2-circle me-2"></i>Đánh dấu <strong>Giờ cao điểm</strong> để dễ dàng lọc và quản lý báo cáo sau này.</li>
-                        </ul>
+                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3">Trạng thái kích hoạt</h6>
+                        <div class="form-check">
+                            <input asp-for="IsActive" class="form-check-input" type="checkbox" checked>
+                            <label class="form-check-label small fw-semibold" asp-for="IsActive">
+                                Kích hoạt ngay lập tức
+                            </label>
+                        </div>
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm" style="border-radius: 12px;">
-                    <div class="card-body">
-                        <h6 class="fw-bold mb-3">Tùy chọn khác</h6>
-                        <div class="form-check mb-3">
-                            <input asp-for="IsActive" class="form-check-input" type="checkbox" checked>
-                            <label class="form-check-label small" asp-for="IsActive">Kích hoạt cấu hình ngay lập tức</label>
-                        </div>
+                <div class="card border-0 shadow-sm bg-primary text-white" style="border-radius:12px;">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-3"><i class="bi bi-lightbulb me-2"></i>Hướng dẫn</h6>
+                        <ul class="list-unstyled mb-0 small opacity-90">
+                            <li class="mb-2"><i class="bi bi-check2-circle me-2"></i>Chọn <strong>Cơ sở</strong> để tải danh sách sân.</li>
+                            <li class="mb-2"><i class="bi bi-check2-circle me-2"></i>Chọn <strong>nhiều ngày</strong>: mỗi ngày sẽ tạo một bản ghi riêng.</li>
+                            <li class="mb-2"><i class="bi bi-check2-circle me-2"></i><strong>Phụ phí</strong> cộng thêm vào giá khi tính tiền.</li>
+                            <li class="mb-2"><i class="bi bi-check2-circle me-2"></i><strong>Đơn vị làm tròn</strong>: tính giờ theo 15/30/60 phút.</li>
+                            <li class="mb-0"><i class="bi bi-check2-circle me-2"></i><strong>Giờ cao điểm</strong> dùng để lọc và báo cáo doanh thu.</li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -148,41 +264,61 @@
 </div>
 
 @section Scripts {
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        $(document).ready(function () {
-            $('#FacilitySelect').on('change', function () {
-                var fId = $(this).val();
-                var $courtDropdown = $('#CourtSelect');
+        function updatePricePreview() {
+            const price     = parseFloat(document.getElementById('priceInput').value) || 0;
+            const surcharge = parseFloat(document.getElementById('surchargeInput').value) || 0;
+            const total     = price + surcharge;
+            document.getElementById('totalPricePreview').textContent = total.toLocaleString('vi-VN') + ' ₫';
+            document.getElementById('priceBreakdown').textContent = surcharge > 0
+                ? `Đơn giá: ${price.toLocaleString('vi-VN')}₫ + Phụ phí: ${surcharge.toLocaleString('vi-VN')}₫`
+                : '';
+        }
 
-                // Hiển thị trạng thái chờ
-                $courtDropdown.empty().append('<option value="">-- Đang tải dữ liệu... --</option>');
-
-                if (fId) {
-                    // SỬA ĐƯỜNG DẪN TẠI ĐÂY: Thêm /Admin/PriceSlot/
-                    $.getJSON('/Admin/PriceSlot/GetCourtsByFacility', { facilityId: fId }, function (data) {
-                        $courtDropdown.empty().append('<option value="">-- Chọn sân cụ thể --</option>');
-
-                        if (data && data.length > 0) {
-                            $.each(data, function (i, item) {
-                                // Lưu ý: item.courtId và item.courtNumber viết thường (camelCase) theo chuẩn trả về của JsonResult
-                                $courtDropdown.append($('<option>', {
-                                    value: item.courtId,
-                                    text: "Sân số " + item.courtNumber + " (" + item.courtType + ")"
-                                }));
-                            });
-                        } else {
-                            $courtDropdown.empty().append('<option value="">-- Cơ sở này chưa có sân --</option>');
-                        }
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        console.error("Lỗi AJAX:", textStatus, errorThrown);
-                        $courtDropdown.empty().append('<option value="">-- Lỗi tải dữ liệu (404/500) --</option>');
-                    });
-                } else {
-                    $courtDropdown.empty().append('<option value="">-- Vui lòng chọn cơ sở trước --</option>');
-                }
+        function selectDays(vals) {
+            document.querySelectorAll('.day-check').forEach(cb => {
+                cb.checked = vals.includes(parseInt(cb.value));
+                applyDayStyle(cb);
             });
+        }
+
+        function applyDayStyle(cb) {
+            const lbl = cb.closest('.day-label');
+            lbl.style.background   = cb.checked ? '#e8f4fd' : '';
+            lbl.style.borderColor  = cb.checked ? '#0d6efd' : '';
+        }
+
+        document.querySelectorAll('.day-check').forEach(cb => {
+            cb.addEventListener('change', () => applyDayStyle(cb));
         });
+
+        document.getElementById('FacilitySelect').addEventListener('change', function() {
+            const fId = this.value;
+            const sel = document.getElementById('CourtSelect');
+            sel.innerHTML = '<option value="">-- Đang tải... --</option>';
+            if (!fId) { sel.innerHTML = '<option value="">-- Chọn cơ sở trước --</option>'; return; }
+
+            fetch(`/AdminPriceSlot/GetCourtsByFacility?facilityId=${fId}`)
+                .then(r => r.json())
+                .then(data => {
+                    sel.innerHTML = '<option value="">-- Chọn sân cụ thể --</option>';
+                    data.forEach(c => {
+                        sel.innerHTML += `<option value="${c.courtId}">Sân ${c.courtNumber} (${c.courtType})</option>`;
+                    });
+                })
+                .catch(() => sel.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>');
+        });
+
+        function validateAndPrepare() {
+            const checked = document.querySelectorAll('.day-check:checked');
+            if (checked.length === 0) {
+                alert('Vui lòng chọn ít nhất một ngày áp dụng!');
+                return false;
+            }
+            document.getElementById('appliedDaysInput').value =
+                Array.from(checked).map(c => c.value).join(',');
+            return true;
+        }
     </script>
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");

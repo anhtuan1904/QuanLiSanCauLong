@@ -12,32 +12,36 @@ namespace QuanLiSanCauLong.Models
         public string FacilityName { get; set; }
 
         [StringLength(300)]
-        public string? Address { get; set; } // Thêm ? để cho phép Null
+        public string? Address { get; set; }
 
         [StringLength(100)]
-        public string? District { get; set; } // Thêm ?
+        public string? District { get; set; }
 
         [StringLength(100)]
-        public string? City { get; set; } // Thêm ?
+        public string? City { get; set; }
 
         [StringLength(20)]
-        public string? Phone { get; set; } // Thêm ?
+        public string? Phone { get; set; }
 
-        // ImageUrl nên để Nullable vì chúng ta dùng bảng FacilityImages để lưu ảnh
+        // ImageUrl dùng để lưu ảnh đại diện nhanh (primary image path)
         public string? ImageUrl { get; set; }
 
         [StringLength(1000)]
-        public string? Description { get; set; } // Thêm ? để hết lỗi "Description is required"
+        public string? Description { get; set; }
 
         public TimeSpan? OpenTime { get; set; }
         public TimeSpan? CloseTime { get; set; }
 
+        // Tọa độ Google Maps
         public decimal? Latitude { get; set; }
         public decimal? Longitude { get; set; }
 
+        // Tiện ích đi kèm: lưu dạng comma-separated, vd: "parking,wifi,canteen,shower,rental"
+        [StringLength(500)]
+        public string? Amenities { get; set; }
+
         public string Status { get; set; } = "Active";
         public bool IsActive { get; set; } = true;
-
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 

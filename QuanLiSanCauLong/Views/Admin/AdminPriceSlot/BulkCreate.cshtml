@@ -7,22 +7,33 @@
 <div class="container-fluid pb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h3 class="fw-bold text-success"><i class="bi bi-lightning-charge-fill"></i> Tạo giá hàng loạt</h3>
-            <p class="text-muted small">Thiết lập nhanh khung giờ cho nhiều sân cùng lúc</p>
+            <h3 class="fw-bold text-success">
+                <i class="bi bi-lightning-charge-fill me-2"></i>Tạo giá hàng loạt
+            </h3>
+            <p class="text-muted small mb-0">Thiết lập nhanh khung giờ &amp; bảng giá cho nhiều sân cùng lúc</p>
         </div>
-        <a asp-action="Index" class="btn btn-outline-secondary border-0"><i class="bi bi-arrow-left me-2"></i>Quay lại</a>
+        <a asp-action="Index" class="btn btn-outline-secondary border-0">
+            <i class="bi bi-arrow-left me-2"></i>Quay lại
+        </a>
     </div>
 
-    <div class="row">
+    <!-- AntiForgery token dùng cho AJAX POST -->
+    @Html.AntiForgeryToken()
+
+    <div class="row g-4">
+
+        <!-- ══ CỘT TRÁI ══ -->
         <div class="col-lg-8">
-            <form id="bulkForm">
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
-                    <div class="card-header bg-white py-3 border-bottom-0">
-                        <h5 class="mb-0 fw-bold"><span class="badge bg-success me-2">1</span> Đối tượng áp dụng</h5>
-                    </div>
-                    <div class="card-body pt-0">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Chọn Cơ sở</label>
+
+            <!-- BƯỚC 1: Cơ sở & Sân -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius:15px;">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="mb-0 fw-bold"><span class="badge bg-success me-2">1</span>Chọn cơ sở &amp; sân áp dụng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Cơ sở <span class="text-danger">*</span></label>
                             <select id="facilitySelect" class="form-select shadow-none" required>
                                 <option value="">-- Chọn cơ sở --</option>
                                 @foreach (var facility in ViewBag.Facilities)
@@ -31,54 +42,156 @@
                                 }
                             </select>
                         </div>
-                        <div class="mb-2 fw-semibold small text-muted text-uppercase">Danh sách sân</div>
-                        <div id="courtList" class="p-3 bg-light rounded-3 border" style="max-height: 200px; overflow-y: auto;">
-                            <p class="text-muted mb-0 small text-center py-3">Vui lòng chọn cơ sở để hiển thị danh sách sân</p>
+                    </div>
+                    <div class="mt-3">
+                        <div class="fw-semibold small text-muted text-uppercase mb-2">Danh sách sân</div>
+                        <div id="courtList" class="p-3 bg-light rounded-3 border"
+                             style="max-height:220px; overflow-y:auto; min-height:80px;">
+                            <p class="text-muted mb-0 small text-center py-2">
+                                <i class="bi bi-arrow-up-circle me-1"></i>Vui lòng chọn cơ sở để hiển thị danh sách sân
+                            </p>
+                        </div>
+                        <div class="mt-2 d-flex gap-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill"
+                                    onclick="toggleAllCourts(true)">
+                                Chọn tất cả
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill"
+                                    onclick="toggleAllCourts(false)">
+                                Bỏ chọn
+                            </button>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
-                    <div class="card-header bg-white py-3 border-bottom-0">
-                        <h5 class="mb-0 fw-bold"><span class="badge bg-success me-2">2</span> Thiết lập khung giờ & Giá</h5>
+            <!-- BƯỚC 2: Ngày áp dụng -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius:15px;">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="mb-0 fw-bold"><span class="badge bg-success me-2">2</span>Ngày áp dụng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex gap-2 mb-3 flex-wrap">
+                        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill"
+                                onclick="selectDays([1,2,3,4,5])">
+                            Thứ 2 – Thứ 6
+                        </button>
+                        <button type="button" class="btn btn-outline-warning btn-sm rounded-pill"
+                                onclick="selectDays([6,0])">
+                            Thứ 7 &amp; CN
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-sm rounded-pill"
+                                onclick="selectDays([0,1,2,3,4,5,6])">
+                            Tất cả ngày
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill"
+                                onclick="selectDays([])">
+                            Bỏ chọn
+                        </button>
                     </div>
-                    <div class="card-body pt-0">
-                        <div class="row g-2 p-3 bg-light rounded-3 border mb-3">
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">Bắt đầu</label>
-                                <input type="time" class="form-control shadow-none" id="newStartTime" />
+                    <div class="row g-2" id="dayCheckboxes">
+                        @{
+                            var dayItems = new[] {
+                                                (1, "Thứ Hai"), (2, "Thứ Ba"), (3, "Thứ Tư"),
+                                                (4, "Thứ Năm"), (5, "Thứ Sáu"), (6, "Thứ Bảy"), (0, "Chủ Nhật"),
+                                                };
+                        }
+                        @foreach (var (val, label) in dayItems)
+                        {
+                            var isWeekend = val == 0 || val == 6;
+                            <div class="col-6 col-md-3">
+                                <label class="day-label d-flex align-items-center gap-2 p-2 border rounded-3"
+                                       style="cursor:pointer; transition:.15s;">
+                                    <input type="checkbox" class="day-check form-check-input m-0"
+                                           value="@val" onchange="applyDayStyle(this); updatePreview()" />
+                                    <span class="small fw-semibold @(isWeekend ? "text-warning" : "")">@label</span>
+                                </label>
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">Kết thúc</label>
-                                <input type="time" class="form-control shadow-none" id="newEndTime" />
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">Giá (₫)</label>
-                                <input type="number" class="form-control shadow-none" id="newPrice" placeholder="100,000" />
-                            </div>
-                            <div class="col-md-3 d-flex align-items-end">
-                                <button type="button" class="btn btn-success w-100 fw-bold" onclick="addTimeSlot()">
-                                    <i class="bi bi-plus-lg me-1"></i> Thêm
-                                </button>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-check form-switch mt-2">
-                                    <input class="form-check-input" type="checkbox" id="newIsPeakHour">
-                                    <label class="form-check-label small" for="newIsPeakHour">Đánh dấu là Giờ cao điểm</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="timeSlotsList">
-                        </div>
+                        }
                     </div>
                 </div>
-            </form>
+            </div>
+
+            <!-- BƯỚC 3: Khung giờ & Giá -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius:15px;">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="mb-0 fw-bold"><span class="badge bg-success me-2">3</span>Thiết lập khung giờ &amp; giá</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Form thêm slot -->
+                    <div class="row g-2 p-3 bg-light rounded-3 border mb-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-bold">Tên bảng giá <span class="text-muted fw-normal">(tuỳ chọn)</span></label>
+                            <input type="text" class="form-control shadow-none" id="newSlotName"
+                                   placeholder="Giá ngày thường, Giá cuối tuần..." />
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-bold">Loại khách</label>
+                            <select class="form-select shadow-none" id="newCustomerType">
+                                <option value="All">Tất cả</option>
+                                <option value="Retail">Vãng lai</option>
+                                <option value="Member">Cố định</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-bold">Đơn vị làm tròn</label>
+                            <select class="form-select shadow-none" id="newRounding">
+                                <option value="15">15 phút</option>
+                                <option value="30">30 phút</option>
+                                <option value="60" selected>60 phút</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-bold">Bắt đầu <span class="text-danger">*</span></label>
+                            <input type="time" class="form-control shadow-none" id="newStartTime" />
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-bold">Kết thúc <span class="text-danger">*</span></label>
+                            <input type="time" class="form-control shadow-none" id="newEndTime" />
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-bold">Đơn giá (₫) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control shadow-none" id="newPrice"
+                                   step="1000" placeholder="100000" oninput="updateNewTotal()" />
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-bold">Phụ phí/giờ (₫)</label>
+                            <input type="number" class="form-control shadow-none" id="newSurcharge"
+                                   step="1000" placeholder="0" oninput="updateNewTotal()" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-bold">Mô tả phụ phí</label>
+                            <input type="text" class="form-control shadow-none" id="newSurchargeNote"
+                                   placeholder="Phí bật đèn, phí nước..." />
+                        </div>
+                        <div class="col-12 col-md-6 d-flex align-items-end gap-2">
+                            <div class="p-2 bg-success bg-opacity-10 border border-success-subtle rounded-3 flex-grow-1">
+                                <div class="small text-muted">Tổng/giờ</div>
+                                <div class="fw-bold text-success" id="newTotalPreview">0 ₫</div>
+                            </div>
+                            <div class="form-check form-switch align-self-end mb-1">
+                                <input class="form-check-input" type="checkbox" id="newIsPeakHour">
+                                <label class="form-check-label small fw-bold" for="newIsPeakHour">Peak</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <button type="button" class="btn btn-success fw-bold px-4"
+                                    onclick="addTimeSlot()">
+                                <i class="bi bi-plus-lg me-1"></i>Thêm khung giờ này
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Danh sách slots đã thêm -->
+                    <div id="timeSlotsList"></div>
+                </div>
+            </div>
         </div>
 
+        <!-- ══ CỘT PHẢI: Preview & Submit ══ -->
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm sticky-top" style="top: 20px; border-radius: 15px;">
-                <div class="card-header bg-dark text-white py-3 border-bottom-0" style="border-radius: 15px 15px 0 0;">
+            <div class="card border-0 shadow-sm" style="top:20px; position:sticky; border-radius:15px;">
+                <div class="card-header bg-dark text-white py-3 border-0" style="border-radius:15px 15px 0 0;">
                     <h6 class="mb-0 fw-bold"><i class="bi bi-eye me-2"></i>Tổng quan cấu hình</h6>
                 </div>
                 <div class="card-body">
@@ -89,12 +202,14 @@
                         </div>
                     </div>
                     <hr>
-                    <button type="button" class="btn btn-primary w-100 py-2 fw-bold shadow-sm" onclick="submitBulkCreate()">
-                        <i class="bi bi-cloud-upload me-2"></i> XÁC NHẬN TẠO NGAY
+                    <button type="button" class="btn btn-primary w-100 py-2 fw-bold shadow-sm"
+                            onclick="submitBulkCreate()">
+                        <i class="bi bi-cloud-upload me-2"></i>XÁC NHẬN TẠO NGAY
                     </button>
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 
@@ -102,105 +217,206 @@
     <script>
         let timeSlots = [];
 
-        // Load sân bằng AJAX
-        $('#facilitySelect').change(function() {
-            const fId = $(this).val();
-            if (!fId) return;
+        // ── Lấy CSRF token ──
+        function getCsrfToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+        }
 
-            $.getJSON(`/AdminPriceSlot/GetCourtsByFacility`, { facilityId: fId }, function(data) {
-                let html = '';
-                data.forEach(court => {
-                    html += `
-                        <div class="form-check mb-2">
-                            <input class="form-check-input court-checkbox" type="checkbox" value="${court.courtId}" id="c${court.courtId}" onchange="updatePreview()">
-                            <label class="form-check-label small fw-semibold" for="c${court.courtId}">
-                                Sân ${court.courtNumber} <span class="text-muted">(${court.courtType})</span>
-                            </label>
-                        </div>`;
-                });
-                $('#courtList').html(html);
-                updatePreview();
-            });
-        });
+        // ── Load sân theo cơ sở ──
+        document.getElementById('facilitySelect').addEventListener('change', function() {
+            const fId = this.value;
+            const list = document.getElementById('courtList');
+            list.innerHTML = '<p class="text-muted small text-center py-2">Đang tải...</p>';
 
-        function addTimeSlot() {
-            const start = $('#newStartTime').val();
-            const end = $('#newEndTime').val();
-            const price = $('#newPrice').val();
-            const isPeak = $('#newIsPeakHour').is(':checked');
-
-            if(!start || !end || !price) {
-                alert("Vui lòng nhập đầy đủ thông tin khung giờ!");
+            if (!fId) {
+                list.innerHTML = '<p class="text-muted small text-center py-2">Vui lòng chọn cơ sở</p>';
                 return;
             }
 
-            timeSlots.push({ startTime: start, endTime: end, price: price, isPeakHour: isPeak });
+            fetch(`/AdminPriceSlot/GetCourtsByFacility?facilityId=${fId}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.length) {
+                        list.innerHTML = '<p class="text-muted small text-center py-2">Cơ sở này chưa có sân</p>';
+                        return;
+                    }
+                    list.innerHTML = data.map(c => `
+                        <div class="form-check mb-2">
+                            <input class="form-check-input court-checkbox" type="checkbox"
+                                   value="${c.courtId}" id="c${c.courtId}"
+                                   onchange="updatePreview()">
+                            <label class="form-check-label small fw-semibold" for="c${c.courtId}">
+                                Sân ${c.courtNumber}
+                                <span class="text-muted fw-normal">(${c.courtType})</span>
+                            </label>
+                        </div>`).join('');
+                    updatePreview();
+                })
+                .catch(() => list.innerHTML = '<p class="text-danger small text-center py-2">Lỗi tải dữ liệu</p>');
+        });
+
+        function toggleAllCourts(checked) {
+            document.querySelectorAll('.court-checkbox').forEach(cb => cb.checked = checked);
+            updatePreview();
+        }
+
+        // ── Ngày ──
+        function selectDays(vals) {
+            document.querySelectorAll('.day-check').forEach(cb => {
+                cb.checked = vals.includes(parseInt(cb.value));
+                applyDayStyle(cb);
+            });
+            updatePreview();
+        }
+
+        function applyDayStyle(cb) {
+            const lbl = cb.closest('.day-label');
+            lbl.style.background  = cb.checked ? '#e8f4fd' : '';
+            lbl.style.borderColor = cb.checked ? '#0d6efd' : '';
+        }
+
+        // ── Preview tổng giá khi nhập ──
+        function updateNewTotal() {
+            const p = parseFloat(document.getElementById('newPrice').value) || 0;
+            const s = parseFloat(document.getElementById('newSurcharge').value) || 0;
+            document.getElementById('newTotalPreview').textContent = (p + s).toLocaleString('vi-VN') + ' ₫';
+        }
+
+        // ── Thêm khung giờ ──
+        function addTimeSlot() {
+            const start     = document.getElementById('newStartTime').value;
+            const end       = document.getElementById('newEndTime').value;
+            const price     = document.getElementById('newPrice').value;
+            const surcharge = document.getElementById('newSurcharge').value || '0';
+            const isPeak    = document.getElementById('newIsPeakHour').checked;
+            const slotName  = document.getElementById('newSlotName').value.trim();
+            const custType  = document.getElementById('newCustomerType').value;
+            const rounding  = document.getElementById('newRounding').value;
+            const surNote   = document.getElementById('newSurchargeNote').value.trim();
+
+            if (!start || !end || !price) {
+                alert('Vui lòng nhập đầy đủ: giờ bắt đầu, kết thúc và đơn giá!');
+                return;
+            }
+            if (start >= end) {
+                alert('Giờ bắt đầu phải nhỏ hơn giờ kết thúc!');
+                return;
+            }
+
+            timeSlots.push({ start, end, price: +price, surcharge: +surcharge,
+                             isPeak, slotName, custType, rounding, surNote });
             renderTimeSlots();
             updatePreview();
+
+            // Reset inputs
+            document.getElementById('newStartTime').value   = '';
+            document.getElementById('newEndTime').value     = '';
+            document.getElementById('newPrice').value       = '';
+            document.getElementById('newSurcharge').value   = '';
+            document.getElementById('newSurchargeNote').value = '';
+            document.getElementById('newSlotName').value    = '';
+            document.getElementById('newIsPeakHour').checked = false;
+            document.getElementById('newTotalPreview').textContent = '0 ₫';
         }
 
         function renderTimeSlots() {
-            let html = '';
-            timeSlots.forEach((slot, index) => {
-                html += `
-                <div class="d-flex align-items-center justify-content-between p-2 mb-2 bg-white border rounded shadow-sm">
+            document.getElementById('timeSlotsList').innerHTML = timeSlots.map((s, i) => `
+                <div class="d-flex align-items-start justify-content-between p-3 mb-2 bg-white border rounded-3 shadow-sm">
                     <div class="small">
-                        <span class="fw-bold text-primary">${slot.startTime} - ${slot.endTime}</span>
-                        <span class="mx-2">|</span>
-                        <span class="fw-bold text-success">${parseInt(slot.price).toLocaleString()}₫</span>
-                        ${slot.isPeakHour ? '<span class="badge bg-danger ms-2">Peak</span>' : ''}
+                        ${s.slotName ? `<div class="fw-bold text-dark mb-1">${s.slotName}</div>` : ''}
+                        <span class="fw-bold text-primary">${s.start} – ${s.end}</span>
+                        <span class="mx-2 text-muted">|</span>
+                        <span class="fw-bold text-success">${(s.price + s.surcharge).toLocaleString()}₫</span>
+                        ${s.surcharge > 0 ? `<span class="text-muted"> (${s.price.toLocaleString()} + ${s.surcharge.toLocaleString()} phụ phí)</span>` : ''}
+                        <span class="mx-2 text-muted">|</span>
+                        <span class="text-muted">${s.custType === 'Retail' ? 'Vãng lai' : s.custType === 'Member' ? 'Cố định' : 'Tất cả'}</span>
+                        <span class="ms-1 text-muted">${s.rounding}p</span>
+                        ${s.isPeak ? '<span class="badge bg-danger ms-2">Peak</span>' : ''}
+                        ${s.surNote ? `<div class="text-muted mt-1">${s.surNote}</div>` : ''}
                     </div>
-                    <button class="btn btn-link text-danger p-0" onclick="removeSlot(${index})"><i class="bi bi-trash"></i></button>
-                </div>`;
-            });
-            $('#timeSlotsList').html(html);
+                    <button class="btn btn-link text-danger p-0 ms-2" onclick="removeSlot(${i})" title="Xóa">
+                        <i class="bi bi-trash fs-5"></i>
+                    </button>
+                </div>`).join('');
         }
 
-        function removeSlot(index) {
-            timeSlots.splice(index, 1);
+        function removeSlot(i) {
+            timeSlots.splice(i, 1);
             renderTimeSlots();
             updatePreview();
         }
 
+        // ── Preview tổng quan ──
         function updatePreview() {
-            const selectedCourts = $('.court-checkbox:checked').length;
-            const totalSlots = selectedCourts * timeSlots.length;
+            const courts  = document.querySelectorAll('.court-checkbox:checked').length;
+            const days    = document.querySelectorAll('.day-check:checked').length;
+            const total   = courts * days * timeSlots.length;
 
-            if (totalSlots > 0) {
-                $('#previewContent').html(`
-                    <div class="alert alert-primary border-0 small mb-0">
-                        Hệ thống sẽ khởi tạo <strong>${totalSlots}</strong> bản ghi đơn giá vào cơ sở dữ liệu.
+            if (total > 0) {
+                document.getElementById('previewContent').innerHTML = `
+                    <div class="alert alert-primary border-0 small mb-3">
+                        Hệ thống sẽ tạo <strong>${total}</strong> bản ghi đơn giá.
                     </div>
-                    <ul class="list-group list-group-flush small mt-3">
-                        <li class="list-group-item d-flex justify-content-between">Số lượng sân: <span>${selectedCourts}</span></li>
-                        <li class="list-group-item d-flex justify-content-between">Số khung giờ: <span>${timeSlots.length}</span></li>
-                    </ul>
-                `);
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item d-flex justify-content-between px-0">
+                            <span>Số sân được chọn</span><strong>${courts}</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0">
+                            <span>Số ngày áp dụng</span><strong>${days}</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0">
+                            <span>Số khung giờ</span><strong>${timeSlots.length}</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0 fw-bold">
+                            <span>Tổng bản ghi</span><strong class="text-primary">${total}</strong>
+                        </li>
+                    </ul>`;
             } else {
-                $('#previewContent').html('<p class="text-center text-muted small py-3">Chọn ít nhất 1 sân và 1 khung giờ</p>');
+                document.getElementById('previewContent').innerHTML =
+                    '<p class="text-center text-muted small py-3">Chọn ít nhất 1 sân, 1 ngày và 1 khung giờ</p>';
             }
         }
 
+        // ── Submit ──
         function submitBulkCreate() {
-            const courtIds = $('.court-checkbox:checked').map(function() { return $(this).val(); }).get();
-            if (courtIds.length === 0 || timeSlots.length === 0) {
-                alert("Vui lòng chọn đủ Sân và Khung giờ!");
-                return;
-            }
+            const courtIds = Array.from(document.querySelectorAll('.court-checkbox:checked'))
+                                  .map(cb => cb.value);
+            const dayVals  = Array.from(document.querySelectorAll('.day-check:checked'))
+                                  .map(cb => parseInt(cb.value));
 
-            const payload = { courtIds: courtIds, timeSlots: timeSlots };
+            if (!courtIds.length) { alert('Vui lòng chọn ít nhất 1 sân!'); return; }
+            if (!dayVals.length)  { alert('Vui lòng chọn ít nhất 1 ngày áp dụng!'); return; }
+            if (!timeSlots.length){ alert('Vui lòng thêm ít nhất 1 khung giờ!'); return; }
 
-            $.ajax({
-                url: '/Admin/PriceSlot/BulkCreate',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(payload),
-                success: function(res) {
-                    if(res.success) {
-                        alert("Đã tạo thành công!");
-                        window.location.href = '/Admin/PriceSlot';
-                    }
+            const btn = document.querySelector('[onclick="submitBulkCreate()"]');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
+
+            const payload = { courtIds, days: dayVals, timeSlots };
+
+            fetch('/AdminPriceSlot/BulkCreate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': getCsrfToken()
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    alert(`Đã tạo thành công ${res.count ?? ''} bản ghi!`);
+                    window.location.href = '/AdminPriceSlot/Index';
+                } else {
+                    alert('Lỗi: ' + (res.message || 'Không xác định'));
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-cloud-upload me-2"></i>XÁC NHẬN TẠO NGAY';
                 }
+            })
+            .catch(err => {
+                alert('Lỗi kết nối máy chủ: ' + err.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cloud-upload me-2"></i>XÁC NHẬN TẠO NGAY';
             });
         }
     </script>

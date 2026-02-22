@@ -1,151 +1,529 @@
 ﻿@model QuanLiSanCauLong.Models.User
-
 @{
     ViewData["Title"] = "Thông tin cá nhân";
 }
 
-<div class="container my-4">
-    <div class="row">
-        <!-- Profile Sidebar -->
-        <div class="col-md-3">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <i class="bi bi-person-circle text-success" style="font-size: 5rem;"></i>
-                    </div>
-                    <h5 class="mb-0">@Model.FullName</h5>
-                    <p class="text-muted small mb-3">@Model.Email</p>
-                    <span class="badge bg-success">@Model.Role</span>
-                </div>
+<style>
+    :root {
+        --deep: #1a1209;
+        --deep2: #231a0e;
+        --deep3: #2e2110;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --gold3: rgba(212,160,23,.1);
+        --warm: #f5ede0;
+        --cream: #fdf8f0;
+        --border: rgba(212,160,23,.2);
+        --muted: rgba(255,255,255,.38);
+        --text: rgba(255,255,255,.82);
+        --err: #ff6b6b;
+    }
+
+    .profile-page {
+        background: var(--deep);
+        min-height: 100vh;
+        padding: 2.5rem 1.5rem 4rem;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .profile-inner {
+        max-width: 1060px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        gap: 1.75rem;
+        align-items: start;
+    }
+
+    /* ── SIDEBAR ── */
+    .profile-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .profile-card-avatar {
+        background: var(--deep2);
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 2rem 1.25rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .profile-card-avatar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold), var(--gold2));
+        }
+
+    .profile-avatar-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--gold), var(--gold2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--deep);
+        box-shadow: 0 6px 20px rgba(212,160,23,.35);
+    }
+
+    .profile-name {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: .25rem;
+    }
+
+    .profile-email-text {
+        font-size: .78rem;
+        color: var(--muted);
+        margin-bottom: .85rem;
+    }
+
+    .profile-role-badge {
+        display: inline-block;
+        background: var(--gold3);
+        border: 1px solid var(--border);
+        border-radius: 100px;
+        padding: .3rem .85rem;
+        font-size: .7rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--gold2);
+    }
+
+    .profile-nav {
+        background: var(--deep2);
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .profile-nav-link {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        padding: .85rem 1.2rem;
+        color: var(--text);
+        text-decoration: none;
+        font-size: .85rem;
+        font-weight: 500;
+        border-left: 3px solid transparent;
+        transition: all .2s;
+    }
+
+        .profile-nav-link:hover, .profile-nav-link.active {
+            background: var(--gold3);
+            border-left-color: var(--gold);
+            color: var(--gold2);
+        }
+
+        .profile-nav-link i {
+            width: 18px;
+            color: var(--gold);
+            opacity: .7;
+            font-size: .9rem;
+        }
+
+        .profile-nav-link:hover i, .profile-nav-link.active i {
+            opacity: 1;
+        }
+
+        .profile-nav-link.danger {
+            color: #ff8080;
+        }
+
+            .profile-nav-link.danger i {
+                color: #ff8080;
+                opacity: .8;
+            }
+
+            .profile-nav-link.danger:hover {
+                background: rgba(255,107,107,.08);
+                border-left-color: #ff6b6b;
+                color: var(--err);
+            }
+
+    /* ── MAIN ── */
+    .profile-main {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .profile-section {
+        background: var(--deep2);
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .profile-section-header {
+        padding: 1.1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .profile-section-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1rem;
+        font-weight: 700;
+        font-style: italic;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+
+        .profile-section-title i {
+            color: var(--gold);
+            font-style: normal;
+        }
+
+    .profile-section-body {
+        padding: 1.5rem;
+    }
+
+    .pf-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.1rem;
+    }
+
+    .pf-group {
+        display: flex;
+        flex-direction: column;
+        gap: .4rem;
+    }
+
+        .pf-group.full {
+            grid-column: 1 / -1;
+        }
+
+    .pf-label {
+        font-size: .7rem;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--gold);
+    }
+
+    .pf-input {
+        background: rgba(255,255,255,.05);
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        padding: .75rem 1rem;
+        color: #fff;
+        font-family: 'Outfit', sans-serif;
+        font-size: .88rem;
+        outline: none;
+        transition: all .2s;
+        width: 100%;
+    }
+
+        .pf-input:focus {
+            border-color: var(--gold);
+            background: rgba(212,160,23,.07);
+            box-shadow: 0 0 0 4px rgba(212,160,23,.1);
+        }
+
+        .pf-input[readonly] {
+            opacity: .55;
+            cursor: not-allowed;
+        }
+
+            .pf-input[readonly]:focus {
+                border-color: var(--border);
+                background: rgba(255,255,255,.05);
+                box-shadow: none;
+            }
+
+    .pf-hint {
+        font-size: .72rem;
+        color: var(--muted);
+    }
+
+    .pf-error {
+        font-size: .72rem;
+        color: var(--err);
+    }
+
+    .pf-status-active {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        background: rgba(32,201,151,.12);
+        border: 1px solid rgba(32,201,151,.3);
+        border-radius: 100px;
+        padding: .35rem .85rem;
+        font-size: .75rem;
+        font-weight: 700;
+        color: #20c997;
+    }
+
+    .pf-status-inactive {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        background: rgba(255,107,107,.12);
+        border: 1px solid rgba(255,107,107,.3);
+        border-radius: 100px;
+        padding: .35rem .85rem;
+        font-size: .75rem;
+        font-weight: 700;
+        color: var(--err);
+    }
+
+    .profile-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: .5rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .pf-btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        background: transparent;
+        border: 2px solid var(--border);
+        border-radius: 7px;
+        padding: .65rem 1.2rem;
+        color: var(--text);
+        font-family: 'Outfit', sans-serif;
+        font-size: .82rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all .2s;
+    }
+
+        .pf-btn-back:hover {
+            border-color: var(--gold);
+            color: var(--gold2);
+        }
+
+    .pf-btn-save {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        background: linear-gradient(135deg, var(--gold), var(--gold2));
+        border: none;
+        border-radius: 7px;
+        padding: .65rem 1.5rem;
+        color: var(--deep);
+        font-family: 'Outfit', sans-serif;
+        font-size: .82rem;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all .25s;
+    }
+
+        .pf-btn-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(212,160,23,.35);
+        }
+
+    /* Stats */
+    .pf-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+
+    .pf-stat-box {
+        background: rgba(255,255,255,.04);
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: 1.25rem;
+        text-align: center;
+        transition: all .2s;
+    }
+
+        .pf-stat-box:hover {
+            border-color: var(--gold);
+            background: var(--gold3);
+        }
+
+    .pf-stat-icon {
+        font-size: 1.8rem;
+        color: var(--gold);
+        margin-bottom: .5rem;
+    }
+
+    .pf-stat-val {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1;
+    }
+
+    .pf-stat-label {
+        font-size: .73rem;
+        color: var(--muted);
+        margin-top: .3rem;
+        letter-spacing: .04em;
+    }
+
+    .af-validation-summary {
+        background: rgba(255,107,107,.1);
+        border: 1px solid rgba(255,107,107,.3);
+        border-radius: 8px;
+        padding: .75rem 1rem;
+        margin-bottom: 1.25rem;
+        font-size: .8rem;
+        color: var(--err);
+    }
+
+    @@media (max-width: 860px) {
+        .profile-inner {
+            grid-template-columns: 1fr;
+        }
+
+        .pf-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .pf-stats-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+
+<div class="profile-page">
+    <div class="profile-inner">
+        <!-- SIDEBAR -->
+        <div class="profile-sidebar">
+            <div class="profile-card-avatar">
+                <div class="profile-avatar-circle">@Model.FullName?.Substring(0, 1).ToUpper()</div>
+                <div class="profile-name">@Model.FullName</div>
+                <div class="profile-email-text">@Model.Email</div>
+                <span class="profile-role-badge">@Model.Role</span>
             </div>
 
-            <div class="list-group shadow-sm">
-                <a href="#profile" class="list-group-item list-group-item-action active">
-                    <i class="bi bi-person"></i> Thông tin cá nhân
+            <nav class="profile-nav">
+                <a href="#profile" class="profile-nav-link active">
+                    <i class="bi bi-person-lines-fill"></i> Thông tin cá nhân
                 </a>
-                <a asp-action="ChangePassword" class="list-group-item list-group-item-action">
-                    <i class="bi bi-key"></i> Đổi mật khẩu
+                <a asp-action="ChangePassword" class="profile-nav-link">
+                    <i class="bi bi-key-fill"></i> Đổi mật khẩu
                 </a>
-                <a asp-controller="Booking" asp-action="MyBookings" class="list-group-item list-group-item-action">
+                <a asp-controller="Booking" asp-action="MyBookings" class="profile-nav-link">
                     <i class="bi bi-calendar-event"></i> Lịch đặt sân
                 </a>
-                <a asp-action="Logout" class="list-group-item list-group-item-action text-danger">
+                <a asp-action="Logout" class="profile-nav-link danger">
                     <i class="bi bi-box-arrow-right"></i> Đăng xuất
                 </a>
-            </div>
+            </nav>
         </div>
 
-        <!-- Profile Form -->
-        <div class="col-md-9">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="bi bi-person-lines-fill"></i> Thông tin cá nhân</h5>
+        <!-- MAIN -->
+        <div class="profile-main">
+            <div class="profile-section" id="profile">
+                <div class="profile-section-header">
+                    <div class="profile-section-title">
+                        <i class="bi bi-person-lines-fill"></i> Thông tin cá nhân
+                    </div>
                 </div>
-                <div class="card-body">
+                <div class="profile-section-body">
                     <form asp-action="Profile" method="post">
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
-
+                        <div asp-validation-summary="ModelOnly" class="af-validation-summary"></div>
                         <input type="hidden" asp-for="UserId" />
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="FullName" class="form-label">
-                                    Họ và tên <span class="text-danger">*</span>
-                                </label>
-                                <input asp-for="FullName" class="form-control" />
-                                <span asp-validation-for="FullName" class="text-danger"></span>
+                        <div class="pf-grid">
+                            <div class="pf-group">
+                                <label asp-for="FullName" class="pf-label">Họ và tên <span style="color:var(--err)">*</span></label>
+                                <input asp-for="FullName" class="pf-input" />
+                                <span asp-validation-for="FullName" class="pf-error"></span>
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Email" class="form-label">
-                                    Email <span class="text-danger">*</span>
-                                </label>
-                                <input asp-for="Email" class="form-control" readonly />
-                                <small class="text-muted">Email không thể thay đổi</small>
+                            <div class="pf-group">
+                                <label asp-for="Email" class="pf-label">Email</label>
+                                <input asp-for="Email" class="pf-input" readonly />
+                                <span class="pf-hint">Email không thể thay đổi</span>
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Phone" class="form-label">
-                                    Số điện thoại
-                                </label>
-                                <input asp-for="Phone" class="form-control phone-input"
-                                       placeholder="0912345678" maxlength="10" />
-                                <span asp-validation-for="Phone" class="text-danger"></span>
+                            <div class="pf-group">
+                                <label asp-for="Phone" class="pf-label">Số điện thoại</label>
+                                <input asp-for="Phone" class="pf-input phone-input" placeholder="0912345678" maxlength="10" />
+                                <span asp-validation-for="Phone" class="pf-error"></span>
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Vai trò</label>
-                                <input type="text" class="form-control" value="@Model.Role" readonly />
+                            <div class="pf-group">
+                                <label class="pf-label">Vai trò</label>
+                                <input type="text" class="pf-input" value="@Model.Role" readonly />
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Ngày tạo tài khoản</label>
-                                <input type="text" class="form-control"
-                                       value="@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")" readonly />
+                            <div class="pf-group">
+                                <label class="pf-label">Ngày tạo tài khoản</label>
+                                <input type="text" class="pf-input" value="@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")" readonly />
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Trạng thái</label>
-                                <div>
+                            <div class="pf-group">
+                                <label class="pf-label">Trạng thái</label>
+                                <div style="margin-top:.25rem">
                                     @if (Model.IsActive)
                                     {
-                                        <span class="badge bg-success">
-                                            <i class="bi bi-check-circle"></i> Đang hoạt động
-                                        </span>
+                                        <span class="pf-status-active"><i class="bi bi-check-circle-fill"></i> Đang hoạt động</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-danger">
-                                            <i class="bi bi-x-circle"></i> Bị khóa
-                                        </span>
+                                        <span class="pf-status-inactive"><i class="bi bi-x-circle-fill"></i> Bị khóa</span>
                                     }
                                 </div>
                             </div>
                         </div>
 
-                        <hr class="my-4" />
-
-                        <div class="d-flex justify-content-between">
-                            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+                        <div class="profile-actions">
+                            <a asp-controller="Home" asp-action="Index" class="pf-btn-back">
                                 <i class="bi bi-arrow-left"></i> Quay lại
                             </a>
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-circle"></i> Cập nhật thông tin
+                            <button type="submit" class="pf-btn-save">
+                                <i class="bi bi-check-circle-fill"></i> Lưu thay đổi
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <!-- User Statistics -->
             @if (Model.Role == "Customer")
             {
-                <div class="card shadow-sm mt-4">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0"><i class="bi bi-graph-up"></i> Thống kê</h6>
+                <div class="profile-section">
+                    <div class="profile-section-header">
+                        <div class="profile-section-title">
+                            <i class="bi bi-graph-up-arrow"></i> Thống kê hoạt động
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="row text-center">
-                            <div class="col-md-4 mb-3">
-                                <div class="stat-box p-3 border rounded">
-                                    <i class="bi bi-calendar-check text-success fs-2"></i>
-                                    <h4 class="mt-2 mb-0">@ViewBag.TotalBookings</h4>
-                                    <small class="text-muted">Tổng đơn đặt</small>
-                                </div>
+                    <div class="profile-section-body">
+                        <div class="pf-stats-grid">
+                            <div class="pf-stat-box">
+                                <div class="pf-stat-icon"><i class="bi bi-calendar-check"></i></div>
+                                <div class="pf-stat-val">@ViewBag.TotalBookings</div>
+                                <div class="pf-stat-label">Tổng đơn đặt</div>
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <div class="stat-box p-3 border rounded">
-                                    <i class="bi bi-check-circle text-info fs-2"></i>
-                                    <h4 class="mt-2 mb-0">@ViewBag.CompletedBookings</h4>
-                                    <small class="text-muted">Đã hoàn thành</small>
-                                </div>
+                            <div class="pf-stat-box">
+                                <div class="pf-stat-icon"><i class="bi bi-check2-circle"></i></div>
+                                <div class="pf-stat-val">@ViewBag.CompletedBookings</div>
+                                <div class="pf-stat-label">Đã hoàn thành</div>
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <div class="stat-box p-3 border rounded">
-                                    <i class="bi bi-currency-dollar text-warning fs-2"></i>
-                                    <h4 class="mt-2 mb-0">@ViewBag.TotalSpent</h4>
-                                    <small class="text-muted">Tổng chi tiêu</small>
-                                </div>
+                            <div class="pf-stat-box">
+                                <div class="pf-stat-icon"><i class="bi bi-cash-coin"></i></div>
+                                <div class="pf-stat-val">@ViewBag.TotalSpent</div>
+                                <div class="pf-stat-label">Tổng chi tiêu</div>
                             </div>
                         </div>
                     </div>
@@ -158,25 +536,9 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        $(document).ready(function() {
-            // Phone number formatting
-            $('.phone-input').on('input', function() {
-                let value = $(this).val().replace(/\D/g, '');
-                if (value.length > 10) {
-                    value = value.substring(0, 10);
-                }
-                $(this).val(value);
-            });
-
-            // Smooth scroll to active section
-            $('a[href^="#"]').on('click', function(e) {
-                e.preventDefault();
-                const target = $(this.getAttribute('href'));
-                if (target.length) {
-                    $('html, body').animate({
-                        scrollTop: target.offset().top - 100
-                    }, 500);
-                }
+        document.querySelectorAll('.phone-input').forEach(el => {
+            el.addEventListener('input', () => {
+                el.value = el.value.replace(/\D/g, '').substring(0, 10);
             });
         });
     </script>

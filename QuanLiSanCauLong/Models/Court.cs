@@ -10,76 +10,88 @@ namespace QuanLiSanCauLong.Models
 
         [Required]
         public int FacilityId { get; set; }
+        public decimal? HourlyRate { get; set; }
 
-        [Required]
+        // ── Thông tin cơ bản ─────────────────────────────────────
+        [Required(ErrorMessage = "Vui lòng nhập tên / số sân")]
         [StringLength(50)]
-        [Display(Name = "Số sân")]
-        public string CourtNumber { get; set; }
+        [Display(Name = "Tên / Số sân")]
+        public string CourtNumber { get; set; } = string.Empty;
+        // VD: "Sân số 1", "Sân VIP", "Sân A"
 
-        [Required]
-        [Display(Name = "Loại sân")]
-        public string CourtType { get; set; } // "Indoor" hoặc "Outdoor"
+        [Required(ErrorMessage = "Vui lòng chọn vị trí sân")]
+        [Display(Name = "Vị trí")]
+        public string CourtType { get; set; } = "Indoor";
+        // "Indoor" = Trong nhà  |  "Outdoor" = Ngoài trời
 
-        [Display(Name = "Trạng thái")]
-        public string Status { get; set; } = "Available";
-
-        [StringLength(500)]
-        [Display(Name = "Mô tả")]
-        public string? Description { get; set; }
-
-        [Display(Name = "Vị trí tầng")]
-        public string? FloorNumber { get; set; }
-
+        [Required(ErrorMessage = "Vui lòng chọn loại mặt sân")]
         [Display(Name = "Loại mặt sân")]
-        public string? SurfaceType { get; set; }
+        public string SurfaceType { get; set; } = "PVC";
+        // "PVC" = Thảm cao su PVC  |  "Wood" = Sàn gỗ  |  "Silicon" = Sơn Silicon
 
-        // Tiện ích
-        [Display(Name = "Hệ thống đèn")]
+        [Required(ErrorMessage = "Vui lòng chọn tình trạng")]
+        [Display(Name = "Tình trạng")]
+        public string Status { get; set; } = "Available";
+        // "Available" = Đang trống  |  "Active" = Đang hoạt động  |  "Maintenance" = Đang bảo trì
+
+        // ── Vị trí trong cơ sở ───────────────────────────────────
+        [Display(Name = "Vị trí tầng")]
+        [StringLength(30)]
+        public string? FloorNumber { get; set; }
+        // VD: "Tầng 1", "Tầng 2" — tuỳ chọn
+
+        // ── Tiện ích của sân ─────────────────────────────────────
+        [Display(Name = "Đèn chiếu sáng")]
         public bool HasLighting { get; set; }
 
-        [Display(Name = "Điều hòa")]
+        [Display(Name = "Điều hoà")]
         public bool HasAC { get; set; }
 
-        [Display(Name = "Wifi")]
-        public bool HasWifi { get; set; }
+        // ── Mô tả ────────────────────────────────────────────────
+        [StringLength(1000)]
+        [Display(Name = "Mô tả thêm")]
+        public string? Description { get; set; }
+        // VD: "Gần cửa sổ, ánh sáng tự nhiên tốt nhất, vị trí góc yên tĩnh"
 
-        [Display(Name = "Bãi đậu xe")]
-        public bool HasParking { get; set; }
-
-        [Display(Name = "Căn tin")]
-        public bool HasCanteen { get; set; }
-
-        [Display(Name = "Phòng tắm")]
-        public bool HasShower { get; set; }
-
-        // Giá
-        [Display(Name = "Giá giờ thường")]
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal RegularPrice { get; set; }
-
-        [Display(Name = "Giá cuối tuần")]
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal? WeekendPrice { get; set; }
-
-        [Display(Name = "Giá giờ cao điểm")]
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal? PeakHourPrice { get; set; }
-
-        // Legacy - giữ để backward compatible
-        [Display(Name = "Giá thuê mỗi giờ")]
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal HourlyRate { get; set; }
-
+        // ── Hình ảnh ─────────────────────────────────────────────
         [Display(Name = "Hình ảnh sân")]
         public string? ImagePath { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
+        // ── Navigation ───────────────────────────────────────────
         [ForeignKey("FacilityId")]
         public virtual Facility? Facility { get; set; }
 
         public virtual ICollection<Booking>? Bookings { get; set; }
         public virtual ICollection<PriceSlot>? PriceSlots { get; set; }
         public virtual ICollection<CourtImage>? CourtImages { get; set; }
+
+        // ── Computed (NotMapped) ─────────────────────────────────
+        [NotMapped]
+        public string StatusLabel => Status switch
+        {
+            "Available" => "Đang trống",
+            "Active" => "Đang hoạt động",
+            "Maintenance" => "Đang bảo trì",
+            _ => Status
+        };
+
+        [NotMapped]
+        public string CourtTypeLabel => CourtType switch
+        {
+            "Indoor" => "Trong nhà",
+            "Outdoor" => "Ngoài trời",
+            _ => CourtType
+        };
+
+        [NotMapped]
+        public string SurfaceTypeLabel => SurfaceType switch
+        {
+            "PVC" => "Thảm cao su (PVC)",
+            "Wood" => "Sàn gỗ",
+            "Silicon" => "Sơn Silicon",
+            _ => SurfaceType
+        };
     }
 }

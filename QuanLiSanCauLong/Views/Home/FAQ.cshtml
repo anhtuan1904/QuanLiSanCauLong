@@ -1,161 +1,485 @@
 ﻿@{
     ViewData["Title"] = "Câu Hỏi Thường Gặp";
 }
-
 <style>
-    .bg-faq-header {
-        background: #6c33f2;
-        padding: 60px 0;
-        color: white;
+    :root {
+        --deep: #1a1209;
+        --deep2: #231a0e;
+        --deep3: #2e2110;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --gold3: rgba(212,160,23,.1);
+        --warm: #f5ede0;
+        --cream: #fdf8f0;
+        --ink: #1a1209;
+        --border: rgba(212,160,23,.2);
+        --muted: rgba(255,255,255,.38);
     }
 
-    .search-box-faq {
-        max-width: 600px;
-        margin: -30px auto 40px;
+    .faq-page {
+        background: var(--warm);
+        min-height: 100vh;
+        font-family: 'Outfit',sans-serif;
+        color: var(--ink);
     }
-
-        .search-box-faq .form-control {
-            padding: 15px 25px;
-            border-radius: 50px;
-            border: none;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-
-    .faq-filter-btn {
-        border-radius: 50px;
-        padding: 8px 20px;
-        margin: 5px;
-        font-weight: 500;
-        border: 1px solid #eee;
-        background: white;
-        transition: 0.3s;
-    }
-
-        .faq-filter-btn.active {
-            background: #6c33f2;
-            color: white;
-            border-color: #6c33f2;
-        }
-
-    .accordion-item {
-        border: none;
-        margin-bottom: 15px;
-        border-radius: 12px !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    /* HERO */
+    .faq-hero {
+        background: var(--deep);
+        position: relative;
         overflow: hidden;
+        padding: 6rem 4rem 5rem;
     }
 
-    .accordion-button {
-        font-weight: 600;
-        padding: 20px;
+        .faq-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg,var(--gold),var(--gold2),transparent);
+        }
+
+    .faq-deco {
+        position: absolute;
+        right: -1rem;
+        bottom: -3rem;
+        font-family: 'Playfair Display',serif;
+        font-size: 18rem;
+        font-weight: 700;
+        font-style: italic;
+        color: rgba(212,160,23,.04);
+        line-height: 1;
+        pointer-events: none;
     }
 
-        .accordion-button:not(.collapsed) {
-            background-color: #f8f7ff;
-            color: #6c33f2;
-            box-shadow: none;
-        }
-
-        .accordion-button:focus {
-            box-shadow: none;
-        }
-
-    .badge-category {
-        font-size: 0.7rem;
-        padding: 5px 10px;
-        border-radius: 5px;
-        margin-right: 15px;
+    .faq-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: .6rem;
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .22em;
         text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 1.2rem;
     }
 
-    .bg-purple-light {
-        background: #f3f0ff;
-        color: #6c33f2;
+        .faq-eyebrow::before {
+            content: '';
+            width: 26px;
+            height: 2px;
+            background: var(--gold);
+            display: block;
+        }
+
+    .faq-hero h1 {
+        font-family: 'Playfair Display',serif;
+        font-size: clamp(2.8rem,6vw,5.5rem);
+        font-weight: 700;
+        color: #fff;
+        line-height: .98;
+        margin-bottom: 1.2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+        .faq-hero h1 em {
+            color: var(--gold2);
+            font-style: italic;
+        }
+    /* Search box */
+    .faq-search-wrap {
+        position: relative;
+        z-index: 1;
+        max-width: 520px;
+        margin-top: 2rem;
+    }
+
+    .faq-search {
+        width: 100%;
+        background: rgba(255,255,255,.07);
+        border: 1.5px solid var(--border);
+        border-radius: 5px;
+        padding: .85rem 1rem .85rem 2.8rem;
+        color: #fff;
+        font-family: 'Outfit',sans-serif;
+        font-size: .9rem;
+        outline: none;
+        transition: all .2s;
+    }
+
+        .faq-search::placeholder {
+            color: rgba(255,255,255,.25);
+        }
+
+        .faq-search:focus {
+            border-color: var(--gold);
+            background: rgba(212,160,23,.07);
+        }
+
+    .faq-search-icon {
+        position: absolute;
+        left: .9rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255,255,255,.3);
+        font-size: .9rem;
+        pointer-events: none;
+    }
+    /* BODY */
+    .faq-body {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 4rem 3rem 6rem;
+    }
+    /* Filter tabs */
+    .faq-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+        margin-bottom: 3rem;
+    }
+
+    .faq-ftab {
+        padding: .5rem 1.2rem;
+        border: 1.5px solid rgba(26,18,9,.15);
+        border-radius: 4px;
+        background: none;
+        color: rgba(26,18,9,.5);
+        font-family: 'Outfit',sans-serif;
+        font-size: .76rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all .2s;
+        white-space: nowrap;
+    }
+
+        .faq-ftab:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .faq-ftab.active {
+            background: var(--gold);
+            color: var(--deep);
+            border-color: var(--gold);
+        }
+    /* Category group */
+    .faq-group {
+        margin-bottom: 3rem;
+    }
+
+    .faq-group-header {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .faq-group-icon {
+        width: 36px;
+        height: 36px;
+        background: var(--gold3);
+        border: 1.5px solid var(--border);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .88rem;
+        color: var(--gold);
+        flex-shrink: 0;
+    }
+
+    .faq-group-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--ink);
+    }
+    /* Accordion */
+    .faq-item {
+        border: 1.5px solid rgba(26,18,9,.09);
+        border-radius: 6px;
+        margin-bottom: .75rem;
+        overflow: hidden;
+        transition: border-color .2s;
+    }
+
+        .faq-item:hover, .faq-item.open {
+            border-color: var(--gold);
+        }
+
+    .faq-q {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.1rem 1.4rem;
+        cursor: pointer;
+        background: var(--cream);
+        transition: background .2s;
+        user-select: none;
+    }
+
+    .faq-item.open .faq-q {
+        background: #fff;
+    }
+
+    .faq-q-text {
+        font-size: .92rem;
+        font-weight: 600;
+        color: var(--ink);
+        line-height: 1.4;
+    }
+
+    .faq-item.open .faq-q-text {
+        color: var(--gold);
+    }
+
+    .faq-chevron {
+        color: rgba(26,18,9,.3);
+        font-size: .82rem;
+        transition: transform .3s,color .2s;
+        flex-shrink: 0;
+    }
+
+    .faq-item.open .faq-chevron {
+        transform: rotate(180deg);
+        color: var(--gold);
+    }
+
+    .faq-a {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height .35s ease,padding .35s;
+    }
+
+    .faq-item.open .faq-a {
+        max-height: 500px;
+        padding: 0 1.4rem 1.25rem;
+    }
+
+    .faq-a p {
+        font-size: .88rem;
+        color: rgba(26,18,9,.6);
+        line-height: 1.85;
+        margin: 0;
+    }
+    /* CTA */
+    .faq-cta {
+        background: var(--deep);
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        padding: 2.5rem;
+        text-align: center;
+        margin-top: 4rem;
+    }
+
+        .faq-cta h3 {
+            font-family: 'Playfair Display',serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: .5rem;
+        }
+
+        .faq-cta p {
+            font-size: .85rem;
+            color: var(--muted);
+            margin-bottom: 1.5rem;
+        }
+
+    .faq-cta-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        border: none;
+        border-radius: 5px;
+        padding: .75rem 1.75rem;
+        font-family: 'Outfit',sans-serif;
+        font-size: .85rem;
+        font-weight: 800;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all .25s;
+    }
+
+        .faq-cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(212,160,23,.35);
+            color: var(--deep);
+        }
+
+    @@media(max-width:900px) {
+        .faq-hero {
+            padding: 5rem 1.5rem 4rem;
+        }
+
+        .faq-body {
+            padding: 3rem 1.5rem 5rem;
+        }
     }
 </style>
 
-<section class="bg-faq-header text-center">
-    <div class="container">
-        <h1 class="fw-bold">Câu Hỏi Thường Gặp</h1>
-        <p class="lead opacity-75">Tìm câu trả lời cho những thắc mắc của bạn</p>
-    </div>
-</section>
+<div class="faq-page">
+    <section class="faq-hero">
+        <div class="faq-deco">?</div>
+        <div class="faq-eyebrow">Trung tâm hỗ trợ</div>
+        <h1>Câu Hỏi<br><em>Thường Gặp.</em></h1>
+        <div class="faq-search-wrap">
+            <i class="bi bi-search faq-search-icon"></i>
+            <input type="text" class="faq-search" id="faqSearch" placeholder="Tìm kiếm câu hỏi của bạn..." />
+        </div>
+    </section>
 
-<div class="container pb-5">
-    <div class="search-box-faq">
-        <input type="text" class="form-control" placeholder="Tìm kiếm câu hỏi của bạn...">
-    </div>
+    <div class="faq-body">
+        <!-- FILTER TABS -->
+        <div class="faq-filters">
+            <button class="faq-ftab active" data-filter="all">Tất cả</button>
+            <button class="faq-ftab" data-filter="booking">Đặt sân</button>
+            <button class="faq-ftab" data-filter="payment">Thanh toán</button>
+            <button class="faq-ftab" data-filter="member">Hội viên</button>
+            <button class="faq-ftab" data-filter="shop">Cửa hàng</button>
+            <button class="faq-ftab" data-filter="policy">Chính sách</button>
+        </div>
 
-    <div class="text-center mb-5">
-        <button class="faq-filter-btn active">Tất cả</button>
-        <button class="faq-filter-btn">Đặt sân</button>
-        <button class="faq-filter-btn">Thanh toán</button>
-        <button class="faq-filter-btn">Hội viên</button>
-        <button class="faq-filter-btn">Cửa hàng</button>
-        <button class="faq-filter-btn">Chính sách</button>
-    </div>
-
-    <div class="row justify-content-center">
-        <div class="col-lg-9">
-            <div class="accordion" id="faqAccordion">
-
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                            <span class="badge badge-category bg-purple-light">Đặt sân</span>
-                            Làm thế nào để đặt sân cầu lông?
-                        </button>
-                    </h2>
-                    <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body text-muted">
-                            Bạn có thể đặt sân trực tiếp trên website bằng cách chọn mục "Sân Cầu Lông", chọn cơ sở và khung giờ mong muốn, sau đó tiến hành thanh toán để giữ chỗ.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                            <span class="badge badge-category bg-purple-light">Thanh toán</span>
-                            Các hình thức thanh toán nào được chấp nhận?
-                        </button>
-                    </h2>
-                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body text-muted">
-                            Hệ thống chấp nhận thanh toán qua ví MoMo, VNPAY, chuyển khoản ngân hàng hoặc thanh toán bằng tiền mặt tại quầy (đối với khách đã có lịch hẹn).
-                        </div>
-                    </div>
-                </div>
-
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                            <span class="badge badge-category bg-purple-light">Hội viên</span>
-                            Quyền lợi của hội viên là gì?
-                        </button>
-                    </h2>
-                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body text-muted">
-                            Hội viên sẽ được giảm giá 10-20% phí thuê sân, ưu tiên đặt lịch sớm trước 1 tuần và tích điểm đổi quà tại cửa hàng đồ thể thao của hệ thống.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
-                            <span class="badge badge-category bg-purple-light">Cửa hàng</span>
-                            Dịch vụ căng vợt mất bao lâu?
-                        </button>
-                    </h2>
-                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body text-muted">
-                            Thông thường dịch vụ căng vợt sẽ hoàn thành trong vòng 30-60 phút tùy vào lượng khách tại cửa hàng. Bạn có thể gửi vợt và nhận lại sau buổi tập.
-                        </div>
-                    </div>
-                </div>
-
+        <!-- BOOKING -->
+        <div class="faq-group" data-cat="booking">
+            <div class="faq-group-header">
+                <div class="faq-group-icon"><i class="bi bi-calendar-check"></i></div>
+                <div class="faq-group-title">Đặt sân</div>
             </div>
+            @{
+                var bookingFaqs = new[]{
+                        new{Q="Làm thế nào để đặt sân cầu lông?",A="Bạn có thể đặt sân trực tiếp trên website bằng cách chọn mục \"Sân Cầu Lông\", chọn cơ sở và khung giờ mong muốn, sau đó tiến hành thanh toán để giữ chỗ."},
+                        new{Q="Tôi có thể hủy lịch đặt sân không?",A="Bạn có thể hủy lịch miễn phí trước 24 giờ so với giờ thi đấu. Hủy sau thời hạn này sẽ không được hoàn tiền."},
+                        new{Q="Có thể đặt sân trước bao lâu?",A="Bạn có thể đặt sân trước tối đa 7 ngày. Hội viên VIP được đặt trước tối đa 14 ngày."}
+                        };
+            }
+            @foreach (var (faq, i) in bookingFaqs.Select((f, i) => (f, i)))
+            {
+                <div class="faq-item" data-cat="booking">
+                    <div class="faq-q" onclick="toggleFaq(this)">
+                        <span class="faq-q-text">@faq.Q</span>
+                        <i class="bi bi-chevron-down faq-chevron"></i>
+                    </div>
+                    <div class="faq-a"><p>@faq.A</p></div>
+                </div>
+            }
+        </div>
+
+        <!-- PAYMENT -->
+        <div class="faq-group" data-cat="payment">
+            <div class="faq-group-header">
+                <div class="faq-group-icon"><i class="bi bi-credit-card"></i></div>
+                <div class="faq-group-title">Thanh toán</div>
+            </div>
+            @{
+                var payFaqs = new[]{
+                        new{Q="Các hình thức thanh toán nào được chấp nhận?",A="Hệ thống chấp nhận ví MoMo, VNPAY, chuyển khoản ngân hàng hoặc tiền mặt tại quầy (đối với khách đã có lịch hẹn)."},
+                        new{Q="Tôi có thể được hoàn tiền không?",A="Hoàn tiền được thực hiện trong vòng 3-5 ngày làm việc khi hủy lịch đúng quy định. Tiền sẽ trả về phương thức thanh toán ban đầu."}
+                        };
+            }
+            @foreach (var faq in payFaqs)
+            {
+                <div class="faq-item" data-cat="payment">
+                    <div class="faq-q" onclick="toggleFaq(this)">
+                        <span class="faq-q-text">@faq.Q</span>
+                        <i class="bi bi-chevron-down faq-chevron"></i>
+                    </div>
+                    <div class="faq-a"><p>@faq.A</p></div>
+                </div>
+            }
+        </div>
+
+        <!-- MEMBER -->
+        <div class="faq-group" data-cat="member">
+            <div class="faq-group-header">
+                <div class="faq-group-icon"><i class="bi bi-person-check"></i></div>
+                <div class="faq-group-title">Hội viên</div>
+            </div>
+            <div class="faq-item" data-cat="member">
+                <div class="faq-q" onclick="toggleFaq(this)">
+                    <span class="faq-q-text">Quyền lợi của hội viên là gì?</span>
+                    <i class="bi bi-chevron-down faq-chevron"></i>
+                </div>
+                <div class="faq-a"><p>Hội viên được giảm giá 10–20% phí thuê sân, ưu tiên đặt lịch trước 2 tuần, tích điểm đổi quà và tham gia các giải đấu nội bộ độc quyền.</p></div>
+            </div>
+        </div>
+
+        <!-- SHOP -->
+        <div class="faq-group" data-cat="shop">
+            <div class="faq-group-header">
+                <div class="faq-group-icon"><i class="bi bi-shop"></i></div>
+                <div class="faq-group-title">Cửa hàng</div>
+            </div>
+            @{
+                var shopFaqs = new[]{
+                        new{Q="Dịch vụ căng vợt mất bao lâu?",A="Dịch vụ căng vợt hoàn thành trong 30–60 phút tùy vào lượng khách. Bạn có thể gửi vợt và nhận lại sau buổi tập."},
+                        new{Q="Cửa hàng có giao hàng tận nhà không?",A="Có, chúng tôi giao hàng trong nội thành TP.HCM trong 24 giờ. Đơn hàng trên 500.000đ được miễn phí giao hàng."}
+                        };
+            }
+            @foreach (var faq in shopFaqs)
+            {
+                <div class="faq-item" data-cat="shop">
+                    <div class="faq-q" onclick="toggleFaq(this)">
+                        <span class="faq-q-text">@faq.Q</span>
+                        <i class="bi bi-chevron-down faq-chevron"></i>
+                    </div>
+                    <div class="faq-a"><p>@faq.A</p></div>
+                </div>
+            }
+        </div>
+
+        <!-- CTA -->
+        <div class="faq-cta">
+            <h3>Không tìm thấy câu trả lời?</h3>
+            <p>Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giúp đỡ bạn</p>
+            <a asp-controller="Home" asp-action="Contact" class="faq-cta-btn"><i class="bi bi-chat-dots-fill"></i> Liên hệ hỗ trợ</a>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function toggleFaq(el) {
+            const item = el.closest('.faq-item');
+            const wasOpen = item.classList.contains('open');
+            document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+            if (!wasOpen) item.classList.add('open');
+        }
+
+        // Filter tabs
+        const ftabs = document.querySelectorAll('.faq-ftab');
+        const fgroups = document.querySelectorAll('.faq-group');
+        const fitems = document.querySelectorAll('.faq-item');
+        ftabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                ftabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const f = tab.dataset.filter;
+                fgroups.forEach(g => g.style.display = f === 'all' || g.dataset.cat === f ? '' : 'none');
+            });
+        });
+
+        // Search
+        document.getElementById('faqSearch').addEventListener('input', function () {
+            const q = this.value.toLowerCase().trim();
+            fitems.forEach(item => {
+                const txt = item.querySelector('.faq-q-text').textContent.toLowerCase();
+                item.style.display = !q || txt.includes(q) ? '' : 'none';
+            });
+            fgroups.forEach(g => {
+                const visible = [...g.querySelectorAll('.faq-item')].some(i => i.style.display !== 'none');
+                g.style.display = visible ? '' : 'none';
+            });
+        });
+    </script>
+}

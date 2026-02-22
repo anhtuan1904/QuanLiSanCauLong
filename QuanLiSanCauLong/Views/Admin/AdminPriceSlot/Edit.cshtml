@@ -3,77 +3,274 @@
 @{
     ViewData["Title"] = "Cập nhật bảng giá";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+
+    var appliedDayValues = (Model.AppliedDays ?? "")
+        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+        .Select(d => int.TryParse(d.Trim(), out var n) ? n : -1)
+        .Where(n => n >= 0)
+        .ToHashSet();
+
+    if (!appliedDayValues.Any() && Model.DayOfWeek.HasValue)
+        appliedDayValues.Add((int)Model.DayOfWeek.Value);
+
+    var dayList = new[] {
+        (1, "Thứ Hai"), (2, "Thứ Ba"), (3, "Thứ Tư"),
+        (4, "Thứ Năm"), (5, "Thứ Sáu"), (6, "Thứ Bảy"), (0, "Chủ Nhật"),
+    };
 }
 
-<div class="container-fluid">
-    <div class="mb-4">
-        <h3 class="fw-bold text-warning"><i class="bi bi-pencil-square"></i> Cập nhật bảng giá</h3>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a asp-action="Index">Danh sách</a></li>
-                <li class="breadcrumb-item active">Chỉnh sửa khung giờ</li>
-            </ol>
-        </nav>
+<div class="container-fluid pb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-warning"><i class="bi bi-pencil-square me-2"></i>Cập nhật bảng giá</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-action="Index">Danh sách</a></li>
+                    <li class="breadcrumb-item active">Chỉnh sửa khung giờ</li>
+                </ol>
+            </nav>
+        </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm" style="border-radius: 15px;">
-                <div class="card-body p-4">
-                    <form asp-action="Edit" method="post">
-                        <input type="hidden" asp-for="PriceSlotId" />
-                        <input type="hidden" asp-for="CourtId" />
-                        <input type="hidden" asp-for="FacilityId" />
+    <form asp-action="Edit" method="post" id="editForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="PriceSlotId" />
+        <input type="hidden" asp-for="CourtId" />
+        <input type="hidden" asp-for="FacilityId" />
+        <input type="hidden" name="AppliedDays" id="appliedDaysInput" value="@Model.AppliedDays" />
 
-                        <div class="alert bg-light border mb-4">
-                            <h6 class="fw-bold"><i class="bi bi-info-circle me-2 text-primary"></i>Thông tin cố định</h6>
-                            <div class="small text-muted">Cơ sở: <strong>@Model.Court?.Facility?.FacilityName</strong></div>
-                            <div class="small text-muted">Sân số: <strong>@Model.Court?.CourtNumber (@Model.CourtType)</strong></div>
+        <div class="row g-4">
+            <div class="col-lg-8">
+
+                <!-- Thông tin cố định -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                    <div class="card-body p-4">
+                        <div class="alert bg-light border mb-0 rounded-3">
+                            <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-2 text-primary"></i>Thông tin cố định</h6>
+                            <div class="row g-2 small text-muted">
+                                <div class="col-md-6">Cơ sở: <strong class="text-dark">@(Model.Court?.Facility?.FacilityName ?? "—")</strong></div>
+                                <div class="col-md-6">Sân số: <strong class="text-dark">@Model.Court?.CourtNumber (@Model.CourtType)</strong></div>
+                            </div>
                         </div>
+                    </div>
+                </div>
 
+                <!-- CARD 1: Thông tin chung -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h5 class="mb-0 fw-bold"><span class="badge bg-warning text-dark me-2">1</span>Thông tin chung</h5>
+                    </div>
+                    <div class="card-body">
                         <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="SlotName" class="form-label fw-semibold">
+                                    Tên bảng giá <span class="text-muted fw-normal">(tuỳ chọn)</span>
+                                </label>
+                                <input asp-for="SlotName" class="form-control shadow-none"
+                                       placeholder="Ví dụ: Giá ngày thường, Giá cuối tuần, Giá lễ..." />
+                            </div>
                             <div class="col-md-6">
-                                <label asp-for="StartTime" class="form-label fw-bold small">Giờ bắt đầu</label>
+                                <label asp-for="CourtType" class="form-label fw-semibold">Loại sân</label>
+                                <select asp-for="CourtType" class="form-select shadow-none">
+                                    <option value="Standard">Sân tiêu chuẩn (Standard)</option>
+                                    <option value="Professional">Sân chuyên nghiệp (Professional)</option>
+                                    <option value="Practice">Sân tập luyện (Practice)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="CustomerType" class="form-label fw-semibold">Loại khách hàng</label>
+                                <select asp-for="CustomerType" class="form-select shadow-none">
+                                    <option value="All">Tất cả loại khách</option>
+                                    <option value="Retail">Khách vãng lai (Lẻ)</option>
+                                    <option value="Member">Khách cố định (Tháng)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 2: Ngày áp dụng -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h5 class="mb-0 fw-bold"><span class="badge bg-warning text-dark me-2">2</span>Ngày áp dụng</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex gap-2 mb-3 flex-wrap">
+                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="selectDays([1,2,3,4,5])">Thứ 2 – Thứ 6</button>
+                            <button type="button" class="btn btn-outline-warning btn-sm rounded-pill" onclick="selectDays([6,0])">Thứ 7 &amp; CN</button>
+                            <button type="button" class="btn btn-outline-success btn-sm rounded-pill" onclick="selectDays([0,1,2,3,4,5,6])">Tất cả ngày</button>
+                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" onclick="selectDays([])">Bỏ chọn</button>
+                        </div>
+                        <div class="row g-2">
+                            @foreach (var (val, label) in dayList)
+                            {
+                                var isWeekend = val == 0 || val == 6;
+                                var isChecked = appliedDayValues.Contains(val);
+                                <div class="col-6 col-md-3">
+                                    <label class="day-label d-flex align-items-center gap-2 p-2 border rounded-3"
+                                           style="cursor:pointer; transition:.15s; @(isChecked ? "background:#e8f4fd;border-color:#0d6efd;" : "")">
+                                        <input type="checkbox" class="day-check form-check-input m-0"
+                                               value="@val" @(isChecked ? "checked" : "") />
+                                        <span class="small fw-semibold @(isWeekend ? "text-warning" : "")">@label</span>
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                        <div class="form-text mt-2" style="font-size:.75rem;">
+                            <i class="bi bi-info-circle me-1 text-primary"></i>
+                            Thay đổi ngày áp dụng sẽ ảnh hưởng đến lịch đặt trong tương lai.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 3: Khung giờ & Giá -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h5 class="mb-0 fw-bold"><span class="badge bg-warning text-dark me-2">3</span>Khung giờ &amp; Đơn giá</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label asp-for="StartTime" class="form-label fw-semibold">Giờ bắt đầu</label>
                                 <input asp-for="StartTime" class="form-control shadow-none" type="time" />
                             </div>
-                            <div class="col-md-6">
-                                <label asp-for="EndTime" class="form-label fw-bold small">Giờ kết thúc</label>
+                            <div class="col-md-4">
+                                <label asp-for="EndTime" class="form-label fw-semibold">Giờ kết thúc</label>
                                 <input asp-for="EndTime" class="form-control shadow-none" type="time" />
                             </div>
-                            <div class="col-md-12">
-                                <label asp-for="Price" class="form-label fw-bold small">Đơn giá thuê (₫)</label>
+                            <div class="col-md-4">
+                                <label asp-for="RoundingMinutes" class="form-label fw-semibold">Đơn vị làm tròn</label>
+                                <select asp-for="RoundingMinutes" class="form-select shadow-none">
+                                    <option value="15">15 phút</option>
+                                    <option value="30">30 phút</option>
+                                    <option value="60">60 phút (1 giờ)</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Price" class="form-label fw-semibold">Đơn giá (VNĐ/giờ)</label>
                                 <div class="input-group">
-                                    <input asp-for="Price" class="form-control shadow-none" type="number" step="1000" />
-                                    <span class="input-group-text">VNĐ</span>
+                                    <span class="input-group-text bg-light border-end-0">₫</span>
+                                    <input asp-for="Price" class="form-control border-start-0 shadow-none"
+                                           type="number" step="1000" id="priceInput" oninput="updatePricePreview()" />
                                 </div>
                             </div>
-                            <div class="col-md-12">
-                                <div class="form-check form-switch p-3 bg-light rounded-3 border">
-                                    <input asp-for="IsPeakHour" class="form-check-input ms-0 me-2" type="checkbox">
-                                    <label asp-for="IsPeakHour" class="form-check-label fw-bold small">Đặt làm Giờ cao điểm</label>
+                            <div class="col-md-6">
+                                <label asp-for="Surcharge" class="form-label fw-semibold">Phụ phí/giờ (VNĐ)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">₫</span>
+                                    <input asp-for="Surcharge" class="form-control border-start-0 shadow-none"
+                                           type="number" step="1000" id="surchargeInput" oninput="updatePricePreview()" />
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="SurchargeNote" class="form-label fw-semibold">
+                                    Mô tả phụ phí <span class="text-muted fw-normal">(tuỳ chọn)</span>
+                                </label>
+                                <input asp-for="SurchargeNote" class="form-control shadow-none"
+                                       placeholder="Ví dụ: Phí bật đèn 30.000đ/giờ..." />
+                            </div>
+
+                            <!-- Preview -->
+                            <div class="col-12">
+                                <div class="p-3 bg-success bg-opacity-10 border border-success-subtle rounded-3">
+                                    <div class="small text-muted mb-1">Giá khách trả thực tế mỗi giờ</div>
+                                    <div class="fs-4 fw-bold text-success" id="totalPricePreview">
+                                        @((Model.Price + Model.Surcharge).ToString("N0")) ₫
+                                    </div>
+                                    <div class="small text-muted" id="priceBreakdown">
+                                        @if (Model.Surcharge > 0)
+                                        {
+                                            @($"Đơn giá: {Model.Price:N0}₫ + Phụ phí: {Model.Surcharge:N0}₫")
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between border">
+                                    <div>
+                                        <h6 class="mb-1 fw-bold"><i class="bi bi-fire text-danger me-1"></i>Giờ cao điểm (Peak Hour)</h6>
+                                        <p class="text-muted small mb-0">Thường 17:00 – 22:00 các ngày trong tuần</p>
+                                    </div>
+                                    <div class="form-check form-switch fs-4 mb-0">
+                                        <input asp-for="IsPeakHour" class="form-check-input" type="checkbox" role="switch">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-check p-3 bg-light rounded-3 border">
+                                    <input asp-for="IsActive" class="form-check-input" type="checkbox">
+                                    <label class="form-check-label fw-semibold small" asp-for="IsActive">Kích hoạt cấu hình này</label>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="mt-4 d-flex gap-2">
-                            <button type="submit" class="btn btn-warning px-4 fw-bold">Lưu thay đổi</button>
-                            <a asp-action="Index" class="btn btn-light border px-4">Hủy</a>
-                        </div>
-                    </form>
+                <div class="d-flex gap-3 justify-content-end">
+                    <a asp-action="Index" class="btn btn-light px-4 py-2 fw-semibold border shadow-sm">Hủy</a>
+                    <button type="submit" class="btn btn-warning px-5 py-2 fw-bold shadow-sm"
+                            onclick="return validateAndPrepare()">
+                        <i class="bi bi-check-circle me-2"></i>Lưu thay đổi
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card border-0 bg-warning bg-opacity-10 border border-warning-subtle" style="border-radius:12px;">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold text-warning-emphasis mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Lưu ý khi sửa</h6>
+                        <ul class="small mb-0 text-muted">
+                            <li class="mb-2">Thay đổi ảnh hưởng đến các lượt đặt sân trong <strong>tương lai</strong>.</li>
+                            <li class="mb-2">Đảm bảo giờ bắt đầu không trùng lặp với khung giờ khác cùng sân.</li>
+                            <li>Thay đổi loại khách ảnh hưởng đến cách hệ thống tính giá tự động.</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div class="col-lg-4">
-            <div class="card border-0 bg-warning bg-opacity-10" style="border-radius: 15px;">
-                <div class="card-body">
-                    <h6 class="fw-bold text-warning-emphasis"><i class="bi bi-lightbulb me-2"></i>Lưu ý khi sửa</h6>
-                    <ul class="small mb-0 mt-2">
-                        <li>Thay đổi khung giờ sẽ ảnh hưởng đến các lượt đặt sân trong tương lai.</li>
-                        <li>Đảm bảo giờ bắt đầu không trùng lặp với các khung giờ khác của cùng một sân.</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
+    </form>
 </div>
+
+@section Scripts {
+    <script>
+        function updatePricePreview() {
+            const price     = parseFloat(document.getElementById('priceInput').value) || 0;
+            const surcharge = parseFloat(document.getElementById('surchargeInput').value) || 0;
+            const total     = price + surcharge;
+            document.getElementById('totalPricePreview').textContent = total.toLocaleString('vi-VN') + ' ₫';
+            document.getElementById('priceBreakdown').textContent = surcharge > 0
+                ? `Đơn giá: ${price.toLocaleString('vi-VN')}₫ + Phụ phí: ${surcharge.toLocaleString('vi-VN')}₫`
+                : '';
+        }
+
+        function selectDays(vals) {
+            document.querySelectorAll('.day-check').forEach(cb => {
+                cb.checked = vals.includes(parseInt(cb.value));
+                applyDayStyle(cb);
+            });
+        }
+
+        function applyDayStyle(cb) {
+            const lbl = cb.closest('.day-label');
+            lbl.style.background  = cb.checked ? '#e8f4fd' : '';
+            lbl.style.borderColor = cb.checked ? '#0d6efd' : '';
+        }
+
+        document.querySelectorAll('.day-check').forEach(cb => {
+            cb.addEventListener('change', () => applyDayStyle(cb));
+        });
+
+        function validateAndPrepare() {
+            const checked = document.querySelectorAll('.day-check:checked');
+            if (checked.length === 0) { alert('Vui lòng chọn ít nhất một ngày áp dụng!'); return false; }
+            document.getElementById('appliedDaysInput').value = Array.from(checked).map(c => c.value).join(',');
+            return true;
+        }
+    </script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

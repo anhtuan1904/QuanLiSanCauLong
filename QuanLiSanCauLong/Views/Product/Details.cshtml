@@ -3,78 +3,677 @@
     ViewData["Title"] = Model.ProductName;
 }
 
-<div class="container py-5">
-    <nav aria-label="breadcrumb" class="mb-5">
-        <ol class="breadcrumb bg-white p-3 rounded-4 shadow-sm">
-            <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none">Cửa hàng</a></li>
-            <li class="breadcrumb-item active">@Model.ProductName</li>
-        </ol>
-    </nav>
+<style>
+    :root {
+        --deep: #1a1209;
+        --deep2: #231a0e;
+        --deep3: #2e2110;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --gold3: rgba(212,160,23,.1);
+        --warm: #f5ede0;
+        --cream: #fdf8f0;
+        --ink: #1a1209;
+        --border: rgba(212,160,23,.2);
+        --muted: rgba(255,255,255,.38);
+    }
 
-    <div class="row g-5">
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm rounded-5 overflow-hidden p-2 bg-white">
-                <img src="@Model.ImageUrls.FirstOrDefault()" id="mainImage" class="img-fluid rounded-5" alt="@Model.ProductName">
-            </div>
+    .detail-page {
+        background: var(--warm);
+        min-height: 100vh;
+        font-family: 'Outfit',sans-serif;
+        color: var(--ink);
+    }
+    /* Breadcrumb */
+    .detail-bc {
+        background: var(--deep2);
+        border-bottom: 1px solid var(--border);
+        padding: .85rem 3rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .77rem;
+    }
+
+        .detail-bc a {
+            color: rgba(255,255,255,.4);
+            text-decoration: none;
+            transition: color .2s;
+            display: flex;
+            align-items: center;
+            gap: .3rem;
+        }
+
+            .detail-bc a:hover {
+                color: var(--gold2);
+            }
+
+        .detail-bc .sep {
+            color: rgba(255,255,255,.2);
+        }
+
+        .detail-bc .cur {
+            color: var(--gold);
+            font-weight: 600;
+        }
+    /* Grid */
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        min-height: 580px;
+    }
+    /* Image side */
+    .detail-img-side {
+        background: var(--cream);
+        position: relative;
+        overflow: hidden;
+        padding: 3.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-right: 2px solid rgba(26,18,9,.07);
+    }
+
+    .detail-main-img {
+        width: 100%;
+        max-width: 460px;
+        aspect-ratio: 1/1;
+        object-fit: cover;
+        border-radius: 4px;
+        transition: transform .5s;
+    }
+
+        .detail-main-img:hover {
+            transform: scale(1.04);
+        }
+
+    .detail-no-img {
+        width: 100%;
+        max-width: 460px;
+        aspect-ratio: 1/1;
+        background: var(--warm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8rem;
+        color: rgba(212,160,23,.15);
+        border-radius: 4px;
+    }
+
+    .detail-sale-overlay {
+        position: absolute;
+        top: 2rem;
+        left: 2rem;
+        background: #c94b2a;
+        color: #fff;
+        font-size: .7rem;
+        font-weight: 800;
+        letter-spacing: .15em;
+        text-transform: uppercase;
+        padding: .4rem 1rem;
+    }
+    /* Thumbnails */
+    .detail-thumbs {
+        display: flex;
+        gap: .65rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .detail-thumb {
+        width: 68px;
+        height: 68px;
+        object-fit: cover;
+        border-radius: 3px;
+        cursor: pointer;
+        opacity: .5;
+        border: 2px solid transparent;
+        transition: all .2s;
+    }
+
+        .detail-thumb:hover, .detail-thumb.active {
+            opacity: 1;
+            border-color: var(--gold);
+        }
+    /* Info side */
+    .detail-info-side {
+        background: #fff;
+        padding: 4rem 3.5rem;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .detail-cat-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        background: var(--gold3);
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        padding: .28rem .85rem;
+        font-size: .67rem;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: var(--gold);
+        width: fit-content;
+        margin-bottom: 1.25rem;
+    }
+
+    .detail-name {
+        font-family: 'Playfair Display',serif;
+        font-size: clamp(1.8rem,3vw,2.8rem);
+        font-weight: 700;
+        line-height: 1.1;
+        color: var(--deep);
+        margin-bottom: 1.5rem;
+    }
+
+    .detail-price-row {
+        display: flex;
+        align-items: baseline;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid rgba(26,18,9,.07);
+    }
+
+    .detail-price {
+        font-family: 'Playfair Display',serif;
+        font-size: 2.4rem;
+        font-weight: 700;
+        color: var(--deep);
+        line-height: 1;
+    }
+
+    .detail-price-old {
+        font-size: 1rem;
+        text-decoration: line-through;
+        color: rgba(26,18,9,.28);
+    }
+
+    .detail-unit {
+        font-size: .82rem;
+        color: rgba(26,18,9,.4);
+    }
+    /* Meta grid */
+    .detail-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .85rem;
+        margin-bottom: 2rem;
+    }
+
+    .dmeta {
+        background: var(--warm);
+        border: 1.5px solid rgba(26,18,9,.06);
+        border-radius: 6px;
+        padding: .9rem 1.1rem;
+    }
+
+    .dmeta-label {
+        font-size: .63rem;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: rgba(26,18,9,.38);
+        margin-bottom: .3rem;
+    }
+
+    .dmeta-val {
+        font-size: .88rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+        .dmeta-val.avail {
+            color: #20c997;
+        }
+
+        .dmeta-val.out {
+            color: #ef4444;
+        }
+    /* Description */
+    .detail-desc-lbl {
+        font-size: .67rem;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: rgba(26,18,9,.35);
+        margin-bottom: .6rem;
+    }
+
+    .detail-desc {
+        font-size: .9rem;
+        color: rgba(26,18,9,.62);
+        line-height: 1.88;
+        margin-bottom: 2rem;
+    }
+    /* Rating stars */
+    .detail-rating {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stars {
+        color: var(--gold);
+        font-size: .9rem;
+    }
+
+    .rating-count {
+        font-size: .78rem;
+        color: rgba(26,18,9,.4);
+    }
+    /* Actions */
+    .detail-actions {
+        display: flex;
+        gap: .85rem;
+        margin-top: auto;
+    }
+
+    .detail-buy-btn {
+        flex: 1;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        border: none;
+        border-radius: 6px;
+        padding: .95rem 1.5rem;
+        font-family: 'Outfit',sans-serif;
+        font-size: .88rem;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all .25s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+    }
+
+        .detail-buy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(212,160,23,.4);
+        }
+
+        .detail-buy-btn.disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+
+            .detail-buy-btn.disabled:hover {
+                transform: none;
+                box-shadow: none;
+            }
+
+    .detail-wish-btn {
+        width: 52px;
+        height: 52px;
+        background: var(--warm);
+        border: 2px solid rgba(26,18,9,.09);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        color: rgba(26,18,9,.38);
+        cursor: pointer;
+        transition: all .2s;
+        flex-shrink: 0;
+    }
+
+        .detail-wish-btn:hover {
+            border-color: #e11d48;
+            color: #e11d48;
+            background: #fff2f5;
+        }
+
+        .detail-wish-btn.active {
+            background: #fee2e2;
+            border-color: #e11d48;
+            color: #e11d48;
+        }
+    /* Share */
+    .detail-share {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(26,18,9,.06);
+    }
+
+    .detail-share-lbl {
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: rgba(26,18,9,.3);
+    }
+
+    .share-icon {
+        width: 32px;
+        height: 32px;
+        background: var(--warm);
+        border: 1.5px solid rgba(26,18,9,.07);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .8rem;
+        color: rgba(26,18,9,.4);
+        text-decoration: none;
+        transition: all .2s;
+    }
+
+        .share-icon:hover {
+            background: var(--gold3);
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+    /* Related */
+    .related-wrap {
+        background: var(--deep);
+        padding: 4rem 3rem;
+        border-top: 3px solid var(--border);
+    }
+
+    .related-hdr {
+        display: flex;
+        align-items: baseline;
+        gap: 1.25rem;
+        margin-bottom: 2.5rem;
+        padding-bottom: .85rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .related-ttl {
+        font-family: 'Playfair Display',serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .related-grid {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: 1.5px;
+        background: var(--border);
+    }
+
+    .rel-card {
+        background: var(--deep2);
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: background .2s;
+    }
+
+        .rel-card:hover {
+            background: var(--deep3);
+        }
+
+    .rel-thumb {
+        height: 180px;
+        overflow: hidden;
+        background: var(--deep3);
+    }
+
+        .rel-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: .82;
+            transition: transform .5s,opacity .3s;
+        }
+
+    .rel-card:hover .rel-thumb img {
+        transform: scale(1.06);
+        opacity: 1;
+    }
+
+    .rel-no-img {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: rgba(212,160,23,.13);
+    }
+
+    .rel-body {
+        padding: 1rem 1.1rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .rel-cat {
+        font-size: .62rem;
+        font-weight: 700;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,.28);
+        margin-bottom: .3rem;
+    }
+
+    .rel-name {
+        font-size: .88rem;
+        font-weight: 600;
+        color: rgba(255,255,255,.78);
+        line-height: 1.3;
+        margin-bottom: .4rem;
+    }
+
+    .rel-price {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--gold2);
+        margin-top: auto;
+    }
+
+    .rel-cta {
+        font-size: .67rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-top: .5rem;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+        opacity: 0;
+        transition: opacity .2s;
+    }
+
+    .rel-card:hover .rel-cta {
+        opacity: 1;
+    }
+
+    @@media(max-width:900px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .detail-img-side {
+            min-height: 320px;
+            padding: 2rem;
+            border-right: none;
+            border-bottom: 1px solid rgba(26,18,9,.07);
+        }
+
+        .detail-info-side {
+            padding: 2.5rem 1.5rem;
+        }
+
+        .related-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+
+        .detail-bc {
+            padding: .85rem 1.5rem;
+        }
+    }
+
+    @@media(max-width:540px) {
+        .detail-meta {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+
+<div class="detail-page">
+    <!-- BREADCRUMB -->
+    <div class="detail-bc">
+        <a asp-action="Index"><i class="bi bi-shop"></i> Cửa hàng</a>
+        <span class="sep">›</span>
+        @if (!string.IsNullOrEmpty(Model.CategoryName))
+        {
+            <a asp-action="Index">@Model.CategoryName</a>
+            <span class="sep">›</span>
+        }
+        <span class="cur">@Model.ProductName</span>
+    </div>
+
+    <!-- MAIN SPLIT -->
+    <div class="detail-grid">
+        <!-- IMAGE SIDE -->
+        <div class="detail-img-side">
+            @if (Model.DiscountPrice.HasValue && Model.DiscountPrice < Model.Price)
+            {
+                var pct = (int)Math.Round((1 - (double)Model.DiscountPrice / (double)Model.Price) * 100);
+                <div class="detail-sale-overlay">-@pct% OFF</div>
+            }
+            @if (Model.ImageUrls != null && Model.ImageUrls.Any())
+            {
+                <div>
+                    <img src="@Model.ImageUrls.First()" id="mainImage" class="detail-main-img" alt="@Model.ProductName" />
+                    @if (Model.ImageUrls.Count() > 1)
+                    {
+                        <div class="detail-thumbs">
+                            @foreach (var url in Model.ImageUrls)
+                            {
+                                <img src="@url" class="detail-thumb @(url == Model.ImageUrls.First() ? "active" : "")" onclick="switchImg(this, '@url')" />
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="detail-no-img"><i class="bi bi-bag"></i></div>
+            }
         </div>
 
-        <div class="col-md-6">
-            <div class="ps-md-4">
-                <span class="badge bg-primary-subtle text-primary mb-3 px-3 py-2 rounded-pill">@Model.CategoryName</span>
-                <h1 class="display-6 fw-bold mb-3">@Model.ProductName</h1>
+        <!-- INFO SIDE -->
+        <div class="detail-info-side">
+            <div class="detail-cat-pill"><i class="bi bi-tag"></i> @Model.CategoryName</div>
+            <h1 class="detail-name">@Model.ProductName</h1>
 
-                <div class="d-flex align-items-baseline gap-2 mb-4">
-                    <h2 class="text-primary fw-extrabold mb-0">@Model.Price.ToString("N0") VNĐ</h2>
-                    <span class="text-muted">/ @Model.Unit</span>
-                </div>
+            <!-- Stars (static decoration — connect to real rating if available) -->
+            <div class="detail-rating">
+                <div class="stars">★★★★☆</div>
+                <span class="rating-count">(24 đánh giá)</span>
+            </div>
 
-                <div class="bg-light p-4 rounded-4 mb-4">
-                    <h6 class="fw-bold mb-2">Thông tin sản phẩm</h6>
-                    <p class="text-secondary mb-0" style="line-height: 1.8;">@Model.Description</p>
-                </div>
+            <div class="detail-price-row">
+                <div class="detail-price">@Model.Price.ToString("N0") VNĐ</div>
+                @if (Model.DiscountPrice.HasValue && Model.DiscountPrice < Model.Price)
+                {
+                    <div class="detail-price-old">@Model.Price.ToString("N0")đ</div>
+                }
+                <div class="detail-unit">/ @Model.Unit</div>
+            </div>
 
-                <div class="row mb-4 g-3">
-                    <div class="col-6">
-                        <div class="border rounded-4 p-3 text-center h-100">
-                            <small class="text-muted d-block mb-1">Trạng thái</small>
-                            <span class="fw-bold @(Model.IsAvailable ? "text-success" : "text-danger")">
-                                <i class="bi bi-check-circle-fill me-1"></i> @(Model.IsAvailable ? "Còn hàng" : "Hết hàng")
-                            </span>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="border rounded-4 p-3 text-center h-100">
-                            <small class="text-muted d-block mb-1">Mã sản phẩm</small>
-                            <span class="fw-bold text-dark">#@Model.ProductCode</span>
-                        </div>
+            <div class="detail-meta">
+                <div class="dmeta">
+                    <div class="dmeta-label">Trạng thái</div>
+                    <div class="dmeta-val @(Model.IsAvailable ? "avail" : "out")">
+                        <i class="bi @(Model.IsAvailable ? "bi-check-circle-fill" : "bi-x-circle-fill")"></i>
+                        @(Model.IsAvailable ? " Còn hàng" : " Hết hàng")
                     </div>
                 </div>
-
-                <div class="d-flex gap-3 mt-5">
-                    <button class="btn btn-primary btn-lg flex-grow-1 rounded-pill py-3 shadow-lg @(Model.IsAvailable ? "" : "disabled")">
-                        <i class="bi bi-bag-plus-fill me-2"></i> Thêm vào giỏ hàng
-                    </button>
-                    <button class="btn btn-outline-secondary btn-lg rounded-circle" style="width: 60px;">
-                        <i class="bi bi-heart"></i>
-                    </button>
+                <div class="dmeta">
+                    <div class="dmeta-label">Mã sản phẩm</div>
+                    <div class="dmeta-val">#@Model.ProductCode</div>
                 </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="detail-desc-lbl">Thông tin sản phẩm</div>
+                <p class="detail-desc">@Model.Description</p>
+            }
+
+            <div class="detail-actions">
+                <button class="detail-buy-btn @(Model.IsAvailable ? "" : "disabled")" @(Model.IsAvailable ? "" : "disabled")>
+                    <i class="bi bi-bag-plus-fill"></i> Thêm vào giỏ hàng
+                </button>
+                <button class="detail-wish-btn" id="wishBtn" onclick="toggleWish(this)" title="Yêu thích">
+                    <i class="bi bi-heart"></i>
+                </button>
+            </div>
+
+            <div class="detail-share">
+                <span class="detail-share-lbl">Chia sẻ</span>
+                <a href="#" class="share-icon"><i class="bi bi-facebook"></i></a>
+                <a href="#" class="share-icon"><i class="bi bi-twitter-x"></i></a>
+                <a href="#" class="share-icon"><i class="bi bi-link-45deg"></i></a>
             </div>
         </div>
     </div>
 
+    <!-- RELATED -->
     @if (Model.RelatedProducts != null && Model.RelatedProducts.Any())
     {
-        <div class="mt-5 pt-5">
-            <div class="d-flex align-items-center mb-4">
-                <h3 class="fw-bold mb-0 me-3">Sản phẩm liên quan</h3>
-                <div class="flex-grow-1 border-bottom"></div>
+        <div class="related-wrap">
+            <div class="related-hdr">
+                <div class="related-ttl">Sản phẩm liên quan</div>
             </div>
-            <div class="row g-4">
-                @foreach (var related in Model.RelatedProducts)
+            <div class="related-grid">
+                @foreach (var rel in Model.RelatedProducts)
                 {
-                    @await Html.PartialAsync("_ProductCard", related)
+                    <a class="rel-card" asp-action="Details" asp-route-id="@rel.ProductId">
+                        <div class="rel-thumb">
+                            @if (!string.IsNullOrEmpty(rel.ImageUrl))
+                            {
+                                <img src="@rel.ImageUrl" alt="@rel.ProductName" />
+                            }
+                            else
+                            {
+                                <div class="rel-no-img"><i class="bi bi-bag"></i></div>
+                            }
+                        </div>
+                        <div class="rel-body">
+                            <div class="rel-cat">@rel.CategoryName</div>
+                            <div class="rel-name">@rel.ProductName</div>
+                            <div class="rel-price">@rel.Price.ToString("N0")đ</div>
+                            <div class="rel-cta">Xem chi tiết <i class="bi bi-arrow-right"></i></div>
+                        </div>
+                    </a>
                 }
             </div>
         </div>
     }
 </div>
+
+@section Scripts {
+    <script>
+        function switchImg(el, url) {
+            document.getElementById('mainImage').src = url;
+            document.querySelectorAll('.detail-thumb').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+        }
+        function toggleWish(btn) {
+            btn.classList.toggle('active');
+            const icon = btn.querySelector('i');
+            icon.className = btn.classList.contains('active') ? 'bi bi-heart-fill' : 'bi bi-heart';
+        }
+    </script>
+}

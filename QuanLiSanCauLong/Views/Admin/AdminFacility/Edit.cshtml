@@ -1,7 +1,15 @@
 ﻿@model QuanLiSanCauLong.Models.Facility
 @{
     Layout = null;
-    var images = ViewBag.FacilityImages as List<QuanLiSanCauLong.Models.FacilityImage> ?? new List<QuanLiSanCauLong.Models.FacilityImage>();
+    // Controller sets ViewBag.FacilityImages (ordered). Fallback to Model.FacilityImages nếu cần.
+    var images = ViewBag.FacilityImages as List<QuanLiSanCauLong.Models.FacilityImage>
+                 ?? Model.FacilityImages?.OrderBy(i => i.DisplayOrder).ToList()
+                 ?? new List<QuanLiSanCauLong.Models.FacilityImage>();
+
+    // Parse tiện ích hiện có (comma-separated trong Model.Amenities)
+    var existingAmenities = (Model.Amenities ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                                    .Select(a => a.Trim())
+                                                    .ToHashSet();
 }
 
 <div class="modal-header border-0 px-4 pt-4 pb-0">
@@ -20,20 +28,26 @@
 
         <div class="row g-3">
 
+            <!-- Tên cơ sở + SĐT -->
             <div class="col-md-7">
-                <label class="form-label fw-semibold small text-muted">Tên Cơ Sở</label>
+                <label class="form-label fw-semibold small text-muted">Tên Cơ Sở <span class="text-danger">*</span></label>
                 <input asp-for="FacilityName" class="form-control fi" required />
             </div>
             <div class="col-md-5">
-                <label class="form-label fw-semibold small text-muted">Số Điện Thoại</label>
-                <input asp-for="Phone" class="form-control fi" />
+                <label class="form-label fw-semibold small text-muted">Hotline Đặt Sân</label>
+                <div class="input-group">
+                    <span class="input-group-text fi border-end-0 rounded-start-3"><i class="bi bi-telephone text-muted"></i></span>
+                    <input asp-for="Phone" class="form-control fi border-start-0 rounded-end-3" />
+                </div>
             </div>
 
+            <!-- Địa chỉ chi tiết -->
             <div class="col-12">
-                <label class="form-label fw-semibold small text-muted">Địa Chỉ</label>
+                <label class="form-label fw-semibold small text-muted">Địa Chỉ Chi Tiết</label>
                 <input asp-for="Address" class="form-control fi" />
             </div>
 
+            <!-- Quận / Thành phố -->
             <div class="col-md-6">
                 <label class="form-label fw-semibold small text-muted">Quận / Huyện</label>
                 <input asp-for="District" class="form-control fi" />
@@ -43,16 +57,16 @@
                 <input asp-for="City" class="form-control fi" />
             </div>
 
-            <div class="col-md-6">
+            <!-- Giờ mở / đóng cửa + Trạng thái -->
+            <div class="col-md-4">
                 <label class="form-label fw-semibold small text-muted">Giờ Mở Cửa</label>
                 <input asp-for="OpenTime" type="time" class="form-control fi" />
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <label class="form-label fw-semibold small text-muted">Giờ Đóng Cửa</label>
                 <input asp-for="CloseTime" type="time" class="form-control fi" />
             </div>
-
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <label class="form-label fw-semibold small text-muted">Trạng Thái</label>
                 <select asp-for="Status" class="form-select fi">
                     <option value="Active">Hoạt Động</option>
@@ -61,12 +75,107 @@
                 </select>
             </div>
 
-            <div class="col-md-6">
+            <!-- Tọa độ Google Maps -->
+            <div class="col-12">
+                <label class="form-label fw-semibold small text-muted">
+                    <i class="bi bi-pin-map me-1 text-danger"></i>Tọa Độ Google Maps
+                    <span class="text-muted fw-normal ms-1" style="font-size:.75rem;">(giúp khách hàng tìm đường)</span>
+                </label>
+                <div class="row g-2">
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-text fi border-end-0 rounded-start-3 small text-muted">Lat</span>
+                            <input type="number" step="any" name="Latitude" value="@Model.Latitude"
+                                   class="form-control fi border-start-0 rounded-end-3" placeholder="10.7769" />
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-text fi border-end-0 rounded-start-3 small text-muted">Lng</span>
+                            <input type="number" step="any" name="Longitude" value="@Model.Longitude"
+                                   class="form-control fi border-start-0 rounded-end-3" placeholder="106.7009" />
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+                        {
+                            <a href="https://www.google.com/maps?q=@Model.Latitude,@Model.Longitude" target="_blank"
+                               class="btn btn-outline-success w-100 rounded-3 fi d-flex align-items-center justify-content-center gap-1"
+                               style="height:38px; font-size:.8rem;">
+                                <i class="bi bi-map-fill"></i> Xem
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="https://www.google.com/maps" target="_blank"
+                               class="btn btn-outline-secondary w-100 rounded-3 fi d-flex align-items-center justify-content-center gap-1"
+                               style="height:38px; font-size:.8rem;">
+                                <i class="bi bi-map"></i> Maps
+                            </a>
+                        }
+                    </div>
+                </div>
+                <div class="form-text text-muted" style="font-size:.75rem;">
+                    <i class="bi bi-info-circle me-1"></i>Mở Google Maps → Nhấp chuột phải vào địa điểm → Copy tọa độ
+                </div>
+            </div>
+
+            <!-- Tiện ích đi kèm -->
+            <div class="col-12">
+                <label class="form-label fw-semibold small text-muted d-block mb-2">
+                    <i class="bi bi-stars me-1" style="color:#d4a017"></i>Tiện Ích Đi Kèm
+                </label>
+                <div class="amenities-grid">
+                    <label class="amenity-item">
+                        <input type="checkbox" name="Amenities" value="parking" class="amenity-check"
+                               @(existingAmenities.Contains("parking") ? "checked" : "") />
+                        <span class="amenity-box">
+                            <i class="bi bi-p-square-fill" style="color:#2196f3"></i>
+                            <span>Gửi xe</span>
+                        </span>
+                    </label>
+                    <label class="amenity-item">
+                        <input type="checkbox" name="Amenities" value="wifi" class="amenity-check"
+                               @(existingAmenities.Contains("wifi") ? "checked" : "") />
+                        <span class="amenity-box">
+                            <i class="bi bi-wifi" style="color:#4caf50"></i>
+                            <span>Wifi</span>
+                        </span>
+                    </label>
+                    <label class="amenity-item">
+                        <input type="checkbox" name="Amenities" value="canteen" class="amenity-check"
+                               @(existingAmenities.Contains("canteen") ? "checked" : "") />
+                        <span class="amenity-box">
+                            <i class="bi bi-cup-hot-fill" style="color:#ff9800"></i>
+                            <span>Căng tin</span>
+                        </span>
+                    </label>
+                    <label class="amenity-item">
+                        <input type="checkbox" name="Amenities" value="shower" class="amenity-check"
+                               @(existingAmenities.Contains("shower") ? "checked" : "") />
+                        <span class="amenity-box">
+                            <i class="bi bi-droplet-fill" style="color:#00bcd4"></i>
+                            <span>Nhà tắm</span>
+                        </span>
+                    </label>
+                    <label class="amenity-item">
+                        <input type="checkbox" name="Amenities" value="rental" class="amenity-check"
+                               @(existingAmenities.Contains("rental") ? "checked" : "") />
+                        <span class="amenity-box">
+                            <i class="bi bi-bag-fill" style="color:#9c27b0"></i>
+                            <span>Thuê vợt / giày</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Mô tả -->
+            <div class="col-12">
                 <label class="form-label fw-semibold small text-muted">Mô Tả</label>
                 <textarea asp-for="Description" class="form-control fi" rows="2"></textarea>
             </div>
 
-            <!-- ===== MULTI-IMAGE SECTION ===== -->
+            <!-- Hình ảnh cơ sở -->
             <div class="col-12">
                 <label class="form-label fw-semibold small text-muted">Hình Ảnh Cơ Sở</label>
                 <div class="image-upload-area rounded-3 border border-dashed p-3">
@@ -79,9 +188,8 @@
                         </div>
                     </div>
 
-                    <input type="file" id="imgInputEdit" name="NewImageFiles" multiple accept="image/*" style="display:none" />
-                    
-                    <!-- Hidden inputs to track changes -->
+                    <input type="file" id="imgInputEdit" name="NewImageFiles" multiple accept="image/jpeg,image/png,image/webp" style="display:none" />
+
                     <input type="hidden" name="PrimaryImageId" id="primaryImageIdEdit" value="@(images.FirstOrDefault(i => i.IsPrimary)?.ImageId ?? 0)" />
                     <input type="hidden" name="NewMainImageIndex" id="mainImageIdxEdit" value="-1" />
                     <input type="hidden" name="DeletedImageIds" id="deletedImageIdsEdit" value="" />
@@ -122,6 +230,45 @@
         background: #fafafa;
     }
 
+    /* Amenities grid */
+    .amenities-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .6rem;
+    }
+
+    .amenity-item {
+        cursor: pointer;
+        margin: 0;
+    }
+
+        .amenity-item input.amenity-check {
+            display: none;
+        }
+
+    .amenity-box {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .45rem .9rem;
+        border: 1.5px solid #e0e0e0;
+        border-radius: 8px;
+        background: #fff;
+        font-size: .85rem;
+        color: #495057;
+        transition: all .2s;
+        user-select: none;
+    }
+
+    .amenity-item input:checked + .amenity-box {
+        border-color: #212529;
+        background: #f0f0f0;
+        color: #212529;
+        font-weight: 600;
+    }
+
+    .amenity-box i { font-size: 1rem; }
+
     .add-img-btn {
         width: 90px;
         height: 90px;
@@ -151,9 +298,7 @@
         transition: all 0.2s;
     }
 
-        .img-thumb-wrap:hover {
-            border-color: #198754;
-        }
+        .img-thumb-wrap:hover { border-color: #198754; }
 
         .img-thumb-wrap img {
             width: 100%;
@@ -180,9 +325,7 @@
             border-width: 3px !important;
         }
 
-            .img-thumb-wrap.is-main .main-star {
-                display: flex;
-            }
+            .img-thumb-wrap.is-main .main-star { display: flex; }
 
         .img-thumb-wrap .del-btn {
             position: absolute;
@@ -210,10 +353,10 @@
 
 <script>
     (function() {
-        const existingImages = @Html.Raw(Json.Serialize(images.Select(i => new { 
-            imageId = i.ImageId, 
-            imagePath = i.ImagePath, 
-            isPrimary = i.IsPrimary 
+        const existingImages = @Html.Raw(Json.Serialize(images.Select(i => new {
+            imageId = i.ImageId,
+            imagePath = i.ImagePath,
+            isPrimary = i.IsPrimary
         })));
 
         const previewContainer = document.getElementById('imagePreviewEdit');
@@ -224,15 +367,14 @@
         const primaryIdInput = document.getElementById('primaryImageIdEdit');
         const mainIdxInput = document.getElementById('mainImageIdxEdit');
 
-        let newFiles = []; // Mảng chứa các file thực tế
+        let newFiles = [];
         let deletedIds = [];
 
-        // 1. Render ảnh cũ từ database
+        // Render ảnh cũ
         existingImages.forEach((img) => {
             const wrap = createExistingImageThumb(img);
             previewContainer.insertBefore(wrap, addBtn);
-            
-            // Tạo input ẩn để duy trì danh sách ID ảnh cũ không bị xóa
+
             const hiddenInput = document.createElement('input');
             hiddenInput.type = 'hidden';
             hiddenInput.name = 'ExistingImageIds';
@@ -249,40 +391,26 @@
             wrap.innerHTML = `
                 <img src="${img.imagePath}" alt="Facility image" />
                 <div class="main-star"><i class="bi bi-star-fill text-dark"></i></div>
-                <button type="button" class="del-btn" title="Xóa ảnh">
-                    <i class="bi bi-x"></i>
-                </button>
+                <button type="button" class="del-btn" title="Xóa ảnh"><i class="bi bi-x"></i></button>
             `;
-
-            wrap.onclick = function(e) {
-                if (!e.target.closest('.del-btn')) setMain(wrap);
-            };
-
+            wrap.onclick = function(e) { if (!e.target.closest('.del-btn')) setMain(wrap); };
             wrap.querySelector('.del-btn').onclick = function(e) {
                 e.stopPropagation();
                 removeExistingImage(img.imageId, wrap);
             };
-
             return wrap;
         }
 
-        // 2. Xử lý khi chọn thêm ảnh mới
         imgInput.addEventListener('change', function(e) {
             const files = Array.from(e.target.files);
-            
             files.forEach(file => {
                 if (file && file.type.startsWith('image/')) {
                     newFiles.push(file);
-                    
                     const reader = new FileReader();
                     reader.onload = function(event) {
                         const wrap = createNewImageThumb(event.target.result);
                         previewContainer.insertBefore(wrap, addBtn);
-                        
-                        // Nếu chưa có ảnh nào là chính, tự chọn ảnh mới này
-                        if (!previewContainer.querySelector('.img-thumb-wrap.is-main')) {
-                            setMain(wrap);
-                        }
+                        if (!previewContainer.querySelector('.img-thumb-wrap.is-main')) setMain(wrap);
                     };
                     reader.readAsDataURL(file);
                 }
@@ -297,55 +425,37 @@
             wrap.innerHTML = `
                 <img src="${src}" alt="New image" />
                 <div class="main-star"><i class="bi bi-star-fill text-dark"></i></div>
-                <button type="button" class="del-btn" title="Xóa ảnh">
-                    <i class="bi bi-x"></i>
-                </button>
+                <button type="button" class="del-btn" title="Xóa ảnh"><i class="bi bi-x"></i></button>
             `;
-
-            wrap.onclick = function(e) {
-                if (!e.target.closest('.del-btn')) setMain(wrap);
-            };
-
+            wrap.onclick = function(e) { if (!e.target.closest('.del-btn')) setMain(wrap); };
             wrap.querySelector('.del-btn').onclick = function(e) {
                 e.stopPropagation();
                 removeNewImage(wrap);
             };
-
             return wrap;
         }
 
-        // 3. Hàm đặt ảnh chính (Dùng chung cho cả cũ và mới)
         function setMain(wrap) {
             document.querySelectorAll('#imagePreviewEdit .img-thumb-wrap').forEach(w => w.classList.remove('is-main'));
             wrap.classList.add('is-main');
             updateFilesAndIndexes();
         }
 
-        // 4. Xóa ảnh cũ
         function removeExistingImage(imageId, wrap) {
             const wasMain = wrap.classList.contains('is-main');
             deletedIds.push(imageId);
             deletedIdsInput.value = deletedIds.join(',');
-            
             const hiddenInput = existingImagesContainer.querySelector(`input[data-image-id="${imageId}"]`);
             if (hiddenInput) hiddenInput.remove();
-            
             wrap.remove();
             handleMainAfterDelete(wasMain);
         }
 
-        // 5. Xóa ảnh mới
         function removeNewImage(wrap) {
             const wasMain = wrap.classList.contains('is-main');
-            
-            // Tìm index của ảnh mới này trong danh sách các ảnh mới đang hiển thị
             const allNewThumbs = Array.from(previewContainer.querySelectorAll('.img-thumb-wrap[data-type="new"]'));
             const indexInNew = allNewThumbs.indexOf(wrap);
-            
-            if (indexInNew > -1) {
-                newFiles.splice(indexInNew, 1);
-            }
-            
+            if (indexInNew > -1) newFiles.splice(indexInNew, 1);
             wrap.remove();
             updateFilesAndIndexes();
             handleMainAfterDelete(wasMain);
@@ -358,29 +468,58 @@
             }
         }
 
-        // 6. CẬP NHẬT DỮ LIỆU ĐỂ GỬI LÊN SERVER
         function updateFilesAndIndexes() {
             const dt = new DataTransfer();
             newFiles.forEach(file => dt.items.add(file));
             imgInput.files = dt.files;
 
             const mainWrap = previewContainer.querySelector('.img-thumb-wrap.is-main');
-            if (!mainWrap) {
-                primaryIdInput.value = -1;
-                mainIdxInput.value = -1;
-                return;
-            }
+            if (!mainWrap) { primaryIdInput.value = -1; mainIdxInput.value = -1; return; }
 
             if (mainWrap.dataset.type === 'existing') {
                 primaryIdInput.value = mainWrap.dataset.imageId;
                 mainIdxInput.value = -1;
             } else {
-                // Tính index của ảnh mới được chọn làm chính trong danh sách newFiles
                 const allNewThumbs = Array.from(previewContainer.querySelectorAll('.img-thumb-wrap[data-type="new"]'));
-                const newIdx = allNewThumbs.indexOf(mainWrap);
                 primaryIdInput.value = -1;
-                mainIdxInput.value = newIdx;
+                mainIdxInput.value = allNewThumbs.indexOf(mainWrap);
             }
+        }
+
+        // AJAX SUBMIT
+        const form = document.getElementById('editFacilityForm');
+        if (form) {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                const formData = new FormData(this);
+
+                try {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang lưu...';
+
+                    const response = await fetch(this.action, { method: 'POST', body: formData });
+
+                    const contentType = response.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        throw new Error("Lỗi Server (Không trả về JSON)");
+                    }
+
+                    const result = await response.json();
+                    if (result.success) {
+                        alert(result.message);
+                        window.location.reload();
+                    } else {
+                        alert("Lỗi: " + result.message);
+                    }
+                } catch (error) {
+                    alert("Lỗi hệ thống: " + error.message);
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            });
         }
     })();
 </script>
