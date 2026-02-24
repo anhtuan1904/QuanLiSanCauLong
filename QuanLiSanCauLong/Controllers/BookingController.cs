@@ -470,7 +470,20 @@ namespace QuanLiSanCauLong.Controllers
                        && p.EndTime > start)
                 .ToListAsync();
 
-            return priceSlots.Sum(p => p.Price);
+            decimal totalPrice = 0;
+            foreach (var slot in priceSlots)
+            {
+                // Tính overlap thực tế giữa khung giờ đặt và slot giá
+                var overlapStart = start > slot.StartTime ? start : slot.StartTime;
+                var overlapEnd = end < slot.EndTime ? end : slot.EndTime;
+                double overlapMinutes = (overlapEnd - overlapStart).TotalMinutes;
+                if (overlapMinutes <= 0) continue;
+
+                // Giá tỉ lệ theo số phút overlap / tổng số phút của slot
+                double slotMinutes = (slot.EndTime - slot.StartTime).TotalMinutes;
+                totalPrice += slot.Price * (decimal)(overlapMinutes / slotMinutes);
+            }
+            return Math.Round(totalPrice, 0);
         }
 
         private bool CanCancelBooking(Booking booking, decimal cancelHours)

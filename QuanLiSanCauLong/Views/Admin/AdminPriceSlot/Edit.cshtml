@@ -1,35 +1,535 @@
 ﻿@model QuanLiSanCauLong.Models.PriceSlot
-
 @{
-    ViewData["Title"] = "Cập nhật bảng giá";
+    ViewData["Title"] = "Chỉnh Sửa Khung Giờ & Giá";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
-
-    var appliedDayValues = (Model.AppliedDays ?? "")
-        .Split(',', StringSplitOptions.RemoveEmptyEntries)
-        .Select(d => int.TryParse(d.Trim(), out var n) ? n : -1)
-        .Where(n => n >= 0)
-        .ToHashSet();
-
-    if (!appliedDayValues.Any() && Model.DayOfWeek.HasValue)
-        appliedDayValues.Add((int)Model.DayOfWeek.Value);
-
-    var dayList = new[] {
-        (1, "Thứ Hai"), (2, "Thứ Ba"), (3, "Thứ Tư"),
-        (4, "Thứ Năm"), (5, "Thứ Sáu"), (6, "Thứ Bảy"), (0, "Chủ Nhật"),
-    };
 }
 
-<div class="container-fluid pb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #fdf8f0;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+        --green: #16a34a;
+        --red: #c94b2a;
+    }
+
+    body, * {
+        font-family: 'Outfit',sans-serif;
+    }
+
+    .pg-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .pg-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+        .pg-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    .pg-sub {
+        font-size: .82rem;
+        color: var(--muted);
+        margin-top: .2rem;
+    }
+
+    .btn-back {
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        background: #fff;
+        color: var(--deep);
+        border: 1.5px solid var(--border);
+        padding: .65rem 1.2rem;
+        border-radius: 8px;
+        font-size: .84rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all .2s;
+    }
+
+        .btn-back:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: var(--cream);
+        }
+
+    .form-layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    .sec-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+    }
+
+    .sec-hd {
+        background: var(--warm);
+        padding: 1rem 1.4rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .sec-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+        .sec-icon i {
+            color: var(--deep);
+            font-size: .9rem;
+        }
+
+    .sec-hdtxt {
+        font-family: 'Playfair Display',serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+    .sec-bd {
+        padding: 1.4rem;
+    }
+
+    .f-group {
+        display: flex;
+        flex-direction: column;
+        gap: .4rem;
+    }
+
+    .f-label {
+        font-size: .78rem;
+        font-weight: 700;
+        color: var(--deep);
+        letter-spacing: .03em;
+    }
+
+        .f-label .req {
+            color: var(--red);
+            margin-left: .15rem;
+        }
+
+    .f-ctrl {
+        padding: .68rem 1rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .9rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s;
+    }
+
+        .f-ctrl:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(212,160,23,.1);
+        }
+
+    .f-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .f-row-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .info-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .45rem 1rem;
+        background: var(--cream);
+        border: 1px solid rgba(212,160,23,.2);
+        border-radius: 20px;
+        font-size: .8rem;
+        font-weight: 600;
+        color: var(--deep);
+    }
+
+        .info-chip i {
+            color: var(--gold);
+        }
+
+    .price-wrap {
+        position: relative;
+    }
+
+        .price-wrap .f-ctrl {
+            padding-left: 2rem;
+        }
+
+    .price-sym {
+        position: absolute;
+        left: .85rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--muted);
+        font-weight: 700;
+        font-size: .9rem;
+    }
+
+    .price-preview {
+        background: linear-gradient(135deg,rgba(26,18,9,.04),rgba(212,160,23,.08));
+        border: 1px solid rgba(212,160,23,.25);
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .pp-label {
+        font-size: .7rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--muted);
+    }
+
+    .pp-value {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--green);
+    }
+
+    .pp-break {
+        font-size: .74rem;
+        color: var(--muted);
+        margin-top: .15rem;
+    }
+
+    .day-grid {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: .6rem;
+    }
+
+    .day-btn-row {
+        display: flex;
+        gap: .5rem;
+        flex-wrap: wrap;
+        margin-bottom: .9rem;
+    }
+
+    .day-quick {
+        padding: .4rem .9rem;
+        background: #fff;
+        border: 1.5px solid var(--border);
+        border-radius: 20px;
+        font-size: .76rem;
+        font-weight: 600;
+        color: var(--deep);
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .day-quick:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: var(--cream);
+        }
+
+    .day-item input {
+        display: none;
+    }
+
+    .day-lbl {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: .6rem .4rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-size: .82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+        text-align: center;
+        background: #fff;
+    }
+
+        .day-lbl:hover {
+            border-color: var(--gold);
+            background: var(--cream);
+        }
+
+    .day-item input:checked + .day-lbl {
+        background: var(--deep);
+        color: var(--gold2);
+        border-color: var(--deep);
+    }
+
+    .day-weekend .day-lbl {
+        color: var(--red);
+    }
+
+    .day-item input:checked + .day-lbl {
+        color: var(--gold2);
+    }
+
+    .peak-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.2rem;
+        background: var(--cream);
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .peak-toggle:hover {
+            border-color: var(--gold);
+        }
+
+        .peak-toggle.active {
+            background: rgba(201,75,42,.06);
+            border-color: rgba(201,75,42,.3);
+        }
+
+    .peak-info .peak-title {
+        font-weight: 700;
+        font-size: .9rem;
+        color: var(--deep);
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+    .peak-info .peak-sub {
+        font-size: .74rem;
+        color: var(--muted);
+        margin-top: .15rem;
+    }
+
+    .toggle-sw {
+        width: 42px;
+        height: 24px;
+        border-radius: 12px;
+        background: var(--border);
+        position: relative;
+        transition: background .2s;
+        flex-shrink: 0;
+    }
+
+        .toggle-sw::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            top: 3px;
+            left: 3px;
+            transition: transform .2s;
+        }
+
+        .toggle-sw.on {
+            background: var(--red);
+        }
+
+            .toggle-sw.on::after {
+                transform: translateX(18px);
+            }
+
+    .sidebar-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        position: sticky;
+        top: 20px;
+    }
+
+    .sidebar-hd {
+        background: var(--deep);
+        padding: 1rem 1.3rem;
+    }
+
+        .sidebar-hd h3 {
+            font-family: 'Playfair Display',serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 0;
+        }
+
+        .sidebar-hd p {
+            font-size: .74rem;
+            color: rgba(255,255,255,.45);
+            margin: .2rem 0 0;
+        }
+
+    .sidebar-bd {
+        padding: 1.2rem;
+    }
+
+    .meta-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: .6rem 0;
+        border-bottom: 1px solid var(--border);
+        font-size: .84rem;
+    }
+
+        .meta-row:last-child {
+            border: none;
+        }
+
+    .meta-label {
+        color: var(--muted);
+        font-size: .78rem;
+    }
+
+    .meta-value {
+        font-weight: 700;
+        color: var(--deep);
+        font-size: .84rem;
+    }
+
+    .status-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--cream);
+        border: 1.5px solid rgba(212,160,23,.2);
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    .status-label {
+        font-weight: 700;
+        font-size: .88rem;
+        color: var(--deep);
+    }
+
+    .status-sub {
+        font-size: .74rem;
+        color: var(--muted);
+        margin-top: .15rem;
+    }
+
+    .submit-area {
+        display: flex;
+        gap: .75rem;
+        margin-top: 1.5rem;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        border: none;
+        padding: .85rem 2rem;
+        font-family: 'Outfit',sans-serif;
+        font-size: .95rem;
+        font-weight: 800;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all .25s;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        flex: 1;
+        justify-content: center;
+    }
+
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(212,160,23,.35);
+        }
+
+    .btn-cancel {
+        background: #fff;
+        color: var(--deep);
+        border: 1.5px solid var(--border);
+        padding: .85rem 1.4rem;
+        font-family: 'Outfit',sans-serif;
+        font-size: .88rem;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all .2s;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+        .btn-cancel:hover {
+            border-color: var(--muted);
+        }
+
+    .val-error {
+        font-size: .74rem;
+        color: var(--red);
+        margin-top: .25rem;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+    .f-hint {
+        font-size: .72rem;
+        color: var(--muted);
+        margin-top: .3rem;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+        .f-hint i {
+            color: var(--gold);
+        }
+</style>
+
+<div>
+    <div class="pg-head">
         <div>
-            <h3 class="fw-bold text-warning"><i class="bi bi-pencil-square me-2"></i>Cập nhật bảng giá</h3>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a asp-action="Index">Danh sách</a></li>
-                    <li class="breadcrumb-item active">Chỉnh sửa khung giờ</li>
-                </ol>
-            </nav>
+            <h1 class="pg-title">Chỉnh Sửa <em>Khung Giờ & Giá</em></h1>
+            <div class="pg-sub">Cập nhật cấu hình giá cho sân</div>
         </div>
+        <a asp-action="Index" class="btn-back"><i class="bi bi-arrow-left"></i> Quay lại</a>
     </div>
 
     <form asp-action="Edit" method="post" id="editForm">
@@ -37,196 +537,197 @@
         <input type="hidden" asp-for="PriceSlotId" />
         <input type="hidden" asp-for="CourtId" />
         <input type="hidden" asp-for="FacilityId" />
-        <input type="hidden" name="AppliedDays" id="appliedDaysInput" value="@Model.AppliedDays" />
 
-        <div class="row g-4">
-            <div class="col-lg-8">
+        <div asp-validation-summary="ModelOnly" class="sys-alert error" style="border-radius:8px;padding:.9rem 1.2rem;background:rgba(201,75,42,.06);border:1px solid rgba(201,75,42,.25);color:var(--red);margin-bottom:1.2rem"></div>
 
-                <!-- Thông tin cố định -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
-                    <div class="card-body p-4">
-                        <div class="alert bg-light border mb-0 rounded-3">
-                            <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-2 text-primary"></i>Thông tin cố định</h6>
-                            <div class="row g-2 small text-muted">
-                                <div class="col-md-6">Cơ sở: <strong class="text-dark">@(Model.Court?.Facility?.FacilityName ?? "—")</strong></div>
-                                <div class="col-md-6">Sân số: <strong class="text-dark">@Model.Court?.CourtNumber (@Model.CourtType)</strong></div>
-                            </div>
+        <div class="form-layout">
+            <div>
+                <!-- Sân hiện tại (readonly) -->
+                <div class="sec-card">
+                    <div class="sec-hd">
+                        <div class="sec-icon"><i class="bi bi-geo-alt-fill"></i></div>
+                        <span class="sec-hdtxt">Sân áp dụng</span>
+                    </div>
+                    <div class="sec-bd">
+                        <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+                            <div class="info-chip"><i class="bi bi-grid-3x3-gap-fill"></i>@(Model.Court?.CourtNumber ?? "Sân " + Model.CourtId)</div>
+                            <div class="info-chip"><i class="bi bi-building"></i>@(Model.Court?.Facility?.FacilityName ?? "—")</div>
+                            <div class="info-chip"><i class="bi bi-tag"></i>@(Model.SlotName ?? "Chưa đặt tên")</div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- CARD 1: Thông tin chung -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h5 class="mb-0 fw-bold"><span class="badge bg-warning text-dark me-2">1</span>Thông tin chung</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label asp-for="SlotName" class="form-label fw-semibold">
-                                    Tên bảng giá <span class="text-muted fw-normal">(tuỳ chọn)</span>
-                                </label>
-                                <input asp-for="SlotName" class="form-control shadow-none"
-                                       placeholder="Ví dụ: Giá ngày thường, Giá cuối tuần, Giá lễ..." />
-                            </div>
-                            <div class="col-md-6">
-                                <label asp-for="CourtType" class="form-label fw-semibold">Loại sân</label>
-                                <select asp-for="CourtType" class="form-select shadow-none">
-                                    <option value="Standard">Sân tiêu chuẩn (Standard)</option>
-                                    <option value="Professional">Sân chuyên nghiệp (Professional)</option>
-                                    <option value="Practice">Sân tập luyện (Practice)</option>
+                        <div class="f-hint" style="margin-top:.8rem"><i class="bi bi-lock"></i>Không thể đổi sân sau khi tạo. Nếu cần, hãy xóa và tạo mới.</div>
+                        <div style="margin-top:1rem" class="f-group">
+                            <label class="f-label">Tên bảng giá <span style="font-weight:400;color:var(--muted)">(tuỳ chọn)</span></label>
+                            <input asp-for="SlotName" class="f-ctrl" placeholder="Giá ngày thường, Giá cuối tuần..." />
+                        </div>
+                        <div style="margin-top:1rem" class="f-row">
+                            <div class="f-group">
+                                <label class="f-label">Loại sân</label>
+                                <select asp-for="CourtType" class="f-ctrl">
+                                    <option value="Standard">Tiêu chuẩn</option>
+                                    <option value="Professional">Chuyên nghiệp</option>
+                                    <option value="Practice">Tập luyện</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
-                                <label asp-for="CustomerType" class="form-label fw-semibold">Loại khách hàng</label>
-                                <select asp-for="CustomerType" class="form-select shadow-none">
-                                    <option value="All">Tất cả loại khách</option>
-                                    <option value="Retail">Khách vãng lai (Lẻ)</option>
-                                    <option value="Member">Khách cố định (Tháng)</option>
+                            <div class="f-group">
+                                <label class="f-label">Loại khách hàng</label>
+                                <select asp-for="CustomerType" class="f-ctrl">
+                                    <option value="All">Tất cả</option>
+                                    <option value="Retail">Vãng lai</option>
+                                    <option value="Member">Cố định / Tháng</option>
                                 </select>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- CARD 2: Ngày áp dụng -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h5 class="mb-0 fw-bold"><span class="badge bg-warning text-dark me-2">2</span>Ngày áp dụng</h5>
+                <!-- Ngày áp dụng -->
+                <div class="sec-card">
+                    <div class="sec-hd">
+                        <div class="sec-icon"><i class="bi bi-calendar3"></i></div>
+                        <span class="sec-hdtxt">Ngày áp dụng</span>
                     </div>
-                    <div class="card-body">
-                        <div class="d-flex gap-2 mb-3 flex-wrap">
-                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="selectDays([1,2,3,4,5])">Thứ 2 – Thứ 6</button>
-                            <button type="button" class="btn btn-outline-warning btn-sm rounded-pill" onclick="selectDays([6,0])">Thứ 7 &amp; CN</button>
-                            <button type="button" class="btn btn-outline-success btn-sm rounded-pill" onclick="selectDays([0,1,2,3,4,5,6])">Tất cả ngày</button>
-                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" onclick="selectDays([])">Bỏ chọn</button>
+                    <div class="sec-bd">
+                        <div class="day-btn-row">
+                            <button type="button" class="day-quick" onclick="selectDays([1,2,3,4,5])">T2 – T6</button>
+                            <button type="button" class="day-quick" onclick="selectDays([6,0])">T7 & CN</button>
+                            <button type="button" class="day-quick" onclick="selectDays([0,1,2,3,4,5,6])">Tất cả</button>
+                            <button type="button" class="day-quick" onclick="selectDays([])">Bỏ chọn</button>
                         </div>
-                        <div class="row g-2">
-                            @foreach (var (val, label) in dayList)
+                        <div class="day-grid">
+                            @{
+                                var currentDays = Model.AppliedDays ?? (Model.DayOfWeek.HasValue ? ((int)Model.DayOfWeek.Value).ToString() : "");
+                                var selectedDaySet = currentDays.Split(',').Select(d => d.Trim()).ToHashSet();
+                                var dayItems = new[]{(1,"Thứ Hai",false),(2,"Thứ Ba",false),(3,"Thứ Tư",false),(4,"Thứ Năm",false),
+                                                        (5,"Thứ Sáu",false),(6,"Thứ Bảy",true),(0,"Chủ Nhật",true)};
+                            }
+                            @foreach (var (val, label, isWe) in dayItems)
                             {
-                                var isWeekend = val == 0 || val == 6;
-                                var isChecked = appliedDayValues.Contains(val);
-                                <div class="col-6 col-md-3">
-                                    <label class="day-label d-flex align-items-center gap-2 p-2 border rounded-3"
-                                           style="cursor:pointer; transition:.15s; @(isChecked ? "background:#e8f4fd;border-color:#0d6efd;" : "")">
-                                        <input type="checkbox" class="day-check form-check-input m-0"
-                                               value="@val" @(isChecked ? "checked" : "") />
-                                        <span class="small fw-semibold @(isWeekend ? "text-warning" : "")">@label</span>
-                                    </label>
+                                bool isChecked = selectedDaySet.Contains(val.ToString());
+                                <div class="day-item @(isWe ? "day-weekend" : "")">
+                                    <input type="checkbox" class="day-check" id="ed@val" value="@val"
+                                           @(isChecked ? "checked" : "") onchange="syncDays()">
+                                    <label class="day-lbl" for="ed@val">@label</label>
                                 </div>
                             }
                         </div>
-                        <div class="form-text mt-2" style="font-size:.75rem;">
-                            <i class="bi bi-info-circle me-1 text-primary"></i>
-                            Thay đổi ngày áp dụng sẽ ảnh hưởng đến lịch đặt trong tương lai.
-                        </div>
+                        <input type="hidden" name="AppliedDays" id="appliedDaysInput" value="@currentDays" />
                     </div>
                 </div>
 
-                <!-- CARD 3: Khung giờ & Giá -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h5 class="mb-0 fw-bold"><span class="badge bg-warning text-dark me-2">3</span>Khung giờ &amp; Đơn giá</h5>
+                <!-- Khung giờ & Giá -->
+                <div class="sec-card">
+                    <div class="sec-hd">
+                        <div class="sec-icon"><i class="bi bi-clock-fill"></i></div>
+                        <span class="sec-hdtxt">Khung giờ & Đơn giá</span>
                     </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label asp-for="StartTime" class="form-label fw-semibold">Giờ bắt đầu</label>
-                                <input asp-for="StartTime" class="form-control shadow-none" type="time" />
+                    <div class="sec-bd">
+                        <div class="f-row-3" style="margin-bottom:1rem">
+                            <div class="f-group">
+                                <label class="f-label">Giờ bắt đầu <span class="req">*</span></label>
+                                <input asp-for="StartTime" class="f-ctrl" type="time" />
+                                <span asp-validation-for="StartTime" class="val-error"><i class="bi bi-exclamation-circle"></i></span>
                             </div>
-                            <div class="col-md-4">
-                                <label asp-for="EndTime" class="form-label fw-semibold">Giờ kết thúc</label>
-                                <input asp-for="EndTime" class="form-control shadow-none" type="time" />
+                            <div class="f-group">
+                                <label class="f-label">Giờ kết thúc <span class="req">*</span></label>
+                                <input asp-for="EndTime" class="f-ctrl" type="time" />
+                                <span asp-validation-for="EndTime" class="val-error"><i class="bi bi-exclamation-circle"></i></span>
                             </div>
-                            <div class="col-md-4">
-                                <label asp-for="RoundingMinutes" class="form-label fw-semibold">Đơn vị làm tròn</label>
-                                <select asp-for="RoundingMinutes" class="form-select shadow-none">
+                            <div class="f-group">
+                                <label class="f-label">Làm tròn giờ</label>
+                                <select asp-for="RoundingMinutes" class="f-ctrl">
                                     <option value="15">15 phút</option>
                                     <option value="30">30 phút</option>
-                                    <option value="60">60 phút (1 giờ)</option>
+                                    <option value="60">60 phút</option>
                                 </select>
                             </div>
-
-                            <div class="col-md-6">
-                                <label asp-for="Price" class="form-label fw-semibold">Đơn giá (VNĐ/giờ)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">₫</span>
-                                    <input asp-for="Price" class="form-control border-start-0 shadow-none"
-                                           type="number" step="1000" id="priceInput" oninput="updatePricePreview()" />
+                        </div>
+                        <div class="f-row" style="margin-bottom:1rem">
+                            <div class="f-group">
+                                <label class="f-label">Đơn giá (₫/giờ) <span class="req">*</span></label>
+                                <div class="price-wrap">
+                                    <span class="price-sym">₫</span>
+                                    <input asp-for="Price" class="f-ctrl" type="number" step="1000" id="priceInput" oninput="calcTotal()" />
                                 </div>
+                                <span asp-validation-for="Price" class="val-error"><i class="bi bi-exclamation-circle"></i></span>
                             </div>
-                            <div class="col-md-6">
-                                <label asp-for="Surcharge" class="form-label fw-semibold">Phụ phí/giờ (VNĐ)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">₫</span>
-                                    <input asp-for="Surcharge" class="form-control border-start-0 shadow-none"
-                                           type="number" step="1000" id="surchargeInput" oninput="updatePricePreview()" />
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <label asp-for="SurchargeNote" class="form-label fw-semibold">
-                                    Mô tả phụ phí <span class="text-muted fw-normal">(tuỳ chọn)</span>
-                                </label>
-                                <input asp-for="SurchargeNote" class="form-control shadow-none"
-                                       placeholder="Ví dụ: Phí bật đèn 30.000đ/giờ..." />
-                            </div>
-
-                            <!-- Preview -->
-                            <div class="col-12">
-                                <div class="p-3 bg-success bg-opacity-10 border border-success-subtle rounded-3">
-                                    <div class="small text-muted mb-1">Giá khách trả thực tế mỗi giờ</div>
-                                    <div class="fs-4 fw-bold text-success" id="totalPricePreview">
-                                        @((Model.Price + Model.Surcharge).ToString("N0")) ₫
-                                    </div>
-                                    <div class="small text-muted" id="priceBreakdown">
-                                        @if (Model.Surcharge > 0)
-                                        {
-                                            @($"Đơn giá: {Model.Price:N0}₫ + Phụ phí: {Model.Surcharge:N0}₫")
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-12">
-                                <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between border">
-                                    <div>
-                                        <h6 class="mb-1 fw-bold"><i class="bi bi-fire text-danger me-1"></i>Giờ cao điểm (Peak Hour)</h6>
-                                        <p class="text-muted small mb-0">Thường 17:00 – 22:00 các ngày trong tuần</p>
-                                    </div>
-                                    <div class="form-check form-switch fs-4 mb-0">
-                                        <input asp-for="IsPeakHour" class="form-check-input" type="checkbox" role="switch">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-12">
-                                <div class="form-check p-3 bg-light rounded-3 border">
-                                    <input asp-for="IsActive" class="form-check-input" type="checkbox">
-                                    <label class="form-check-label fw-semibold small" asp-for="IsActive">Kích hoạt cấu hình này</label>
+                            <div class="f-group">
+                                <label class="f-label">Phụ phí (₫/giờ)</label>
+                                <div class="price-wrap">
+                                    <span class="price-sym">₫</span>
+                                    <input asp-for="Surcharge" class="f-ctrl" type="number" step="1000" id="surInput" oninput="calcTotal()" />
                                 </div>
                             </div>
                         </div>
+                        <div class="f-group" style="margin-bottom:1rem">
+                            <label class="f-label">Mô tả phụ phí</label>
+                            <input asp-for="SurchargeNote" class="f-ctrl" placeholder="Phí bật đèn..." />
+                        </div>
+                        <div class="price-preview">
+                            <div>
+                                <div class="pp-label">Khách trả / giờ</div>
+                                <div class="pp-value" id="totalPreview">
+                                    @((Model.Price + Model.Surcharge).ToString("N0")) ₫
+                                </div>
+                                <div class="pp-break" id="priceBreak">
+                                    @(Model.Surcharge > 0 ? $"{Model.Price:N0}₫ + {Model.Surcharge:N0}₫ phụ phí" : "")
+                                </div>
+                            </div>
+                            <i class="bi bi-calculator" style="font-size:2rem;color:rgba(212,160,23,.3)"></i>
+                        </div>
+                        <div class="peak-toggle @(Model.IsPeakHour ? "active" : "")" id="peakToggle" style="margin-top:1rem" onclick="togglePeak()">
+                            <div class="peak-info">
+                                <div class="peak-title"><i class="bi bi-fire" style="color:var(--red)"></i> Giờ cao điểm (Peak Hour)</div>
+                                <div class="peak-sub">Thường 17:00 – 22:00 các ngày trong tuần</div>
+                            </div>
+                            <div class="toggle-sw @(Model.IsPeakHour ? "on" : "")" id="peakSw"></div>
+                        </div>
+                        <input asp-for="IsPeakHour" id="isPeakInput" type="hidden" value="@Model.IsPeakHour.ToString().ToLower()" />
                     </div>
                 </div>
 
-                <div class="d-flex gap-3 justify-content-end">
-                    <a asp-action="Index" class="btn btn-light px-4 py-2 fw-semibold border shadow-sm">Hủy</a>
-                    <button type="submit" class="btn btn-warning px-5 py-2 fw-bold shadow-sm"
-                            onclick="return validateAndPrepare()">
-                        <i class="bi bi-check-circle me-2"></i>Lưu thay đổi
+                <div class="submit-area">
+                    <a asp-action="Index" class="btn-cancel"><i class="bi bi-x"></i> Hủy</a>
+                    <button type="submit" class="btn-submit" onclick="return prepareSubmit()">
+                        <i class="bi bi-check-circle-fill"></i> Lưu Thay Đổi
                     </button>
                 </div>
             </div>
 
-            <div class="col-lg-4">
-                <div class="card border-0 bg-warning bg-opacity-10 border border-warning-subtle" style="border-radius:12px;">
-                    <div class="card-body p-4">
-                        <h6 class="fw-bold text-warning-emphasis mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Lưu ý khi sửa</h6>
-                        <ul class="small mb-0 text-muted">
-                            <li class="mb-2">Thay đổi ảnh hưởng đến các lượt đặt sân trong <strong>tương lai</strong>.</li>
-                            <li class="mb-2">Đảm bảo giờ bắt đầu không trùng lặp với khung giờ khác cùng sân.</li>
-                            <li>Thay đổi loại khách ảnh hưởng đến cách hệ thống tính giá tự động.</li>
-                        </ul>
+            <!-- SIDEBAR -->
+            <div>
+                <div class="sidebar-card">
+                    <div class="sidebar-hd">
+                        <h3>Thông tin bản ghi</h3>
+                        <p>ID: #@Model.PriceSlotId</p>
+                    </div>
+                    <div class="sidebar-bd">
+                        <div class="status-toggle">
+                            <div>
+                                <div class="status-label">Kích hoạt</div>
+                                <div class="status-sub">Cấu hình có hiệu lực ngay</div>
+                            </div>
+                            <input asp-for="IsActive" type="checkbox"
+                                   style="width:20px;height:20px;accent-color:var(--gold);cursor:pointer" />
+                        </div>
+                        <div class="meta-row">
+                            <span class="meta-label">Sân</span>
+                            <span class="meta-value">@(Model.Court?.CourtNumber ?? "—")</span>
+                        </div>
+                        <div class="meta-row">
+                            <span class="meta-label">Cơ sở</span>
+                            <span class="meta-value">@(Model.Court?.Facility?.FacilityName ?? "—")</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.SlotName))
+                        {
+                            <div class="meta-row">
+                                <span class="meta-label">Tên bảng giá</span>
+                                <span class="meta-value">@Model.SlotName</span>
+                            </div>
+                        }
+                        <div class="meta-row">
+                            <span class="meta-label">Tạo lúc</span>
+                            <span class="meta-value">@(Model.CreatedAt.ToString("dd/MM/yyyy"))</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -236,37 +737,38 @@
 
 @section Scripts {
     <script>
-        function updatePricePreview() {
-            const price     = parseFloat(document.getElementById('priceInput').value) || 0;
-            const surcharge = parseFloat(document.getElementById('surchargeInput').value) || 0;
-            const total     = price + surcharge;
-            document.getElementById('totalPricePreview').textContent = total.toLocaleString('vi-VN') + ' ₫';
-            document.getElementById('priceBreakdown').textContent = surcharge > 0
-                ? `Đơn giá: ${price.toLocaleString('vi-VN')}₫ + Phụ phí: ${surcharge.toLocaleString('vi-VN')}₫`
-                : '';
-        }
-
         function selectDays(vals) {
             document.querySelectorAll('.day-check').forEach(cb => {
                 cb.checked = vals.includes(parseInt(cb.value));
-                applyDayStyle(cb);
             });
+            syncDays();
+        }
+        function syncDays() {
+            document.getElementById('appliedDaysInput').value =
+                Array.from(document.querySelectorAll('.day-check:checked')).map(c => c.value).join(',');
+        }
+        document.querySelectorAll('.day-check').forEach(cb => cb.addEventListener('change', syncDays));
+
+        function calcTotal() {
+            const p = parseFloat(document.getElementById('priceInput').value) || 0;
+            const s = parseFloat(document.getElementById('surInput').value)   || 0;
+            document.getElementById('totalPreview').textContent = (p+s).toLocaleString('vi-VN') + ' ₫';
+            document.getElementById('priceBreak').textContent = s > 0
+                ? `${p.toLocaleString('vi-VN')}₫ + ${s.toLocaleString('vi-VN')}₫ phụ phí` : '';
         }
 
-        function applyDayStyle(cb) {
-            const lbl = cb.closest('.day-label');
-            lbl.style.background  = cb.checked ? '#e8f4fd' : '';
-            lbl.style.borderColor = cb.checked ? '#0d6efd' : '';
+        let peakOn = @Model.IsPeakHour.ToString().ToLower();
+        function togglePeak() {
+            peakOn = !peakOn;
+            document.getElementById('peakSw').classList.toggle('on', peakOn);
+            document.getElementById('peakToggle').classList.toggle('active', peakOn);
+            document.getElementById('isPeakInput').value = peakOn ? 'true' : 'false';
         }
 
-        document.querySelectorAll('.day-check').forEach(cb => {
-            cb.addEventListener('change', () => applyDayStyle(cb));
-        });
-
-        function validateAndPrepare() {
+        function prepareSubmit() {
             const checked = document.querySelectorAll('.day-check:checked');
-            if (checked.length === 0) { alert('Vui lòng chọn ít nhất một ngày áp dụng!'); return false; }
-            document.getElementById('appliedDaysInput').value = Array.from(checked).map(c => c.value).join(',');
+            if (!checked.length) { alert('Vui lòng chọn ít nhất một ngày áp dụng!'); return false; }
+            syncDays();
             return true;
         }
     </script>

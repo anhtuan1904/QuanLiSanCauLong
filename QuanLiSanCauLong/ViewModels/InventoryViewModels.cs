@@ -9,13 +9,14 @@ namespace QuanLiSanCauLong.ViewModels
     /// </summary>
     public class InventoryListViewModel
     {
+        // ===== FIX: Thêm FacilityId, FacilityName =====
         public int FacilityId { get; set; }
         public string FacilityName { get; set; }
-        public List<InventoryItemViewModel> Items { get; set; }
 
-        // Thêm 2 dòng này để tính toán tự động dựa trên danh sách Items
-        public int TotalProducts => Items?.Count ?? 0;
-        public int LowStockCount => Items?.Count(i => i.IsLowStock) ?? 0;
+        public List<InventoryItemViewModel> Items { get; set; } = new();
+        public int LowStockCount { get; set; }
+        public int ExpiringCount { get; set; }
+        public int OutOfStockCount { get; set; }
     }
 
     /// <summary>
@@ -24,55 +25,83 @@ namespace QuanLiSanCauLong.ViewModels
     public class InventoryItemViewModel
     {
         public int InventoryId { get; set; }
-
-        public string FacilityName { get; set; }
         public int ProductId { get; set; }
+
+        // Product info
         public string ProductName { get; set; }
-        public string ProductCode { get; set; }
+        public string ProductCode { get; set; }     // FIX: thêm (dùng trong Controller & InventoryService)
+        public string SKU { get; set; }
+        public string Barcode { get; set; }
+        public string BatchNumber { get; set; }
+        public string ImageUrl { get; set; }
+        public string Unit { get; set; }
+        public string StorageLocation { get; set; }
+        public decimal Price { get; set; }          // FIX: thêm
+
+        // Category
         public string CategoryName { get; set; }
-        public string CategoryType { get; set; }
+        public string CategoryType { get; set; }    // FIX: thêm
+
+        // Facility
+        public int FacilityId { get; set; }
+        public string FacilityName { get; set; }
+
+        // Stock numbers
         public int Quantity { get; set; }
         public int MinQuantity { get; set; }
         public int MaxQuantity { get; set; }
-        public bool IsLowStock => Quantity <= MinQuantity;
-        public string Unit { get; set; }
-        public decimal Price { get; set; }
-        public DateTime LastUpdated { get; set; }
-    }
 
-    /// <summary>
-    /// ViewModel cho giao dịch nhập/xuất kho
-    /// </summary>
+        // --- FIX LỖI: Thêm bí danh MinStockLevel để khớp với code ở View/Controller ---
+        public int MinStockLevel { get => MinQuantity; set => MinQuantity = value; }
+
+        // Timestamps
+        public DateTime LastUpdated { get; set; }   // FIX: thêm
+
+        // Expiry
+        public DateTime? ExpiryDate { get; set; }
+
+        // Supplier
+        public string SupplierName { get; set; }
+
+        // Computed
+        public bool IsLowStock => MinQuantity > 0 && Quantity <= MinQuantity;
+        public bool IsExpired => ExpiryDate.HasValue && ExpiryDate.Value < DateTime.Now;
+        public bool IsExpiringSoon => ExpiryDate.HasValue && !IsExpired && ExpiryDate.Value <= DateTime.Now.AddDays(30);
+    }
     public class StockTransactionViewModel
     {
-        [Required]
         public int FacilityId { get; set; }
-
-        [Required]
-        [Display(Name = "Loại giao dịch")]
-        public string TransactionType { get; set; } // Import, Export, Adjustment
-
-        // Bổ sung thuộc tính này để hết lỗi
-        [Display(Name = "Ngày giao dịch")]
+        public string TransactionType { get; set; }     // FIX: thêm (Import / Export)
         public DateTime TransactionDate { get; set; } = DateTime.Now;
 
-        [Display(Name = "Ghi chú")]
+        public int? SupplierId { get; set; }
+
+        [StringLength(100)]
+        public string BatchNumber { get; set; }
+
+        [DataType(DataType.Date)]
+        public DateTime? ExpiryDate { get; set; }
+
+        [StringLength(100)]
+        public string DocumentReference { get; set; }
+
+        [StringLength(20)]
+        public string OutReason { get; set; } = "Sale";
+
         public string Note { get; set; }
 
-        public List<StockTransactionItemViewModel> Items { get; set; }
-        public decimal TotalAmount => Items?.Sum(i => i.TotalPrice) ?? 0;
+        public List<StockTransactionItemViewModel> Items { get; set; } = new();
     }
 
-    /// <summary>
-    /// ViewModel cho chi tiết sản phẩm trong giao dịch kho
-    /// </summary>
     public class StockTransactionItemViewModel
     {
         public int ProductId { get; set; }
-        public string ProductName { get; set; }
         public int Quantity { get; set; }
-        public decimal UnitPrice { get; set; }
-        public decimal TotalPrice => Quantity * UnitPrice;
-    }
 
+        public string Unit { get; set; }
+
+        public decimal CostPrice { get; set; }
+        public decimal UnitPrice { get; set; }      // FIX: thêm (dùng trong InventoryService)
+        public decimal TotalPrice { get; set; }     // FIX: thêm (dùng trong InventoryService)
+    }
 }

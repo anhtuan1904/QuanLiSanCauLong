@@ -4,70 +4,404 @@
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="container py-5">
-    <div class="col-lg-7 mx-auto">
-        <div class="card border-0 shadow-lg rounded-4">
-            <div class="card-body p-5">
-                <div class="text-center mb-4">
-                    <h3 class="fw-bold">Thêm Sản Phẩm Mới</h3>
-                    <p class="text-muted">Nhập thông tin sản phẩm để quản lý kho hàng</p>
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #f5f4ec;
+        --warm: #f0ead8;
+        --card: #ffffff;
+        --border: #e4d9c8;
+        --muted: #8a7560;
+    }
+
+    body, .container-fluid {
+        font-family: 'Outfit', sans-serif;
+        background: var(--cream);
+    }
+
+    /* Breadcrumb */
+    .bc {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .82rem;
+        color: var(--muted);
+        margin-bottom: 1.4rem;
+    }
+
+        .bc a {
+            color: var(--muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: .3rem;
+            transition: .15s;
+        }
+
+            .bc a:hover {
+                color: var(--deep);
+            }
+
+    .bc-sep {
+        opacity: .5;
+    }
+
+    .bc-cur {
+        color: var(--deep);
+        font-weight: 700;
+    }
+
+    /* Wrap */
+    .cf-wrap {
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    /* Header */
+    .cf-head {
+        margin-bottom: 2rem;
+    }
+
+    .cf-head-label {
+        font-size: .68rem;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: var(--gold);
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        margin-bottom: .5rem;
+    }
+
+        .cf-head-label::before {
+            content: '';
+            width: 16px;
+            height: 1px;
+            background: var(--gold);
+        }
+
+    .cf-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+        .cf-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    .cf-sub {
+        font-size: .85rem;
+        color: var(--muted);
+        margin-top: .3rem;
+    }
+
+    /* Card */
+    .cf-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 2px 12px rgba(26,18,9,.06);
+    }
+
+    .cf-card-head {
+        padding: 1.1rem 1.75rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--warm);
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+
+        .cf-card-head i {
+            color: var(--gold);
+            font-size: .95rem;
+        }
+
+    .cf-card-head-title {
+        font-weight: 700;
+        font-size: .92rem;
+        color: var(--deep);
+    }
+
+    .cf-card-body {
+        padding: 1.6rem 1.75rem;
+    }
+
+    /* Fields */
+    .field-group {
+        margin-bottom: 1.2rem;
+    }
+
+    .field-label {
+        display: block;
+        font-size: .72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: var(--muted);
+        margin-bottom: .5rem;
+    }
+
+    .field-input, .field-select, .field-textarea {
+        width: 100%;
+        padding: .6rem .9rem;
+        background: var(--cream);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .88rem;
+        color: var(--deep);
+        outline: none;
+        transition: .18s;
+    }
+
+        .field-input:focus, .field-select:focus, .field-textarea:focus {
+            border-color: var(--gold);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(212,160,23,.1);
+        }
+
+    .field-textarea {
+        resize: vertical;
+        min-height: 90px;
+    }
+
+    /* Two columns */
+    .field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    @@media(max-width:600px) {
+        .field-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Image preview */
+    .img-preview-box {
+        width: 100%;
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        background: var(--warm);
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: .18s;
+        position: relative;
+    }
+
+        .img-preview-box:hover {
+            border-color: var(--gold);
+            background: #fef9ec;
+        }
+
+        .img-preview-box input[type=file] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+    .img-preview-icon {
+        font-size: 2rem;
+        color: var(--gold);
+        opacity: .5;
+        display: block;
+        margin-bottom: .4rem;
+    }
+
+    .img-preview-text {
+        font-size: .82rem;
+        color: var(--muted);
+    }
+
+    #imgPreviewOut {
+        width: 100%;
+        max-height: 180px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        margin-top: 1rem;
+        display: none;
+    }
+
+    /* Buttons */
+    .btn-row {
+        display: flex;
+        gap: .75rem;
+        margin-top: 1.5rem;
+    }
+
+    .btn-cancel {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .4rem;
+        padding: .65rem 1.2rem;
+        background: var(--warm);
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .88rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: .18s;
+    }
+
+        .btn-cancel:hover {
+            background: var(--cream);
+            color: var(--deep);
+        }
+
+    .btn-submit {
+        flex: 2;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        padding: .65rem 1.4rem;
+        background: var(--gold2);
+        color: var(--deep);
+        border: none;
+        border-radius: 10px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .88rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: .2s;
+        box-shadow: 0 2px 8px rgba(212,160,23,.3);
+    }
+
+        .btn-submit:hover {
+            background: var(--gold);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(212,160,23,.4);
+        }
+</style>
+
+<div class="container-fluid px-4 py-4">
+
+    <!-- Breadcrumb -->
+    <div class="bc">
+        <a asp-action="Index"><i class="bi bi-house"></i> Sản phẩm</a>
+        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
+        <span class="bc-cur">Thêm mới</span>
+    </div>
+
+    <div class="cf-wrap">
+
+        <!-- Header -->
+        <div class="cf-head">
+            <div class="cf-head-label">Sản Phẩm</div>
+            <div class="cf-title">Thêm <em>Sản Phẩm Mới</em></div>
+            <div class="cf-sub">Nhập thông tin sản phẩm để quản lý kho hàng</div>
+        </div>
+
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+
+            <!-- Thông tin cơ bản -->
+            <div class="cf-card">
+                <div class="cf-card-head">
+                    <i class="bi bi-box-seam-fill"></i>
+                    <span class="cf-card-head-title">Thông tin cơ bản</span>
                 </div>
-
-                <form asp-action="Create" method="post" enctype="multipart/form-data">
-                    <div class="row g-3">
-                        <div class="col-md-8">
-                            <label class="form-label fw-bold small text-uppercase">Tên Sản Phẩm</label>
-                            <input asp-for="ProductName" class="form-control rounded-3 py-2 bg-light border-0" placeholder="Nhập tên sản phẩm..." />
+                <div class="cf-card-body">
+                    <div class="field-row">
+                        <div class="field-group" style="grid-column:1/-1">
+                            <label class="field-label">Tên Sản Phẩm</label>
+                            <input asp-for="ProductName" class="field-input" placeholder="Nhập tên sản phẩm..." />
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold small text-uppercase">Mã SKU</label>
-                            <input asp-for="ProductCode" class="form-control rounded-3 py-2 bg-light border-0" placeholder="SKU-001" />
+                        <div class="field-group">
+                            <label class="field-label">Mã SKU</label>
+                            <input asp-for="ProductCode" class="field-input" placeholder="SKU-001" />
                         </div>
-                        <div class="col-12">
-                            <label class="form-label fw-bold small text-uppercase">Mô Tả</label>
-                            <textarea asp-for="Description" class="form-control rounded-3 bg-light border-0" rows="3" placeholder="Mô tả sản phẩm..."></textarea>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase">Giá (VNĐ)</label>
-                            <input asp-for="Price" type="number" class="form-control rounded-3 py-2 bg-light border-0" />
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase">Số Lượng/Đơn vị</label>
-                            <input asp-for="Unit" class="form-control rounded-3 py-2 bg-light border-0" placeholder="Cái, Bộ, Đôi..." />
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase">Danh mục</label>
-                            <select asp-for="CategoryId" class="form-select rounded-3 py-2 bg-light border-0"
-                                    asp-items="@(new SelectList(ViewBag.Categories, "CategoryId", "CategoryName"))"></select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase">Hình ảnh</label>
-                            <input type="file" name="ImageFile" class="form-control rounded-3 py-2 bg-light border-0" id="imgInp" accept="image/*" />
-                        </div>
-
-                        <div class="col-12 text-center mt-3 d-none" id="previewContainer">
-                            <img id="blah" src="#" alt="preview" class="rounded-3 shadow-sm border" style="max-height: 150px;" />
-                        </div>
-
-                        <div class="col-12 d-flex gap-2 mt-4">
-                            <a asp-action="Index" class="btn btn-light flex-fill fw-bold py-2 rounded-3 text-muted">Hủy</a>
-                            <button type="submit" class="btn btn-dark flex-fill fw-bold py-2 rounded-3">Thêm Sản Phẩm</button>
+                        <div class="field-group">
+                            <label class="field-label">Đơn vị</label>
+                            <input asp-for="Unit" class="field-input" placeholder="Cái, Bộ, Đôi..." />
                         </div>
                     </div>
-                </form>
+                    <div class="field-group">
+                        <label class="field-label">Mô Tả Sản Phẩm</label>
+                        <textarea asp-for="Description" class="field-textarea" placeholder="Mô tả sản phẩm..."></textarea>
+                    </div>
+                </div>
             </div>
-        </div>
+
+            <!-- Giá & Danh mục -->
+            <div class="cf-card">
+                <div class="cf-card-head">
+                    <i class="bi bi-tag-fill"></i>
+                    <span class="cf-card-head-title">Giá & Danh mục</span>
+                </div>
+                <div class="cf-card-body">
+                    <div class="field-row">
+                        <div class="field-group">
+                            <label class="field-label">Giá (VNĐ)</label>
+                            <input asp-for="Price" type="number" class="field-input" placeholder="0" />
+                        </div>
+                        <div class="field-group">
+                            <label class="field-label">Danh mục</label>
+                            <select asp-for="CategoryId" class="field-select"
+                                    asp-items="@(new SelectList(ViewBag.Categories, "CategoryId", "CategoryName"))">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hình ảnh -->
+            <div class="cf-card">
+                <div class="cf-card-head">
+                    <i class="bi bi-image-fill"></i>
+                    <span class="cf-card-head-title">Hình ảnh sản phẩm</span>
+                </div>
+                <div class="cf-card-body">
+                    <div class="img-preview-box" id="imgDropZone">
+                        <input type="file" name="ImageFile" accept="image/*" id="imgInp" />
+                        <i class="bi bi-cloud-arrow-up img-preview-icon"></i>
+                        <div class="img-preview-text">Nhấp hoặc kéo thả để tải ảnh lên<br><small>JPG, PNG, WEBP — tối đa 5MB</small></div>
+                    </div>
+                    <img id="imgPreviewOut" src="#" alt="Preview" />
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="btn-row">
+                <a asp-action="Index" class="btn-cancel">
+                    <i class="bi bi-x-lg"></i> Hủy
+                </a>
+                <button type="submit" class="btn-submit">
+                    <i class="bi bi-plus-circle-fill"></i> Thêm Sản Phẩm
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        imgInp.onchange = evt => {
-            const [file] = imgInp.files;
+        const imgInp = document.getElementById('imgInp');
+        const imgPreviewOut = document.getElementById('imgPreviewOut');
+
+        imgInp.onchange = function () {
+            const [file] = this.files;
             if (file) {
-                blah.src = URL.createObjectURL(file);
-                document.getElementById('previewContainer').classList.remove('d-none');
+                imgPreviewOut.src = URL.createObjectURL(file);
+                imgPreviewOut.style.display = 'block';
             }
-        }
+        };
     </script>
 }

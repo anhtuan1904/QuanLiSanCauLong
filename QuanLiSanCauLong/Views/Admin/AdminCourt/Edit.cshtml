@@ -789,7 +789,201 @@
         </div>
 
     </form>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         6. QUẢN LÝ KHUNG GIỜ (ngoài form, dùng AJAX riêng)
+    ═══════════════════════════════════════════════════════════ -->
+    <div class="cf-card" style="margin-top:1.5rem;">
+        <div class="cf-card-head">
+            <i class="bi bi-clock cf-card-icon"></i>
+            <span class="cf-card-title">Khung Giờ &amp; Giá Sân</span>
+        </div>
+        <div class="cf-card-body">
+
+            <!-- Chọn ngày -->
+            <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem;">
+                @foreach (var (dayNum, dayName) in new (int, string)[]{
+                                (1,"Thứ 2"),(2,"Thứ 3"),(3,"Thứ 4"),(4,"Thứ 5"),
+                                (5,"Thứ 6"),(6,"Thứ 7"),(0,"CN")})
+                {
+                    <button type="button" class="day-tab" data-day="@dayNum"
+                            onclick="loadSlots(@dayNum)">
+                        @dayName
+                    </button>
+                }
+            </div>
+
+            <!-- Danh sách khung giờ của ngày đang chọn -->
+            <div id="slotList" style="min-height:60px;">
+                <div class="slot-empty">Chọn ngày để xem khung giờ</div>
+            </div>
+
+            <!-- Form thêm khung giờ mới -->
+            <div style="border-top:1px solid var(--border);margin-top:1rem;padding-top:1rem;">
+                <div style="font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+                            color:var(--muted);margin-bottom:.75rem;">
+                    Thêm Khung Giờ Mới
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.6rem;align-items:end;flex-wrap:wrap;">
+                    <div>
+                        <label class="fg-label">Từ giờ</label>
+                        <input type="time" id="newStart" class="fg-input" value="06:00" step="1800" />
+                    </div>
+                    <div>
+                        <label class="fg-label">Đến giờ</label>
+                        <input type="time" id="newEnd" class="fg-input" value="07:00" step="1800" />
+                    </div>
+                    <div>
+                        <label class="fg-label">Giá (₫)</label>
+                        <input type="number" id="newPrice" class="fg-input" value="80000"
+                               min="0" step="5000" placeholder="VD: 80000" />
+                    </div>
+                    <div>
+                        <button type="button" class="btn-add-slot" onclick="addSlot()">
+                            <i class="bi bi-plus-circle"></i> Thêm
+                        </button>
+                    </div>
+                </div>
+                <div id="slotMsg" style="margin-top:.6rem;font-size:.8rem;display:none;"></div>
+            </div>
+
+        </div>
+    </div>
+
 </div>
+
+<style>
+    /* ── PRICESLOT STYLES ─────────────────────────── */
+    .day-tab {
+        padding: .4rem .9rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #fff;
+        font-family: 'Outfit',sans-serif;
+        font-size: .8rem;
+        color: var(--muted);
+        cursor: pointer;
+        transition: all .15s;
+    }
+
+        .day-tab:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .day-tab.active {
+            background: linear-gradient(135deg,var(--gold),var(--gold2));
+            color: var(--deep);
+            border-color: var(--gold);
+            font-weight: 700;
+        }
+
+    .slot-row {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        padding: .55rem .75rem;
+        background: var(--cream);
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        margin-bottom: .4rem;
+    }
+
+    .slot-time {
+        font-weight: 700;
+        font-size: .88rem;
+        color: var(--deep);
+        min-width: 110px;
+        font-family: monospace;
+    }
+
+    .slot-price {
+        font-size: .82rem;
+        color: #16a34a;
+        font-weight: 600;
+        flex: 1;
+    }
+
+    .slot-inactive {
+        opacity: .45;
+    }
+
+    .slot-del {
+        width: 26px;
+        height: 26px;
+        border-radius: 5px;
+        border: 1px solid rgba(201,75,42,.3);
+        background: rgba(201,75,42,.06);
+        color: #c94b2a;
+        cursor: pointer;
+        font-size: .75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+        .slot-del:hover {
+            background: #c94b2a;
+            color: #fff;
+        }
+
+    .slot-toggle {
+        width: 26px;
+        height: 26px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: .75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+        .slot-toggle:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+    .slot-empty {
+        color: var(--muted);
+        font-size: .83rem;
+        padding: .75rem 0;
+    }
+
+    .btn-add-slot {
+        padding: .55rem 1rem;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        border: none;
+        border-radius: 7px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .82rem;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        transition: all .2s;
+    }
+
+        .btn-add-slot:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(212,160,23,.3);
+        }
+
+    .slot-msg-ok {
+        color: #16a34a;
+    }
+
+    .slot-msg-err {
+        color: #c94b2a;
+    }
+</style>
 
 @section Scripts {
     @{
@@ -867,14 +1061,150 @@
             document.getElementById('ni-' + i)?.remove();
         }
 
-        // Init on load
-        (function() {
-            const ct = '@Model.CourtType';
-            const sf = '@Model.SurfaceType';
-            const st = '@Model.Status';
-            if (ct) selectLocation(ct);
-            if (sf) selectSurface(sf);
-            if (st) selectStatus(st);
-        })();
+        // ── PRICESLOT MANAGEMENT ───────────────────────────────────
+        const COURT_ID = @Model.CourtId;
+        let currentDay = -1;
+
+        // Chọn tab ngày
+        function loadSlots(day) {
+            currentDay = day;
+            document.querySelectorAll('.day-tab').forEach(t => {
+                t.classList.toggle('active', parseInt(t.dataset.day) === day);
+            });
+            fetchSlots(day);
+        }
+
+        // Lấy danh sách khung giờ từ server
+        function fetchSlots(day) {
+            document.getElementById('slotList').innerHTML =
+                '<div class="slot-empty"><i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite"></i> Đang tải...</div>';
+
+            fetch(`/AdminCourt/GetPriceSlots?courtId=${COURT_ID}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success) { renderSlots([], day); return; }
+                    const daySlots = data.slots.filter(s => s.dayOfWeek === day);
+                    renderSlots(daySlots, day);
+                })
+                .catch(() => renderSlots([], day));
+        }
+
+        // Render danh sách slot
+        function renderSlots(slots, day) {
+            const list = document.getElementById('slotList');
+            if (!slots.length) {
+                list.innerHTML = '<div class="slot-empty">Chưa có khung giờ nào cho ngày này. Hãy thêm bên dưới.</div>';
+                return;
+            }
+
+            // Sắp xếp theo giờ bắt đầu
+            slots.sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+            list.innerHTML = slots.map(s => `
+                <div class="slot-row ${s.isActive ? '' : 'slot-inactive'}" id="slot-${s.slotId}">
+                    <span class="slot-time">
+                        <i class="bi bi-clock" style="font-size:.72rem;color:var(--gold);margin-right:.3rem;"></i>
+                        ${s.startTime} – ${s.endTime}
+                    </span>
+                    <span class="slot-price">
+                        ${Number(s.price).toLocaleString('vi-VN')} ₫/giờ
+                    </span>
+                    <span style="font-size:.7rem;color:var(--muted);">
+                        ${s.isActive ? '✓ Hiện' : '✗ Ẩn'}
+                    </span>
+                    <button type="button" class="slot-toggle" title="${s.isActive ? 'Ẩn khung giờ' : 'Hiện khung giờ'}"
+                            onclick="toggleSlot(${s.slotId})">
+                        <i class="bi bi-${s.isActive ? 'eye-slash' : 'eye'}"></i>
+                    </button>
+                    <button type="button" class="slot-del" title="Xóa khung giờ"
+                            onclick="deleteSlot(${s.slotId}, '${s.startTime}–${s.endTime}')">
+                        <i class="bi bi-trash3"></i>
+                    </button>
+                </div>`).join('');
+        }
+
+        // ✅ THÊM KHUNG GIỜ — GỌI ENDPOINT ĐÃ SỬA LOGIC OVERLAP
+        function addSlot() {
+            if (currentDay < 0) {
+                showMsg('Vui lòng chọn ngày trước!', false); return;
+            }
+            const start = document.getElementById('newStart').value;
+            const end   = document.getElementById('newEnd').value;
+            const price = document.getElementById('newPrice').value;
+
+            if (!start || !end) { showMsg('Vui lòng nhập giờ bắt đầu và kết thúc!', false); return; }
+            if (start >= end)   { showMsg('Giờ bắt đầu phải nhỏ hơn giờ kết thúc!', false); return; }
+            if (!price || price < 0) { showMsg('Vui lòng nhập giá hợp lệ!', false); return; }
+
+            const fd = new FormData();
+            fd.append('courtId',   COURT_ID);
+            fd.append('dayOfWeek', currentDay);
+            fd.append('startTime', start);
+            fd.append('endTime',   end);
+            fd.append('price',     price);
+            fd.append('isActive',  'true');
+            fd.append('__RequestVerificationToken',
+                document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+
+            fetch('/AdminCourt/AddPriceSlot', { method: 'POST', body: fd })
+                .then(r => r.json())
+                .then(data => {
+                    showMsg(data.message, data.success);
+                    if (data.success) {
+                        // Tự động đặt giờ bắt đầu tiếp theo = giờ kết thúc vừa thêm
+                        document.getElementById('newStart').value = end;
+                        const [h, m] = end.split(':').map(Number);
+                        const nextEnd = String(h + 1).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+                        document.getElementById('newEnd').value = nextEnd;
+                        fetchSlots(currentDay);
+                    }
+                })
+                .catch(() => showMsg('Lỗi kết nối máy chủ!', false));
+        }
+
+        // Xóa khung giờ
+        function deleteSlot(id, label) {
+            if (!confirm(`Xóa khung giờ ${label}?`)) return;
+            const fd = new FormData();
+            fd.append('slotId', id);
+            fd.append('__RequestVerificationToken',
+                document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+
+            fetch('/AdminCourt/DeletePriceSlot', { method:'POST', body: fd })
+                .then(r => r.json())
+                .then(data => {
+                    showMsg(data.message, data.success);
+                    if (data.success) fetchSlots(currentDay);
+                })
+                .catch(() => showMsg('Lỗi kết nối!', false));
+        }
+
+        // Bật/tắt hiển thị
+        function toggleSlot(id) {
+            const fd = new FormData();
+            fd.append('slotId', id);
+            fd.append('__RequestVerificationToken',
+                document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+
+            fetch('/AdminCourt/TogglePriceSlot', { method:'POST', body: fd })
+                .then(r => r.json())
+                .then(data => {
+                    showMsg(data.message, data.success);
+                    if (data.success) fetchSlots(currentDay);
+                });
+        }
+
+        // Hiển thị thông báo
+        function showMsg(msg, ok) {
+            const el = document.getElementById('slotMsg');
+            el.textContent = msg;
+            el.className = ok ? 'slot-msg-ok' : 'slot-msg-err';
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 3500);
+        }
+
+        // Mặc định chọn Thứ 2 khi load trang
+        document.addEventListener('DOMContentLoaded', () => loadSlots(1));
+        // ── END PRICESLOT ──────────────────────────────────────────
     </script>
 }

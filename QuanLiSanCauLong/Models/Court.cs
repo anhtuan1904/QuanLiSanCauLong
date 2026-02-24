@@ -12,6 +12,10 @@ namespace QuanLiSanCauLong.Models
         public int FacilityId { get; set; }
         public decimal? HourlyRate { get; set; }
 
+        // --- THÊM DÒNG NÀY ĐỂ SỬA LỖI ---
+        [NotMapped]
+        public decimal? PricePerHour { get => HourlyRate; set => HourlyRate = value; }
+
         // ── Thông tin cơ bản ─────────────────────────────────────
         [Required(ErrorMessage = "Vui lòng nhập tên / số sân")]
         [StringLength(50)]

@@ -4,79 +4,508 @@
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="container-fluid py-4">
-    <div class="mb-4">
-        <a asp-action="Index" class="text-decoration-none text-secondary fw-bold small">
-            <i class="bi bi-arrow-left me-1"></i> QUAY LẠI DANH SÁCH
-        </a>
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #f5f4ec;
+        --warm: #f0ead8;
+        --card: #ffffff;
+        --border: #e4d9c8;
+        --muted: #8a7560;
+        --green: #15803d;
+        --green-soft: #dcfce7;
+        --red: #dc2626;
+        --red-soft: #fef2f2;
+    }
+
+    body, .container-fluid {
+        font-family: 'Outfit', sans-serif;
+        background: var(--cream);
+    }
+
+    /* Breadcrumb */
+    .bc {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .82rem;
+        color: var(--muted);
+        margin-bottom: 1.5rem;
+    }
+
+        .bc a {
+            color: var(--muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: .3rem;
+            transition: .15s;
+        }
+
+            .bc a:hover {
+                color: var(--deep);
+            }
+
+    .bc-sep {
+        opacity: .5;
+    }
+
+    .bc-cur {
+        color: var(--deep);
+        font-weight: 700;
+    }
+
+    /* Main Layout */
+    .detail-wrap {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 1.4rem;
+        align-items: start;
+    }
+
+    @@media(max-width:900px) {
+        .detail-wrap {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Image Panel */
+    .img-panel {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(26,18,9,.06);
+    }
+
+    .img-panel-inner {
+        background: var(--warm);
+        border-bottom: 1px solid var(--border);
+        padding: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 300px;
+    }
+
+    .product-main-img {
+        max-width: 100%;
+        max-height: 300px;
+        object-fit: contain;
+        border-radius: 12px;
+        transition: .3s;
+    }
+
+        .product-main-img:hover {
+            transform: scale(1.03);
+        }
+
+    .img-placeholder {
+        width: 100%;
+        height: 260px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        gap: .5rem;
+    }
+
+        .img-placeholder i {
+            font-size: 3rem;
+            color: var(--gold);
+            opacity: .3;
+        }
+
+        .img-placeholder span {
+            font-size: .82rem;
+        }
+
+    .img-panel-foot {
+        padding: 1rem 1.4rem;
+        display: flex;
+        gap: .5rem;
+    }
+
+    /* Info Panel */
+    .info-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+    }
+
+    /* Cards */
+    .dc {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(26,18,9,.05);
+    }
+
+    .dc-hd {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--warm);
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+
+        .dc-hd i {
+            color: var(--gold);
+            font-size: .95rem;
+        }
+
+    .dc-hd-title {
+        font-weight: 700;
+        font-size: .92rem;
+        color: var(--deep);
+    }
+
+    .dc-bd {
+        padding: 1.4rem 1.5rem;
+    }
+
+    /* Product heading in card */
+    .prod-cat-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .25rem .8rem;
+        background: #fef9ec;
+        border: 1px solid #f0dea0;
+        border-radius: 20px;
+        font-size: .73rem;
+        font-weight: 700;
+        color: var(--gold);
+        margin-bottom: .7rem;
+    }
+
+    .prod-heading {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--deep);
+        margin-bottom: .3rem;
+    }
+
+    .prod-code {
+        font-size: .78rem;
+        color: var(--muted);
+        font-family: 'Courier New',monospace;
+    }
+
+    /* Price */
+    .price-row {
+        display: flex;
+        align-items: baseline;
+        gap: .5rem;
+        margin: 1rem 0;
+    }
+
+    .price-main {
+        font-family: 'Playfair Display',serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--green);
+    }
+
+    .price-unit {
+        font-size: .88rem;
+        color: var(--muted);
+    }
+
+    /* Status */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .3rem .9rem;
+        border-radius: 20px;
+        font-size: .78rem;
+        font-weight: 700;
+    }
+
+    .badge-available {
+        background: var(--green-soft);
+        color: var(--green);
+        border: 1px solid #a7f3d0;
+    }
+
+    .badge-outofstock {
+        background: #fef9ec;
+        color: #92600a;
+        border: 1px solid #f0dea0;
+    }
+
+    .badge-discontinued {
+        background: var(--red-soft);
+        color: var(--red);
+        border: 1px solid #fecaca;
+    }
+
+    /* Description */
+    .desc-block {
+        background: var(--warm);
+        border-left: 3px solid var(--gold);
+        border-radius: 0 8px 8px 0;
+        padding: .9rem 1.1rem;
+        font-size: .86rem;
+        color: var(--deep);
+        line-height: 1.65;
+    }
+
+    /* Info rows */
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: .5rem 0;
+        font-size: .85rem;
+    }
+
+        .info-row + .info-row {
+            border-top: 1px solid var(--warm);
+        }
+
+    .info-lbl {
+        color: var(--muted);
+    }
+
+    .info-val {
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+    /* Buttons */
+    .btn-edit {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .42rem;
+        padding: .6rem 1rem;
+        background: var(--gold2);
+        color: var(--deep);
+        border: none;
+        border-radius: 9px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .85rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: .2s;
+        box-shadow: 0 2px 6px rgba(212,160,23,.25);
+    }
+
+        .btn-edit:hover {
+            background: var(--gold);
+            color: #fff;
+        }
+
+    .btn-delete {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .42rem;
+        padding: .6rem 1rem;
+        background: var(--red-soft);
+        color: var(--red);
+        border: 1px solid #fecaca;
+        border-radius: 9px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .85rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: .18s;
+    }
+
+        .btn-delete:hover {
+            background: var(--red);
+            color: #fff;
+            border-color: var(--red);
+        }
+
+    /* Toast */
+    .toast-wrap {
+        position: fixed;
+        top: 1.2rem;
+        right: 1.2rem;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+        pointer-events: none;
+    }
+
+    .toast-msg {
+        padding: .75rem 1.2rem;
+        border-radius: 10px;
+        font-size: .84rem;
+        font-weight: 600;
+        box-shadow: 0 8px 24px rgba(0,0,0,.14);
+        pointer-events: all;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        animation: slideIn .22s ease;
+        background: #fff;
+        border-left: 4px solid var(--red);
+        color: var(--red);
+    }
+
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(20px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0)
+        }
+    }
+</style>
+
+<div class="container-fluid px-4 py-4">
+
+    <!-- Breadcrumb -->
+    <div class="bc">
+        <a asp-action="Index"><i class="bi bi-house"></i> Sản phẩm</a>
+        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
+        <span class="bc-cur">@Model.ProductName</span>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="row g-0">
-            <div class="col-md-5 bg-light d-flex align-items-center justify-content-center p-5">
-                <div class="product-image-container shadow-sm rounded-4 overflow-hidden bg-white">
-                    <img src="@Model.ImageUrl" class="img-fluid object-fit-contain"
-                         style="max-height: 400px; width: 100%;"
+    <div class="detail-wrap">
+
+        <!-- LEFT: Image Panel -->
+        <div class="img-panel">
+            <div class="img-panel-inner">
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <img src="@Model.ImageUrl"
+                         class="product-main-img"
                          alt="@Model.ProductName"
                          onerror="this.src='/images/no-image.png'" />
+                }
+                else
+                {
+                    <div class="img-placeholder">
+                        <i class="bi bi-image"></i>
+                        <span>Chưa có ảnh sản phẩm</span>
+                    </div>
+                }
+            </div>
+            <div class="img-panel-foot">
+                <a asp-action="Edit" asp-route-id="@Model.ProductId" class="btn-edit">
+                    <i class="bi bi-pencil-square"></i> Chỉnh sửa
+                </a>
+                <button class="btn-delete" onclick="deleteProduct(@Model.ProductId)">
+                    <i class="bi bi-trash"></i> Xóa
+                </button>
+            </div>
+        </div>
+
+        <!-- RIGHT: Info Panels -->
+        <div class="info-panel">
+
+            <!-- Main Info -->
+            <div class="dc">
+                <div class="dc-hd"><i class="bi bi-box-seam-fill"></i><span class="dc-hd-title">Thông tin sản phẩm</span></div>
+                <div class="dc-bd">
+                    <div class="prod-cat-tag">
+                        <i class="bi bi-tag-fill"></i>
+                        @Model.Category?.CategoryName
+                    </div>
+                    <div class="prod-heading">@Model.ProductName</div>
+                    <div class="prod-code">Mã SKU: @(Model.ProductCode ?? "N/A")</div>
+
+                    <div class="price-row">
+                        <span class="price-main">₫@Model.Price.ToString("N0")</span>
+                        <span class="price-unit">/ @Model.Unit</span>
+                    </div>
+
+                    @switch (Model.Status)
+                    {
+                        case "Available":
+                            <span class="status-badge badge-available"><i class="bi bi-check-circle-fill"></i> Còn hàng</span>
+                            break;
+                        case "OutOfStock":
+                            <span class="status-badge badge-outofstock"><i class="bi bi-exclamation-circle-fill"></i> Sắp hết hàng</span>
+                            break;
+                        default:
+                            <span class="status-badge badge-discontinued"><i class="bi bi-x-circle-fill"></i> Ngừng bán</span>
+                            break;
+                    }
                 </div>
             </div>
 
-            <div class="col-md-7 p-5">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <span class="badge bg-soft-primary text-primary border rounded-pill px-3 mb-2">
-                            @Model.Category?.CategoryName
-                        </span>
-                        <h2 class="fw-bold text-dark">@Model.ProductName</h2>
-                        <p class="text-muted small">Mã sản phẩm: <span class="fw-bold">@Model.ProductCode</span></p>
-                    </div>
-                    <div class="status-badge">
-                        @if (Model.Status == "Available")
-                        {
-                            <span class="badge bg-success rounded-pill px-3">Còn Hàng</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-danger rounded-pill px-3">Hết Hàng</span>
-                        }
+            <!-- Description -->
+            <div class="dc">
+                <div class="dc-hd"><i class="bi bi-file-text-fill"></i><span class="dc-hd-title">Mô tả sản phẩm</span></div>
+                <div class="dc-bd">
+                    <div class="desc-block">
+                        @(string.IsNullOrEmpty(Model.Description) ? "Không có mô tả cho sản phẩm này." : Model.Description)
                     </div>
                 </div>
+            </div>
 
-                <div class="price-section mb-4">
-                    <h3 class="text-success fw-bold">₫@Model.Price.ToString("N0") <small class="text-muted fs-6">/ @Model.Unit</small></h3>
-                </div>
-
-                <div class="description-section mb-5">
-                    <label class="fw-bold text-uppercase small text-muted d-block mb-2">Mô tả sản phẩm</label>
-                    <div class="p-3 bg-light rounded-3 border-start border-primary border-4">
-                        <p class="mb-0 text-dark lh-base">@(string.IsNullOrEmpty(Model.Description) ? "Không có mô tả cho sản phẩm này." : Model.Description)</p>
+            <!-- Thống kê -->
+            <div class="dc">
+                <div class="dc-hd"><i class="bi bi-bar-chart-fill"></i><span class="dc-hd-title">Thông tin kho hàng</span></div>
+                <div class="dc-bd">
+                    <div class="info-row">
+                        <span class="info-lbl">Mã sản phẩm</span>
+                        <span class="info-val" style="font-family:'Courier New',monospace">#@Model.ProductId</span>
                     </div>
-                </div>
-
-                <div class="action-buttons d-flex gap-3 pt-4 border-top">
-                    <a asp-action="Edit" asp-route-id="@Model.ProductId" class="btn btn-warning px-4 rounded-3 fw-bold">
-                        <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
-                    </a>
-                    <button class="btn btn-outline-danger px-4 rounded-3 fw-bold" onclick="deleteProduct(@Model.ProductId)">
-                        <i class="bi bi-trash me-2"></i>Xóa sản phẩm
-                    </button>
+                    <div class="info-row">
+                        <span class="info-lbl">Danh mục</span>
+                        <span class="info-val">@Model.Category?.CategoryName</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-lbl">Đơn vị tính</span>
+                        <span class="info-val">@Model.Unit</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-lbl">Tồn kho hiện tại</span>
+                        <span class="info-val" style="color:var(--green)">15 @Model.Unit</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-lbl">Đã bán</span>
+                        <span class="info-val">45 @Model.Unit</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    .bg-soft-primary {
-        background-color: #eef2ff;
-    }
+<div class="toast-wrap" id="toastWrap"></div>
 
-    .product-image-container {
-        transition: transform 0.3s ease;
-    }
-
-        .product-image-container:hover {
-            transform: scale(1.02);
+@section Scripts {
+    <script>
+        function deleteProduct(id) {
+            if (!confirm('Bạn có chắc muốn xóa sản phẩm này? Thao tác này không thể hoàn tác.')) return;
+            fetch(`/Admin/AdminProduct/Delete/${id}`, {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '' }
+            }).then(r => {
+                if (r.ok) {
+                    window.location.href = '/Admin/AdminProduct';
+                } else {
+                    const wrap = document.getElementById('toastWrap');
+                    const el = document.createElement('div');
+                    el.className = 'toast-msg';
+                    el.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Đã xảy ra lỗi khi xóa sản phẩm!';
+                    wrap.appendChild(el);
+                    setTimeout(() => el.remove(), 3200);
+                }
+            });
         }
-</style>
+    </script>
+}

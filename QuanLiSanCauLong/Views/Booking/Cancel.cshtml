@@ -1,5 +1,451 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model QuanLiSanCauLong.ViewModels.BookingHistoryViewModel
 @{
+    ViewData["Title"] = "Huỷ đặt sân #" + Model.BookingCode;
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+    :root {
+        --D: #1a1209;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --G3: rgba(212,160,23,.1);
+        --W: #f5ede0;
+        --S: #ede5d8;
+        --R: #c94b2a;
+        --GN: #10b981;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        background: var(--W);
+        font-family: 'Outfit',sans-serif;
+    }
+
+    .pghd {
+        background: var(--D);
+        border-bottom: 1px solid rgba(212,160,23,.18);
+        padding: .78rem 2rem;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        position: relative;
+    }
+
+        .pghd::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,var(--G),var(--G2),transparent);
+        }
+
+        .pghd a {
+            color: var(--G2);
+            text-decoration: none;
+            font-size: .78rem;
+            font-weight: 600;
+            opacity: .8;
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+        }
+
+            .pghd a:hover {
+                opacity: 1;
+            }
+
+        .pghd .sep {
+            color: rgba(255,255,255,.38);
+            font-size: .65rem;
+        }
+
+        .pghd .cur {
+            color: rgba(255,255,255,.38);
+            font-size: .78rem;
+            font-style: italic;
+        }
+
+    .pw {
+        max-width: 620px;
+        margin: 2.5rem auto;
+        padding: 0 1.5rem;
+    }
+
+    /* Warning banner */
+    .warn-banner {
+        background: linear-gradient(135deg,#fef2f2,#fee2e2);
+        border: 1.5px solid #fca5a5;
+        border-radius: 12px;
+        padding: 1.4rem 1.6rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .warn-icon {
+        width: 44px;
+        height: 44px;
+        background: #fee2e2;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border: 2px solid #fca5a5;
+    }
+
+        .warn-icon i {
+            color: var(--R);
+            font-size: 1.3rem;
+        }
+
+    .warn-title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #991b1b;
+        margin-bottom: .35rem;
+    }
+
+    .warn-desc {
+        font-size: .82rem;
+        color: #7f1d1d;
+        line-height: 1.6;
+    }
+
+    /* Card */
+    .c {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1.2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    }
+
+    .c-hd {
+        background: var(--D);
+        border-bottom: 1px solid rgba(212,160,23,.18);
+        padding: .9rem 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+        .c-hd i {
+            color: var(--G);
+        }
+
+    .c-title {
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        font-size: .94rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .c-bd {
+        padding: 1.2rem 1.4rem;
+    }
+
+    /* Info rows */
+    .ir {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: .5rem 0;
+        font-size: .84rem;
+        gap: .5rem;
+    }
+
+        .ir + .ir {
+            border-top: 1px solid #f5f0ea;
+        }
+
+    .ir-lbl {
+        color: #8c7a68;
+        flex-shrink: 0;
+    }
+
+    .ir-val {
+        font-weight: 600;
+        color: var(--D);
+        text-align: right;
+    }
+
+    /* Cancel form */
+    .reason-label {
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #8c7a68;
+        margin-bottom: .55rem;
+    }
+
+    .reason-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .55rem;
+        margin-bottom: 1rem;
+    }
+
+    .reason-opt {
+        position: relative;
+    }
+
+        .reason-opt input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+    .reason-lbl {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .65rem .9rem;
+        border: 1.5px solid var(--S);
+        border-radius: 7px;
+        cursor: pointer;
+        font-size: .8rem;
+        font-weight: 600;
+        color: #4a3728;
+        transition: all .2s;
+    }
+
+        .reason-lbl i {
+            color: #8c7a68;
+            font-size: .9rem;
+            transition: color .2s;
+        }
+
+    .reason-opt input:checked + .reason-lbl {
+        border-color: var(--R);
+        background: #fef2f2;
+        color: #991b1b;
+    }
+
+        .reason-opt input:checked + .reason-lbl i {
+            color: var(--R);
+        }
+
+    .nta {
+        width: 100%;
+        padding: .75rem .95rem;
+        border: 1.5px solid var(--S);
+        border-radius: 7px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .84rem;
+        color: var(--D);
+        resize: vertical;
+        outline: none;
+        transition: border-color .2s;
+        min-height: 90px;
+    }
+
+        .nta:focus {
+            border-color: var(--R);
+            box-shadow: 0 0 0 3px rgba(201,75,42,.08);
+        }
+
+    /* Policy */
+    .policy-box {
+        background: var(--W);
+        border: 1px solid var(--S);
+        border-radius: 8px;
+        padding: 1rem 1.1rem;
+    }
+
+    .policy-row {
+        display: flex;
+        gap: .5rem;
+        font-size: .78rem;
+        color: #5a4a3a;
+        padding: .3rem 0;
+        line-height: 1.5;
+    }
+
+        .policy-row i {
+            color: var(--G);
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+
+        .policy-row.bad i {
+            color: var(--R);
+        }
+
+    /* Actions */
+    .action-row {
+        display: flex;
+        gap: .75rem;
+        margin-top: 1.6rem;
+    }
+
+    .btn-cancel-confirm {
+        flex: 1;
+        padding: .9rem;
+        background: linear-gradient(135deg,#dc2626,#b91c1c);
+        color: #fff;
+        font-family: 'Outfit',sans-serif;
+        font-size: .9rem;
+        font-weight: 800;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .45rem;
+        transition: all .22s;
+    }
+
+        .btn-cancel-confirm:hover {
+            box-shadow: 0 8px 20px rgba(220,38,38,.38);
+        }
+
+        .btn-cancel-confirm:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+    .btn-back-action {
+        flex: 1;
+        padding: .9rem;
+        background: #fff;
+        color: var(--D);
+        border: 1.5px solid var(--S);
+        border-radius: 8px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .88rem;
+        font-weight: 600;
+        text-align: center;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .45rem;
+        transition: all .2s;
+    }
+
+        .btn-back-action:hover {
+            border-color: var(--D);
+            color: var(--D);
+        }
+
+    @@media(max-width:600px) {
+        .pghd, .pw {
+            padding-left: 1.2rem;
+            padding-right: 1.2rem;
+        }
+
+        .reason-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .action-row {
+            flex-direction: column-reverse;
+        }
+    }
+</style>
+
+<div class="pghd">
+    <a href="javascript:history.back()"><i class="bi bi-arrow-left"></i> Quay lại</a>
+    <span class="sep"><i class="bi bi-chevron-right"></i></span>
+    <span class="cur">Huỷ đặt sân</span>
+</div>
+
+<div class="pw">
+    <!-- Warning -->
+    <div class="warn-banner">
+        <div class="warn-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div>
+            <div class="warn-title">Bạn muốn huỷ đơn đặt sân này?</div>
+            <div class="warn-desc">Hành động này <strong>không thể hoàn tác</strong>. Vui lòng đọc chính sách hoàn tiền trước khi xác nhận huỷ.</div>
+        </div>
+    </div>
+
+    <!-- Booking Summary -->
+    <div class="c">
+        <div class="c-hd"><i class="bi bi-calendar-check"></i><span class="c-title">Thông tin đặt sân</span></div>
+        <div class="c-bd">
+            <div class="ir"><span class="ir-lbl">Mã đặt sân</span><span class="ir-val" style="color:var(--G);font-family:monospace">#@Model.BookingCode</span></div>
+            <div class="ir"><span class="ir-lbl">Cơ sở</span><span class="ir-val">@Model.FacilityName</span></div>
+            <div class="ir"><span class="ir-lbl">Sân</span><span class="ir-val">@Model.CourtNumber <span style="font-size:.74rem;color:#8c7a68">(@Model.CourtType)</span></span></div>
+            <div class="ir">
+                <span class="ir-lbl">Ngày chơi</span>
+                <span class="ir-val">@Model.BookingDate.ToString("dd/MM/yyyy") · @Model.StartTime.ToString(@"hh\:mm")–@Model.EndTime.ToString(@"hh\:mm")</span>
+            </div>
+            <div class="ir"><span class="ir-lbl">Tổng tiền</span><span class="ir-val" style="color:var(--R)">@Model.GrandTotal.ToString("N0")đ</span></div>
+        </div>
+    </div>
+
+    <!-- Cancel Form -->
+    <div class="c">
+        <div class="c-hd"><i class="bi bi-chat-square-text"></i><span class="c-title">Lý do huỷ</span></div>
+        <div class="c-bd">
+            <form asp-action="Cancel" method="post" id="cancelForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.BookingId" />
+
+                <div class="reason-label">Chọn lý do</div>
+                <div class="reason-grid">
+                    <div class="reason-opt">
+                        <input type="radio" name="cancelReason" id="r1" value="Thay đổi lịch" />
+                        <label class="reason-lbl" for="r1"><i class="bi bi-calendar-x"></i> Thay đổi lịch</label>
+                    </div>
+                    <div class="reason-opt">
+                        <input type="radio" name="cancelReason" id="r2" value="Có việc đột xuất" />
+                        <label class="reason-lbl" for="r2"><i class="bi bi-lightning"></i> Việc đột xuất</label>
+                    </div>
+                    <div class="reason-opt">
+                        <input type="radio" name="cancelReason" id="r3" value="Thời tiết xấu" />
+                        <label class="reason-lbl" for="r3"><i class="bi bi-cloud-rain"></i> Thời tiết xấu</label>
+                    </div>
+                    <div class="reason-opt">
+                        <input type="radio" name="cancelReason" id="r4" value="Lý do khác" checked />
+                        <label class="reason-lbl" for="r4"><i class="bi bi-three-dots"></i> Lý do khác</label>
+                    </div>
+                </div>
+
+                <div class="reason-label">Ghi chú thêm (tuỳ chọn)</div>
+                <textarea name="cancelNote" class="nta" placeholder="Nhập thêm lý do nếu cần..."></textarea>
+
+                <!-- Policy -->
+                <div class="policy-box" style="margin-top:1rem">
+                    <div class="policy-row"><i class="bi bi-check-circle-fill"></i> Huỷ trước <strong>24 giờ</strong>: hoàn tiền 100%</div>
+                    <div class="policy-row"><i class="bi bi-check-circle-fill"></i> Huỷ trước <strong>2–24 giờ</strong>: hoàn tiền 50%</div>
+                    <div class="policy-row bad"><i class="bi bi-x-circle-fill"></i> Huỷ trong vòng <strong>2 giờ</strong>: không hoàn tiền</div>
+                </div>
+
+                <div class="action-row">
+                    <a href="javascript:history.back()" class="btn-back-action">
+                        <i class="bi bi-arrow-left"></i> Giữ đơn
+                    </a>
+                    <button type="submit" class="btn-cancel-confirm" id="btnCancel"
+                            onclick="return confirm('Bạn chắc chắn muốn huỷ đơn #@Model.BookingCode?')">
+                        <i class="bi bi-x-circle-fill"></i> Xác nhận huỷ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('cancelForm').addEventListener('submit', function() {
+            var btn = document.getElementById('btnCancel');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang xử lý...';
+        });
+    </script>
 }

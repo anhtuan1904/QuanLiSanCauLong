@@ -1,422 +1,1029 @@
 ﻿@model QuanLiSanCauLong.Models.PriceSlot
 @{
-    ViewData["Title"] = "Tạo giá hàng loạt";
+    ViewData["Title"] = "Tạo Giá Hàng Loạt";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="container-fluid pb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #fdf8f0;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+        --green: #16a34a;
+        --red: #c94b2a;
+    }
+
+    body, * {
+        font-family: 'Outfit',sans-serif;
+    }
+
+    /* HEADER */
+    .pg-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .pg-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+        .pg-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    .pg-sub {
+        font-size: .82rem;
+        color: var(--muted);
+        margin-top: .2rem;
+    }
+
+    .btn-back {
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        background: #fff;
+        color: var(--deep);
+        border: 1.5px solid var(--border);
+        padding: .65rem 1.2rem;
+        border-radius: 8px;
+        font-size: .84rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all .2s;
+    }
+
+        .btn-back:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: var(--cream);
+        }
+
+    /* LIGHTNING BADGE */
+    .bulk-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        padding: .35rem .9rem;
+        border-radius: 20px;
+        font-size: .78rem;
+        font-weight: 700;
+        margin-bottom: .5rem;
+    }
+
+    /* LAYOUT */
+    .bulk-layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    /* SECTION CARDS */
+    .sec-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+    }
+
+    .sec-hd {
+        background: var(--warm);
+        padding: 1rem 1.4rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .sec-num {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        font-weight: 800;
+        font-size: .78rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .sec-hdtxt {
+        font-family: 'Playfair Display',serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+    .sec-bd {
+        padding: 1.4rem;
+    }
+
+    /* FORM CONTROLS */
+    .f-label {
+        font-size: .78rem;
+        font-weight: 700;
+        color: var(--deep);
+        letter-spacing: .03em;
+        display: block;
+        margin-bottom: .4rem;
+    }
+
+        .f-label .req {
+            color: var(--red);
+        }
+
+    .f-ctrl {
+        width: 100%;
+        padding: .68rem 1rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .9rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
+        transition: border-color .2s;
+    }
+
+        .f-ctrl:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(212,160,23,.1);
+        }
+
+    /* COURT LIST */
+    .court-list-wrap {
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .court-list-hd {
+        background: var(--warm);
+        padding: .7rem 1rem;
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .court-scroll {
+        max-height: 220px;
+        overflow-y: auto;
+        padding: .75rem 1rem;
+    }
+
+        .court-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .court-scroll::-webkit-scrollbar-track {
+            background: var(--warm);
+        }
+
+        .court-scroll::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 3px;
+        }
+
+    .court-item {
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+        padding: .5rem .6rem;
+        border-radius: 7px;
+        cursor: pointer;
+        transition: background .15s;
+    }
+
+        .court-item:hover {
+            background: var(--cream);
+        }
+
+        .court-item input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--gold);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .court-item .ci-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 5px;
+            flex-shrink: 0;
+            background: linear-gradient(135deg,var(--gold),var(--gold2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .68rem;
+            font-weight: 700;
+            color: var(--deep);
+        }
+
+        .court-item .ci-name {
+            font-weight: 600;
+            font-size: .86rem;
+            color: var(--deep);
+        }
+
+        .court-item .ci-type {
+            font-size: .72rem;
+            color: var(--muted);
+        }
+
+    .court-empty {
+        text-align: center;
+        padding: 1.5rem;
+        color: var(--muted);
+        font-size: .84rem;
+    }
+
+        .court-empty i {
+            font-size: 1.5rem;
+            display: block;
+            margin-bottom: .5rem;
+            opacity: .35;
+        }
+
+    .sel-btns {
+        display: flex;
+        gap: .5rem;
+        padding: .6rem 1rem;
+        border-top: 1px solid var(--border);
+        background: var(--warm);
+    }
+
+    .sel-btn {
+        padding: .35rem .85rem;
+        border: 1.5px solid var(--border);
+        border-radius: 6px;
+        background: #fff;
+        font-size: .75rem;
+        font-weight: 600;
+        color: var(--deep);
+        cursor: pointer;
+        transition: all .18s;
+    }
+
+        .sel-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: var(--cream);
+        }
+
+    /* DAY SELECTOR */
+    .day-btn-row {
+        display: flex;
+        gap: .5rem;
+        flex-wrap: wrap;
+        margin-bottom: .9rem;
+    }
+
+    .day-quick {
+        padding: .4rem .9rem;
+        background: #fff;
+        border: 1.5px solid var(--border);
+        border-radius: 20px;
+        font-size: .76rem;
+        font-weight: 600;
+        color: var(--deep);
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .day-quick:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: var(--cream);
+        }
+
+    .day-grid {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: .6rem;
+    }
+
+    .day-item input {
+        display: none;
+    }
+
+    .day-lbl {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: .6rem .4rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-size: .82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+        text-align: center;
+        background: #fff;
+    }
+
+        .day-lbl:hover {
+            border-color: var(--gold);
+            background: var(--cream);
+        }
+
+    .day-item input:checked + .day-lbl {
+        background: var(--deep);
+        color: var(--gold2);
+        border-color: var(--deep);
+    }
+
+    .day-weekend .day-lbl {
+        color: var(--red);
+    }
+
+    .day-item input:checked + .day-lbl {
+        color: var(--gold2);
+    }
+
+    /* SLOT FORM */
+    .slot-form {
+        background: var(--cream);
+        border: 1.5px solid rgba(212,160,23,.2);
+        border-radius: 10px;
+        padding: 1.2rem;
+    }
+
+    .slot-form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .9rem;
+    }
+
+    .slot-form-grid3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: .9rem;
+        margin-top: .9rem;
+    }
+
+    .price-wrap {
+        position: relative;
+    }
+
+        .price-wrap .f-ctrl {
+            padding-left: 1.9rem;
+        }
+
+    .price-sym {
+        position: absolute;
+        left: .8rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--muted);
+        font-weight: 700;
+    }
+
+    .add-slot-btn {
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        border: none;
+        padding: .8rem 1.6rem;
+        border-radius: 8px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .88rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all .22s;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin-top: 1rem;
+    }
+
+        .add-slot-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(212,160,23,.35);
+        }
+
+    /* SLOT LIST */
+    .slot-list {
+        margin-top: 1.1rem;
+        display: flex;
+        flex-direction: column;
+        gap: .6rem;
+    }
+
+    .slot-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: .85rem 1.1rem;
+        border-left: 3px solid var(--gold);
+    }
+
+    .slot-item-info {
+        flex: 1;
+    }
+
+    .slot-time {
+        font-weight: 700;
+        font-size: .9rem;
+        color: var(--deep);
+    }
+
+    .slot-price {
+        font-weight: 700;
+        color: var(--green);
+        margin-left: .5rem;
+    }
+
+    .slot-meta {
+        font-size: .74rem;
+        color: var(--muted);
+        margin-top: .2rem;
+    }
+
+    .slot-del {
+        width: 28px;
+        height: 28px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--muted);
+        transition: all .18s;
+        font-size: .76rem;
+    }
+
+        .slot-del:hover {
+            border-color: var(--red);
+            color: var(--red);
+            background: rgba(201,75,42,.07);
+        }
+
+    /* SIDEBAR (PREVIEW) */
+    .sidebar-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        position: sticky;
+        top: 20px;
+    }
+
+    .sidebar-hd {
+        background: var(--deep);
+        padding: 1.1rem 1.3rem;
+    }
+
+        .sidebar-hd h3 {
+            font-family: 'Playfair Display',serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 0;
+        }
+
+        .sidebar-hd p {
+            font-size: .74rem;
+            color: rgba(255,255,255,.45);
+            margin: .2rem 0 0;
+        }
+
+    .sidebar-bd {
+        padding: 1.2rem;
+    }
+
+    /* PREVIEW BOX */
+    .preview-empty {
+        text-align: center;
+        padding: 2rem 1rem;
+    }
+
+        .preview-empty i {
+            font-size: 2.5rem;
+            opacity: .2;
+            display: block;
+            margin-bottom: .6rem;
+            color: var(--deep);
+        }
+
+        .preview-empty p {
+            font-size: .82rem;
+            color: var(--muted);
+        }
+
+    .preview-stat {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: .6rem 0;
+        border-bottom: 1px solid var(--border);
+        font-size: .86rem;
+    }
+
+        .preview-stat:last-child {
+            border: none;
+        }
+
+    .preview-stat-label {
+        color: var(--muted);
+    }
+
+    .preview-stat-value {
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+    .preview-total {
+        background: linear-gradient(135deg,rgba(212,160,23,.1),rgba(245,200,66,.15));
+        border: 1px solid rgba(212,160,23,.25);
+        border-radius: 8px;
+        padding: .9rem 1rem;
+        text-align: center;
+        margin-top: .75rem;
+    }
+
+    .preview-total-n {
+        font-family: 'Playfair Display',serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--gold);
+        line-height: 1;
+    }
+
+    .preview-total-l {
+        font-size: .72rem;
+        color: var(--muted);
+        margin-top: .2rem;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+    }
+
+    /* SUBMIT */
+    .bulk-submit {
+        width: 100%;
+        margin-top: 1rem;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        border: none;
+        padding: .9rem;
+        border-radius: 8px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .95rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all .22s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+    }
+
+        .bulk-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(212,160,23,.4);
+        }
+
+        .bulk-submit:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+    /* HINT */
+    .f-hint {
+        font-size: .72rem;
+        color: var(--muted);
+        margin-top: .4rem;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+        .f-hint i {
+            color: var(--gold);
+        }
+</style>
+
+@Html.AntiForgeryToken()
+
+<div>
+    <!-- HEADER -->
+    <div class="pg-head">
         <div>
-            <h3 class="fw-bold text-success">
-                <i class="bi bi-lightning-charge-fill me-2"></i>Tạo giá hàng loạt
-            </h3>
-            <p class="text-muted small mb-0">Thiết lập nhanh khung giờ &amp; bảng giá cho nhiều sân cùng lúc</p>
+            <div class="bulk-badge"><i class="bi bi-lightning-charge-fill"></i> Tạo Hàng Loạt</div>
+            <h1 class="pg-title">Thiết Lập <em>Bảng Giá Nhanh</em></h1>
+            <div class="pg-sub">Cấu hình khung giờ & giá cho nhiều sân cùng lúc</div>
         </div>
-        <a asp-action="Index" class="btn btn-outline-secondary border-0">
-            <i class="bi bi-arrow-left me-2"></i>Quay lại
-        </a>
+        <a asp-action="Index" class="btn-back"><i class="bi bi-arrow-left"></i> Quay lại</a>
     </div>
 
-    <!-- AntiForgery token dùng cho AJAX POST -->
-    @Html.AntiForgeryToken()
+    <div class="bulk-layout">
+        <!-- ══ LEFT ══ -->
+        <div>
 
-    <div class="row g-4">
-
-        <!-- ══ CỘT TRÁI ══ -->
-        <div class="col-lg-8">
-
-            <!-- BƯỚC 1: Cơ sở & Sân -->
-            <div class="card border-0 shadow-sm mb-4" style="border-radius:15px;">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h5 class="mb-0 fw-bold"><span class="badge bg-success me-2">1</span>Chọn cơ sở &amp; sân áp dụng</h5>
+            <!-- STEP 1 -->
+            <div class="sec-card">
+                <div class="sec-hd">
+                    <div class="sec-num">1</div>
+                    <span class="sec-hdtxt">Chọn cơ sở & sân áp dụng</span>
                 </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Cơ sở <span class="text-danger">*</span></label>
-                            <select id="facilitySelect" class="form-select shadow-none" required>
-                                <option value="">-- Chọn cơ sở --</option>
-                                @foreach (var facility in ViewBag.Facilities)
-                                {
-                                    <option value="@facility.FacilityId">@facility.FacilityName</option>
-                                }
-                            </select>
-                        </div>
+                <div class="sec-bd">
+                    <div style="margin-bottom:1rem">
+                        <label class="f-label">Cơ sở <span class="req">*</span></label>
+                        <select id="facilitySelect" class="f-ctrl" required onchange="loadCourts(this.value)">
+                            <option value="">— Chọn cơ sở —</option>
+                            @foreach (var f in ViewBag.Facilities)
+                            {
+                                <option value="@f.FacilityId">@f.FacilityName</option>
+                            }
+                        </select>
                     </div>
-                    <div class="mt-3">
-                        <div class="fw-semibold small text-muted text-uppercase mb-2">Danh sách sân</div>
-                        <div id="courtList" class="p-3 bg-light rounded-3 border"
-                             style="max-height:220px; overflow-y:auto; min-height:80px;">
-                            <p class="text-muted mb-0 small text-center py-2">
-                                <i class="bi bi-arrow-up-circle me-1"></i>Vui lòng chọn cơ sở để hiển thị danh sách sân
-                            </p>
+
+                    <div class="court-list-wrap">
+                        <div class="court-list-hd">
+                            <span>Danh sách sân</span>
+                            <span id="courtCount" style="color:var(--deep);font-size:.78rem;font-weight:700">—</span>
                         </div>
-                        <div class="mt-2 d-flex gap-2">
-                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill"
-                                    onclick="toggleAllCourts(true)">
-                                Chọn tất cả
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill"
-                                    onclick="toggleAllCourts(false)">
-                                Bỏ chọn
-                            </button>
+                        <div class="court-scroll" id="courtList">
+                            <div class="court-empty">
+                                <i class="bi bi-building"></i>
+                                Vui lòng chọn cơ sở để hiển thị sân
+                            </div>
+                        </div>
+                        <div class="sel-btns">
+                            <button type="button" class="sel-btn" onclick="toggleAll(true)">Chọn tất cả</button>
+                            <button type="button" class="sel-btn" onclick="toggleAll(false)">Bỏ chọn</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- BƯỚC 2: Ngày áp dụng -->
-            <div class="card border-0 shadow-sm mb-4" style="border-radius:15px;">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h5 class="mb-0 fw-bold"><span class="badge bg-success me-2">2</span>Ngày áp dụng</h5>
+            <!-- STEP 2 -->
+            <div class="sec-card">
+                <div class="sec-hd">
+                    <div class="sec-num">2</div>
+                    <span class="sec-hdtxt">Ngày áp dụng</span>
                 </div>
-                <div class="card-body">
-                    <div class="d-flex gap-2 mb-3 flex-wrap">
-                        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill"
-                                onclick="selectDays([1,2,3,4,5])">
-                            Thứ 2 – Thứ 6
-                        </button>
-                        <button type="button" class="btn btn-outline-warning btn-sm rounded-pill"
-                                onclick="selectDays([6,0])">
-                            Thứ 7 &amp; CN
-                        </button>
-                        <button type="button" class="btn btn-outline-success btn-sm rounded-pill"
-                                onclick="selectDays([0,1,2,3,4,5,6])">
-                            Tất cả ngày
-                        </button>
-                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill"
-                                onclick="selectDays([])">
-                            Bỏ chọn
-                        </button>
+                <div class="sec-bd">
+                    <div class="day-btn-row">
+                        <button type="button" class="day-quick" onclick="selectDays([1,2,3,4,5])">T2 – T6</button>
+                        <button type="button" class="day-quick" onclick="selectDays([6,0])">T7 & CN</button>
+                        <button type="button" class="day-quick" onclick="selectDays([0,1,2,3,4,5,6])">Tất cả</button>
+                        <button type="button" class="day-quick" onclick="selectDays([])">Bỏ chọn</button>
                     </div>
-                    <div class="row g-2" id="dayCheckboxes">
+                    <div class="day-grid">
                         @{
-                            var dayItems = new[] {
-                                                (1, "Thứ Hai"), (2, "Thứ Ba"), (3, "Thứ Tư"),
-                                                (4, "Thứ Năm"), (5, "Thứ Sáu"), (6, "Thứ Bảy"), (0, "Chủ Nhật"),
-                                                };
+                            var dayItems = new[]{(1,"Thứ Hai",false),(2,"Thứ Ba",false),(3,"Thứ Tư",false),(4,"Thứ Năm",false),
+                                                (5,"Thứ Sáu",false),(6,"Thứ Bảy",true),(0,"Chủ Nhật",true)};
                         }
-                        @foreach (var (val, label) in dayItems)
+                        @foreach (var (val, label, isWe) in dayItems)
                         {
-                            var isWeekend = val == 0 || val == 6;
-                            <div class="col-6 col-md-3">
-                                <label class="day-label d-flex align-items-center gap-2 p-2 border rounded-3"
-                                       style="cursor:pointer; transition:.15s;">
-                                    <input type="checkbox" class="day-check form-check-input m-0"
-                                           value="@val" onchange="applyDayStyle(this); updatePreview()" />
-                                    <span class="small fw-semibold @(isWeekend ? "text-warning" : "")">@label</span>
+                            <div class="day-item @(isWe ? "day-weekend" : "")">
+                                <input type="checkbox" class="day-check" id="bd@val" value="@val" onchange="updatePreview()">
+                                <label class="day-lbl" for="bd@val">@label</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 3 -->
+            <div class="sec-card">
+                <div class="sec-hd">
+                    <div class="sec-num">3</div>
+                    <span class="sec-hdtxt">Thêm khung giờ & Đơn giá</span>
+                </div>
+                <div class="sec-bd">
+                    <div class="slot-form">
+                        <div class="slot-form-grid">
+                            <div>
+                                <label class="f-label">Tên bảng giá <span style="font-weight:400;color:var(--muted)">(tuỳ chọn)</span></label>
+                                <input type="text" class="f-ctrl" id="nName" placeholder="Giá thường, Giá peak..." />
+                            </div>
+                            <div>
+                                <label class="f-label">Loại khách</label>
+                                <select class="f-ctrl" id="nCust">
+                                    <option value="All">Tất cả</option>
+                                    <option value="Retail">Vãng lai</option>
+                                    <option value="Member">Cố định</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="slot-form-grid3">
+                            <div>
+                                <label class="f-label">Bắt đầu <span class="req">*</span></label>
+                                <input type="time" class="f-ctrl" id="nStart" />
+                            </div>
+                            <div>
+                                <label class="f-label">Kết thúc <span class="req">*</span></label>
+                                <input type="time" class="f-ctrl" id="nEnd" />
+                            </div>
+                            <div>
+                                <label class="f-label">Làm tròn</label>
+                                <select class="f-ctrl" id="nRound">
+                                    <option value="15">15 phút</option>
+                                    <option value="30">30 phút</option>
+                                    <option value="60" selected>60 phút</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="f-label">Đơn giá (₫) <span class="req">*</span></label>
+                                <div class="price-wrap">
+                                    <span class="price-sym">₫</span>
+                                    <input type="number" class="f-ctrl" id="nPrice" step="1000" placeholder="100000" oninput="calcNew()" />
+                                </div>
+                            </div>
+                            <div>
+                                <label class="f-label">Phụ phí (₫)</label>
+                                <div class="price-wrap">
+                                    <span class="price-sym">₫</span>
+                                    <input type="number" class="f-ctrl" id="nSur" step="1000" placeholder="0" oninput="calcNew()" />
+                                </div>
+                            </div>
+                            <div style="display:flex;flex-direction:column;justify-content:flex-end">
+                                <label class="f-label">Tổng/giờ</label>
+                                <div style="padding:.68rem 1rem;background:rgba(22,163,74,.08);border:1.5px solid rgba(22,163,74,.2);
+                                    border-radius:8px;font-weight:700;color:var(--green);font-size:.95rem" id="nTotal">
+                                    0 ₫
+                                </div>
+                            </div>
+                            <div style="grid-column:1/-1">
+                                <label class="f-label">Mô tả phụ phí <span style="font-weight:400;color:var(--muted)">(tuỳ chọn)</span></label>
+                                <input type="text" class="f-ctrl" id="nSurNote" placeholder="Phí bật đèn 30.000đ/giờ..." />
+                            </div>
+                            <div style="grid-column:1/-1;display:flex;align-items:center;gap:.7rem">
+                                <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.84rem;font-weight:600;color:var(--deep)">
+                                    <input type="checkbox" id="nPeak" style="width:16px;height:16px;accent-color:var(--red);cursor:pointer">
+                                    <i class="bi bi-fire" style="color:var(--red)"></i> Đánh dấu giờ cao điểm
                                 </label>
                             </div>
-                        }
-                    </div>
-                </div>
-            </div>
-
-            <!-- BƯỚC 3: Khung giờ & Giá -->
-            <div class="card border-0 shadow-sm mb-4" style="border-radius:15px;">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h5 class="mb-0 fw-bold"><span class="badge bg-success me-2">3</span>Thiết lập khung giờ &amp; giá</h5>
-                </div>
-                <div class="card-body">
-                    <!-- Form thêm slot -->
-                    <div class="row g-2 p-3 bg-light rounded-3 border mb-3">
-                        <div class="col-12 col-md-6">
-                            <label class="form-label small fw-bold">Tên bảng giá <span class="text-muted fw-normal">(tuỳ chọn)</span></label>
-                            <input type="text" class="form-control shadow-none" id="newSlotName"
-                                   placeholder="Giá ngày thường, Giá cuối tuần..." />
                         </div>
-                        <div class="col-6 col-md-3">
-                            <label class="form-label small fw-bold">Loại khách</label>
-                            <select class="form-select shadow-none" id="newCustomerType">
-                                <option value="All">Tất cả</option>
-                                <option value="Retail">Vãng lai</option>
-                                <option value="Member">Cố định</option>
-                            </select>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <label class="form-label small fw-bold">Đơn vị làm tròn</label>
-                            <select class="form-select shadow-none" id="newRounding">
-                                <option value="15">15 phút</option>
-                                <option value="30">30 phút</option>
-                                <option value="60" selected>60 phút</option>
-                            </select>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <label class="form-label small fw-bold">Bắt đầu <span class="text-danger">*</span></label>
-                            <input type="time" class="form-control shadow-none" id="newStartTime" />
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <label class="form-label small fw-bold">Kết thúc <span class="text-danger">*</span></label>
-                            <input type="time" class="form-control shadow-none" id="newEndTime" />
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <label class="form-label small fw-bold">Đơn giá (₫) <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control shadow-none" id="newPrice"
-                                   step="1000" placeholder="100000" oninput="updateNewTotal()" />
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <label class="form-label small fw-bold">Phụ phí/giờ (₫)</label>
-                            <input type="number" class="form-control shadow-none" id="newSurcharge"
-                                   step="1000" placeholder="0" oninput="updateNewTotal()" />
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <label class="form-label small fw-bold">Mô tả phụ phí</label>
-                            <input type="text" class="form-control shadow-none" id="newSurchargeNote"
-                                   placeholder="Phí bật đèn, phí nước..." />
-                        </div>
-                        <div class="col-12 col-md-6 d-flex align-items-end gap-2">
-                            <div class="p-2 bg-success bg-opacity-10 border border-success-subtle rounded-3 flex-grow-1">
-                                <div class="small text-muted">Tổng/giờ</div>
-                                <div class="fw-bold text-success" id="newTotalPreview">0 ₫</div>
-                            </div>
-                            <div class="form-check form-switch align-self-end mb-1">
-                                <input class="form-check-input" type="checkbox" id="newIsPeakHour">
-                                <label class="form-check-label small fw-bold" for="newIsPeakHour">Peak</label>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <button type="button" class="btn btn-success fw-bold px-4"
-                                    onclick="addTimeSlot()">
-                                <i class="bi bi-plus-lg me-1"></i>Thêm khung giờ này
-                            </button>
-                        </div>
+                        <button type="button" class="add-slot-btn" onclick="addSlot()">
+                            <i class="bi bi-plus-circle-fill"></i> Thêm khung giờ này
+                        </button>
                     </div>
 
-                    <!-- Danh sách slots đã thêm -->
-                    <div id="timeSlotsList"></div>
+                    <div class="slot-list" id="slotList"></div>
                 </div>
             </div>
         </div>
 
-        <!-- ══ CỘT PHẢI: Preview & Submit ══ -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm" style="top:20px; position:sticky; border-radius:15px;">
-                <div class="card-header bg-dark text-white py-3 border-0" style="border-radius:15px 15px 0 0;">
-                    <h6 class="mb-0 fw-bold"><i class="bi bi-eye me-2"></i>Tổng quan cấu hình</h6>
+        <!-- ══ RIGHT (PREVIEW + SUBMIT) ══ -->
+        <div>
+            <div class="sidebar-card">
+                <div class="sidebar-hd">
+                    <h3>Tổng quan cấu hình</h3>
+                    <p>Preview trước khi tạo hàng loạt</p>
                 </div>
-                <div class="card-body">
-                    <div id="previewContent">
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-clipboard2-plus fs-1 opacity-25"></i>
-                            <p class="small mt-2">Chưa có dữ liệu thiết lập</p>
+                <div class="sidebar-bd">
+                    <div id="previewBox">
+                        <div class="preview-empty">
+                            <i class="bi bi-clipboard2-plus"></i>
+                            <p>Chưa có dữ liệu thiết lập.<br>Chọn sân, ngày và thêm khung giờ.</p>
                         </div>
                     </div>
-                    <hr>
-                    <button type="button" class="btn btn-primary w-100 py-2 fw-bold shadow-sm"
-                            onclick="submitBulkCreate()">
-                        <i class="bi bi-cloud-upload me-2"></i>XÁC NHẬN TẠO NGAY
+                    <hr style="border-color:var(--border);margin:1rem 0">
+                    <button type="button" class="bulk-submit" id="submitBtn" onclick="doSubmit()">
+                        <i class="bi bi-cloud-upload-fill"></i> Xác nhận tạo ngay
                     </button>
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         let timeSlots = [];
 
-        // ── Lấy CSRF token ──
-        function getCsrfToken() {
+        function getCsrf() {
             return document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
         }
 
-        // ── Load sân theo cơ sở ──
-        document.getElementById('facilitySelect').addEventListener('change', function() {
-            const fId = this.value;
+        // ── Load courts (dùng AdminCourt/GetByFacility) ──
+        function loadCourts(fId) {
             const list = document.getElementById('courtList');
-            list.innerHTML = '<p class="text-muted small text-center py-2">Đang tải...</p>';
-
+            document.getElementById('courtCount').textContent = '—';
             if (!fId) {
-                list.innerHTML = '<p class="text-muted small text-center py-2">Vui lòng chọn cơ sở</p>';
-                return;
+                list.innerHTML = '<div class="court-empty"><i class="bi bi-building"></i>Vui lòng chọn cơ sở</div>';
+                updatePreview(); return;
             }
+            list.innerHTML = '<div class="court-empty" style="padding:1rem"><div class="spinner-border spinner-border-sm text-warning me-2"></div>Đang tải...</div>';
 
-            fetch(`/AdminPriceSlot/GetCourtsByFacility?facilityId=${fId}`)
-                .then(r => r.json())
+            fetch(`/AdminCourt/GetByFacility?facilityId=${fId}`)
+                .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
                 .then(data => {
-                    if (!data.length) {
-                        list.innerHTML = '<p class="text-muted small text-center py-2">Cơ sở này chưa có sân</p>';
-                        return;
+                    const courts = data.courts ?? data;
+                    document.getElementById('courtCount').textContent = courts.length + ' sân';
+                    if (!courts.length) {
+                        list.innerHTML = '<div class="court-empty"><i class="bi bi-inbox"></i>Cơ sở này chưa có sân</div>';
+                        updatePreview(); return;
                     }
-                    list.innerHTML = data.map(c => `
-                        <div class="form-check mb-2">
-                            <input class="form-check-input court-checkbox" type="checkbox"
-                                   value="${c.courtId}" id="c${c.courtId}"
-                                   onchange="updatePreview()">
-                            <label class="form-check-label small fw-semibold" for="c${c.courtId}">
-                                Sân ${c.courtNumber}
-                                <span class="text-muted fw-normal">(${c.courtType})</span>
-                            </label>
-                        </div>`).join('');
+                    list.innerHTML = courts.map(c => {
+                        const num  = c.courtNumber ?? c.CourtNumber;
+                        const type = c.courtType   ?? c.CourtType;
+                        const id   = c.courtId     ?? c.CourtId;
+                        const abbr = num.length > 0 ? num.slice(-2) : '#';
+                        return `
+                        <div class="court-item" onclick="toggleCourt(this)">
+                            <input type="checkbox" class="court-cb" value="${id}" onchange="updatePreview()">
+                            <div class="ci-badge">${abbr}</div>
+                            <div>
+                                <div class="ci-name">Sân ${num}</div>
+                                <div class="ci-type">${type === 'Indoor' ? '🏠 Trong nhà' : '☀️ Ngoài trời'}</div>
+                            </div>
+                        </div>`;
+                    }).join('');
                     updatePreview();
                 })
-                .catch(() => list.innerHTML = '<p class="text-danger small text-center py-2">Lỗi tải dữ liệu</p>');
-        });
+                .catch(() => {
+                    list.innerHTML = '<div class="court-empty" style="color:var(--red)"><i class="bi bi-exclamation-triangle"></i>Lỗi tải dữ liệu sân</div>';
+                });
+        }
 
-        function toggleAllCourts(checked) {
-            document.querySelectorAll('.court-checkbox').forEach(cb => cb.checked = checked);
+        function toggleCourt(el) {
+            const cb = el.querySelector('input[type=checkbox]');
+            cb.checked = !cb.checked;
             updatePreview();
         }
 
-        // ── Ngày ──
+        function toggleAll(checked) {
+            document.querySelectorAll('.court-cb').forEach(cb => cb.checked = checked);
+            updatePreview();
+        }
+
+        // ── Day select ──
         function selectDays(vals) {
             document.querySelectorAll('.day-check').forEach(cb => {
                 cb.checked = vals.includes(parseInt(cb.value));
-                applyDayStyle(cb);
             });
             updatePreview();
         }
 
-        function applyDayStyle(cb) {
-            const lbl = cb.closest('.day-label');
-            lbl.style.background  = cb.checked ? '#e8f4fd' : '';
-            lbl.style.borderColor = cb.checked ? '#0d6efd' : '';
+        // ── Calc new slot total ──
+        function calcNew() {
+            const p = parseFloat(document.getElementById('nPrice').value) || 0;
+            const s = parseFloat(document.getElementById('nSur').value)   || 0;
+            document.getElementById('nTotal').textContent = (p+s).toLocaleString('vi-VN') + ' ₫';
         }
 
-        // ── Preview tổng giá khi nhập ──
-        function updateNewTotal() {
-            const p = parseFloat(document.getElementById('newPrice').value) || 0;
-            const s = parseFloat(document.getElementById('newSurcharge').value) || 0;
-            document.getElementById('newTotalPreview').textContent = (p + s).toLocaleString('vi-VN') + ' ₫';
-        }
+        // ── Add slot ──
+        function addSlot() {
+            const start = document.getElementById('nStart').value;
+            const end   = document.getElementById('nEnd').value;
+            const price = document.getElementById('nPrice').value;
+            if (!start || !end || !price) { alert('Vui lòng nhập đủ: giờ bắt đầu, kết thúc và đơn giá!'); return; }
+            if (start >= end) { alert('Giờ bắt đầu phải nhỏ hơn giờ kết thúc!'); return; }
 
-        // ── Thêm khung giờ ──
-        function addTimeSlot() {
-            const start     = document.getElementById('newStartTime').value;
-            const end       = document.getElementById('newEndTime').value;
-            const price     = document.getElementById('newPrice').value;
-            const surcharge = document.getElementById('newSurcharge').value || '0';
-            const isPeak    = document.getElementById('newIsPeakHour').checked;
-            const slotName  = document.getElementById('newSlotName').value.trim();
-            const custType  = document.getElementById('newCustomerType').value;
-            const rounding  = document.getElementById('newRounding').value;
-            const surNote   = document.getElementById('newSurchargeNote').value.trim();
+            timeSlots.push({
+                start, end, price: +price,
+                surcharge: +(document.getElementById('nSur').value)   || 0,
+                slotName:  document.getElementById('nName').value.trim(),
+                custType:  document.getElementById('nCust').value,
+                rounding:  document.getElementById('nRound').value,
+                surNote:   document.getElementById('nSurNote').value.trim(),
+                isPeak:    document.getElementById('nPeak').checked
+            });
 
-            if (!start || !end || !price) {
-                alert('Vui lòng nhập đầy đủ: giờ bắt đầu, kết thúc và đơn giá!');
-                return;
-            }
-            if (start >= end) {
-                alert('Giờ bắt đầu phải nhỏ hơn giờ kết thúc!');
-                return;
-            }
-
-            timeSlots.push({ start, end, price: +price, surcharge: +surcharge,
-                             isPeak, slotName, custType, rounding, surNote });
-            renderTimeSlots();
+            renderSlots();
             updatePreview();
 
-            // Reset inputs
-            document.getElementById('newStartTime').value   = '';
-            document.getElementById('newEndTime').value     = '';
-            document.getElementById('newPrice').value       = '';
-            document.getElementById('newSurcharge').value   = '';
-            document.getElementById('newSurchargeNote').value = '';
-            document.getElementById('newSlotName').value    = '';
-            document.getElementById('newIsPeakHour').checked = false;
-            document.getElementById('newTotalPreview').textContent = '0 ₫';
+            // Reset
+            ['nStart','nEnd','nPrice','nSur','nSurNote','nName'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('nPeak').checked = false;
+            document.getElementById('nTotal').textContent = '0 ₫';
         }
 
-        function renderTimeSlots() {
-            document.getElementById('timeSlotsList').innerHTML = timeSlots.map((s, i) => `
-                <div class="d-flex align-items-start justify-content-between p-3 mb-2 bg-white border rounded-3 shadow-sm">
-                    <div class="small">
-                        ${s.slotName ? `<div class="fw-bold text-dark mb-1">${s.slotName}</div>` : ''}
-                        <span class="fw-bold text-primary">${s.start} – ${s.end}</span>
-                        <span class="mx-2 text-muted">|</span>
-                        <span class="fw-bold text-success">${(s.price + s.surcharge).toLocaleString()}₫</span>
-                        ${s.surcharge > 0 ? `<span class="text-muted"> (${s.price.toLocaleString()} + ${s.surcharge.toLocaleString()} phụ phí)</span>` : ''}
-                        <span class="mx-2 text-muted">|</span>
-                        <span class="text-muted">${s.custType === 'Retail' ? 'Vãng lai' : s.custType === 'Member' ? 'Cố định' : 'Tất cả'}</span>
-                        <span class="ms-1 text-muted">${s.rounding}p</span>
-                        ${s.isPeak ? '<span class="badge bg-danger ms-2">Peak</span>' : ''}
-                        ${s.surNote ? `<div class="text-muted mt-1">${s.surNote}</div>` : ''}
+        function renderSlots() {
+            const custMap = { All:'Tất cả', Retail:'Vãng lai', Member:'Cố định' };
+            document.getElementById('slotList').innerHTML = timeSlots.map((s, i) => `
+                <div class="slot-item">
+                    <div class="slot-item-info">
+                        ${s.slotName ? `<div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.2rem">${s.slotName}</div>` : ''}
+                        <span class="slot-time">${s.start} – ${s.end}</span>
+                        <span class="slot-price">${(s.price+s.surcharge).toLocaleString('vi-VN')}₫</span>
+                        <div class="slot-meta">
+                            ${custMap[s.custType]||s.custType} · Làm tròn ${s.rounding}p
+                            ${s.isPeak ? ' · <span style="color:var(--red);font-weight:700">⚡ Cao điểm</span>' : ''}
+                            ${s.surNote ? ` · ${s.surNote}` : ''}
+                        </div>
                     </div>
-                    <button class="btn btn-link text-danger p-0 ms-2" onclick="removeSlot(${i})" title="Xóa">
-                        <i class="bi bi-trash fs-5"></i>
+                    <button type="button" class="slot-del" onclick="removeSlot(${i})" title="Xóa">
+                        <i class="bi bi-trash3"></i>
                     </button>
                 </div>`).join('');
         }
 
         function removeSlot(i) {
             timeSlots.splice(i, 1);
-            renderTimeSlots();
+            renderSlots();
             updatePreview();
         }
 
-        // ── Preview tổng quan ──
+        // ── Preview ──
         function updatePreview() {
-            const courts  = document.querySelectorAll('.court-checkbox:checked').length;
-            const days    = document.querySelectorAll('.day-check:checked').length;
-            const total   = courts * days * timeSlots.length;
+            const courts = document.querySelectorAll('.court-cb:checked').length;
+            const days   = document.querySelectorAll('.day-check:checked').length;
+            const total  = courts * days * timeSlots.length;
 
             if (total > 0) {
-                document.getElementById('previewContent').innerHTML = `
-                    <div class="alert alert-primary border-0 small mb-3">
-                        Hệ thống sẽ tạo <strong>${total}</strong> bản ghi đơn giá.
-                    </div>
-                    <ul class="list-group list-group-flush small">
-                        <li class="list-group-item d-flex justify-content-between px-0">
-                            <span>Số sân được chọn</span><strong>${courts}</strong>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between px-0">
-                            <span>Số ngày áp dụng</span><strong>${days}</strong>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between px-0">
-                            <span>Số khung giờ</span><strong>${timeSlots.length}</strong>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between px-0 fw-bold">
-                            <span>Tổng bản ghi</span><strong class="text-primary">${total}</strong>
-                        </li>
-                    </ul>`;
+                document.getElementById('previewBox').innerHTML = `
+                    <div class="preview-stat"><span class="preview-stat-label">Số sân được chọn</span><strong class="preview-stat-value">${courts}</strong></div>
+                    <div class="preview-stat"><span class="preview-stat-label">Số ngày áp dụng</span><strong class="preview-stat-value">${days}</strong></div>
+                    <div class="preview-stat"><span class="preview-stat-label">Số khung giờ</span><strong class="preview-stat-value">${timeSlots.length}</strong></div>
+                    <div class="preview-total">
+                        <div class="preview-total-n">${total}</div>
+                        <div class="preview-total-l">bản ghi sẽ được tạo</div>
+                    </div>`;
             } else {
-                document.getElementById('previewContent').innerHTML =
-                    '<p class="text-center text-muted small py-3">Chọn ít nhất 1 sân, 1 ngày và 1 khung giờ</p>';
+                document.getElementById('previewBox').innerHTML = `
+                    <div class="preview-empty">
+                        <i class="bi bi-clipboard2-plus"></i>
+                        <p>Chọn ít nhất 1 sân, 1 ngày và thêm 1 khung giờ</p>
+                    </div>`;
             }
         }
 
         // ── Submit ──
-        function submitBulkCreate() {
-            const courtIds = Array.from(document.querySelectorAll('.court-checkbox:checked'))
-                                  .map(cb => cb.value);
-            const dayVals  = Array.from(document.querySelectorAll('.day-check:checked'))
-                                  .map(cb => parseInt(cb.value));
+        function doSubmit() {
+            const courtIds = Array.from(document.querySelectorAll('.court-cb:checked')).map(cb => cb.value);
+            const dayVals  = Array.from(document.querySelectorAll('.day-check:checked')).map(cb => parseInt(cb.value));
 
             if (!courtIds.length) { alert('Vui lòng chọn ít nhất 1 sân!'); return; }
-            if (!dayVals.length)  { alert('Vui lòng chọn ít nhất 1 ngày áp dụng!'); return; }
+            if (!dayVals.length)  { alert('Vui lòng chọn ít nhất 1 ngày!'); return; }
             if (!timeSlots.length){ alert('Vui lòng thêm ít nhất 1 khung giờ!'); return; }
 
-            const btn = document.querySelector('[onclick="submitBulkCreate()"]');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
+            const total = courtIds.length * dayVals.length * timeSlots.length;
+            Swal.fire({
+                title: `Tạo ${total} bản ghi giá?`,
+                html: `<span style="font-size:.88rem;color:#6b5040">${courtIds.length} sân × ${dayVals.length} ngày × ${timeSlots.length} khung giờ</span>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#d4a017',
+                confirmButtonText: 'Xác nhận tạo',
+                cancelButtonText: 'Hủy',
+                reverseButtons: true
+            }).then(r => {
+                if (!r.isConfirmed) return;
+                const btn = document.getElementById('submitBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
 
-            const payload = { courtIds, days: dayVals, timeSlots };
-
-            fetch('/AdminPriceSlot/BulkCreate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': getCsrfToken()
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(r => r.json())
-            .then(res => {
-                if (res.success) {
-                    alert(`Đã tạo thành công ${res.count ?? ''} bản ghi!`);
-                    window.location.href = '/AdminPriceSlot/Index';
-                } else {
-                    alert('Lỗi: ' + (res.message || 'Không xác định'));
+                fetch('/AdminPriceSlot/BulkCreate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() },
+                    body: JSON.stringify({ courtIds, days: dayVals, timeSlots })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Tạo thành công!',
+                            text: `Đã tạo ${res.count ?? total} bản ghi giá`,
+                            timer: 1800, showConfirmButton: false
+                        }).then(() => window.location.href = '/AdminPriceSlot/Index');
+                    } else {
+                        Swal.fire('Lỗi!', res.message || 'Không xác định', 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-cloud-upload-fill"></i> Xác nhận tạo ngay';
+                    }
+                })
+                .catch(err => {
+                    Swal.fire('Lỗi kết nối!', err.message, 'error');
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-cloud-upload me-2"></i>XÁC NHẬN TẠO NGAY';
-                }
-            })
-            .catch(err => {
-                alert('Lỗi kết nối máy chủ: ' + err.message);
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-cloud-upload me-2"></i>XÁC NHẬN TẠO NGAY';
+                    btn.innerHTML = '<i class="bi bi-cloud-upload-fill"></i> Xác nhận tạo ngay';
+                });
             });
         }
     </script>

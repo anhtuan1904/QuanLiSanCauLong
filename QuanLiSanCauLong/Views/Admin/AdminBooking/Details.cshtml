@@ -1,299 +1,917 @@
 ﻿@model QuanLiSanCauLong.ViewModels.BookingHistoryViewModel
-
 @{
-    ViewData["Title"] = "Chi tiết đơn đặt sân";
+    ViewData["Title"] = "Chi tiết đặt sân #" + Model.BookingCode;
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #f5f4ec;
+        --warm: #f0ead8;
+        --card: #ffffff;
+        --border: #e4d9c8;
+        --muted: #8a7560;
+        --text: #1a1209;
+        --green: #15803d;
+        --green-soft: #dcfce7;
+        --red: #dc2626;
+        --red-soft: #fef2f2;
+        --blue: #0284c7;
+        --blue-soft: #e0f2fe;
+        --purple: #7c3aed;
+        --purple-soft: #f5f3ff;
+    }
+
+    body, .container-fluid {
+        font-family: 'Outfit', sans-serif;
+        background: var(--cream);
+    }
+
+    /* ── Breadcrumb ── */
+    .bc {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .82rem;
+        color: var(--muted);
+        margin-bottom: 1.4rem;
+    }
+
+        .bc a {
+            color: var(--muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: .3rem;
+            transition: .15s;
+        }
+
+            .bc a:hover {
+                color: var(--deep);
+            }
+
+    .bc-sep {
+        opacity: .5;
+    }
+
+    .bc-cur {
+        color: var(--deep);
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+    }
+
+    /* ── Page top row ── */
+    .pgtop {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .page-label {
+        font-size: .68rem;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: var(--gold);
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        margin-bottom: .35rem;
+    }
+
+        .page-label::before {
+            content: '';
+            width: 14px;
+            height: 1px;
+            background: var(--gold);
+        }
+
+    .pg-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.65rem;
+        font-weight: 700;
+        color: var(--deep);
+        margin: 0;
+    }
+
+        .pg-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    .pg-meta {
+        font-size: .78rem;
+        color: var(--muted);
+        margin-top: .25rem;
+        font-family: 'Courier New', monospace;
+    }
+
+    /* ── Action Buttons ── */
+    .action-btns {
+        display: flex;
+        gap: .55rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-act {
+        display: inline-flex;
+        align-items: center;
+        gap: .42rem;
+        padding: .55rem 1.15rem;
+        border-radius: 9px;
+        border: none;
+        font-family: 'Outfit', sans-serif;
+        font-size: .84rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: .18s;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .btn-print {
+        background: var(--warm);
+        color: var(--muted);
+        border: 1px solid var(--border);
+    }
+
+        .btn-print:hover {
+            background: var(--cream);
+            color: var(--deep);
+        }
+
+    .btn-confirm {
+        background: var(--gold2);
+        color: var(--deep);
+        box-shadow: 0 2px 8px rgba(212,160,23,.3);
+    }
+
+        .btn-confirm:hover {
+            background: var(--gold);
+            color: #fff;
+        }
+
+    .btn-checkin {
+        background: var(--blue);
+        color: #fff;
+    }
+
+        .btn-checkin:hover {
+            background: #0369a1;
+        }
+
+    .btn-complete {
+        background: var(--green-soft);
+        color: var(--green);
+        border: 1px solid #a7f3d0;
+    }
+
+        .btn-complete:hover {
+            background: var(--green);
+            color: #fff;
+            border-color: var(--green);
+        }
+
+    .btn-cancel {
+        background: var(--red-soft);
+        color: var(--red);
+        border: 1px solid #fecaca;
+    }
+
+        .btn-cancel:hover {
+            background: var(--red);
+            color: #fff;
+            border-color: var(--red);
+        }
+
+    /* ── Timeline ── */
+    .timeline-wrap {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1.5rem 2rem;
+        margin-bottom: 1.3rem;
+        box-shadow: 0 2px 10px rgba(26,18,9,.05);
+    }
+
+    .timeline {
+        display: flex;
+        align-items: center;
+    }
+
+    .tl-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        min-width: 64px;
+    }
+
+    .tl-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        border: 2px solid var(--border);
+        background: var(--warm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: var(--muted);
+        transition: .3s;
+    }
+
+    .tl-step.done .tl-icon {
+        background: var(--green);
+        border-color: var(--green);
+        color: #fff;
+    }
+
+    .tl-step.active .tl-icon {
+        background: var(--gold2);
+        border-color: var(--gold);
+        color: var(--deep);
+        box-shadow: 0 0 0 4px rgba(245,200,66,.2);
+    }
+
+    .tl-step.cancelled .tl-icon {
+        background: var(--red);
+        border-color: var(--red);
+        color: #fff;
+    }
+
+    .tl-label {
+        margin-top: .6rem;
+        font-size: .72rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-align: center;
+        white-space: nowrap;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .tl-step.done .tl-label {
+        color: var(--green);
+    }
+
+    .tl-step.active .tl-label {
+        color: var(--gold);
+    }
+
+    .tl-step.cancelled .tl-label {
+        color: var(--red);
+    }
+
+    .tl-line {
+        flex: 1;
+        height: 2px;
+        background: var(--border);
+        margin: 0 .5rem;
+        position: relative;
+        top: -14px;
+    }
+
+        .tl-line.done {
+            background: var(--green);
+        }
+
+    /* ── Layout ── */
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 1.3rem;
+        align-items: start;
+    }
+
+    @@media (max-width: 992px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ── Section Cards ── */
+    .dc {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+        margin-bottom: 1.2rem;
+        box-shadow: 0 2px 10px rgba(26,18,9,.05);
+    }
+
+    .dc-hd {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--warm);
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+
+        .dc-hd i {
+            color: var(--gold);
+            font-size: .95rem;
+        }
+
+    .dc-hd-title {
+        font-weight: 700;
+        font-size: .92rem;
+        color: var(--deep);
+        letter-spacing: .02em;
+    }
+
+    .dc-bd {
+        padding: 1.4rem 1.5rem;
+    }
+
+    /* Court block */
+    .court-block {
+        display: flex;
+        align-items: flex-start;
+        gap: 1.1rem;
+    }
+
+    .court-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 13px;
+        background: #fef9ec;
+        border: 1px solid #f0dea0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        color: var(--gold);
+        flex-shrink: 0;
+    }
+
+    .court-name {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--deep);
+    }
+
+    .court-sub {
+        font-size: .8rem;
+        color: var(--muted);
+        margin-top: .2rem;
+    }
+
+    .court-price {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--green);
+        margin-left: auto;
+    }
+
+    .time-chips {
+        display: flex;
+        gap: .6rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+
+    .time-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .38rem;
+        padding: .4rem .9rem;
+        border-radius: 8px;
+        font-size: .8rem;
+        font-weight: 600;
+        background: var(--warm);
+        border: 1px solid var(--border);
+        color: var(--deep);
+    }
+
+        .time-chip i {
+            color: var(--gold);
+            font-size: .82rem;
+        }
+
+    /* Products */
+    .prod-row {
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+        padding: .75rem 0;
+        border-bottom: 1px solid var(--warm);
+    }
+
+        .prod-row:last-child {
+            border-bottom: none;
+        }
+
+    .prod-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 9px;
+        background: #fef9ec;
+        border: 1px solid #f0dea0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .92rem;
+        color: var(--gold);
+        flex-shrink: 0;
+    }
+
+    .prod-name {
+        font-weight: 700;
+        font-size: .86rem;
+        color: var(--deep);
+    }
+
+    .prod-meta {
+        font-size: .76rem;
+        color: var(--muted);
+    }
+
+    .prod-price {
+        margin-left: auto;
+        font-weight: 800;
+        font-size: .88rem;
+        color: var(--deep);
+    }
+
+    /* Summary */
+    .sum-row {
+        display: flex;
+        justify-content: space-between;
+        padding: .45rem 0;
+        font-size: .85rem;
+    }
+
+        .sum-row .lbl {
+            color: var(--muted);
+        }
+
+        .sum-row .val {
+            font-weight: 700;
+            color: var(--deep);
+        }
+
+    .sum-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding-top: .9rem;
+        margin-top: .7rem;
+        border-top: 2px solid var(--border);
+    }
+
+        .sum-total .lbl {
+            font-size: .95rem;
+            font-weight: 800;
+            color: var(--deep);
+        }
+
+        .sum-total .val {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+    /* Customer avatar */
+    .cust-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #fef9ec;
+        border: 2px solid #f0dea0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        color: var(--gold);
+        flex-shrink: 0;
+    }
+
+    .cust-name-lg {
+        font-weight: 800;
+        font-size: .95rem;
+        color: var(--deep);
+    }
+
+    .cust-role {
+        font-size: .74rem;
+        color: var(--muted);
+    }
+
+    .contact-row {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .4rem 0;
+        font-size: .85rem;
+        color: var(--deep);
+        border-bottom: 1px solid var(--warm);
+    }
+
+        .contact-row:last-child {
+            border-bottom: none;
+        }
+
+        .contact-row i {
+            color: var(--gold);
+            width: 16px;
+            text-align: center;
+        }
+
+    /* Info rows */
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: .55rem 0;
+        font-size: .84rem;
+    }
+
+        .info-row + .info-row {
+            border-top: 1px solid var(--warm);
+        }
+
+    .info-lbl {
+        color: var(--muted);
+        flex-shrink: 0;
+    }
+
+    .info-val {
+        font-weight: 700;
+        color: var(--deep);
+        text-align: right;
+    }
+
+    /* Badges */
+    .badge-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .3rem .8rem;
+        border-radius: 20px;
+        font-size: .75rem;
+        font-weight: 700;
+    }
+
+    .bp-paid {
+        background: var(--green-soft);
+        color: var(--green);
+    }
+
+    .bp-unpaid {
+        background: #fef9ec;
+        color: #92600a;
+        border: 1px solid #f0dea0;
+    }
+
+    .bp-pending {
+        background: #fef9ec;
+        color: #92600a;
+        border: 1px solid #f0dea0;
+    }
+
+    .bp-confirmed {
+        background: var(--blue-soft);
+        color: var(--blue);
+    }
+
+    .bp-playing {
+        background: var(--purple-soft);
+        color: var(--purple);
+    }
+
+    .bp-completed {
+        background: var(--green-soft);
+        color: var(--green);
+    }
+
+    .bp-cancelled {
+        background: var(--red-soft);
+        color: var(--red);
+    }
+
+    /* Act grid */
+    .act-grid {
+        display: grid;
+        gap: .55rem;
+    }
+
+    /* Toast */
+    .toast-wrap {
+        position: fixed;
+        top: 1.2rem;
+        right: 1.2rem;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+        pointer-events: none;
+    }
+
+    .toast-msg {
+        padding: .75rem 1.2rem;
+        border-radius: 10px;
+        font-size: .84rem;
+        font-weight: 600;
+        box-shadow: 0 8px 24px rgba(0,0,0,.14);
+        pointer-events: all;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        animation: slideIn .22s ease;
+    }
+
+    .toast-success {
+        background: #fff;
+        border-left: 4px solid var(--green);
+        color: var(--green);
+    }
+
+    .toast-error {
+        background: #fff;
+        border-left: 4px solid var(--red);
+        color: var(--red);
+    }
+
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @@media print {
+        .action-btns, .act-grid, .bc, .pgtop .btn-print {
+            display: none !important;
+        }
+
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
 <div class="container-fluid px-4 py-4">
-    <!-- Header -->
-    <div class="d-flex align-items-center justify-content-between mb-4">
-        <div class="d-flex align-items-center">
-            <a asp-action="Index" class="btn btn-outline-secondary rounded-circle me-3" style="width: 40px; height: 40px; padding: 0;">
-                <i class="bi bi-arrow-left"></i>
-            </a>
-            <div>
-                <h3 class="fw-bold mb-0">Chi Tiết Đơn Đặt Sân</h3>
-                <p class="text-muted mb-0 small">
-                    Mã: <span class="fw-semibold">@Model.BookingCode</span> •
-                    Ngày tạo: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
-                </p>
-            </div>
+
+    <!-- Breadcrumb -->
+    <div class="bc">
+        <a asp-action="Index"><i class="bi bi-house"></i> Quản lý đặt sân</a>
+        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
+        <span class="bc-cur">@Model.BookingCode</span>
+    </div>
+
+    <!-- Page top -->
+    <div class="pgtop">
+        <div>
+            <div class="page-label">Chi tiết đơn đặt</div>
+            <div class="pg-title">Đơn sân <em>#@Model.BookingCode</em></div>
+            <div class="pg-meta">Tạo lúc @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
         </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary" onclick="window.print()">
-                <i class="bi bi-printer me-2"></i>In hóa đơn
+        <div class="action-btns">
+            <button class="btn-act btn-print" onclick="window.print()">
+                <i class="bi bi-printer"></i> In hoá đơn
             </button>
             @if (Model.Status == "Pending")
             {
-                <button class="btn btn-success" onclick="confirmBooking(@Model.BookingId)">
-                    <i class="bi bi-check-circle me-2"></i>Xác nhận đơn
+                <button class="btn-act btn-confirm" onclick="doAction('confirm', @Model.BookingId, 'Xác nhận đơn này?')">
+                    <i class="bi bi-check-circle"></i> Xác nhận đơn
                 </button>
             }
-            else if (Model.Status == "Confirmed")
+            @if (Model.Status == "Confirmed")
             {
-                <button class="btn btn-primary" onclick="checkInBooking(@Model.BookingId)">
-                    <i class="bi bi-box-arrow-in-right me-2"></i>Check-in
+                <button class="btn-act btn-checkin" onclick="doAction('checkin', @Model.BookingId, 'Check-in cho khách hàng?')">
+                    <i class="bi bi-box-arrow-in-right"></i> Check-in
+                </button>
+            }
+            @if (Model.Status == "Playing")
+            {
+                <button class="btn-act btn-complete" onclick="doAction('complete', @Model.BookingId, 'Đánh dấu hoàn thành?')">
+                    <i class="bi bi-flag-fill"></i> Hoàn thành
                 </button>
             }
         </div>
     </div>
 
-    <div class="row g-4">
-        <!-- Left Column -->
-        <div class="col-lg-8">
-            <!-- Progress Timeline -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body p-4">
-                    <div class="progress-timeline">
-                        <div class="timeline-step @(Model.Status != "Cancelled" ? "active" : "")">
-                            <div class="step-icon">
-                                <i class="bi bi-file-earmark-text"></i>
-                            </div>
-                            <div class="step-label">Đã Đặt</div>
-                        </div>
-                        <div class="timeline-line @(Model.Status != "Pending" && Model.Status != "Cancelled" ? "active" : "")"></div>
+    <!-- Timeline -->
+    <div class="timeline-wrap">
+        @{
+            bool isCancelled = Model.Status == "Cancelled";
+            bool step1 = true;
+            bool step2 = new[] { "Confirmed", "Playing", "Completed" }.Contains(Model.Status);
+            bool step3 = new[] { "Playing", "Completed" }.Contains(Model.Status);
+            bool step4 = Model.Status == "Completed";
+        }
+        <div class="timeline">
+            <div class="tl-step @(isCancelled ? "cancelled" : "done")">
+                <div class="tl-icon"><i class="bi bi-@(isCancelled ? "x-lg" : "file-earmark-check")"></i></div>
+                <div class="tl-label">Đã đặt</div>
+            </div>
+            <div class="tl-line @(step2 && !isCancelled ? "done" : "")"></div>
+            <div class="tl-step @(!isCancelled && step2 ? (step3 ? "done" : "active") : "")">
+                <div class="tl-icon"><i class="bi bi-check2"></i></div>
+                <div class="tl-label">Xác nhận</div>
+            </div>
+            <div class="tl-line @(step3 && !isCancelled ? "done" : "")"></div>
+            <div class="tl-step @(!isCancelled && step3 ? (step4 ? "done" : "active") : "")">
+                <div class="tl-icon"><i class="bi bi-box-arrow-in-right"></i></div>
+                <div class="tl-label">Check-in</div>
+            </div>
+            <div class="tl-line @(step4 ? "done" : "")"></div>
+            <div class="tl-step @(!isCancelled && step4 ? "done" : "")">
+                <div class="tl-icon"><i class="bi bi-flag-fill"></i></div>
+                <div class="tl-label">Hoàn thành</div>
+            </div>
+        </div>
+    </div>
 
-                        <div class="timeline-step @(Model.Status == "Confirmed" || Model.Status == "CheckedIn" || Model.Status == "Completed" ? "active" : "")">
-                            <div class="step-icon">
-                                <i class="bi bi-check2"></i>
-                            </div>
-                            <div class="step-label">Xác Nhận</div>
+    <div class="detail-grid">
+        <!-- LEFT -->
+        <div>
+            <!-- Court info -->
+            <div class="dc">
+                <div class="dc-hd"><i class="bi bi-calendar-event-fill"></i><span class="dc-hd-title">Thông tin đặt sân</span></div>
+                <div class="dc-bd">
+                    <div class="court-block">
+                        <div class="court-icon"><i class="bi bi-grid-3x3-gap-fill"></i></div>
+                        <div style="flex:1">
+                            <div class="court-name">@Model.FacilityName</div>
+                            <div class="court-sub">Sân @Model.CourtNumber · @Model.CourtType</div>
                         </div>
-                        <div class="timeline-line @(Model.Status == "CheckedIn" || Model.Status == "Completed" ? "active" : "")"></div>
-
-                        <div class="timeline-step @(Model.Status == "CheckedIn" || Model.Status == "Completed" ? "active" : "")">
-                            <div class="step-icon">
-                                <i class="bi bi-box-arrow-in-right"></i>
-                            </div>
-                            <div class="step-label">Check-in</div>
-                        </div>
-                        <div class="timeline-line @(Model.Status == "Completed" ? "active" : "")"></div>
-
-                        <div class="timeline-step @(Model.Status == "Completed" ? "active completed" : "")">
-                            <div class="step-icon">
-                                <i class="bi bi-flag-fill"></i>
-                            </div>
-                            <div class="step-label">Hoàn Thành</div>
-                        </div>
+                        <div class="court-price">₫@Model.GrandTotal.ToString("N0")</div>
+                    </div>
+                    <div class="time-chips">
+                        <span class="time-chip"><i class="bi bi-calendar3"></i> @Model.BookingDate.ToString("dd/MM/yyyy") (@Model.BookingDate.ToString("ddd"))</span>
+                        <span class="time-chip"><i class="bi bi-clock"></i> @Model.StartTime.ToString(@"hh\:mm") – @Model.EndTime.ToString(@"hh\:mm")</span>
+                        <span class="time-chip"><i class="bi bi-hourglass"></i> @Model.Duration phút</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Booking Details -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="fw-bold mb-0">Chi Tiết Đặt Sân</h5>
-                </div>
-                <div class="card-body p-4">
-                    <!-- Court Booking -->
-                    <div class="booking-item mb-4 pb-4 border-bottom">
-                        <div class="d-flex align-items-start">
-                            <div class="icon-box-large bg-primary-subtle rounded-3 p-3 me-3">
-                                <i class="bi bi-calendar-event text-primary fs-3"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <div>
-                                        <h6 class="fw-bold mb-1">@Model.FacilityName</h6>
-                                        <p class="text-muted mb-2 small">
-                                            Sân @Model.CourtNumber (@Model.CourtType)
-                                        </p>
-                                    </div>
-                                    <h5 class="fw-bold text-success mb-0">₫@Model.GrandTotal.ToString("N0")</h5>
-                                </div>
-                                <div class="d-flex gap-4 flex-wrap">
-                                    <div>
-                                        <small class="text-muted d-block">Ngày đặt</small>
-                                        <span class="fw-semibold">@Model.BookingDate.ToString("dd/MM/yyyy")</span>
-                                    </div>
-                                    <div>
-                                        <small class="text-muted d-block">Thời gian</small>
-                                        <span class="fw-semibold text-primary">
-                                            @Model.StartTime.ToString(@"hh\:mm") - @Model.EndTime.ToString(@"hh\:mm")
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <small class="text-muted d-block">Thời lượng</small>
-                                        <span class="fw-semibold">@Model.Duration phút</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Related Orders -->
-                    @if (Model.RelatedOrders != null && Model.RelatedOrders.Any())
-                    {
-                        <div class="mb-4">
-                            <h6 class="fw-bold mb-3">Dịch Vụ & Sản Phẩm Đi Kèm</h6>
-                            @foreach (var order in Model.RelatedOrders)
+            <!-- Products -->
+            @if (Model.RelatedOrders != null && Model.RelatedOrders.Any())
+            {
+                <div class="dc">
+                    <div class="dc-hd"><i class="bi bi-box-seam-fill"></i><span class="dc-hd-title">Sản phẩm & Dịch vụ đi kèm</span></div>
+                    <div class="dc-bd">
+                        @foreach (var order in Model.RelatedOrders)
+                        {
+                            @foreach (var od in order.OrderDetails)
                             {
-                                <div class="booking-item mb-3">
-                                    <div class="d-flex align-items-start">
-                                        <div class="icon-box bg-warning-subtle rounded-3 p-2 me-3">
-                                            <i class="bi bi-box-seam text-warning fs-5"></i>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <div class="d-flex justify-content-between">
-                                                <div>
-                                                    <div class="fw-semibold">Đơn hàng #@order.OrderCode</div>
-                                                    <small class="text-muted">@order.OrderDetails.Count sản phẩm</small>
-                                                </div>
-                                                <span class="fw-bold text-success">₫@order.TotalAmount.ToString("N0")</span>
-                                            </div>
-                                        </div>
+                                <div class="prod-row">
+                                    <div class="prod-icon"><i class="bi bi-bag-fill"></i></div>
+                                    <div>
+                                        <div class="prod-name">@od.ProductName</div>
+                                        <div class="prod-meta">@od.Quantity @od.Unit × ₫@od.UnitPrice.ToString("N0")</div>
                                     </div>
+                                    <div class="prod-price">₫@od.TotalPrice.ToString("N0")</div>
                                 </div>
                             }
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Summary -->
+            <div class="dc">
+                <div class="dc-hd"><i class="bi bi-receipt-cutoff"></i><span class="dc-hd-title">Chi tiết thanh toán</span></div>
+                <div class="dc-bd">
+                    <div class="sum-row"><span class="lbl">Tiền sân</span><span class="val">₫@Model.TotalPrice.ToString("N0")</span></div>
+                    @if (Model.RelatedOrders != null && Model.RelatedOrders.Any())
+                    {
+                        <div class="sum-row">
+                            <span class="lbl">Sản phẩm đi kèm</span>
+                            <span class="val">₫@Model.RelatedOrders.Sum(o => o.TotalAmount).ToString("N0")</span>
                         </div>
                     }
-
-                    <!-- Summary -->
-                    <div class="mt-4 pt-4 border-top">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Tạm tính:</span>
-                            <span class="fw-semibold">₫@Model.GrandTotal.ToString("N0")</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Giảm giá:</span>
-                            <span class="text-danger fw-semibold">-₫0</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                            <span class="h5 fw-bold mb-0">Tổng cộng:</span>
-                            <span class="h4 fw-bold text-success mb-0">₫@Model.GrandTotal.ToString("N0")</span>
-                        </div>
+                    <div class="sum-row"><span class="lbl">Giảm giá</span><span class="val" style="color:var(--red)">-₫0</span></div>
+                    <div class="sum-total">
+                        <span class="lbl">Tổng cộng</span>
+                        <span class="val">₫@Model.GrandTotal.ToString("N0")</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Right Column -->
-        <div class="col-lg-4">
-            <!-- Customer Info -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body p-4">
-                    <h6 class="fw-bold mb-3">Thông Tin Khách Hàng</h6>
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="avatar-circle bg-primary-subtle text-primary me-3">
-                            <i class="bi bi-person fs-4"></i>
-                        </div>
+        <!-- RIGHT -->
+        <div>
+            <!-- Customer -->
+            <div class="dc">
+                <div class="dc-hd"><i class="bi bi-person-fill"></i><span class="dc-hd-title">Thông tin khách hàng</span></div>
+                <div class="dc-bd">
+                    <div style="display:flex;align-items:center;gap:.9rem;margin-bottom:1rem">
+                        <div class="cust-avatar"><i class="bi bi-person-fill"></i></div>
                         <div>
-                            <div class="fw-bold">@Model.CustomerName</div>
-                            <small class="text-muted">Khách hàng</small>
+                            <div class="cust-name-lg">@Model.CustomerName</div>
+                            <div class="cust-role">Khách hàng</div>
                         </div>
                     </div>
-                    <div class="contact-info">
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="bi bi-telephone text-muted me-2"></i>
-                            <span class="small">@Model.Phone</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-envelope text-muted me-2"></i>
-                            <span class="small">@Model.Email</span>
-                        </div>
-                    </div>
+                    <div class="contact-row"><i class="bi bi-telephone"></i> @Model.Phone</div>
+                    <div class="contact-row"><i class="bi bi-envelope"></i> @Model.Email</div>
                 </div>
             </div>
 
             <!-- Payment & Status -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body p-4">
-                    <h6 class="fw-bold mb-3">Thanh Toán & Trạng Thái</h6>
-
-                    <div class="mb-3">
-                        <label class="small text-muted d-block mb-1">Phương thức</label>
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-credit-card text-primary me-2"></i>
-                            <span class="fw-semibold">@Model.PaymentMethod</span>
-                        </div>
+            <div class="dc">
+                <div class="dc-hd"><i class="bi bi-credit-card-fill"></i><span class="dc-hd-title">Thanh toán & Trạng thái</span></div>
+                <div class="dc-bd">
+                    <div class="info-row">
+                        <span class="info-lbl">Phương thức</span>
+                        <span class="info-val">@Model.PaymentMethod</span>
                     </div>
-
-                    <div class="mb-3">
-                        <label class="small text-muted d-block mb-1">Trạng thái thanh toán</label>
-                        @if (Model.PaymentStatus == "Paid")
-                        {
-                            <span class="badge bg-success-subtle text-success px-3 py-2">
-                                <i class="bi bi-check-circle me-1"></i>Đã Thanh Toán
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-warning-subtle text-warning px-3 py-2">
-                                <i class="bi bi-clock me-1"></i>Chưa Thanh Toán
-                            </span>
-                        }
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="small text-muted d-block mb-1">Trạng thái đơn</label>
-                        @switch (Model.Status)
-                        {
-                            case "Pending":
-                                <span class="badge bg-warning-subtle text-warning px-3 py-2">
-                                    <i class="bi bi-clock-history me-1"></i>Chờ Xác Nhận
-                                </span>
-                                break;
-                            case "Confirmed":
-                                <span class="badge bg-info-subtle text-info px-3 py-2">
-                                    <i class="bi bi-check-circle me-1"></i>Đã Xác Nhận
-                                </span>
-                                break;
-                            case "CheckedIn":
-                                <span class="badge bg-primary-subtle text-primary px-3 py-2">
-                                    <i class="bi bi-box-arrow-in-right me-1"></i>Đã Check-in
-                                </span>
-                                break;
-                            case "Completed":
-                                <span class="badge bg-success-subtle text-success px-3 py-2">
-                                    <i class="bi bi-check2-circle me-1"></i>Hoàn Thành
-                                </span>
-                                break;
-                            case "Cancelled":
-                                <span class="badge bg-danger-subtle text-danger px-3 py-2">
-                                    <i class="bi bi-x-circle me-1"></i>Đã Hủy
-                                </span>
-                                break;
-                        }
-                    </div>
-
-                    <div class="mb-0">
-                        <label class="small text-muted d-block mb-1">Ghi chú</label>
-                        <p class="small mb-0 fst-italic text-muted">
-                            @if (string.IsNullOrEmpty(Model.Note))
+                    <div class="info-row">
+                        <span class="info-lbl">Thanh toán</span>
+                        <span class="info-val">
+                            @if (Model.PaymentStatus == "Paid")
                             {
-                                <span>"Không có ghi chú"</span>
+                                <span class="badge-pill bp-paid"><i class="bi bi-check-circle-fill"></i> Đã thanh toán</span>
                             }
                             else
                             {
-                                <span>@Model.Note</span>
+                                <span class="badge-pill bp-unpaid"><i class="bi bi-clock"></i> Chưa thanh toán</span>
                             }
-                        </p>
+                        </span>
                     </div>
+                    <div class="info-row">
+                        <span class="info-lbl">Trạng thái</span>
+                        <span class="info-val">
+                            @switch (Model.Status)
+                            {
+                                case "Pending":
+                                    <span class="badge-pill bp-pending"><i class="bi bi-clock-history"></i> Chờ xác nhận</span>
+                                    break;
+                                case "Confirmed":
+                                    <span class="badge-pill bp-confirmed"><i class="bi bi-check-circle"></i> Đã xác nhận</span>
+                                    break;
+                                case "Playing":
+                                    <span class="badge-pill bp-playing"><i class="bi bi-controller"></i> Đang chơi</span>
+                                    break;
+                                case "Completed":
+                                    <span class="badge-pill bp-completed"><i class="bi bi-check2-circle"></i> Hoàn thành</span>
+                                    break;
+                                case "Cancelled":
+                                    <span class="badge-pill bp-cancelled"><i class="bi bi-x-circle"></i> Đã hủy</span>
+                                    break;
+                            }
+                        </span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Note))
+                    {
+                        <div class="info-row" style="display:block;margin-top:.5rem">
+                            <span class="info-lbl" style="display:block;margin-bottom:.3rem">Ghi chú</span>
+                            <p style="font-size:.82rem;color:var(--muted);font-style:italic;margin:0;background:var(--warm);padding:.6rem .8rem;border-radius:7px;border-left:3px solid var(--gold)">@Model.Note</p>
+                        </div>
+                    }
                 </div>
             </div>
 
-            <!-- Actions -->
-            @if (Model.Status == "Pending" || Model.Status == "Confirmed")
+            <!-- Admin Actions -->
+            @if (Model.Status != "Cancelled" && Model.Status != "Completed")
             {
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-4">
-                        <h6 class="fw-bold mb-3">Thao Tác</h6>
-                        <div class="d-grid gap-2">
+                <div class="dc">
+                    <div class="dc-hd"><i class="bi bi-sliders2"></i><span class="dc-hd-title">Thao tác Admin</span></div>
+                    <div class="dc-bd">
+                        <div class="act-grid">
                             @if (Model.Status == "Pending")
                             {
-                                <button class="btn btn-success" onclick="confirmBooking(@Model.BookingId)">
-                                    <i class="bi bi-check-circle me-2"></i>Xác nhận đơn
+                                <button class="btn-act btn-confirm" onclick="doAction('confirm', @Model.BookingId, 'Xác nhận đơn này?')" style="justify-content:center">
+                                    <i class="bi bi-check-circle"></i> Xác nhận đơn
                                 </button>
                             }
-                            else if (Model.Status == "Confirmed")
+                            @if (Model.Status == "Confirmed")
                             {
-                                <button class="btn btn-primary" onclick="checkInBooking(@Model.BookingId)">
-                                    <i class="bi bi-box-arrow-in-right me-2"></i>Check-in
+                                <button class="btn-act btn-checkin" onclick="doAction('checkin', @Model.BookingId, 'Check-in cho khách hàng?')" style="justify-content:center">
+                                    <i class="bi bi-box-arrow-in-right"></i> Check-in
                                 </button>
                             }
-                            <button class="btn btn-outline-danger" onclick="cancelBooking(@Model.BookingId)">
-                                <i class="bi bi-x-circle me-2"></i>Hủy đơn
+                            @if (Model.Status == "Playing")
+                            {
+                                <button class="btn-act btn-complete" onclick="doAction('complete', @Model.BookingId, 'Đánh dấu hoàn thành?')" style="justify-content:center">
+                                    <i class="bi bi-flag-fill"></i> Hoàn thành
+                                </button>
+                            }
+                            @if (Model.PaymentStatus == "Unpaid")
+                            {
+                                <button class="btn-act btn-complete" onclick="updatePayment(@Model.BookingId,'Paid')" style="justify-content:center">
+                                    <i class="bi bi-cash-coin"></i> Đánh dấu đã TT
+                                </button>
+                            }
+                            <button class="btn-act btn-cancel" onclick="cancelBooking(@Model.BookingId)" style="justify-content:center">
+                                <i class="bi bi-x-circle"></i> Hủy đơn
                             </button>
                         </div>
                     </div>
@@ -303,151 +921,62 @@
     </div>
 </div>
 
+<!-- Toast -->
+<div class="toast-wrap" id="toastWrap"></div>
+
 @section Scripts {
     <script>
-        function confirmBooking(bookingId) {
-            if (confirm('Xác nhận đơn đặt sân này?')) {
-                $.post('@Url.Action("Confirm", "AdminBooking")', { bookingId: bookingId })
-                    .done(function(result) {
-                        alert(result.message);
-                        if (result.success) location.reload();
-                    });
-            }
-        }
+        const URLS = {
+            confirm:  '@Url.Action("Confirm", "AdminBooking")',
+            checkin:  '@Url.Action("CheckIn", "AdminBooking")',
+            complete: '@Url.Action("Complete", "AdminBooking")',
+            cancel:   '@Url.Action("Cancel", "AdminBooking")',
+            payment:  '@Url.Action("UpdatePayment", "AdminBooking")'
+        };
 
-        function checkInBooking(bookingId) {
-            if (confirm('Xác nhận khách hàng đã check-in?')) {
-                $.post('@Url.Action("CheckIn", "AdminBooking")', { bookingId: bookingId })
-                    .done(function(result) {
-                        alert(result.message);
-                        if (result.success) location.reload();
-                    });
-            }
+        function doAction(action, bookingId, msg) {
+            if (!confirm(msg)) return;
+            postAjax(URLS[action], { bookingId });
         }
 
         function cancelBooking(bookingId) {
             const reason = prompt('Lý do hủy đơn:');
-            if (reason) {
-                $.post('@Url.Action("Cancel", "AdminBooking")', { bookingId: bookingId, reason: reason })
-                    .done(function(result) {
-                        alert(result.message);
-                        if (result.success) location.reload();
-                    });
-            }
+            if (!reason) return;
+            postAjax(URLS.cancel, { bookingId, reason });
+        }
+
+        function updatePayment(bookingId, paymentStatus) {
+            postAjax(URLS.payment, { bookingId, paymentStatus });
+        }
+
+        function postAjax(url, data) {
+            const body = Object.entries(data)
+                .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+                .join('&');
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? ''
+                },
+                body
+            })
+            .then(r => r.json())
+            .then(result => {
+                showToast(result.message, result.success ? 'success' : 'error');
+                if (result.success) setTimeout(() => location.reload(), 1000);
+            })
+            .catch(() => showToast('Lỗi kết nối máy chủ', 'error'));
+        }
+
+        function showToast(msg, type = 'success') {
+            const wrap = document.getElementById('toastWrap');
+            const el   = document.createElement('div');
+            el.className = `toast-msg toast-${type}`;
+            el.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-circle-fill'}"></i> ${msg}`;
+            wrap.appendChild(el);
+            setTimeout(() => el.remove(), 3200);
         }
     </script>
 }
-
-<style>
-    .progress-timeline {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 20px 0;
-    }
-
-    .timeline-step {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        position: relative;
-    }
-
-    .step-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background: #e2e8f0;
-        color: #94a3b8;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-        transition: all 0.3s;
-    }
-
-    .timeline-step.active .step-icon {
-        background: #6366f1;
-        color: white;
-    }
-
-    .timeline-step.completed .step-icon {
-        background: #10b981;
-        color: white;
-    }
-
-    .step-label {
-        margin-top: 10px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #64748b;
-    }
-
-    .timeline-step.active .step-label {
-        color: #1e293b;
-    }
-
-    .timeline-line {
-        flex: 1;
-        height: 3px;
-        background: #e2e8f0;
-        margin: 0 10px;
-        position: relative;
-        top: -25px;
-    }
-
-        .timeline-line.active {
-            background: #6366f1;
-        }
-
-    .icon-box-large {
-        width: 64px;
-        height: 64px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .icon-box {
-        width: 48px;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .avatar-circle {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .bg-success-subtle {
-        background-color: rgba(16, 185, 129, 0.1) !important;
-    }
-
-    .bg-primary-subtle {
-        background-color: rgba(99, 102, 241, 0.1) !important;
-    }
-
-    .bg-info-subtle {
-        background-color: rgba(14, 165, 233, 0.1) !important;
-    }
-
-    .bg-warning-subtle {
-        background-color: rgba(245, 158, 11, 0.1) !important;
-    }
-
-    .bg-danger-subtle {
-        background-color: rgba(239, 68, 68, 0.1) !important;
-    }
-
-    @@media print {
-        .btn, .card-footer {
-            display: none !important;
-        }
-    }
-</style>

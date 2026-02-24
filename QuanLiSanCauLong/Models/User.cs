@@ -22,7 +22,12 @@ namespace QuanLiSanCauLong.Models
         [StringLength(20)]
         public string Phone { get; set; }
 
-        // CẦN THIÊT: Thuộc tính Password để khớp với View Create/Register (Sửa lỗi image_45c11e.png)
+        // --- DÒNG THÊM MỚI ĐỂ SỬA LỖI ---
+        // Giúp code gọi .PhoneNumber vẫn chạy được mà không cần đổi tên cột trong DB
+        [NotMapped]
+        public string PhoneNumber { get => Phone; set => Phone = value; }
+
+        // CẦN THIẾT: Thuộc tính Password để khớp với View Create/Register
         [Required(ErrorMessage = "Mật khẩu không được để trống")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
@@ -33,7 +38,7 @@ namespace QuanLiSanCauLong.Models
         [Required]
         public string Role { get; set; } // Customer, Staff, Admin
 
-        // CẦN THIẾT: Thuộc tính Status để khớp với View Index/Create (Sửa lỗi image_55b353.png)
+        // CẦN THIẾT: Thuộc tính Status để khớp với View Index/Create
         public string Status { get; set; } = "Active"; // Active, Locked
 
         public int? FacilityId { get; set; }

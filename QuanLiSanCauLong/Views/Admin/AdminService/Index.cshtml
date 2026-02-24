@@ -8,429 +8,1071 @@
     var activeTab = ViewBag.ActiveTab as string ?? "courses";
 }
 
-<div class="container-fluid px-4 py-4" style="background:#f8f9fa; min-height:100vh;">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #fdf8f0;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+    }
+
+    body, * {
+        font-family: 'Outfit',sans-serif;
+    }
+
+    /* ── PAGE HEADER ── */
+    .idx-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .idx-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+        .idx-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    .idx-sub {
+        font-size: .82rem;
+        color: var(--muted);
+        margin-top: .25rem;
+    }
+
+    .add-btn {
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        border: none;
+        padding: .75rem 1.6rem;
+        font-family: 'Outfit',sans-serif;
+        font-size: .86rem;
+        font-weight: 700;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        text-decoration: none;
+        transition: all .25s;
+    }
+
+        .add-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(212,160,23,.35);
+            color: var(--deep);
+        }
+
+    /* ── ALERTS ── */
+    .sys-alert {
+        padding: .9rem 1.25rem;
+        border-radius: 8px;
+        margin-bottom: 1.25rem;
+        font-size: .84rem;
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+    }
+
+        .sys-alert.success {
+            background: rgba(22,163,74,.08);
+            border: 1px solid rgba(22,163,74,.25);
+            color: #16a34a;
+        }
+
+        .sys-alert.error {
+            background: rgba(201,75,42,.06);
+            border: 1px solid rgba(201,75,42,.25);
+            color: #c94b2a;
+        }
+
+    /* ── STAT STRIP ── */
+    .stat-strip {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1.75rem;
+    }
+
+    .stat-box {
+        background: #fff;
+        padding: 1.2rem 1.5rem;
+    }
+
+    .stat-n {
+        font-family: 'Playfair Display',serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--deep);
+        line-height: 1;
+    }
+
+    .stat-l {
+        font-size: .72rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: .3rem;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+    .stat-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+    }
+
+    /* ── TABS ── */
+    .svc-tabs {
+        display: flex;
+        gap: .5rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .svc-tab {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .6rem 1.25rem;
+        border: 1.5px solid var(--border);
+        border-radius: 7px;
+        background: #fff;
+        font-size: .84rem;
+        font-weight: 600;
+        color: var(--muted);
+        cursor: pointer;
+        transition: all .2s;
+        user-select: none;
+    }
+
+        .svc-tab:hover {
+            border-color: rgba(212,160,23,.5);
+            color: var(--deep);
+        }
+
+        .svc-tab.active {
+            border-color: var(--gold);
+            background: var(--deep);
+            color: var(--gold2);
+        }
+
+        .svc-tab .tab-badge {
+            background: rgba(255,255,255,.15);
+            color: inherit;
+            font-size: .65rem;
+            font-weight: 700;
+            padding: .15rem .45rem;
+            border-radius: 3px;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .svc-tab:not(.active) .tab-badge {
+            background: var(--warm);
+            color: var(--muted);
+        }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+    }
+
+    .tb-search {
+        position: relative;
+        flex: 1;
+        min-width: 200px;
+        max-width: 320px;
+    }
+
+        .tb-search input {
+            width: 100%;
+            padding: .65rem 1rem .65rem 2.3rem;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            font-family: 'Outfit',sans-serif;
+            font-size: .84rem;
+            color: var(--deep);
+            background: #fff;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+            .tb-search input:focus {
+                border-color: var(--gold);
+            }
+
+        .tb-search i {
+            position: absolute;
+            left: .8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: .85rem;
+        }
+
+    /* ── TABLE wrapper ── */
+    .idx-table-wrap {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .idx-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .idx-table th {
+            background: var(--warm);
+            padding: .8rem 1rem;
+            font-size: .67rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .idx-table td {
+            padding: .9rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: .86rem;
+            vertical-align: middle;
+            color: var(--deep);
+        }
+
+        .idx-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .idx-table tr:hover td {
+            background: var(--cream);
+        }
+
+    /* ── ROW ICON BADGE ── */
+    .row-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+        .row-icon.gold {
+            background: linear-gradient(135deg,var(--gold),var(--gold2));
+            color: var(--deep);
+        }
+
+        .row-icon.warm {
+            background: var(--warm);
+            color: var(--gold);
+            font-size: .9rem;
+        }
+
+    /* ── INFO CELL ── */
+    .info-name {
+        font-weight: 700;
+        font-size: .88rem;
+        color: var(--deep);
+        line-height: 1.2;
+    }
+
+    .info-sub {
+        font-size: .72rem;
+        color: var(--muted);
+        margin-top: .15rem;
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+        flex-wrap: wrap;
+    }
+
+    /* ── CHIPS ── */
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        font-size: .66rem;
+        font-weight: 700;
+        padding: .22rem .55rem;
+        border-radius: 4px;
+        letter-spacing: .04em;
+        white-space: nowrap;
+    }
+
+    .chip-green {
+        background: rgba(22,163,74,.1);
+        color: #16a34a;
+    }
+
+    .chip-red {
+        background: rgba(201,75,42,.1);
+        color: #c94b2a;
+    }
+
+    .chip-gold {
+        background: rgba(212,160,23,.12);
+        color: #92660a;
+    }
+
+    .chip-blue {
+        background: rgba(79,70,229,.08);
+        color: #4f46e5;
+    }
+
+    .chip-cyan {
+        background: rgba(6,182,212,.08);
+        color: #0e7490;
+    }
+
+    .chip-neutral {
+        background: var(--warm);
+        color: var(--muted);
+    }
+
+    /* ── PRICE ── */
+    .price-val {
+        font-family: 'Playfair Display',serif;
+        font-size: .95rem;
+        font-weight: 700;
+        color: var(--gold);
+    }
+
+    .price-old {
+        font-size: .72rem;
+        color: var(--muted);
+        text-decoration: line-through;
+    }
+
+    /* ── META GRID ── */
+    .meta-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .25rem .75rem;
+    }
+
+    .meta-item {
+        font-size: .75rem;
+    }
+
+        .meta-item .mk {
+            color: var(--muted);
+        }
+
+        .meta-item .mv {
+            font-weight: 600;
+            color: var(--deep);
+        }
+
+    /* ── ACTION BTNS ── */
+    .act-g {
+        display: flex;
+        gap: .3rem;
+    }
+
+    .act-b {
+        width: 30px;
+        height: 30px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--muted);
+        transition: all .2s;
+        font-size: .78rem;
+        text-decoration: none;
+    }
+
+        .act-b.view:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(212,160,23,.07);
+        }
+
+        .act-b.edit:hover {
+            border-color: #4f46e5;
+            color: #4f46e5;
+            background: rgba(79,70,229,.07);
+        }
+
+        .act-b.del:hover {
+            border-color: #c94b2a;
+            color: #c94b2a;
+            background: rgba(201,75,42,.07);
+        }
+
+    /* ── STRINGING GRID ── */
+    .stringing-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill,minmax(300px,1fr));
+        gap: 1.1rem;
+    }
+
+    .sg-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all .2s;
+    }
+
+        .sg-card:hover {
+            box-shadow: 0 5px 20px rgba(26,18,9,.07);
+            transform: translateY(-1px);
+        }
+
+    .sg-card-head {
+        padding: .9rem 1.15rem;
+        background: var(--warm);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .sg-card-body {
+        padding: 1rem 1.15rem;
+    }
+
+    .sg-card-footer {
+        padding: .75rem 1.15rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    /* ── TOURNAMENT CARDS ── */
+    .tm-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all .2s;
+        margin-bottom: 1rem;
+    }
+
+        .tm-card:hover {
+            box-shadow: 0 5px 20px rgba(26,18,9,.07);
+        }
+
+    .tm-card-inner {
+        display: flex;
+        align-items: stretch;
+    }
+
+    .tm-accent {
+        width: 5px;
+        flex-shrink: 0;
+        background: linear-gradient(180deg,var(--gold),var(--gold2));
+    }
+
+    .tm-body {
+        padding: 1.1rem 1.25rem;
+        flex: 1;
+        display: flex;
+        gap: 1.25rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .tm-main {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .tm-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .3rem .75rem;
+        min-width: 200px;
+    }
+
+    .tm-actions {
+        display: flex;
+        flex-direction: column;
+        gap: .35rem;
+        flex-shrink: 0;
+    }
+
+    /* ── PROGRESS BAR ── */
+    .prog-wrap {
+        height: 4px;
+        background: var(--border);
+        border-radius: 2px;
+        margin-top: .4rem;
+    }
+
+    .prog-bar {
+        height: 4px;
+        border-radius: 2px;
+        background: linear-gradient(90deg,var(--gold),var(--gold2));
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--muted);
+    }
+
+        .empty-state i {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 1rem;
+            opacity: .3;
+        }
+
+    /* ── MODAL LOADING ── */
+    .modal-loading {
+        padding: 3rem;
+        text-align: center;
+        color: var(--muted);
+    }
+
+    .spin {
+        width: 32px;
+        height: 32px;
+        border: 3px solid var(--border);
+        border-top-color: var(--gold);
+        border-radius: 50%;
+        animation: spin .7s linear infinite;
+        margin: 0 auto 1rem;
+    }
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin-bottom: 1rem;
+    }
+
+        .section-label i {
+            color: var(--gold);
+        }
+
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+    .hidden {
+        display: none !important;
+    }
+</style>
+
+<div>
+
+    <!-- PAGE HEADER -->
+    <div class="idx-head">
         <div>
-            <h4 class="fw-bold mb-1">🎯 Quản Lý Dịch Vụ</h4>
-            <p class="text-muted small mb-0">Quản lý khóa học, dịch vụ căng vợt và giải đấu cầu lông</p>
+            <h1 class="idx-title">Quản Lý <em>Dịch Vụ</em></h1>
+            <div class="idx-sub">Khóa học · Căng vợt · Giải đấu cầu lông</div>
         </div>
-        <button class="btn btn-dark px-4 fw-bold rounded-3" id="btnAddService">
-            <i class="bi bi-plus-lg me-1"></i> Thêm Mới
+        <button class="add-btn" id="btnAddService">
+            <i class="bi bi-plus-circle"></i> Thêm Mới
         </button>
     </div>
 
-    <!-- Tabs -->
-    <ul class="nav nav-pills mb-4 gap-2" id="serviceTab">
-        <li class="nav-item">
-            <button class="nav-link px-4 py-2 fw-semibold @(activeTab == "courses" ? "active" : "")"
-                    data-tab="courses" onclick="switchTab('courses', this)">
-                <i class="bi bi-mortarboard me-1"></i> Khóa Học
-                <span class="badge bg-white text-dark ms-1">@courses.Count</span>
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link px-4 py-2 fw-semibold @(activeTab == "stringings" ? "active" : "")"
-                    data-tab="stringings" onclick="switchTab('stringings', this)">
-                <i class="bi bi-tools me-1"></i> Căng Vợt
-                <span class="badge bg-white text-dark ms-1">@stringings.Count</span>
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link px-4 py-2 fw-semibold @(activeTab == "tournaments" ? "active" : "")"
-                    data-tab="tournaments" onclick="switchTab('tournaments', this)">
-                <i class="bi bi-trophy me-1"></i> Giải Đấu
-                <span class="badge bg-white text-dark ms-1">@tournaments.Count</span>
-            </button>
-        </li>
-    </ul>
+    <!-- ALERTS -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="sys-alert success"><i class="bi bi-check-circle-fill"></i>@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="sys-alert error"><i class="bi bi-exclamation-circle"></i>@TempData["ErrorMessage"]</div>
+    }
 
-    <!-- ======================== TAB: KHÓA HỌC ======================== -->
-    <div id="tab-courses" class="tab-pane @(activeTab == "courses" ? "" : "d-none")">
+    <!-- TABS -->
+    <div class="svc-tabs" id="serviceTab">
+        <button class="svc-tab @(activeTab == "courses" ? "active" : "")" data-tab="courses" onclick="switchTab('courses',this)">
+            <i class="bi bi-mortarboard"></i> Khóa Học
+            <span class="tab-badge">@courses.Count</span>
+        </button>
+        <button class="svc-tab @(activeTab == "stringings" ? "active" : "")" data-tab="stringings" onclick="switchTab('stringings',this)">
+            <i class="bi bi-tools"></i> Căng Vợt
+            <span class="tab-badge">@stringings.Count</span>
+        </button>
+        <button class="svc-tab @(activeTab == "tournaments" ? "active" : "")" data-tab="tournaments" onclick="switchTab('tournaments',this)">
+            <i class="bi bi-trophy"></i> Giải Đấu
+            <span class="tab-badge">@tournaments.Count</span>
+        </button>
+    </div>
+
+    <!-- ═══════════════════════ TAB: KHÓA HỌC ═══════════════════════ -->
+    <div id="tab-courses" class="tab-pane @(activeTab == "courses" ? "" : "hidden")">
 
         <!-- Stats -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm p-3 rounded-3">
-                    <div class="fs-2 fw-bold text-primary">@courses.Count</div>
-                    <div class="text-muted small">Tổng Khóa Học</div>
-                </div>
+        <div class="stat-strip">
+            <div class="stat-box">
+                <div class="stat-n">@courses.Count</div>
+                <div class="stat-l"><span class="stat-dot" style="background:var(--gold);"></span>Tổng Khóa Học</div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm p-3 rounded-3">
-                    <div class="fs-2 fw-bold text-success">@courses.Count(c => c.Status == "Active")</div>
-                    <div class="text-muted small">Đang Hoạt Động</div>
-                </div>
+            <div class="stat-box">
+                <div class="stat-n" style="color:#16a34a;">@courses.Count(c => c.Status == "Active")</div>
+                <div class="stat-l"><span class="stat-dot" style="background:#16a34a;"></span>Đang Hoạt Động</div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm p-3 rounded-3">
-                    <div class="fs-2 fw-bold text-info">@courses.Sum(c => c.CurrentStudents)</div>
-                    <div class="text-muted small">Học Viên</div>
-                </div>
+            <div class="stat-box">
+                <div class="stat-n" style="color:#4f46e5;">@courses.Sum(c => c.CurrentStudents)</div>
+                <div class="stat-l"><span class="stat-dot" style="background:#4f46e5;"></span>Học Viên</div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm p-3 rounded-3">
-                    <div class="fs-2 fw-bold text-warning">@("đ" + ((courses.Sum(c => (c.EffectivePrice ?? 0) * c.CurrentStudents)) / 1000000).ToString("N0") + "M")</div>
-                    <div class="text-muted small">Doanh Thu</div>
-                </div>
+            <div class="stat-box">
+                <div class="stat-n" style="color:var(--gold);">@(((courses.Sum(c => (c.EffectivePrice ?? 0) * c.CurrentStudents)) / 1000000).ToString("N0"))M<small style="font-size:.9rem;font-family:'Outfit';">đ</small></div>
+                <div class="stat-l"><span class="stat-dot" style="background:var(--gold);"></span>Doanh Thu</div>
             </div>
         </div>
 
-        <!-- Search -->
-        <div class="card border-0 shadow-sm rounded-3 mb-4 p-3">
-            <div class="input-group">
-                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" class="form-control border-start-0" id="searchCourse" placeholder="Tìm kiếm khóa học..." oninput="filterCards('course-card', this.value)">
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="tb-search">
+                <i class="bi bi-search"></i>
+                <input type="text" placeholder="Tìm khóa học..." oninput="filterRows('course-row',this.value)">
             </div>
         </div>
 
-        <!-- List -->
-        <div class="d-flex flex-column gap-3">
-            @foreach (var c in courses.OrderBy(x => x.DisplayOrder))
-            {
-                <div class="card border-0 shadow-sm rounded-3 course-card" data-name="@c.CourseName.ToLower()">
-                    <div class="card-body p-4">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <div class="d-flex align-items-start gap-3">
-                                    <div class="rounded-3 bg-primary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0"
-                                         style="width:56px;height:56px;">
-                                        <i class="bi bi-mortarboard fs-3 text-primary"></i>
-                                    </div>
+        <!-- Table -->
+        <div class="idx-table-wrap">
+            <table class="idx-table">
+                <thead>
+                    <tr>
+                        <th>Khóa Học</th>
+                        <th>Trình Độ</th>
+                        <th>Lịch / Thời Lượng</th>
+                        <th>Học Viên</th>
+                        <th>Học Phí</th>
+                        <th>Trạng Thái</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in courses.OrderBy(x => x.DisplayOrder))
+                    {
+                        <tr class="course-row" data-name="@c.CourseName.ToLower()">
+                            <td>
+                                <div style="display:flex;align-items:center;gap:.75rem;">
+                                    <div class="row-icon gold"><i class="bi bi-mortarboard"></i></div>
                                     <div>
-                                        <div class="d-flex align-items-center gap-2 mb-1">
-                                            <h6 class="fw-bold mb-0">@c.CourseName</h6>
-                                            <span class="badge bg-@(c.Status == "Active" ? "success" : c.Status == "Full" ? "danger" : "secondary") badge-sm">
-                                                @(c.Status == "Active" ? "Đang Hoạt Động" : c.Status == "Full" ? "Đầy" : "Ngừng")
-                                            </span>
+                                        <div class="info-name">@c.CourseName</div>
+                                        <div class="info-sub">
+                                            @if (!string.IsNullOrEmpty(c.Instructor))
+                                            {
+                                                <span><i class="bi bi-person" style="color:var(--gold);"></i> @c.Instructor</span>
+                                            }
                                             @if (c.IsFeatured)
                                             {
-                                                <span class="badge bg-warning text-dark badge-sm">⭐ Nổi bật</span>
+                                                <span class="chip chip-gold">⭐ Nổi bật</span>
                                             }
                                         </div>
-                                        <div class="text-muted small mb-1">
-                                            <i class="bi bi-person me-1"></i>@c.Instructor &nbsp;•&nbsp;
-                                            <span class="badge bg-light text-dark">@c.Level</span>
-                                        </div>
-                                        <p class="text-muted small mb-0">@c.ShortDesc</p>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="row g-2 small">
-                                    <div class="col-6">
-                                        <div class="text-muted">Thời Lượng</div>
-                                        <div class="fw-semibold"><i class="bi bi-clock me-1"></i>@(c.DurationWeeks != null ? c.DurationWeeks + " tuần" : "—")</div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="text-muted">Lịch Học</div>
-                                        <div class="fw-semibold"><i class="bi bi-calendar3 me-1"></i>@(c.Schedule ?? "—")</div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="text-muted">Học Viên</div>
-                                        <div class="fw-semibold"><i class="bi bi-people me-1"></i>@c.CurrentStudents/@(c.MaxStudents?.ToString() ?? "∞")</div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="text-muted">Học Phí</div>
-                                        <div class="fw-bold text-success">
-                                            @if (c.DiscountFee.HasValue)
-                                            {
-                                                <span>@c.DiscountFee.Value.ToString("N0")đ</span>
-                                            }
-                                            else if (c.TuitionFee.HasValue)
-                                            {
-                                                <span>@c.TuitionFee.Value.ToString("N0")đ</span>
-                                            }
-                                            else
-                                            {
+                            </td>
+                            <td>
+                                @switch (c.Level)
+                                {
+                                    case "Beginner":
+                                        <span class="chip chip-green">🌱 Cơ bản</span>
+                                        break;
+                                    case "Intermediate":
 
-                                                <span>—</span>
-                                            }
-                                        </div>
-                                    </div>
+                                        <span class="chip chip-blue">⚡ Trung cấp</span>
+                                        break;
+                                    case "Advanced":
+
+                                        <span class="chip chip-gold">🏆 Nâng cao</span>
+                                        break;
+                                    default:
+
+                                        <span class="chip chip-neutral">—</span>
+                                        break;
+                                }
+                            </td>
+                            <td>
+                                <div class="meta-grid">
+                                    <div class="meta-item"><span class="mk">Lịch</span><br><span class="mv">@(c.Schedule ?? "—")</span></div>
+                                    <div class="meta-item"><span class="mk">Thời lượng</span><br><span class="mv">@(c.DurationWeeks != null ? c.DurationWeeks + " tuần" : "—")</span></div>
                                 </div>
-                            </div>
-                            <div class="col-md-2 text-end">
-                                <div class="d-flex flex-column gap-2">
-                                    <button class="btn btn-outline-secondary btn-sm" onclick="openModal('/AdminService/CourseDetails/@c.CourseId')">
-                                        <i class="bi bi-eye me-1"></i>Xem
-                                    </button>
-                                    <button class="btn btn-outline-primary btn-sm" onclick="openModal('/AdminService/CourseEdit/@c.CourseId')">
-                                        <i class="bi bi-pencil me-1"></i>Sửa
-                                    </button>
-                                    <button class="btn btn-outline-danger btn-sm" onclick="confirmDelete('Course', @c.CourseId, '@c.CourseName')">
-                                        <i class="bi bi-trash me-1"></i>Xóa
-                                    </button>
+                            </td>
+                            <td>
+                                <div style="font-weight:700;font-size:.88rem;">@c.CurrentStudents / @(c.MaxStudents?.ToString() ?? "∞")</div>
+                                @if (c.MaxStudents.HasValue && c.MaxStudents > 0)
+                                {
+                                    var pct = Math.Min(100, (int)((c.CurrentStudents * 100.0) / c.MaxStudents.Value));
+                                    var col = pct >= 90 ? "#c94b2a" : pct >= 70 ? "#d4a017" : "#16a34a";
+                                    <div class="prog-wrap"><div class="prog-bar" style="width:@pct%;background:@col;"></div></div>
+                                }
+                            </td>
+                            <td>
+                                @if (c.DiscountFee.HasValue)
+                                {
+                                    <div class="price-old">@c.TuitionFee?.ToString("N0")đ</div>
+                                    <div class="price-val">@c.DiscountFee.Value.ToString("N0")đ</div>
+                                }
+                                else if (c.TuitionFee.HasValue)
+                                {
+                                    <div class="price-val">@c.TuitionFee.Value.ToString("N0")đ</div>
+                                }
+                                else
+                                {
+
+                                    <span style="color:var(--muted);">—</span>
+                                }
+                            </td>
+                            <td>
+                                @switch (c.Status)
+                                {
+                                    case "Active":
+                                        <span class="chip chip-green">● Hoạt động</span>
+                                        break;
+                                    case "Full":
+
+                                        <span class="chip chip-red">⊗ Đã đầy</span>
+                                        break;
+                                    default:
+
+                                        <span class="chip chip-neutral">○ Ngừng</span>
+                                        break;
+                                }
+                            </td>
+                            <td>
+                                <div class="act-g">
+                                    <button class="act-b view" onclick="openModal('/AdminService/CourseDetails/@c.CourseId')" title="Xem"><i class="bi bi-eye"></i></button>
+                                    <button class="act-b edit" onclick="openModal('/AdminService/CourseEdit/@c.CourseId')" title="Sửa"><i class="bi bi-pencil"></i></button>
+                                    <button class="act-b del" onclick="confirmDelete('Course',@c.CourseId,'@Html.Raw(c.CourseName.Replace("'", "&#39;"))')" title="Xóa"><i class="bi bi-trash3"></i></button>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
+                            </td>
+                        </tr>
+                    }
+                    @if (!courses.Any())
+                    {
+                        <tr><td colspan="7" class="empty-state"><i class="bi bi-inbox"></i><div>Chưa có khóa học nào</div></td></tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- ======================== TAB: CĂNG VỢT ======================== -->
-    <div id="tab-stringings" class="tab-pane @(activeTab == "stringings" ? "" : "d-none")">
+    <!-- ═══════════════════════ TAB: CĂNG VỢT ═══════════════════════ -->
+    <div id="tab-stringings" class="tab-pane @(activeTab == "stringings" ? "" : "hidden")">
 
         <!-- Stats -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm p-3 rounded-3">
-                    <div class="fs-2 fw-bold text-purple" style="color:#7c3aed;">@stringings.Count</div>
-                    <div class="text-muted small">Dịch Vụ</div>
-                </div>
+        <div class="stat-strip">
+            <div class="stat-box">
+                <div class="stat-n">@stringings.Count</div>
+                <div class="stat-l"><span class="stat-dot" style="background:var(--gold);"></span>Dịch Vụ</div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm p-3 rounded-3">
-                    <div class="fs-2 fw-bold text-success">@stringings.Sum(s => s.TotalOrders)</div>
-                    <div class="text-muted small">Đơn Tháng Này</div>
-                </div>
+            <div class="stat-box">
+                <div class="stat-n" style="color:#16a34a;">@stringings.Sum(s => s.TotalOrders)</div>
+                <div class="stat-l"><span class="stat-dot" style="background:#16a34a;"></span>Đơn Tháng Này</div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm p-3 rounded-3">
-                    <div class="fs-2 fw-bold text-danger">@("đ" + ((stringings.Sum(s => (s.Price ?? 0) * s.TotalOrders)) / 1000000).ToString("N0") + "M")</div>
-                    <div class="text-muted small">Doanh Thu</div>
-                </div>
+            <div class="stat-box">
+                <div class="stat-n" style="color:#c94b2a;">@(((stringings.Sum(s => (s.Price ?? 0) * s.TotalOrders)) / 1000000).ToString("N0"))M<small style="font-size:.9rem;font-family:'Outfit';">đ</small></div>
+                <div class="stat-l"><span class="stat-dot" style="background:#c94b2a;"></span>Doanh Thu</div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm p-3 rounded-3">
-                    <div class="fs-2 fw-bold text-warning">@stringings.Count(s => s.Status == "Active")</div>
-                    <div class="text-muted small">Đang Chờ</div>
-                </div>
+            <div class="stat-box">
+                <div class="stat-n" style="color:var(--gold);">@stringings.Count(s => s.Status == "Active")</div>
+                <div class="stat-l"><span class="stat-dot" style="background:var(--gold);"></span>Đang Hoạt Động</div>
             </div>
         </div>
 
-        <!-- Search -->
-        <div class="card border-0 shadow-sm rounded-3 mb-4 p-3">
-            <div class="input-group">
-                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" class="form-control border-start-0" placeholder="Tìm kiếm dịch vụ căng vợt..." oninput="filterCards('stringing-card', this.value)">
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="tb-search">
+                <i class="bi bi-search"></i>
+                <input type="text" placeholder="Tìm dịch vụ căng vợt..." oninput="filterRows('stringing-card',this.value)">
             </div>
         </div>
 
-        <!-- Dịch Vụ Căng Vợt - tiêu đề section -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <h5 class="fw-bold mb-1">Dịch Vụ Căng Vợt</h5>
-                <p class="text-muted small mb-0">Các dịch vụ căng dây vợt cầu lông</p>
-            </div>
-        </div>
-
-        <!-- Grid 2 cột -->
-        <div class="row g-4">
+        <!-- Grid cards -->
+        <div class="stringing-grid">
             @foreach (var s in stringings.OrderBy(x => x.DisplayOrder))
             {
-                <div class="col-md-6 stringing-card" data-name="@s.ServiceName.ToLower()">
-                    <div class="card border-0 shadow-sm rounded-3 h-100">
-                        <div class="card-body p-4">
-                            <div class="d-flex align-items-start gap-3 mb-3">
-                                <div class="rounded-3 bg-warning bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0"
-                                     style="width:48px;height:48px;">
-                                    <i class="bi bi-tools fs-4 text-warning"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div class="d-flex align-items-center gap-2 mb-1">
-                                        <h6 class="fw-bold mb-0">@s.ServiceName</h6>
-                                        @if (s.IsPopular)
-                                        {
-                                            <span class="badge bg-info text-white" style="font-size:.7rem;">🔥 Phổ biến</span>
-                                        }
-                                        @if (s.IsFeatured)
-                                        {
-                                            <span class="badge bg-warning text-dark" style="font-size:.7rem;">⭐</span>
-                                        }
-                                    </div>
-                                    @if (!string.IsNullOrEmpty(s.Brand))
-                                    {
-                                        <span class="badge bg-light text-dark">@s.Brand</span>
-                                    }
-                                    <p class="text-muted small mb-0 mt-1">@s.ShortDesc</p>
-                                </div>
-                            </div>
-
-                            <div class="row g-2 small mb-3">
-                                <div class="col-6">
-                                    <div class="text-muted">Giá Dịch Vụ</div>
-                                    <div class="fw-bold text-success fs-6">@(s.Price?.ToString("N0") + "đ" ?? "—")</div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="text-muted">Thời Gian</div>
-                                    <div class="fw-semibold">@(s.DurationMinutes != null ? s.DurationMinutes + " phút" : "—")</div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="text-muted">Bảo Hành</div>
-                                    <div class="fw-semibold">@(s.WarrantyDays != null ? s.WarrantyDays + " ngày" : "—")</div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="text-muted">Đơn Hàng</div>
-                                    <div class="fw-semibold">@s.TotalOrders.ToString("N0") đơn</div>
-                                </div>
-                            </div>
-
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-outline-secondary btn-sm flex-fill" onclick="openModal('/AdminService/StringingDetails/@s.StringingId')">
-                                    <i class="bi bi-eye me-1"></i>Xem
-                                </button>
-                                <button class="btn btn-outline-primary btn-sm flex-fill" onclick="openModal('/AdminService/StringingEdit/@s.StringingId')">
-                                    <i class="bi bi-pencil me-1"></i>Sửa
-                                </button>
-                                <button class="btn btn-outline-danger btn-sm" onclick="confirmDelete('Stringing', @s.StringingId, '@s.ServiceName')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                <div class="sg-card stringing-card" data-name="@s.ServiceName.ToLower()">
+                    <div class="sg-card-head">
+                        <div class="row-icon warm"><i class="bi bi-tools"></i></div>
+                        <div style="flex:1;">
+                            <div class="info-name">@s.ServiceName</div>
+                            <div class="info-sub">
+                                @if (!string.IsNullOrEmpty(s.Brand))
+                                {
+                                    <span class="chip chip-neutral">@s.Brand</span>
+                                }
+                                @if (!string.IsNullOrEmpty(s.StringModel))
+                                {
+                                    <span>@s.StringModel</span>
+                                }
+                                @if (s.IsPopular)
+                                {
+                                    <span class="chip chip-cyan">🔥 Phổ biến</span>
+                                }
+                                @if (s.IsFeatured)
+                                {
+                                    <span class="chip chip-gold">⭐</span>
+                                }
                             </div>
                         </div>
+                        <div class="price-val">@(s.Price?.ToString("N0") + "đ" ?? "—")</div>
                     </div>
+                    <div class="sg-card-body">
+                        <div class="meta-grid" style="gap:.4rem .75rem;">
+                            <div class="meta-item"><span class="mk">Thời gian</span><br><span class="mv">@(s.DurationMinutes != null ? s.DurationMinutes + " phút" : "—")</span></div>
+                            <div class="meta-item"><span class="mk">Bảo hành</span><br><span class="mv">@(s.WarrantyDays != null ? s.WarrantyDays + " ngày" : "—")</span></div>
+                            <div class="meta-item"><span class="mk">Lực căng</span><br><span class="mv">@(string.IsNullOrEmpty(s.Tension) ? "—" : s.Tension)</span></div>
+                            <div class="meta-item"><span class="mk">Đơn hàng</span><br><span class="mv">@s.TotalOrders.ToString("N0") đơn</span></div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(s.ShortDesc))
+                        {
+                            <div style="font-size:.78rem;color:var(--muted);margin-top:.65rem;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">@s.ShortDesc</div>
+                        }
+                    </div>
+                    <div class="sg-card-footer">
+                        @if (s.Status == "Active")
+                        {
+                            <span class="chip chip-green">● Hoạt động</span>
+                        }
+                        else
+                        {
+
+                            <span class="chip chip-neutral">○ Ngừng</span>
+                        }
+                        <div class="act-g">
+                            <button class="act-b view" onclick="openModal('/AdminService/StringingDetails/@s.StringingId')" title="Xem"><i class="bi bi-eye"></i></button>
+                            <button class="act-b edit" onclick="openModal('/AdminService/StringingEdit/@s.StringingId')" title="Sửa"><i class="bi bi-pencil"></i></button>
+                            <button class="act-b del" onclick="confirmDelete('Stringing',@s.StringingId,'@Html.Raw(s.ServiceName.Replace("'", "&#39;"))')" title="Xóa"><i class="bi bi-trash3"></i></button>
+                        </div>
+                    </div>
+                </div>
+            }
+            @if (!stringings.Any())
+            {
+                <div class="empty-state" style="grid-column:1/-1;">
+                    <i class="bi bi-inbox"></i><div>Chưa có dịch vụ căng vợt nào</div>
                 </div>
             }
         </div>
     </div>
 
-    <!-- ======================== TAB: GIẢI ĐẤU ======================== -->
-    <div id="tab-tournaments" class="tab-pane @(activeTab == "tournaments" ? "" : "d-none")">
+    <!-- ═══════════════════════ TAB: GIẢI ĐẤU ═══════════════════════ -->
+    <div id="tab-tournaments" class="tab-pane @(activeTab == "tournaments" ? "" : "hidden")">
 
         <!-- Stats -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm p-3 rounded-3">
-                    <div class="fs-2 fw-bold text-primary">@tournaments.Count</div>
-                    <div class="text-muted small">Giải Đấu</div>
-                </div>
+        <div class="stat-strip">
+            <div class="stat-box">
+                <div class="stat-n">@tournaments.Count</div>
+                <div class="stat-l"><span class="stat-dot" style="background:var(--gold);"></span>Giải Đấu</div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm p-3 rounded-3">
-                    <div class="fs-2 fw-bold text-success">@tournaments.Count(t => t.Status == "Ongoing")</div>
-                    <div class="text-muted small">Đang Diễn Ra</div>
-                </div>
+            <div class="stat-box">
+                <div class="stat-n" style="color:#16a34a;">@tournaments.Count(t => t.Status == "Ongoing")</div>
+                <div class="stat-l"><span class="stat-dot" style="background:#16a34a;"></span>Đang Diễn Ra</div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm p-3 rounded-3">
-                    <div class="fs-2 fw-bold text-info">@tournaments.Sum(t => t.CurrentPlayers)</div>
-                    <div class="text-muted small">Vận Động Viên</div>
-                </div>
+            <div class="stat-box">
+                <div class="stat-n" style="color:#4f46e5;">@tournaments.Sum(t => t.CurrentPlayers)</div>
+                <div class="stat-l"><span class="stat-dot" style="background:#4f46e5;"></span>Vận Động Viên</div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm p-3 rounded-3">
-                    <div class="fs-2 fw-bold text-warning">@("đ" + ((tournaments.Sum(t => t.PrizeMoney ?? 0)) / 1000000).ToString("N0") + "M")</div>
-                    <div class="text-muted small">Giải Thưởng</div>
-                </div>
+            <div class="stat-box">
+                <div class="stat-n" style="color:var(--gold);">@(((tournaments.Sum(t => t.PrizeMoney ?? 0)) / 1000000).ToString("N0"))M<small style="font-size:.9rem;font-family:'Outfit';">đ</small></div>
+                <div class="stat-l"><span class="stat-dot" style="background:var(--gold);"></span>Giải Thưởng</div>
             </div>
         </div>
 
-        <!-- Header section -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <h5 class="fw-bold mb-1">Giải Đấu Nội Bộ</h5>
-                <p class="text-muted small mb-0">Các giải đấu cầu lông được tổ chức</p>
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="tb-search">
+                <i class="bi bi-search"></i>
+                <input type="text" placeholder="Tìm giải đấu..." oninput="filterRows('tournament-card',this.value)">
             </div>
         </div>
 
-        <!-- Search -->
-        <div class="card border-0 shadow-sm rounded-3 mb-4 p-3">
-            <div class="input-group">
-                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" class="form-control border-start-0" placeholder="Tìm kiếm giải đấu..." oninput="filterCards('tournament-card', this.value)">
-            </div>
-        </div>
-
-        <!-- List -->
-        <div class="d-flex flex-column gap-3">
+        <!-- Tournament list -->
+        <div>
             @foreach (var t in tournaments.OrderBy(x => x.DisplayOrder))
             {
-                <div class="card border-0 shadow-sm rounded-3 tournament-card" data-name="@t.TournamentName.ToLower()">
-                    <div class="card-body p-4">
-                        <div class="row align-items-start">
-                            <div class="col-md-7">
-                                <div class="d-flex align-items-start gap-3">
-                                    <div class="rounded-3 bg-warning bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0"
-                                         style="width:48px;height:48px;">
-                                        <i class="bi bi-trophy fs-4 text-warning"></i>
-                                    </div>
-                                    <div>
-                                        <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                                            <h6 class="fw-bold mb-0">@t.TournamentName</h6>
-                                            <span class="badge bg-@t.StatusBadge">@t.StatusLabel</span>
-                                            @if (!string.IsNullOrEmpty(t.TournamentType))
+                <div class="tm-card tournament-card" data-name="@t.TournamentName.ToLower()">
+                    <div class="tm-card-inner">
+                        <div class="tm-accent"></div>
+                        <div class="tm-body">
+                            <!-- Icon + Name -->
+                            <div style="display:flex;align-items:center;gap:.75rem;min-width:200px;flex:2;">
+                                <div class="row-icon gold" style="width:44px;height:44px;font-size:1.2rem;flex-shrink:0;"><i class="bi bi-trophy"></i></div>
+                                <div>
+                                    <div class="info-name">@t.TournamentName</div>
+                                    <div class="info-sub" style="margin-top:.25rem;">
+                                        @{
+                                            var stClass = t.Status switch
                                             {
-                                                <span class="badge bg-light text-dark">@t.TournamentType</span>
-                                            }
-                                        </div>
-                                        <p class="text-muted small mb-2">@t.ShortDesc</p>
+                                                            "Ongoing" => "chip-green",
+                                                            "Upcoming" => "chip-blue",
+                                                            "Completed" => "chip-neutral",
+                                                _ => "chip-red"
+                                            };
+                                        }
+                                        <span class="chip @stClass">@t.StatusLabel</span>
+                                        @if (!string.IsNullOrEmpty(t.TournamentType))
+                                        {
+                                            <span class="chip chip-neutral">@t.TournamentType</span>
+                                        }
                                     </div>
+                                    @if (!string.IsNullOrEmpty(t.ShortDesc))
+                                    {
+                                        <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem;line-height:1.4;">@t.ShortDesc</div>
+                                    }
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="row g-2 small">
-                                    <div class="col-6">
-                                        <div class="text-muted">Thời Gian</div>
-                                        <div class="fw-semibold">
-                                            @(t.StartDate?.ToString("dd/MM/yyyy") ?? "—") - @(t.EndDate?.ToString("dd/MM/yyyy") ?? "—")
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="text-muted">Địa Điểm</div>
-                                        <div class="fw-semibold">@(t.Venue ?? "—")</div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="text-muted">Vận Động Viên</div>
-                                        <div class="fw-semibold"><i class="bi bi-people me-1"></i>@t.CurrentPlayers/@(t.MaxPlayers?.ToString() ?? "∞")</div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="text-muted">Giải Thưởng</div>
-                                        <div class="fw-bold text-warning">@(t.PrizeMoney?.ToString("N0") + "đ" ?? "—")</div>
-                                    </div>
-                                </div>
+
+                            <!-- Meta -->
+                            <div class="tm-meta">
+                                <div class="meta-item"><span class="mk">Bắt đầu</span><br><span class="mv">@(t.StartDate?.ToString("dd/MM/yyyy") ?? "—")</span></div>
+                                <div class="meta-item"><span class="mk">Kết thúc</span><br><span class="mv">@(t.EndDate?.ToString("dd/MM/yyyy") ?? "—")</span></div>
+                                <div class="meta-item"><span class="mk">Địa điểm</span><br><span class="mv">@(t.Venue ?? "—")</span></div>
+                                <div class="meta-item"><span class="mk">VĐV</span><br><span class="mv">@t.CurrentPlayers / @(t.MaxPlayers?.ToString() ?? "∞")</span></div>
                             </div>
-                            <div class="col-md-2 text-end">
-                                <div class="d-flex flex-column gap-2">
-                                    <button class="btn btn-outline-secondary btn-sm" onclick="openModal('/AdminService/TournamentDetails/@t.TournamentId')">
-                                        <i class="bi bi-eye me-1"></i>Xem
-                                    </button>
-                                    <button class="btn btn-outline-primary btn-sm" onclick="openModal('/AdminService/TournamentEdit/@t.TournamentId')">
-                                        <i class="bi bi-pencil me-1"></i>Sửa
-                                    </button>
-                                    <button class="btn btn-outline-danger btn-sm" onclick="confirmDelete('Tournament', @t.TournamentId, '@t.TournamentName')">
-                                        <i class="bi bi-trash me-1"></i>Xóa
-                                    </button>
-                                </div>
+
+                            <!-- Prize -->
+                            <div style="text-align:right;flex-shrink:0;">
+                                <div style="font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.2rem;">Giải thưởng</div>
+                                <div class="price-val">@(t.PrizeMoney.HasValue? t.PrizeMoney.Value.ToString("N0") + "đ" : "—")</div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="tm-actions">
+                                <button class="act-b view" onclick="openModal('/AdminService/TournamentDetails/@t.TournamentId')" title="Xem"><i class="bi bi-eye"></i></button>
+                                <button class="act-b edit" onclick="openModal('/AdminService/TournamentEdit/@t.TournamentId')" title="Sửa"><i class="bi bi-pencil"></i></button>
+                                <button class="act-b del" onclick="confirmDelete('Tournament',@t.TournamentId,'@Html.Raw(t.TournamentName.Replace("'", "&#39;"))')" title="Xóa"><i class="bi bi-trash3"></i></button>
                             </div>
                         </div>
                     </div>
                 </div>
             }
+            @if (!tournaments.Any())
+            {
+                <div class="empty-state">
+                    <i class="bi bi-trophy"></i><div>Chưa có giải đấu nào</div>
+                </div>
+            }
         </div>
     </div>
+
 </div>
 
-<!-- Universal Modal -->
+<!-- ═══ UNIVERSAL MODAL ═══ -->
+<style>
+    /* Modal scroll fix - Bootstrap modal-dialog-scrollable cần đúng cấu trúc header/body/footer
+       Vì partial views dùng custom structure, ta tự handle scroll */
+    #modalService .modal-dialog {
+        display: flex;
+        align-items: center;
+        min-height: calc(100% - 3.5rem);
+    }
+
+    #modalService .modal-content {
+        border-radius: 14px !important;
+        overflow: hidden;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+    }
+    /* Header & footer của partial cố định, chỉ body scroll */
+    #modalServiceContent [class$="-header"],
+    #modalServiceContent [class*="-header "] {
+        flex-shrink: 0;
+    }
+
+    #modalServiceContent [class$="-body"] {
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    #modalServiceContent [class$="-footer"] {
+        flex-shrink: 0;
+    }
+    /* Thêm scrollbar style cho body */
+    #modalServiceContent [class$="-body"]::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    #modalServiceContent [class$="-body"]::-webkit-scrollbar-track {
+        background: var(--warm,#f5ede0);
+    }
+
+    #modalServiceContent [class$="-body"]::-webkit-scrollbar-thumb {
+        background: var(--gold,#d4a017);
+        border-radius: 3px;
+    }
+</style>
+
 <div class="modal fade" id="modalService" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg rounded-4" id="modalServiceContent">
-            <div class="p-5 text-center">
-                <div class="spinner-border text-dark"></div>
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" id="modalServiceContent">
+            <div class="modal-loading" style="padding:3rem;text-align:center;color:#8a7560;">
+                <div class="spin"></div>
+                <div style="font-size:.84rem;">Đang tải...</div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Delete Modal -->
+<!-- ═══ DELETE MODAL ═══ -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-body p-4 text-center">
-                <div class="mb-3">
-                    <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 rounded-circle" style="width:72px;height:72px;">
-                        <i class="bi bi-exclamation-triangle text-danger fs-2"></i>
-                    </div>
+    <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:14px;overflow:hidden;">
+            <div style="padding:2rem;text-align:center;">
+                <div style="width:64px;height:64px;background:rgba(201,75,42,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                    <i class="bi bi-exclamation-triangle" style="font-size:1.5rem;color:#c94b2a;"></i>
                 </div>
-                <h5 class="fw-bold mb-2">Xác nhận xóa?</h5>
-                <p class="text-muted small mb-4">Bạn có chắc muốn xóa <strong id="deleteName"></strong>?</p>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-light w-100 rounded-3" data-bs-dismiss="modal">Hủy</button>
-                    <form id="deleteForm" method="post" class="w-100">
+                <div style="font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--deep);margin-bottom:.5rem;">Xác nhận xóa?</div>
+                <div style="font-size:.84rem;color:var(--muted);margin-bottom:1.5rem;">Bạn có chắc muốn xóa <strong id="deleteName" style="color:var(--deep);"></strong>?<br>Hành động này không thể hoàn tác.</div>
+                <div style="display:flex;gap:.65rem;">
+                    <button style="flex:1;padding:.65rem;border:1.5px solid var(--border);border-radius:7px;background:#fff;color:var(--muted);font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;" data-bs-dismiss="modal">Hủy</button>
+                    <form id="deleteForm" method="post" style="flex:1;">
                         @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-danger w-100 rounded-3">Xóa</button>
+                        <button type="submit" style="width:100%;padding:.65rem;border:none;border-radius:7px;background:#c94b2a;color:#fff;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;">Xóa</button>
                     </form>
                 </div>
             </div>
@@ -438,41 +1080,15 @@
     </div>
 </div>
 
-<style>
-    .nav-pills .nav-link {
-        color: #6c757d;
-        background: #fff;
-        border: 1px solid #dee2e6;
-    }
-
-        .nav-pills .nav-link.active {
-            background: #212529;
-            color: #fff;
-            border-color: #212529;
-        }
-
-        .nav-pills .nav-link:hover:not(.active) {
-            background: #f8f9fa;
-            color: #212529;
-        }
-
-    .card {
-        transition: box-shadow .2s;
-    }
-
-        .card:hover {
-            box-shadow: 0 4px 20px rgba(0,0,0,.1) !important;
-        }
-</style>
-
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         let currentTab = '@activeTab';
 
         function switchTab(tab, el) {
-            document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('d-none'));
-            document.querySelectorAll('#serviceTab .nav-link').forEach(b => b.classList.remove('active'));
-            document.getElementById('tab-' + tab).classList.remove('d-none');
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('#serviceTab .svc-tab').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.remove('hidden');
             el.classList.add('active');
             currentTab = tab;
         }
@@ -486,93 +1102,72 @@
             openModal(urls[currentTab]);
         });
 
-        // Open modal & fetch partial view
         function openModal(url) {
-            document.getElementById('modalServiceContent').innerHTML =
-                '<div class="p-5 text-center"><div class="spinner-border text-dark"></div><p class="mt-2 text-muted">Đang tải...</p></div>';
-            var modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalService'));
-            modal.show();
+            document.getElementById('modalServiceContent').innerHTML = `
+                <div class="modal-loading"><div class="spin"></div><div style="font-size:.84rem;color:var(--muted);">Đang tải...</div></div>`;
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalService')).show();
             fetch(url)
-                .then(r => {
-                    if (!r.ok) throw new Error('HTTP ' + r.status);
-                    return r.text();
-                })
-                .then(html => {
-                    document.getElementById('modalServiceContent').innerHTML = html;
-                })
+                .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+                .then(html => { document.getElementById('modalServiceContent').innerHTML = html; })
                 .catch(err => {
                     document.getElementById('modalServiceContent').innerHTML =
-                        `<div class="p-4 text-danger"><i class="bi bi-exclamation-circle me-2"></i>Lỗi tải form: ${err.message}</div>`;
+                        `<div style="padding:2rem;color:#c94b2a;"><i class="bi bi-exclamation-circle me-2"></i>Lỗi tải form: ${err.message}</div>`;
                 });
         }
 
-        // Submit form bằng fetch (dùng chung cho cả 3 dịch vụ)
+        function openEditModal(id) { openModal('/AdminService/Edit/' + id); }
+
         function submitServiceForm(formId, actionUrl) {
             const form = document.getElementById(formId);
-            if (!form) return;
-
-            // Validate HTML5
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-
-            const formData = new FormData(form);
-
-            fetch(actionUrl, {
-                method: 'POST',
-                body: formData
-            })
-            .then(r => r.json())
-            .then(res => {
-                if (res.success) {
-                    bootstrap.Modal.getInstance(document.getElementById('modalService')).hide();
-                    location.reload();
-                } else {
-                    alert(res.message || 'Có lỗi xảy ra, vui lòng thử lại.');
-                }
-            })
-            .catch(err => {
-                alert('Lỗi kết nối: ' + err.message);
-            });
+            if (!form || !form.checkValidity()) { form?.reportValidity(); return; }
+            fetch(actionUrl, { method:'POST', body: new FormData(form) })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        bootstrap.Modal.getInstance(document.getElementById('modalService')).hide();
+                        location.reload();
+                    } else { Swal.fire('Lỗi', res.message || 'Có lỗi xảy ra', 'error'); }
+                })
+                .catch(err => Swal.fire('Lỗi kết nối', err.message, 'error'));
         }
 
-        // Filter cards
-        function filterCards(cls, query) {
+        function filterRows(cls, query) {
             const q = query.toLowerCase();
-            document.querySelectorAll('.' + cls).forEach(card => {
-                const name = (card.dataset.name || '').toLowerCase();
-                card.style.display = name.includes(q) ? '' : 'none';
+            document.querySelectorAll('.' + cls).forEach(el => {
+                el.style.display = (el.dataset.name || '').toLowerCase().includes(q) ? '' : 'none';
             });
         }
 
-        // Delete
         function confirmDelete(type, id, name) {
             const urlMap = {
                 Course:      '/AdminService/CourseDelete/',
                 Stringing:   '/AdminService/StringingDelete/',
                 Tournament:  '/AdminService/TournamentDelete/'
             };
-            document.getElementById('deleteName').textContent = name;
-            document.getElementById('deleteForm').onsubmit = function (e) {
-                e.preventDefault();
-                const token = this.querySelector('[name=__RequestVerificationToken]').value;
-                fetch(urlMap[type] + id, {
-                    method: 'POST',
-                    headers: {
-                        'RequestVerificationToken': token,
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: '__RequestVerificationToken=' + encodeURIComponent(token)
-                })
-                .then(r => r.json())
-                .then(res => {
-                    bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
-                    if (res.success) location.reload();
-                    else alert(res.message);
-                });
-            };
-            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+            Swal.fire({
+                title: `Xóa "${name}"?`,
+                text: 'Dữ liệu sẽ bị xóa vĩnh viễn!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#c94b2a',
+                cancelButtonColor: '#8a7560',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy',
+                reverseButtons: true
+            }).then(r => {
+                if (!r.isConfirmed) return;
+                const fd = new FormData();
+                fd.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+                fetch(urlMap[type] + id, { method:'POST', body:fd })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({ icon:'success', title:'Đã xóa!', text:data.message, timer:1500, showConfirmButton:false })
+                                .then(() => location.reload());
+                        } else { Swal.fire('Lỗi!', data.message, 'error'); }
+                    })
+                    .catch(() => Swal.fire('Lỗi!', 'Không thể kết nối máy chủ', 'error'));
+            });
         }
     </script>
 }

@@ -5,214 +5,624 @@
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="container-fluid py-4 page-content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #f5f4ec;
+        --warm: #f0ead8;
+        --card: #ffffff;
+        --border: #e4d9c8;
+        --muted: #8a7560;
+        --green: #15803d;
+        --green-soft: #dcfce7;
+        --red: #dc2626;
+        --red-soft: #fef2f2;
+    }
+
+    body, .container-fluid {
+        font-family: 'Outfit', sans-serif;
+        background: var(--cream);
+    }
+
+    /* Page Header */
+    .page-hd {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 1.8rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .page-label {
+        font-size: .68rem;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: var(--gold);
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        margin-bottom: .35rem;
+    }
+
+        .page-label::before {
+            content: '';
+            width: 16px;
+            height: 1px;
+            background: var(--gold);
+        }
+
+    .page-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: var(--deep);
+        margin: 0;
+        line-height: 1.15;
+    }
+
+        .page-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    .page-sub {
+        font-size: .83rem;
+        color: var(--muted);
+        margin-top: .3rem;
+    }
+
+    /* Add Button */
+    .btn-add {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .65rem 1.4rem;
+        background: var(--gold2);
+        color: var(--deep);
+        border: none;
+        border-radius: 10px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .88rem;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        transition: .2s;
+        white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(212,160,23,.3);
+    }
+
+        .btn-add:hover {
+            background: var(--gold);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(212,160,23,.4);
+        }
+
+    /* Nav Pills */
+    .nav-pills-custom {
+        display: inline-flex;
+        gap: .35rem;
+        background: var(--warm);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: .3rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .nav-pill-item {
+        padding: .42rem 1.1rem;
+        border-radius: 7px;
+        font-size: .83rem;
+        font-weight: 600;
+        color: var(--muted);
+        text-decoration: none;
+        transition: .18s;
+        white-space: nowrap;
+    }
+
+        .nav-pill-item:hover {
+            color: var(--deep);
+            background: rgba(255,255,255,.6);
+        }
+
+        .nav-pill-item.active {
+            background: var(--deep);
+            color: var(--gold2);
+        }
+
+    /* Search Bar */
+    .search-row {
+        display: flex;
+        gap: .75rem;
+        margin-bottom: 1.6rem;
+        flex-wrap: wrap;
+    }
+
+    .search-wrap {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        padding: .5rem 1rem;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        flex: 1;
+        min-width: 200px;
+        box-shadow: 0 1px 6px rgba(26,18,9,.05);
+    }
+
+        .search-wrap i {
+            color: var(--muted);
+            font-size: .9rem;
+            flex-shrink: 0;
+        }
+
+        .search-wrap input {
+            border: none;
+            background: transparent;
+            font-family: 'Outfit',sans-serif;
+            font-size: .86rem;
+            color: var(--deep);
+            outline: none;
+            width: 100%;
+        }
+
+            .search-wrap input::placeholder {
+                color: var(--muted);
+            }
+
+    .filter-select {
+        padding: .5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .84rem;
+        color: var(--deep);
+        background: var(--card);
+        cursor: pointer;
+        outline: none;
+        min-width: 180px;
+        box-shadow: 0 1px 6px rgba(26,18,9,.05);
+    }
+
+    .btn-search {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .5rem 1.2rem;
+        background: var(--deep);
+        color: var(--gold2);
+        border: none;
+        border-radius: 10px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .84rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: .18s;
+    }
+
+        .btn-search:hover {
+            background: #2d200a;
+        }
+
+    /* Product Grid */
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(2,1fr);
+        gap: 1.1rem;
+    }
+
+    @@media(max-width:900px) {
+        .products-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .product-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: .22s;
+        box-shadow: 0 2px 10px rgba(26,18,9,.05);
+    }
+
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(26,18,9,.1);
+            border-color: #d4c4a8;
+        }
+
+    .product-card-body {
+        display: flex;
+        gap: 1.1rem;
+        padding: 1.3rem 1.4rem;
+    }
+
+    .product-img {
+        width: 110px;
+        height: 110px;
+        border-radius: 12px;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: var(--warm);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .product-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-img i {
+            font-size: 2rem;
+            color: var(--gold);
+            opacity: .4;
+        }
+
+    .product-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .product-name {
+        font-weight: 800;
+        font-size: .95rem;
+        color: var(--deep);
+        margin-bottom: .15rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .product-sku {
+        font-size: .73rem;
+        color: var(--muted);
+        font-family: 'Courier New',monospace;
+        margin-bottom: .5rem;
+    }
+
+    .product-cat {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .22rem .75rem;
+        background: #fef9ec;
+        border: 1px solid #f0dea0;
+        border-radius: 20px;
+        font-size: .72rem;
+        font-weight: 700;
+        color: var(--gold);
+        margin-bottom: .7rem;
+    }
+
+    .product-stats {
+        display: flex;
+        gap: 1.2rem;
+    }
+
+    .stat-lbl {
+        font-size: .65rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        font-weight: 700;
+        color: var(--muted);
+        display: block;
+        margin-bottom: .1rem;
+    }
+
+    .stat-val-price {
+        font-weight: 800;
+        font-size: 1rem;
+        color: var(--green);
+    }
+
+    .stat-val-num {
+        font-weight: 700;
+        font-size: .9rem;
+        color: var(--deep);
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .28rem;
+        padding: .25rem .75rem;
+        border-radius: 20px;
+        font-size: .72rem;
+        font-weight: 700;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .badge-available {
+        background: var(--green-soft);
+        color: var(--green);
+        border: 1px solid #a7f3d0;
+    }
+
+    .badge-outofstock {
+        background: #fef9ec;
+        color: #92600a;
+        border: 1px solid #f0dea0;
+    }
+
+    .badge-discontinued {
+        background: var(--red-soft);
+        color: var(--red);
+        border: 1px solid #fecaca;
+    }
+
+    /* Card Footer */
+    .product-card-foot {
+        display: flex;
+        gap: .5rem;
+        padding: .9rem 1.4rem;
+        border-top: 1px solid var(--warm);
+        background: #fdfcf8;
+    }
+
+    .btn-edit {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .4rem;
+        padding: .5rem .9rem;
+        border: 1px solid var(--border);
+        background: var(--warm);
+        color: var(--deep);
+        border-radius: 9px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .82rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: .16s;
+    }
+
+        .btn-edit:hover {
+            background: var(--deep);
+            color: var(--gold2);
+            border-color: var(--deep);
+        }
+
+    .btn-delete {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .4rem;
+        padding: .5rem .9rem;
+        border: 1px solid #fecaca;
+        background: var(--red-soft);
+        color: var(--red);
+        border-radius: 9px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .82rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: .16s;
+    }
+
+        .btn-delete:hover {
+            background: var(--red);
+            color: #fff;
+            border-color: var(--red);
+        }
+
+    /* Empty */
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        color: var(--muted);
+        grid-column: 1/-1;
+    }
+
+        .empty-state i {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 1rem;
+            color: var(--gold);
+            opacity: .3;
+        }
+
+        .empty-state p {
+            font-size: .9rem;
+            margin: 0;
+        }
+
+    /* Toast */
+    .toast-wrap {
+        position: fixed;
+        top: 1.2rem;
+        right: 1.2rem;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+        pointer-events: none;
+    }
+
+    .toast-msg {
+        padding: .75rem 1.2rem;
+        border-radius: 10px;
+        font-size: .84rem;
+        font-weight: 600;
+        box-shadow: 0 8px 24px rgba(0,0,0,.14);
+        pointer-events: all;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        animation: slideIn .22s ease;
+        background: #fff;
+        border-left: 4px solid var(--red);
+        color: var(--red);
+    }
+
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(20px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0)
+        }
+    }
+</style>
+
+<div class="container-fluid px-4 py-4">
+
+    <!-- Header -->
+    <div class="page-hd">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Quản Lý Sản Phẩm</h2>
-            <p class="text-muted small mb-0">Quản lý danh mục, sản phẩm và kho hàng của bạn</p>
+            <div class="page-label">Sản Phẩm</div>
+            <div class="page-title">Quản lý <em>Sản Phẩm</em></div>
+            <div class="page-sub">Quản lý danh mục, sản phẩm và kho hàng của bạn</div>
         </div>
-        <a asp-action="Create" class="btn btn-dark rounded-3 px-4 py-2 fw-bold shadow-sm">
-            <i class="bi bi-plus-lg me-2"></i>Thêm Sản Phẩm
+        <a asp-action="Create" class="btn-add">
+            <i class="bi bi-plus-lg"></i> Thêm Sản Phẩm
         </a>
     </div>
 
-    <div class="d-flex gap-2 mb-4 bg-light p-1 rounded-3 d-inline-flex">
-        <a href="/Admin/AdminCategory" class="btn btn-sm px-3 rounded-2 text-secondary fw-medium">Danh Mục</a>
-        <a href="#" class="btn btn-sm px-3 rounded-2 bg-white shadow-sm text-dark fw-bold">Sản Phẩm</a>
-        <a href="#" class="btn btn-sm px-3 rounded-2 text-secondary fw-medium">Kho Hàng</a>
+    <!-- Nav -->
+    <div class="nav-pills-custom">
+        <a href="/Admin/AdminCategory" class="nav-pill-item">Danh Mục</a>
+        <a href="#" class="nav-pill-item active">Sản Phẩm</a>
+        <a href="#" class="nav-pill-item">Kho Hàng</a>
     </div>
 
-    <div class="search-bar-container mb-4 position-relative">
-        <form method="get" class="row g-3">
-            <div class="col-md-8 position-relative">
-                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                <input type="text" class="form-control ps-5 border-0 shadow-sm rounded-3 py-2"
-                       name="search" placeholder="Tìm kiếm sản phẩm..." value="@ViewBag.Search">
+    <!-- Search -->
+    <form method="get">
+        <div class="search-row">
+            <div class="search-wrap">
+                <i class="bi bi-search"></i>
+                <input type="text" name="search" placeholder="Tìm kiếm sản phẩm..." value="@ViewBag.Search" />
             </div>
-            <div class="col-md-4">
-                <select class="form-select border-0 shadow-sm rounded-3 py-2" name="categoryId" onchange="this.form.submit()">
-                    <option value="">Tất cả danh mục</option>
-                    @foreach (var cat in ViewBag.Categories)
-                    {
-                        <option value="@cat.CategoryId" selected="@(ViewBag.CurrentCategory == cat.CategoryId)">
-                            @cat.CategoryName
-                        </option>
-                    }
-                </select>
-            </div>
-        </form>
-    </div>
+            <select class="filter-select" name="categoryId" onchange="this.form.submit()">
+                <option value="">Tất cả danh mục</option>
+                @foreach (var cat in ViewBag.Categories)
+                {
+                    <option value="@cat.CategoryId" selected="@(ViewBag.CurrentCategory == cat.CategoryId)">
+                        @cat.CategoryName
+                    </option>
+                }
+            </select>
+            <button type="submit" class="btn-search">
+                <i class="bi bi-funnel"></i> Lọc
+            </button>
+        </div>
+    </form>
 
-    <div class="row g-4">
+    <!-- Grid -->
+    <div class="products-grid">
         @if (Model != null && Model.Any())
         {
             foreach (var product in Model)
             {
-                <div class="col-md-6">
-                    <div class="card product-modern-card border-0 shadow-sm rounded-4 overflow-hidden h-100">
-                        <div class="card-body p-4">
-                            <div class="d-flex">
-                                <div class="product-img-wrapper rounded-3 overflow-hidden shadow-sm me-4">
-                                    @if (!string.IsNullOrEmpty(product.ImageUrl))
-                                    {
-                                        <img src="@product.ImageUrl" class="w-100 h-100 object-fit-cover" alt="@product.ProductName">
-                                    }
-                                    else
-                                    {
-                                        <div class="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
-                                            <i class="bi bi-image text-muted opacity-50 fs-2"></i>
-                                        </div>
-                                    }
+                <div class="product-card">
+                    <div class="product-card-body">
+                        <div class="product-img">
+                            @if (!string.IsNullOrEmpty(product.ImageUrl))
+                            {
+                                <img src="@product.ImageUrl" alt="@product.ProductName" onerror="this.src='/images/no-image.png'" />
+                            }
+                            else
+                            {
+                                <i class="bi bi-image"></i>
+                            }
+                        </div>
+
+                        <div class="product-info">
+                            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;margin-bottom:.2rem">
+                                <div class="product-name">@product.ProductName</div>
+                                @switch (product.Status)
+                                {
+                                    case "Available":
+                                        <span class="status-badge badge-available"><i class="bi bi-check-circle-fill"></i> Còn hàng</span>
+                                        break;
+                                    case "OutOfStock":
+                                        <span class="status-badge badge-outofstock"><i class="bi bi-exclamation-circle-fill"></i> Sắp hết</span>
+                                        break;
+                                    default:
+                                        <span class="status-badge badge-discontinued"><i class="bi bi-x-circle-fill"></i> Ngừng bán</span>
+                                        break;
+                                }
+                            </div>
+                            <div class="product-sku">SKU: @(product.ProductCode ?? "N/A")</div>
+                            <div class="product-cat">
+                                <i class="bi bi-tag-fill"></i>
+                                @product.Category?.CategoryName
+                            </div>
+                            <div class="product-stats">
+                                <div>
+                                    <span class="stat-lbl">Giá</span>
+                                    <span class="stat-val-price">₫@product.Price.ToString("N0")</span>
                                 </div>
-
-                                <div class="flex-grow-1">
-                                    <div class="d-flex justify-content-between align-items-start mb-1">
-                                        <h5 class="fw-bold text-dark mb-0">@product.ProductName</h5>
-                                        @Html.Raw(GetStatusBadge(product.Status))
-                                    </div>
-                                    <p class="text-muted small mb-2">SKU: @(product.ProductCode ?? "N/A")</p>
-
-                                    <div class="mb-3">
-                                        <span class="badge bg-light text-dark border rounded-pill px-3 py-1 fw-medium">
-                                            @product.Category?.CategoryName
-                                        </span>
-                                    </div>
-
-                                    <div class="row g-0 align-items-end">
-                                        <div class="col-4">
-                                            <label class="d-block text-muted tiny-text text-uppercase fw-bold">Giá</label>
-                                            <span class="text-success fw-bold fs-5">₫@product.Price.ToString("N0")</span>
-                                        </div>
-                                        <div class="col-4">
-                                            <label class="d-block text-muted tiny-text text-uppercase fw-bold">Tồn kho</label>
-                                            <span class="fw-bold text-dark">15</span> @* Giả định logic *@
-                                        </div>
-                                        <div class="col-4">
-                                            <label class="d-block text-muted tiny-text text-uppercase fw-bold">Đã bán</label>
-                                            <span class="fw-bold text-dark">45</span> @* Giả định logic *@
-                                        </div>
-                                    </div>
+                                <div>
+                                    <span class="stat-lbl">Tồn kho</span>
+                                    <span class="stat-val-num">15</span>
+                                </div>
+                                <div>
+                                    <span class="stat-lbl">Đã bán</span>
+                                    <span class="stat-val-num">45</span>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="card-footer bg-white border-top-0 p-3 px-4 d-flex gap-2">
-                            <a asp-action="Edit" asp-route-id="@product.ProductId"
-                               class="btn btn-outline-secondary btn-sm flex-fill rounded-3 fw-bold py-2">
-                                <i class="bi bi-pencil-square me-2"></i>Sửa
-                            </a>
-                            <button onclick="deleteProduct(@product.ProductId)"
-                                    class="btn btn-outline-danger btn-sm flex-fill rounded-3 fw-bold py-2">
-                                <i class="bi bi-trash-fill me-2"></i>Xóa
-                            </button>
-                        </div>
+                    <div class="product-card-foot">
+                        <a asp-action="Edit" asp-route-id="@product.ProductId" class="btn-edit">
+                            <i class="bi bi-pencil-square"></i> Chỉnh sửa
+                        </a>
+                        <button onclick="deleteProduct(@product.ProductId)" class="btn-delete">
+                            <i class="bi bi-trash-fill"></i> Xóa
+                        </button>
                     </div>
                 </div>
             }
         }
         else
         {
-            <div class="col-12 text-center py-5">
-                <div class="bg-light d-inline-block p-4 rounded-circle mb-3">
-                    <i class="bi bi-box-seam text-muted fs-1"></i>
-                </div>
-                <h5 class="text-muted">Không tìm thấy sản phẩm nào</h5>
+            <div class="empty-state">
+                <i class="bi bi-box-seam"></i>
+                <p>Không tìm thấy sản phẩm nào</p>
             </div>
         }
     </div>
 </div>
 
-@functions {
-    public string GetStatusBadge(string status) => status switch
-    {
-        "Available" => "<span class='badge badge-soft-success rounded-pill px-2'>Còn Hàng</span>",
-        "OutOfStock" => "<span class='badge badge-soft-warning rounded-pill px-2'>Sắp Hết</span>",
-        _ => "<span class='badge badge-soft-danger rounded-pill px-2'>Ngừng Bán</span>"
-    };
-}
-
-<style>
-    .page-content {
-        background-color: #fcfcfd;
-        min-vh-100;
-    }
-
-    /* Card Styling */
-    .product-modern-card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-        .product-modern-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
-        }
-
-    /* Image Wrapper */
-    .product-img-wrapper {
-        width: 120px;
-        height: 120px;
-        flex-shrink: 0;
-        background: #f8f9fa;
-    }
-
-    /* Badge Custom Colors */
-    .badge-soft-success {
-        background-color: #ecfdf5;
-        color: #10b981;
-        border: 1px solid #d1fae5;
-    }
-
-    .badge-soft-warning {
-        background-color: #fffbeb;
-        color: #f59e0b;
-        border: 1px solid #fef3c7;
-    }
-
-    .badge-soft-danger {
-        background-color: #fef2f2;
-        color: #ef4444;
-        border: 1px solid #fee2e2;
-    }
-
-    .tiny-text {
-        font-size: 0.65rem;
-        letter-spacing: 0.5px;
-    }
-
-    /* Form Elements */
-    .form-control:focus, .form-select:focus {
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.05);
-        border: 1px solid #dee2e6;
-    }
-
-    /* Buttons */
-    .btn-outline-secondary {
-        color: #64748b;
-        border-color: #e2e8f0;
-    }
-
-        .btn-outline-secondary:hover {
-            background-color: #f8fafc;
-            color: #334155;
-            border-color: #cbd5e1;
-        }
-</style>
+<div class="toast-wrap" id="toastWrap"></div>
 
 @section Scripts {
     <script>
         function deleteProduct(id) {
-            if (confirm('Bạn có chắc muốn xóa sản phẩm này? Thao tác này không thể hoàn tác.')) {
-                fetch(`/Admin/AdminProduct/Delete/${id}`, {
-                    method: 'POST',
-                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-                }).then(response => {
-                    if (response.ok) {
-                        location.reload();
-                    } else {
-                        alert('Đã xảy ra lỗi khi xóa sản phẩm!');
-                    }
-                });
-            }
+            if (!confirm('Bạn có chắc muốn xóa sản phẩm này? Thao tác này không thể hoàn tác.')) return;
+            fetch(`/Admin/AdminProduct/Delete/${id}`, {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '' }
+            }).then(r => {
+                if (r.ok) {
+                    location.reload();
+                } else {
+                    const wrap = document.getElementById('toastWrap');
+                    const el = document.createElement('div');
+                    el.className = 'toast-msg';
+                    el.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Đã xảy ra lỗi khi xóa sản phẩm!';
+                    wrap.appendChild(el);
+                    setTimeout(() => el.remove(), 3200);
+                }
+            });
         }
     </script>
 }

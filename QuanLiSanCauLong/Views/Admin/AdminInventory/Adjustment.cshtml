@@ -1,86 +1,500 @@
 ﻿@model QuanLiSanCauLong.Models.Inventory
 
-<div class="modal-header border-0 p-4 pb-0">
+<style>
+    :root {
+        --court-dark: #1a1a2e;
+        --court-gold: #e8c840;
+        --court-gold-h: #d4b320;
+        --court-bg: #f5f0e8;
+        --court-card: #ffffff;
+        --court-border: #e8e0d0;
+        --court-text: #2d2d2d;
+        --court-muted: #7a7060;
+    }
+
+    .modal-hd-court {
+        background: var(--court-dark);
+        color: #fff;
+        border-radius: 16px 16px 0 0;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+        .modal-hd-court h5 {
+            font-weight: 800;
+            font-size: 1.05rem;
+            margin: 0 0 2px;
+            color: #fff;
+        }
+
+        .modal-hd-court p {
+            font-size: .78rem;
+            color: rgba(255,255,255,.6);
+            margin: 0;
+        }
+
+    .icon-wrap-adj {
+        width: 38px;
+        height: 38px;
+        border-radius: 9px;
+        background: rgba(232,200,64,.2);
+        color: var(--court-gold);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+    .btn-close-inv {
+        filter: invert(1);
+        opacity: .7;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        padding: .25rem;
+    }
+
+    /* Product info card */
+    .prod-info-card {
+        background: var(--court-bg);
+        border: 1px solid var(--court-border);
+        border-radius: 12px;
+        padding: 1rem 1.2rem;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .prod-thumb-adj {
+        width: 56px;
+        height: 56px;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid var(--court-border);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--court-muted);
+    }
+
+        .prod-thumb-adj img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .prod-info-name {
+        font-size: .95rem;
+        font-weight: 800;
+        color: var(--court-dark);
+        margin-bottom: 3px;
+    }
+
+    .prod-info-meta {
+        display: flex;
+        gap: .6rem;
+        flex-wrap: wrap;
+    }
+
+    .pi-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: .68rem;
+        font-weight: 700;
+    }
+
+    .pi-sku {
+        background: var(--court-bg);
+        color: var(--court-muted);
+        border: 1px solid var(--court-border);
+    }
+
+    .pi-cat {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #93c5fd;
+    }
+
+    .pi-batch {
+        background: #f9fafb;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+
+    .pi-loc {
+        background: #faf5ff;
+        color: #7e22ce;
+        border: 1px solid #d8b4fe;
+    }
+
+    .pi-fac {
+        text-align: right;
+        min-width: 80px;
+    }
+
+        .pi-fac small {
+            font-size: .65rem;
+            text-transform: uppercase;
+            color: var(--court-muted);
+            display: block;
+        }
+
+        .pi-fac span {
+            font-size: .85rem;
+            font-weight: 700;
+            color: var(--court-dark);
+        }
+
+    /* Form fields */
+    .fl label {
+        display: block;
+        font-size: .73rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: var(--court-muted);
+        margin-bottom: 5px;
+    }
+
+    .fc {
+        border: 1.5px solid var(--court-border);
+        border-radius: 8px;
+        background: var(--court-bg);
+        color: var(--court-text);
+        font-size: .875rem;
+        padding: .48rem .75rem;
+        width: 100%;
+        transition: .2s;
+    }
+
+        .fc:focus {
+            outline: none;
+            border-color: var(--court-gold);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(232,200,64,.2);
+        }
+
+    .fc-readonly {
+        background: #f8f6f0;
+        color: var(--court-muted);
+        font-weight: 700;
+        cursor: not-allowed;
+    }
+
+    textarea.fc {
+        resize: vertical;
+        min-height: 70px;
+    }
+
+    .fc-unit {
+        display: flex;
+    }
+
+        .fc-unit input {
+            border-radius: 8px 0 0 8px;
+            border-right: none;
+        }
+
+        .fc-unit .unit-label {
+            background: #f0ece4;
+            border: 1.5px solid var(--court-border);
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+            padding: .48rem .75rem;
+            font-size: .8rem;
+            color: var(--court-muted);
+            font-weight: 700;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+        }
+
+    .section-div {
+        font-size: .68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--court-dark);
+        display: inline-block;
+        padding-bottom: .35rem;
+        border-bottom: 2px solid var(--court-gold);
+        margin-bottom: .85rem;
+    }
+
+    .fw-mono {
+        font-family: monospace;
+        letter-spacing: .3px;
+    }
+
+    .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .85rem;
+    }
+
+    .qty-arrow {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding-bottom: .65rem;
+        color: var(--court-muted);
+        font-size: 1.25rem;
+    }
+
+    /* Diff box */
+    .diff-box {
+        border-radius: 9px;
+        padding: .65rem 1rem;
+        font-size: .84rem;
+        font-weight: 700;
+        display: none;
+        align-items: center;
+        gap: .5rem;
+        margin-bottom: 1rem;
+    }
+
+    .diff-up {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
+
+    .diff-down {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fca5a5;
+    }
+
+    .diff-same {
+        background: var(--court-bg);
+        color: var(--court-muted);
+        border: 1px solid var(--court-border);
+    }
+
+    /* Warning note */
+    .warn-note {
+        background: #fffbeb;
+        border: 1px solid #fcd34d;
+        border-radius: 8px;
+        padding: .65rem .9rem;
+        font-size: .78rem;
+        color: #b45309;
+        display: flex;
+        align-items: flex-start;
+        gap: .5rem;
+    }
+
+    /* Footer */
+    .modal-foot-court {
+        background: var(--court-bg);
+        border-top: 1px solid var(--court-border);
+        border-radius: 0 0 16px 16px;
+        padding: 1rem 1.5rem;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: .6rem;
+    }
+
+    .btn-cancel-modal {
+        background: var(--court-card);
+        color: var(--court-text);
+        border: 1.5px solid var(--court-border);
+        border-radius: 9px;
+        padding: .55rem 1.3rem;
+        font-weight: 600;
+        font-size: .875rem;
+        cursor: pointer;
+        transition: .18s;
+    }
+
+        .btn-cancel-modal:hover {
+            background: #ede8de;
+        }
+
+    .btn-submit-modal {
+        background: var(--court-dark);
+        color: #fff;
+        border: none;
+        border-radius: 9px;
+        padding: .55rem 1.75rem;
+        font-weight: 800;
+        font-size: .875rem;
+        cursor: pointer;
+        transition: .18s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+        .btn-submit-modal:hover {
+            background: #2a2a4a;
+            box-shadow: 0 4px 12px rgba(26,26,46,.3);
+        }
+</style>
+
+<div class="modal-hd-court">
     <div class="d-flex align-items-center">
-        <div class="bg-soft-warning p-2 rounded-3 me-3">
-            <i class="bi bi-pencil-square text-warning fs-4"></i>
-        </div>
+        <div class="icon-wrap-adj"><i class="bi bi-pencil-square"></i></div>
         <div>
-            <h4 class="fw-bold mb-0">Điều Chỉnh Tồn Kho</h4>
-            <p class="text-muted small mb-0">Cập nhật số lượng thực tế sau kiểm kê</p>
+            <h5>Điều Chỉnh Tồn Kho</h5>
+            <p>Cập nhật số lượng thực tế sau kiểm kê</p>
         </div>
     </div>
-    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
 </div>
 
-<form asp-action="Adjustment" method="post">
-    <div class="modal-body p-4">
+<form asp-action="Adjustment" method="post" id="adjustForm">
+    <div class="modal-body p-4" style="background:#fff;">
         <input type="hidden" name="inventoryId" value="@Model.InventoryId" />
 
-        <div class="bg-light rounded-4 p-3 mb-4 border-0">
-            <div class="row align-items-center">
-                <div class="col-6 border-end text-center">
-                    <label class="form-label fw-bold small text-uppercase text-muted mb-1 d-block">Sản phẩm</label>
-                    <span class="fw-bold text-dark">@Model.Product.ProductName</span>
+        <!-- Product info card -->
+        <div class="prod-info-card">
+            <div class="prod-thumb-adj">
+                @if (!string.IsNullOrEmpty(Model.Product?.ImageUrl))
+                {
+                    <img src="@Model.Product.ImageUrl" onerror="this.src='/images/no-image.png'" />
+                }
+                else
+                {
+                    <i class="bi bi-box-seam"></i>
+                }
+            </div>
+            <div style="flex:1;min-width:0;">
+                <div class="prod-info-name">@Model.Product?.ProductName</div>
+                <div class="prod-info-meta">
+                    @if (!string.IsNullOrEmpty(Model.Product?.SKU))
+                    {
+                        <span class="pi-tag pi-sku fw-mono"><i class="bi bi-upc"></i>@Model.Product.SKU</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Product?.Category?.CategoryName))
+                    {
+                        <span class="pi-tag pi-cat"><i class="bi bi-tag"></i>@Model.Product.Category.CategoryName</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Product?.BatchNumber))
+                    {
+                        <span class="pi-tag pi-batch"><i class="bi bi-layers"></i>Lô: @Model.Product.BatchNumber</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Product?.StorageLocation))
+                    {
+                        <span class="pi-tag pi-loc"><i class="bi bi-pin-map"></i>@Model.Product.StorageLocation</span>
+                    }
                 </div>
-                <div class="col-6 ps-4 text-center">
-                    <label class="form-label fw-bold small text-uppercase text-muted mb-1 d-block">Cơ sở</label>
-                    <span class="fw-bold text-dark">@Model.Facility.FacilityName</span>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.Facility?.FacilityName))
+            {
+                <div class="pi-fac">
+                    <small>Cơ sở</small>
+                    <span>@Model.Facility.FacilityName</span>
+                </div>
+            }
+        </div>
+
+        <!-- Before / After -->
+        <div class="section-div"><i class="bi bi-arrow-left-right me-1"></i>Số Lượng Trước / Sau</div>
+        <div class="row g-2 mb-3 align-items-end">
+            <div class="col-md-5 fl">
+                <label>Hệ thống ghi nhận</label>
+                <div class="fc-unit">
+                    <input type="text" class="fc fc-readonly" value="@Model.Quantity" readonly />
+                    <span class="unit-label">@Model.Product?.Unit</span>
+                </div>
+            </div>
+            <div class="col-md-2 qty-arrow"><i class="bi bi-arrow-right"></i></div>
+            <div class="col-md-5 fl">
+                <label>Thực tế kiểm kê <span style="color:#dc2626;">*</span></label>
+                <div class="fc-unit">
+                    <input type="number" name="newQuantity" id="newQtyInput"
+                           class="fc" value="@Model.Quantity" min="0" required oninput="calcDiff()" />
+                    <span class="unit-label">@Model.Product?.Unit</span>
                 </div>
             </div>
         </div>
 
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label fw-bold small text-uppercase text-muted">Số lượng hiện tại</label>
-                <div class="input-group">
-                    <input type="text" class="form-control rounded-3 py-2 bg-white border shadow-none fw-bold text-secondary"
-                           value="@Model.Quantity" readonly />
-                    <span class="input-group-text border bg-light text-muted small">@Model.Product.Unit</span>
-                </div>
-            </div>
+        <!-- Diff indicator -->
+        <div id="diffBox" class="diff-box mb-3">
+            <i id="diffIcon" class="bi"></i>
+            <span id="diffText"></span>
+        </div>
 
-            <div class="col-md-6">
-                <label class="form-label fw-bold small text-uppercase text-muted">Số lượng mới</label>
-                <div class="input-group border rounded-3 overflow-hidden shadow-sm">
-                    <input type="number" name="newQuantity" class="form-control py-2 border-0 shadow-none fw-bold"
-                           value="@Model.Quantity" min="0" required />
-                    <span class="input-group-text border-0 bg-white text-muted small">@Model.Product.Unit</span>
-                </div>
+        <!-- Reason / Doc -->
+        <div class="section-div"><i class="bi bi-sliders2 me-1"></i>Phân Loại & Chứng Từ</div>
+        <div class="two-col mb-3">
+            <div class="fl">
+                <label>Loại điều chỉnh</label>
+                <select name="adjustReason" class="fc">
+                    <option value="Stocktake">📋 Kiểm kê định kỳ</option>
+                    <option value="Defective">❌ Phát hiện hàng lỗi/hư</option>
+                    <option value="Lost">🔍 Thất thoát / mất mát</option>
+                    <option value="Found">✅ Phát hiện thêm hàng</option>
+                    <option value="Expired">📅 Loại bỏ hàng hết hạn</option>
+                    <option value="Other">📝 Lý do khác</option>
+                </select>
             </div>
+            <div class="fl">
+                <label>Số chứng từ kiểm kê</label>
+                <input name="docRef" class="fc fw-mono" placeholder="VD: KK-2025-001" />
+            </div>
+        </div>
 
-            <div class="col-12">
-                <label class="form-label fw-bold small text-uppercase text-muted">Lý do điều chỉnh</label>
-                <textarea name="note" class="form-control rounded-3 bg-light border-0 shadow-none"
-                          rows="3" placeholder="Ví dụ: Kiểm kho định kỳ, hàng lỗi..."></textarea>
-                <div class="form-text text-danger small mt-2">
-                    <i class="bi bi-info-circle me-1"></i> <strong>Lưu ý:</strong> Thao tác này thay đổi trực tiếp con số tồn kho.
-                </div>
-            </div>
+        <div class="fl mb-3">
+            <label>Mô tả chi tiết</label>
+            <textarea name="note" class="fc" rows="2"
+                      placeholder="Ghi rõ lý do chênh lệch, ví dụ: hàng hỏng sau kiểm kê..."></textarea>
+        </div>
+
+        <div class="warn-note">
+            <i class="bi bi-exclamation-triangle-fill" style="flex-shrink:0;margin-top:1px;"></i>
+            <span><strong>Lưu ý:</strong> Thao tác này thay đổi trực tiếp số tồn kho trong hệ thống và được ghi vào lịch sử không thể hoàn tác.</span>
         </div>
     </div>
 
-    <div class="modal-footer border-0 p-4 pt-0">
-        <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Hủy</button>
-        <button type="submit" class="btn btn-dark rounded-3 px-4 shadow fw-bold">
-            <i class="bi bi-check2-circle me-2"></i>Cập Nhật Ngay
+    <div class="modal-foot-court">
+        <button type="button" class="btn-cancel-modal" data-bs-dismiss="modal">Hủy</button>
+        <button type="submit" class="btn-submit-modal">
+            <i class="bi bi-check2-circle"></i> Cập Nhật Tồn Kho
         </button>
     </div>
 </form>
 
-<style>
-    .bg-soft-warning {
-        background-color: #fffbeb;
+<script>
+    const currentQty = @Model.Quantity;
+
+    function calcDiff() {
+        const newQty = parseInt(document.getElementById('newQtyInput').value) || 0;
+        const diff   = newQty - currentQty;
+        const box    = document.getElementById('diffBox');
+        const ico    = document.getElementById('diffIcon');
+        const txt    = document.getElementById('diffText');
+
+        box.style.display = 'flex';
+        box.className = 'diff-box mb-3';
+
+        if (diff > 0) {
+            box.classList.add('diff-up');
+            ico.className = 'bi bi-arrow-up-circle-fill';
+            txt.innerHTML = `Tăng <strong>+${diff} @Model.Product?.Unit</strong> so với hệ thống`;
+        } else if (diff < 0) {
+            box.classList.add('diff-down');
+            ico.className = 'bi bi-arrow-down-circle-fill';
+            txt.innerHTML = `Giảm <strong>${diff} @Model.Product?.Unit</strong> so với hệ thống`;
+        } else {
+            box.classList.add('diff-same');
+            ico.className = 'bi bi-check-circle-fill';
+            txt.innerHTML = `Số lượng <strong>khớp</strong> với hệ thống, không có chênh lệch`;
+        }
     }
 
-    /* Tinh chỉnh input focus để đồng bộ với các form trước */
-    .form-control:focus {
-        background-color: #ffffff !important;
-        border: 1px solid #dee2e6 !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
-    }
-
-    .modal-content {
-        border-radius: 1.25rem;
-    }
-</style>
+    document.addEventListener('DOMContentLoaded', calcDiff);
+</script>

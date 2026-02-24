@@ -1,283 +1,1253 @@
-﻿@model QuanLiSanCauLong.Models.Facility
+﻿@model QuanLiSanCauLong.ViewModels.FacilityDetailsViewModel
 @{
-    Layout = null;
-    var images = ViewBag.FacilityImages as List<QuanLiSanCauLong.Models.FacilityImage>
-                 ?? new List<QuanLiSanCauLong.Models.FacilityImage>();
-
-    var primaryImage = images.FirstOrDefault(i => i.IsPrimary)?.ImagePath
-                    ?? (images.Any() ? images.First().ImagePath : "/images/default-facility.jpg");
-
-    // Parse tiện ích
-    var amenitySet = (Model.Amenities ?? "")
-                     .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                     .Select(a => a.Trim())
-                     .ToHashSet();
-
-    // Dữ liệu tiện ích để render
-    var amenityMap = new (string Key, string Label, string Icon, string Color)[]
-    {
-        ("parking", "Gửi xe",         "bi-p-square-fill", "#2196f3"),
-        ("wifi",    "Wifi",            "bi-wifi",          "#4caf50"),
-        ("canteen", "Căng tin",        "bi-cup-hot-fill",  "#ff9800"),
-        ("shower",  "Nhà tắm",         "bi-droplet-fill",  "#00bcd4"),
-        ("rental",  "Thuê vợt / giày", "bi-bag-fill",      "#9c27b0"),
-    };
+    ViewData["Title"] = Model.FacilityName;
 }
 
-<div class="modal-header border-0 px-4 pt-4 pb-0">
-    <div>
-        <h5 class="fw-bold mb-1">Chi Tiết Cơ Sở</h5>
-        <p class="text-muted small mb-0">Thông tin chi tiết về <strong>@Model.FacilityName</strong></p>
-    </div>
-    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+<style>
+    :root {
+        --D: #1a1209;
+        --D2: #231a0e;
+        --D3: #2e2010;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --G3: rgba(212,160,23,.1);
+        --G4: rgba(212,160,23,.18);
+        --W: #f5ede0;
+        --S: #ede5d8;
+        --R: #c94b2a;
+        --GN: #10b981;
+        --M: rgba(255,255,255,.38);
+        --M2: rgba(255,255,255,.08);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        background: var(--W);
+        margin: 0;
+    }
+
+    /* BREADCRUMB */
+    .bc {
+        background: var(--D);
+        padding: .75rem 2rem;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        border-bottom: 1px solid var(--G4);
+    }
+
+        .bc a {
+            color: var(--G2);
+            text-decoration: none;
+            font-size: .78rem;
+            font-weight: 600;
+            opacity: .8;
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+        }
+
+            .bc a:hover {
+                opacity: 1;
+            }
+
+    .bc-sep {
+        color: var(--M);
+        font-size: .65rem;
+    }
+
+    .bc-cur {
+        color: var(--M);
+        font-size: .78rem;
+        font-style: italic;
+    }
+
+    /* HERO */
+    .hero {
+        background: var(--D);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 55% 90% at 72% 50%,rgba(212,160,23,.07),transparent 65%);
+            pointer-events: none;
+        }
+
+    .hero-wrap {
+        max-width: 1380px;
+        margin: 0 auto;
+        padding: 2.2rem 2rem;
+        display: grid;
+        grid-template-columns: 1fr 370px;
+        gap: 2.2rem;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Carousel */
+    .fc {
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--G4);
+    }
+
+        .fc .carousel-item img {
+            height: 400px;
+            object-fit: cover;
+            filter: brightness(.88);
+        }
+
+        .fc .carousel-control-prev, .fc .carousel-control-next {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(26,18,9,.72);
+            border: 1px solid var(--G4);
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity .25s;
+        }
+
+        .fc:hover .carousel-control-prev, .fc:hover .carousel-control-next {
+            opacity: 1;
+        }
+
+        .fc .carousel-control-prev {
+            left: 10px;
+        }
+
+        .fc .carousel-control-next {
+            right: 10px;
+        }
+
+    .carousel-indicators [data-bs-target] {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--G);
+        border: 0;
+        opacity: .45;
+    }
+
+    .carousel-indicators .active {
+        opacity: 1;
+    }
+
+    /* Info */
+    .iblock {
+        display: flex;
+        flex-direction: column;
+        gap: 1.1rem;
+    }
+
+    .i-pills {
+        display: flex;
+        gap: .5rem;
+        align-items: center;
+    }
+
+    .i-pill {
+        background: var(--R);
+        color: #fff;
+        font-size: .58rem;
+        font-weight: 700;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        padding: .24rem .7rem;
+        border-radius: 3px;
+    }
+
+    .i-open {
+        background: rgba(16,185,129,.12);
+        color: #34d399;
+        border: 1px solid rgba(16,185,129,.2);
+        font-size: .58rem;
+        font-weight: 700;
+        letter-spacing: .15em;
+        text-transform: uppercase;
+        padding: .24rem .7rem;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+    .i-title {
+        font-family: 'Playfair Display',serif;
+        font-size: clamp(1.55rem,2.2vw,2.3rem);
+        font-weight: 700;
+        color: #fff;
+        margin: 0;
+        line-height: 1.15;
+    }
+
+    .i-addr {
+        font-size: .82rem;
+        color: var(--M);
+        display: flex;
+        align-items: flex-start;
+        gap: .4rem;
+    }
+
+        .i-addr i {
+            color: var(--R);
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+    /* Stats */
+    .i-stats {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: 1px;
+        background: var(--G4);
+        border: 1px solid var(--G4);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .istat {
+        background: var(--D2);
+        padding: .9rem .5rem;
+        text-align: center;
+        transition: background .18s;
+    }
+
+        .istat:hover {
+            background: var(--G3);
+        }
+
+    .sv {
+        font-weight: 700;
+        font-size: 1.15rem;
+        color: var(--G2);
+        line-height: 1;
+        margin-bottom: .28rem;
+    }
+
+    .sl {
+        font-size: .56rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--M);
+    }
+
+    .i-desc {
+        font-size: .82rem;
+        line-height: 1.8;
+        color: var(--M);
+        border-left: 2px solid var(--G);
+        padding-left: .9rem;
+    }
+
+    .i-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .45rem;
+    }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .27rem .78rem;
+        background: var(--M2);
+        border: 1px solid var(--G4);
+        border-radius: 4px;
+        color: rgba(255,255,255,.65);
+        font-size: .72rem;
+        font-weight: 500;
+        transition: all .2s;
+    }
+
+        .chip:hover {
+            background: var(--G3);
+            border-color: var(--G);
+            color: var(--G2);
+        }
+
+        .chip i {
+            color: var(--G);
+            font-size: .72rem;
+        }
+
+    /* BOOKING SECTION */
+    .bsec {
+        max-width: 1380px;
+        margin: 0 auto;
+        padding: 2.2rem 2rem;
+    }
+
+    /* Tabs */
+    .tabs {
+        display: flex;
+        gap: .35rem;
+        background: var(--D);
+        border: 1px solid var(--G4);
+        border-radius: 8px;
+        padding: .4rem;
+        width: fit-content;
+        margin-bottom: 1.6rem;
+    }
+
+    .tb {
+        padding: .55rem 1.3rem;
+        border: none;
+        background: none;
+        border-radius: 5px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .8rem;
+        font-weight: 600;
+        color: var(--M);
+        cursor: pointer;
+        transition: all .22s;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+        .tb.on {
+            background: linear-gradient(135deg,var(--G),var(--G2));
+            color: var(--D);
+        }
+
+    .tp {
+        display: none;
+    }
+
+        .tp.on {
+            display: block;
+        }
+
+    /* Card */
+    .bcard {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .bcard-hd {
+        background: var(--D);
+        border-bottom: 1px solid var(--G4);
+        padding: 1.1rem 1.6rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: .9rem;
+    }
+
+    .bcard-title {
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .dpick {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        background: rgba(255,255,255,.05);
+        border: 1px solid var(--G4);
+        border-radius: 6px;
+        padding: .5rem .9rem;
+    }
+
+        .dpick label {
+            font-size: .72rem;
+            font-weight: 600;
+            color: var(--M);
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .dpick input[type=date] {
+            background: none;
+            border: none;
+            color: var(--G2);
+            font-family: 'Outfit',sans-serif;
+            font-weight: 700;
+            font-size: .82rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+    .bcard-bd {
+        padding: 1.6rem;
+    }
+
+    /* Legend */
+    .leg {
+        display: flex;
+        gap: 1.4rem;
+        margin-bottom: 1.2rem;
+        padding-bottom: 1.1rem;
+        border-bottom: 1px solid var(--S);
+    }
+
+    .li {
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        font-size: .72rem;
+        color: #8c7a68;
+        font-weight: 500;
+    }
+
+    .ld {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        border: 1.5px solid;
+    }
+
+        .ld.a {
+            background: #fff;
+            border-color: var(--S);
+        }
+
+        .ld.s {
+            background: var(--D);
+            border-color: var(--G);
+        }
+
+        .ld.b {
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+
+    /* Timeline */
+    .tscroll {
+        overflow-x: auto;
+        padding-bottom: .5rem;
+    }
+
+        .tscroll::-webkit-scrollbar {
+            height: 5px;
+        }
+
+        .tscroll::-webkit-scrollbar-track {
+            background: var(--S);
+            border-radius: 3px;
+        }
+
+        .tscroll::-webkit-scrollbar-thumb {
+            background: var(--G);
+            border-radius: 3px;
+        }
+
+    .crow {
+        display: flex;
+        align-items: center;
+        gap: .9rem;
+        margin-bottom: 1rem;
+        min-width: 1000px;
+    }
+
+    .clbl {
+        width: 110px;
+        flex-shrink: 0;
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        font-size: .84rem;
+        font-weight: 700;
+        color: var(--D);
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+    }
+
+        .clbl i {
+            color: var(--G);
+        }
+
+    .srow {
+        display: flex;
+        gap: .4rem;
+        flex: 1;
+    }
+
+    /* Slot */
+    .slot {
+        width: 76px;
+        height: 64px;
+        border: 1.5px solid var(--S);
+        border-radius: 7px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all .2s;
+        background: #fff;
+        flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .slot::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,var(--G),var(--G2));
+            transform: scaleX(0);
+            transition: transform .2s;
+        }
+
+        .slot:hover:not(.bk)::before {
+            transform: scaleX(1);
+        }
+
+        .slot:hover:not(.bk) {
+            border-color: var(--G);
+            background: var(--G3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212,160,23,.18);
+        }
+
+        .slot.bk {
+            background: #fef2f2;
+            border-color: #fecaca;
+            cursor: not-allowed;
+        }
+
+            .slot.bk::after {
+                content: 'Đã đặt';
+                position: absolute;
+                inset: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: .6rem;
+                font-weight: 700;
+                letter-spacing: .04em;
+                color: #dc2626;
+                background: rgba(254,242,242,.88);
+            }
+
+        .slot.sel {
+            background: var(--D);
+            border-color: var(--G);
+            box-shadow: 0 4px 14px rgba(212,160,23,.28);
+        }
+
+            .slot.sel::before {
+                transform: scaleX(1);
+            }
+
+    .slot-t {
+        font-family: 'Outfit',sans-serif;
+        font-weight: 700;
+        font-size: .82rem;
+        color: var(--D);
+    }
+
+    .slot.sel .slot-t {
+        color: var(--G2);
+    }
+
+    .slot-p {
+        font-size: .68rem;
+        font-weight: 500;
+        color: #8c7a68;
+        margin-top: 1px;
+    }
+
+    .slot.sel .slot-p {
+        color: rgba(255,255,255,.45);
+    }
+
+    .slot.bk .slot-t, .slot.bk .slot-p {
+        opacity: 0;
+    }
+
+    /* History table */
+    .htbl {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .htbl thead tr {
+            background: var(--D2);
+        }
+
+        .htbl th {
+            padding: .8rem 1rem;
+            font-size: .68rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--G);
+            text-align: left;
+            border: none;
+        }
+
+        .htbl td {
+            padding: .85rem 1rem;
+            font-size: .84rem;
+            border-bottom: 1px solid var(--S);
+            vertical-align: middle;
+        }
+
+        .htbl tbody tr:hover {
+            background: #fdfcfa;
+        }
+
+    .sb {
+        padding: .24rem .72rem;
+        border-radius: 4px;
+        font-size: .66rem;
+        font-weight: 700;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+        .sb.confirmed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .sb.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .sb.cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .sb.playing {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .sb.completed {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+    .empty-blk {
+        text-align: center;
+        padding: 3.5rem;
+        color: #8c7a68;
+    }
+
+        .empty-blk i {
+            font-size: 2.5rem;
+            color: var(--S);
+            display: block;
+            margin-bottom: .75rem;
+        }
+
+    /* PAY BAR */
+    .paybar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--D);
+        border-top: 2px solid var(--G4);
+        padding: 1rem 0;
+        z-index: 1000;
+        transform: translateY(110%);
+        transition: transform .38s cubic-bezier(.175,.885,.32,1.275);
+        box-shadow: 0 -8px 32px rgba(0,0,0,.42);
+    }
+
+        .paybar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,var(--G),var(--G2),transparent);
+        }
+
+        .paybar.show {
+            transform: translateY(0);
+        }
+
+    .pay-in {
+        max-width: 1380px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.2rem;
+    }
+
+    .pay-txt {
+    }
+
+    .pay-lbl {
+        font-size: .7rem;
+        color: var(--M);
+        letter-spacing: .05em;
+    }
+
+    .pay-tot {
+        font-family: 'Outfit',sans-serif;
+        font-weight: 700;
+        font-size: 1.8rem;
+        color: var(--G2);
+        line-height: 1;
+    }
+
+    .pay-meta {
+        font-size: .68rem;
+        color: var(--M);
+        margin-top: .1rem;
+    }
+
+    .pay-acts {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+
+    .btn-clr {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        background: var(--M2);
+        border: 1px solid var(--G4);
+        color: var(--M);
+        cursor: pointer;
+        transition: all .2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .82rem;
+    }
+
+        .btn-clr:hover {
+            background: rgba(220,38,38,.15);
+            border-color: #dc2626;
+            color: #dc2626;
+        }
+
+    .btn-book {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        background: linear-gradient(135deg,var(--G),var(--G2));
+        color: var(--D);
+        font-family: 'Outfit',sans-serif;
+        font-size: .9rem;
+        font-weight: 800;
+        letter-spacing: .03em;
+        padding: .82rem 2rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all .22s;
+        white-space: nowrap;
+    }
+
+        .btn-book:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(212,160,23,.4);
+            filter: brightness(1.05);
+        }
+
+    /* Modal overlay */
+    .ov {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.55);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+    }
+
+    .ov-box {
+        background: #fff;
+        border-radius: 10px;
+        overflow: hidden;
+        max-width: 500px;
+        width: 100%;
+        border: 1px solid var(--S);
+        box-shadow: 0 24px 60px rgba(0,0,0,.32);
+    }
+
+    .ov-hd {
+        background: var(--D);
+        padding: 1.1rem 1.4rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .ov-title {
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .ov-close {
+        background: none;
+        border: none;
+        color: var(--M);
+        font-size: 1rem;
+        cursor: pointer;
+    }
+
+    .ov-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: .75rem 1.2rem;
+        border-bottom: 1px solid var(--S);
+    }
+
+    .ov-item-name {
+        font-size: .88rem;
+        font-weight: 600;
+        color: var(--D);
+    }
+
+    .ov-item-sub {
+        font-size: .74rem;
+        color: #8c7a68;
+        margin-top: .1rem;
+    }
+
+    .ov-item-right {
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+    }
+
+    .ov-price {
+        font-weight: 700;
+        color: var(--G);
+    }
+
+    .ov-book {
+        background: linear-gradient(135deg,var(--G),var(--G2));
+        color: var(--D);
+        border: none;
+        padding: .38rem .9rem;
+        border-radius: 5px;
+        font-size: .74rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .ov-ft {
+        padding: .9rem 1.4rem;
+        background: #fdf8f0;
+        border-top: 1px solid var(--S);
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .btn-cancel-sm {
+        background: none;
+        border: 1.5px solid var(--S);
+        padding: .4rem 1.1rem;
+        border-radius: 5px;
+        font-size: .78rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: #8c7a68;
+    }
+
+        .btn-cancel-sm:hover {
+            border-color: var(--D);
+            color: var(--D);
+        }
+
+    @@media(max-width:1100px) {
+        .hero-wrap {
+            grid-template-columns: 1fr;
+        }
+
+        .fc .carousel-item img {
+            height: 300px;
+        }
+
+        .i-stats {
+            grid-template-columns: repeat(2,1fr);
+        }
+    }
+
+    @@media(max-width:768px) {
+        .hero-wrap, .bsec, .bc {
+            padding-left: 1.2rem;
+            padding-right: 1.2rem;
+        }
+
+        .tabs {
+            width: 100%;
+        }
+
+        .bcard-hd {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .pay-in {
+            flex-direction: column;
+            gap: .8rem;
+        }
+
+        .btn-book {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .pay-tot {
+            font-size: 1.45rem;
+        }
+    }
+</style>
+
+<!-- BREADCRUMB -->
+<div class="bc">
+    <a href="@Url.Action("Index", "Facility")"><i class="bi bi-house"></i> Trang chủ</a>
+    <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
+    <a href="@Url.Action("Index", "Facility")">Cơ sở</a>
+    <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
+    <span class="bc-cur">@Model.FacilityName</span>
 </div>
 
-<div class="modal-body px-4 py-3">
-    <div class="row g-4">
-
-        <!-- ══ CỘT TRÁI: Ảnh + Trạng thái ══ -->
-        <div class="col-md-5">
-            <div class="facility-image-section">
-                <!-- Ảnh chính -->
-                <div class="main-image-container mb-3 rounded-3 overflow-hidden">
-                    <img src="@primaryImage" class="w-100 h-100"
-                         style="object-fit:cover;" id="mainDisplayImage"
-                         alt="@Model.FacilityName" />
-                </div>
-
-                <!-- Thumbnail gallery -->
-                @if (images.Count > 1)
+<!-- HERO -->
+<div class="hero">
+    <div class="hero-wrap">
+        <!-- Carousel -->
+        <div id="fc" class="carousel slide fc" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+                @for (int i = 0; i < Model.ImageUrls.Count; i++)
                 {
-                    <div class="d-flex gap-2 flex-wrap mb-3">
-                        @foreach (var img in images)
+                    <button type="button" data-bs-target="#fc" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")"></button>
+                }
+            </div>
+            <div class="carousel-inner">
+                @for (int i = 0; i < Model.ImageUrls.Count; i++)
+                {
+                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                        <img src="@Model.ImageUrls[i]" class="d-block w-100" alt="@Model.FacilityName" />
+                    </div>
+                }
+            </div>
+            @if (Model.ImageUrls.Count > 1)
+            {
+                <button class="carousel-control-prev" type="button" data-bs-target="#fc" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#fc" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </button>
+            }
+        </div>
+
+        <!-- Info block -->
+        <div class="iblock">
+            <div class="i-pills">
+                <div class="i-pill">Badminton Court</div>
+                <div class="i-open"><i class="bi bi-circle-fill" style="font-size:.38rem"></i> Đang mở cửa</div>
+            </div>
+            <h1 class="i-title">@Model.FacilityName</h1>
+            <div class="i-addr"><i class="bi bi-geo-alt-fill"></i>@Model.Address@(!string.IsNullOrEmpty(Model.District) ? ", " + Model.District : "")@(!string.IsNullOrEmpty(Model.City) ? ", " + Model.City : "")</div>
+            <div class="i-stats">
+                <div class="istat">
+                    <div class="sv">@(Model.MinPrice > 0 ? (Model.MinPrice / 1000).ToString("0") + "k" : "---")</div>
+                    <div class="sl">Giá từ</div>
+                </div>
+                <div class="istat">
+                    <div class="sv"><i class="bi bi-star-fill" style="font-size:.7rem;color:var(--G)"></i> @(Model.AverageRating.HasValue? Model.AverageRating.Value.ToString("0.0"):"4.8")</div>
+                    <div class="sl">Đánh giá</div>
+                </div>
+                <div class="istat">
+                    <div class="sv">@Model.TotalCourts</div>
+                    <div class="sl">Số sân</div>
+                </div>
+                <div class="istat">
+                    <div class="sv" style="font-size:.8rem">@(Model.OpenTime?.ToString(@"hh\:mm") ?? "06")–@(Model.CloseTime?.ToString(@"hh\:mm") ?? "23")</div>
+                    <div class="sl">Giờ mở</div>
+                </div>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="i-desc">@Model.Description</div>
+            }
+            <div class="i-chips">
+                @foreach (var a in Model.Amenities.Where(x => x.IsAvailable).Take(6))
+                {
+                    <div class="chip"><i class="bi bi-check-circle-fill"></i> @a.AmenityName</div>
+                }
+                @if (!Model.Amenities.Any())
+                {
+                    <div class="chip"><i class="bi bi-wifi"></i> Wifi</div>
+                    <div class="chip"><i class="bi bi-car-front"></i> Bãi xe</div>
+                    <div class="chip"><i class="bi bi-cup-hot"></i> Canteen</div>
+                    <div class="chip"><i class="bi bi-droplet"></i> Phòng tắm</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BOOKING SECTION -->
+<div class="bsec">
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tb on" data-tab="t-book"><i class="bi bi-calendar-check"></i> Đặt sân</button>
+        <button class="tb" data-tab="t-hist"><i class="bi bi-clock-history"></i> Lịch của tôi</button>
+    </div>
+
+    <!-- TAB: Booking -->
+    <div class="tp on" id="t-book">
+        <div class="bcard">
+            <div class="bcard-hd">
+                <div class="bcard-title">Chọn khung giờ trống</div>
+                <div class="dpick">
+                    <label><i class="bi bi-calendar3 me-1"></i>Ngày đặt:</label>
+                    <input type="date" id="datePicker"
+                           value="@Model.SelectedDate.ToString("yyyy-MM-dd")"
+                           min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                           onchange="window.location.href='?id=@Model.FacilityId&date='+this.value" />
+                </div>
+            </div>
+            <div class="bcard-bd">
+                <div class="leg">
+                    <div class="li"><div class="ld a"></div> Trống</div>
+                    <div class="li"><div class="ld s"></div> Đã chọn</div>
+                    <div class="li"><div class="ld b"></div> Đã đặt</div>
+                </div>
+                @if (!Model.Courts.Any())
+                {
+                    <div class="empty-blk"><i class="bi bi-building-x"></i><p>Cơ sở chưa có sân hoặc chưa cấu hình khung giờ</p></div>
+                }
+                else
+                {
+                    <div class="tscroll">
+                        @foreach (var court in Model.Courts)
                         {
-                            <div class="thumb-image-wrap @(img.IsPrimary ? "active" : "")"
-                                 onclick="changeMainImage('@img.ImagePath', this)">
-                                <img src="@img.ImagePath" alt="Thumbnail" />
+                            <div class="crow">
+                                <div class="clbl"><i class="bi bi-grid-3x3-gap"></i>@court.CourtNumber</div>
+                                <div class="srow">
+                                    @if (!court.Slots.Any())
+                                    {
+                                        <span style="font-size:.74rem;color:#8c7a68;font-style:italic">Chưa có khung giờ</span>
+                                    }
+                                    @foreach (var slot in court.Slots)
+                                    {
+                                        <div class="slot @(slot.IsBooked ? "bk" : "")"
+                                             data-cid="@court.CourtId"
+                                             data-cnum="@court.CourtNumber"
+                                             data-st="@slot.StartTime.ToString(@"hh\:mm")"
+                                             data-et="@slot.EndTime.ToString(@"hh\:mm")"
+                                             data-price="@((int)slot.Price)"
+                                             onclick="toggleSlot(this)">
+                                            <span class="slot-t">@slot.StartTime.ToString(@"hh\:mm")</span>
+                                            <span class="slot-p">@((slot.Price / 1000).ToString("0"))k</span>
+                                        </div>
+                                    }
+                                </div>
                             </div>
                         }
                     </div>
                 }
-
-                <!-- Trạng thái -->
-                <div class="text-center mb-2">
-                    @{
-                        var (badgeCls, statusLabel) = Model.Status switch
-                        {
-                                    "Active" => ("bg-success", "Hoạt Động"),
-                                    "Maintenance" => ("bg-warning text-dark", "Bảo Trì"),
-                            _ => ("bg-danger", "Ngừng Hoạt Động")
-                        };
-                    }
-                    <span class="badge @badgeCls px-4 py-2 rounded-pill" style="font-size:.85rem;">
-                        @statusLabel
-                    </span>
-                </div>
-
-                <!-- Google Maps link nếu có tọa độ -->
-                @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
-                {
-                    <a href="https://www.google.com/maps?q=@Model.Latitude,@Model.Longitude"
-                       target="_blank"
-                       class="btn btn-outline-danger w-100 rounded-3 btn-sm mt-1">
-                        <i class="bi bi-geo-alt-fill me-1"></i>Xem trên Google Maps
-                    </a>
-                }
-            </div>
-        </div>
-
-        <!-- ══ CỘT PHẢI: Thông tin ══ -->
-        <div class="col-md-7">
-            <div class="facility-details">
-                <h4 class="fw-bold mb-3">@Model.FacilityName</h4>
-
-                <!-- Thông tin liên hệ -->
-                <div class="info-group mb-3 pb-3">
-                    <h6 class="fw-bold text-muted small mb-3 text-uppercase ls-1">Thông Tin Liên Hệ</h6>
-                    <div class="row g-2">
-                        <div class="col-12">
-                            <div class="d-flex align-items-start gap-2">
-                                <i class="bi bi-geo-alt-fill text-danger mt-1" style="flex-shrink:0"></i>
-                                <div>
-                                    <div class="fw-semibold">@Model.Address</div>
-                                    <div class="text-muted small">@Model.District, @Model.City</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="d-flex align-items-start gap-2">
-                                <i class="bi bi-telephone-fill text-primary mt-1"></i>
-                                <div>
-                                    <div class="text-muted" style="font-size:.75rem;">Hotline</div>
-                                    <div class="fw-semibold">@(Model.Phone ?? "—")</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="d-flex align-items-start gap-2">
-                                <i class="bi bi-clock-fill text-warning mt-1"></i>
-                                <div>
-                                    <div class="text-muted" style="font-size:.75rem;">Giờ hoạt động</div>
-                                    <div class="fw-semibold">
-                                        @(Model.OpenTime?.ToString(@"hh\:mm") ?? "--")
-                                        –
-                                        @(Model.CloseTime?.ToString(@"hh\:mm") ?? "--")
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Thống kê sân -->
-                <div class="info-group mb-3 pb-3">
-                    <h6 class="fw-bold text-muted small mb-3 text-uppercase ls-1">Thông Tin Sân</h6>
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <div class="stat-box p-3 rounded-3 bg-light text-center">
-                                <div class="fs-3 fw-bold text-dark">@(Model.Courts?.Count ?? 0)</div>
-                                <div class="text-muted small">Tổng số sân</div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="stat-box p-3 rounded-3 bg-light text-center">
-                                <div class="fs-3 fw-bold text-success">
-                                    @(Model.Courts?.Count(c => c.Status == "Available") ?? 0)
-                                </div>
-                                <div class="text-muted small">Sân đang trống</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tiện ích -->
-                @if (amenitySet.Any())
-                {
-                    <div class="info-group mb-3 pb-3">
-                        <h6 class="fw-bold text-muted small mb-3 text-uppercase ls-1">
-                            <i class="bi bi-stars me-1" style="color:#d4a017"></i>Tiện Ích Đi Kèm
-                        </h6>
-                        <div class="d-flex flex-wrap gap-2">
-                            @foreach (var am in amenityMap.Where(a => amenitySet.Contains(a.Key)))
-                            {
-                                <span class="amenity-tag">
-                                    <i class="bi @am.Icon" style="color:@am.Color"></i>
-                                    @am.Label
-                                </span>
-                            }
-                        </div>
-                    </div>
-                }
-
-                <!-- Mô tả -->
-                @if (!string.IsNullOrWhiteSpace(Model.Description))
-                {
-                    <div class="info-group mb-3 pb-3">
-                        <h6 class="fw-bold text-muted small mb-2 text-uppercase ls-1">Mô Tả</h6>
-                        <p class="text-secondary mb-0" style="line-height:1.7;font-size:.88rem;">
-                            @Model.Description
-                        </p>
-                    </div>
-                }
-
-                <!-- Ngày tạo -->
-                <div class="text-muted small">
-                    <i class="bi bi-calendar-check me-1"></i>
-                    Ngày tạo: <strong>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</strong>
-                </div>
             </div>
         </div>
     </div>
 
-    <!-- Nút hành động -->
-    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-        <button type="button" class="btn btn-light px-4 fw-semibold rounded-3"
-                data-bs-dismiss="modal">
-            Đóng
-        </button>
-        <button type="button" class="btn btn-dark px-4 fw-semibold rounded-3"
-                onclick="openEditFromDetails(@Model.FacilityId)">
-            <i class="bi bi-pencil-square me-1"></i>Chỉnh Sửa
-        </button>
+    <!-- TAB: History -->
+    <div class="tp" id="t-hist">
+        <div class="bcard">
+            <div class="bcard-hd">
+                <div class="bcard-title">Lịch đặt sân của tôi</div>
+                <a asp-controller="Booking" asp-action="MyBookings" style="font-size:.76rem;color:var(--G2);text-decoration:none">
+                    Xem tất cả <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+            @if (Model.UserBookings != null && Model.UserBookings.Any())
+            {
+                <div style="overflow-x:auto">
+                    <table class="htbl">
+                        <thead><tr><th>Sân</th><th>Ngày</th><th>Giờ</th><th>Trạng thái</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var b in Model.UserBookings)
+                            {
+                                <tr>
+                                    <td><strong>@b.CourtName</strong></td>
+                                    <td>@b.Date.ToString("dd/MM/yyyy")</td>
+                                    <td>@b.Time</td>
+                                    <td><span class="sb @b.Status.ToLower()">@b.Status</span></td>
+                                    <td><a asp-controller="Booking" asp-action="Details" asp-route-id="@b.BookingId" style="font-size:.76rem;color:var(--G);text-decoration:none">Chi tiết →</a></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-blk"><i class="bi bi-calendar-x"></i><p>Bạn chưa có lịch đặt nào</p></div>
+            }
+        </div>
     </div>
 </div>
 
-<style>
-    .thumb-image-wrap {
-        width: 60px;
-        height: 60px;
-        border-radius: 8px;
-        overflow: hidden;
-        border: 2px solid #dee2e6;
-        cursor: pointer;
-        transition: all .2s;
-        flex-shrink: 0;
-    }
+<!-- PAY BAR -->
+<div id="payBar" class="paybar">
+    <div class="pay-in">
+        <div class="pay-txt">
+            <div class="pay-lbl" id="payLbl">Đã chọn 0 khung giờ</div>
+            <div class="pay-tot" id="payTot">0đ</div>
+            <div class="pay-meta" id="payMeta"></div>
+        </div>
+        <div class="pay-acts">
+            <button class="btn-clr" onclick="clearAll()" title="Bỏ chọn"><i class="bi bi-x-lg"></i></button>
+            <!-- ✅ ĐÃ FIX: onclick gọi goBook() -->
+            <button class="btn-book" id="btnBook" onclick="goBook()">
+                <i class="bi bi-check-circle-fill"></i> ĐẶT SÂN NGAY
+            </button>
+        </div>
+    </div>
+</div>
 
-        .thumb-image-wrap:hover,
-        .thumb-image-wrap.active {
-            border-color: #198754;
-            transform: scale(1.05);
+@section Scripts {
+    <script>
+        var sel = [];
+        var FAC = @Model.FacilityId;
+        var DATE = '@Model.SelectedDate.ToString("yyyy-MM-dd")';
+
+        /* ── TABS ── */
+        document.querySelectorAll('.tb').forEach(b => {
+            b.addEventListener('click', function(){
+                document.querySelectorAll('.tb').forEach(x=>x.classList.remove('on'));
+                document.querySelectorAll('.tp').forEach(x=>x.classList.remove('on'));
+                this.classList.add('on');
+                document.getElementById(this.dataset.tab).classList.add('on');
+            });
+        });
+
+        /* ── SLOT TOGGLE ── */
+        function toggleSlot(el) {
+            if (el.classList.contains('bk')) return;
+            var cid   = +el.dataset.cid;
+            var cnum  = el.dataset.cnum;
+            var st    = el.dataset.st;
+            var et    = el.dataset.et;
+            var price = +el.dataset.price;
+            var key   = cid + '-' + st;
+
+            // 1 slot per court max
+            var prev = sel.find(s => s.cid === cid);
+            if (prev && prev.key !== key) {
+                prev.el.classList.remove('sel');
+                sel = sel.filter(s => s.cid !== cid);
+            }
+
+            if (el.classList.contains('sel')) {
+                el.classList.remove('sel');
+                sel = sel.filter(s => s.key !== key);
+            } else {
+                el.classList.add('sel');
+                sel.push({key,cid,cnum,st,et,price,el});
+            }
+            refreshBar();
         }
 
-        .thumb-image-wrap img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        function clearAll() {
+            sel.forEach(s => s.el.classList.remove('sel'));
+            sel = [];
+            refreshBar();
         }
 
-    .main-image-container {
-        height: 260px;
-        border: 2px solid #e9ecef;
-        background: #f8f9fa;
-    }
-
-    .stat-box {
-        border: 1px solid #e9ecef;
-        transition: all .2s;
-    }
-
-        .stat-box:hover {
-            border-color: #198754;
-            background: #f0f9f4 !important;
+        function refreshBar() {
+            var bar   = document.getElementById('payBar');
+            var cnt   = sel.length;
+            var total = sel.reduce((a,s) => a+s.price, 0);
+            if (cnt > 0) {
+                bar.classList.add('show');
+                document.getElementById('payLbl').textContent = 'Đã chọn ' + cnt + ' khung giờ';
+                document.getElementById('payTot').textContent = total.toLocaleString('vi-VN') + 'đ';
+                document.getElementById('payMeta').textContent = sel.map(s => s.cnum+' ('+s.st+'–'+s.et+')').join(', ');
+            } else {
+                bar.classList.remove('show');
+            }
         }
 
-    .info-group {
-        border-bottom: 1px solid #f0f0f0;
-    }
-
-        .info-group:last-of-type {
-            border-bottom: none;
+        /* ── ✅ BOOKING NAVIGATION ── */
+        function goBook() {
+            if (!sel.length) return;
+            if (sel.length === 1) {
+                // Qua trang chi tiết sân để xem thông tin trước khi đặt
+                var s = sel[0];
+                window.location.href = '/Court/Details/' + s.cid
+                    + '?bookingDate=' + DATE
+                    + '&startTime='   + s.st
+                    + '&endTime='     + s.et;
+                return;
+            }
+            // Nhiều slot → modal chọn
+            showMultiModal();
         }
 
-    .ls-1 {
-        letter-spacing: .05em;
-    }
+        function showMultiModal() {
+            var existing = document.getElementById('mmodal');
+            if (existing) existing.remove();
 
-    .amenity-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: .4rem;
-        padding: .35rem .8rem;
-        background: #f5f5f5;
-        border: 1px solid #e0e0e0;
-        border-radius: 6px;
-        font-size: .82rem;
-        color: #333;
-        font-weight: 500;
-    }
-</style>
+            var items = sel.map(function(s, i){
+                return '<div class="ov-item">'+
+                    '<div><div class="ov-item-name">Sân '+s.cnum+'</div><div class="ov-item-sub">'+s.st+' – '+s.et+'</div></div>'+
+                    '<div class="ov-item-right">'+
+                        '<span class="ov-price">'+s.price.toLocaleString('vi-VN')+'đ</span>'+
+                        '<button class="ov-book" onclick="bookOne('+i+')">Đặt sân này</button>'+
+                    '</div>'+
+                '</div>';
+            }).join('');
 
-<script>
-    function changeMainImage(imagePath, thumbElement) {
-        document.getElementById('mainDisplayImage').src = imagePath;
-        document.querySelectorAll('.thumb-image-wrap').forEach(el => el.classList.remove('active'));
-        thumbElement.classList.add('active');
-    }
+            var html = '<div id="mmodal" class="ov">'+
+                '<div class="ov-box">'+
+                    '<div class="ov-hd"><span class="ov-title">Chọn sân để đặt</span>'+
+                        '<button class="ov-close" onclick="document.getElementById(\'mmodal\').remove()"><i class="bi bi-x-lg"></i></button></div>'+
+                    '<div style="max-height:360px;overflow-y:auto">'+items+'</div>'+
+                    '<div class="ov-ft"><button class="btn-cancel-sm" onclick="document.getElementById(\'mmodal\').remove()">Đóng</button></div>'+
+                '</div>'+
+            '</div>';
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
 
-    function openEditFromDetails(facilityId) {
-        const currentModal = bootstrap.Modal.getInstance(document.getElementById('modalFacility'));
-        if (currentModal) currentModal.hide();
-        setTimeout(() => openEditModal(facilityId), 300);
-    }
-</script>
+        function bookOne(idx) {
+            var s = sel[idx];
+            // Qua trang chi tiết sân để xem thông tin trước khi đặt
+            window.location.href = '/Court/Details/' + s.cid
+                + '?bookingDate=' + DATE
+                + '&startTime='   + s.st
+                + '&endTime='     + s.et;
+        }
+
+        /* carousel */
+        document.addEventListener('DOMContentLoaded', function(){
+            var el = document.getElementById('fc');
+            if (el) new bootstrap.Carousel(el, {interval:3500,wrap:true});
+        });
+    </script>
+}

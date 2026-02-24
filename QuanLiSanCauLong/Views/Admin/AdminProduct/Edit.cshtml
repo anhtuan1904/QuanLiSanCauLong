@@ -4,109 +4,389 @@
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="container py-5">
-    <div class="col-lg-7 mx-auto">
-        <div class="mb-4">
-            <a asp-action="Index" class="text-decoration-none text-secondary fw-bold small">
-                <i class="bi bi-arrow-left me-1"></i> QUAY LẠI DANH SÁCH
-            </a>
-        </div>
-
-        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="card-header bg-white border-0 pt-5 text-center">
-                <h3 class="fw-bold text-dark mb-1">Cập Nhật Sản Phẩm</h3>
-                <p class="text-muted small">ID: #@Model.ProductId — Chỉnh sửa thông tin chi tiết của sản phẩm</p>
-            </div>
-
-            <div class="card-body p-5 pt-4">
-                <form asp-action="Edit" method="post" enctype="multipart/form-data">
-                    <input type="hidden" asp-for="ProductId" />
-                    <input type="hidden" asp-for="ImageUrl" />
-
-                    <div class="row g-4">
-                        <div class="col-12">
-                            <label class="form-label fw-bold small text-uppercase text-muted">Tên Sản Phẩm</label>
-                            <input asp-for="ProductName" class="form-control rounded-3 py-2 bg-light border-0 shadow-none" placeholder="Nhập tên sản phẩm..." />
-                            <span asp-validation-for="ProductName" class="text-danger small"></span>
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label fw-bold small text-uppercase text-muted">Hình ảnh sản phẩm</label>
-                            <div class="d-flex align-items-center gap-4 p-3 border rounded-4 bg-light">
-                                <div class="position-relative">
-                                    <img id="previewEdit" src="@Model.ImageUrl"
-                                         class="rounded-3 shadow-sm object-fit-cover"
-                                         style="width: 120px; height: 120px; border: 2px solid #fff;"
-                                         onerror="this.src='/images/no-image.png'" />
-                                    <div class="position-absolute bottom-0 end-0 translate-middle mb-n2 me-n2">
-                                        <span class="badge rounded-circle bg-warning p-2 shadow-sm">
-                                            <i class="bi bi-pencil-fill text-dark" style="font-size: 0.7rem;"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <p class="small text-muted mb-2">Tải lên ảnh mới để thay đổi (Định dạng: JPG, PNG, WEBP)</p>
-                                    <input type="file" name="ImageFile" class="form-control form-control-sm rounded-3 border-0 shadow-none" accept="image/*" id="imgEditInput" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase text-muted">Giá (VNĐ)</label>
-                            <input asp-for="Price" type="number" class="form-control rounded-3 py-2 bg-light border-0 shadow-none" />
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase text-muted">Trạng Thái</label>
-                            <select asp-for="Status" class="form-select rounded-3 py-2 bg-light border-0 shadow-none">
-                                <option value="Available">Còn hàng</option>
-                                <option value="OutOfStock">Hết hàng</option>
-                                <option value="Discontinued">Ngừng bán</option>
-                            </select>
-                        </div>
-
-                        <div class="col-12 d-flex gap-3 mt-5">
-                            <a asp-action="Index" class="btn btn-light flex-fill fw-bold py-2 rounded-3 text-secondary border">
-                                <i class="bi bi-x-lg me-2"></i>Hủy Thay Đổi
-                            </a>
-                            <button type="submit" class="btn btn-dark flex-fill fw-bold py-2 rounded-3 shadow">
-                                <i class="bi bi-cloud-arrow-up-fill me-2"></i>Lưu Thay Đổi Ngay
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 <style>
-    /* Loại bỏ viền xanh khi focus để giao diện nhìn mượt hơn */
-    .form-control:focus, .form-select:focus {
-        background-color: #f1f3f5 !important;
-        box-shadow: none !important;
-        border-color: transparent !important;
+    @@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #f5f4ec;
+        --warm: #f0ead8;
+        --card: #ffffff;
+        --border: #e4d9c8;
+        --muted: #8a7560;
+        --red: #dc2626;
+        --red-soft: #fef2f2;
     }
 
-    .card {
-        background-color: #ffffff;
+    body, .container-fluid {
+        font-family: 'Outfit', sans-serif;
+        background: var(--cream);
     }
 
-    /* Hiệu ứng cho nút bấm */
-    .btn-dark {
-        background-color: #1a1d20;
+    .bc {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .82rem;
+        color: var(--muted);
+        margin-bottom: 1.4rem;
     }
 
-        .btn-dark:hover {
-            background-color: #000;
-            transform: translateY(-2px);
-            transition: all 0.2s;
+        .bc a {
+            color: var(--muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: .3rem;
+            transition: .15s;
+        }
+
+            .bc a:hover {
+                color: var(--deep);
+            }
+
+    .bc-sep {
+        opacity: .5;
+    }
+
+    .bc-cur {
+        color: var(--deep);
+        font-weight: 700;
+    }
+
+    .cf-wrap {
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    .cf-head {
+        margin-bottom: 2rem;
+    }
+
+    .cf-head-label {
+        font-size: .68rem;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: var(--gold);
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        margin-bottom: .5rem;
+    }
+
+        .cf-head-label::before {
+            content: '';
+            width: 16px;
+            height: 1px;
+            background: var(--gold);
+        }
+
+    .cf-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+        .cf-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    .cf-sub {
+        font-size: .85rem;
+        color: var(--muted);
+        margin-top: .3rem;
+    }
+
+    .cf-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 2px 12px rgba(26,18,9,.06);
+    }
+
+    .cf-card-head {
+        padding: 1.1rem 1.75rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--warm);
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+
+        .cf-card-head i {
+            color: var(--gold);
+            font-size: .95rem;
+        }
+
+    .cf-card-head-title {
+        font-weight: 700;
+        font-size: .92rem;
+        color: var(--deep);
+    }
+
+    .cf-card-body {
+        padding: 1.6rem 1.75rem;
+    }
+
+    .field-group {
+        margin-bottom: 1.2rem;
+    }
+
+    .field-label {
+        display: block;
+        font-size: .72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: var(--muted);
+        margin-bottom: .5rem;
+    }
+
+    .field-input, .field-select {
+        width: 100%;
+        padding: .6rem .9rem;
+        background: var(--cream);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .88rem;
+        color: var(--deep);
+        outline: none;
+        transition: .18s;
+    }
+
+        .field-input:focus, .field-select:focus {
+            border-color: var(--gold);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(212,160,23,.1);
+        }
+
+    .field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    @@media(max-width:600px) {
+        .field-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Image edit section */
+    .img-edit-box {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        padding: 1.1rem 1.2rem;
+        background: var(--warm);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+    }
+
+    .img-edit-thumb {
+        width: 110px;
+        height: 110px;
+        border-radius: 12px;
+        object-fit: cover;
+        border: 2px solid var(--border);
+        flex-shrink: 0;
+        background: var(--cream);
+    }
+
+    .img-edit-right {
+        flex: 1;
+    }
+
+    .img-edit-hint {
+        font-size: .8rem;
+        color: var(--muted);
+        margin-bottom: .7rem;
+    }
+
+    .img-edit-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .28rem .65rem;
+        background: #fef9ec;
+        border: 1px solid #f0dea0;
+        border-radius: 20px;
+        font-size: .72rem;
+        font-weight: 700;
+        color: var(--gold);
+        margin-bottom: .6rem;
+    }
+
+    .field-file {
+        width: 100%;
+        padding: .5rem .8rem;
+        background: var(--cream);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .82rem;
+        color: var(--deep);
+        outline: none;
+        cursor: pointer;
+        transition: .18s;
+    }
+
+        .field-file:focus {
+            border-color: var(--gold);
+        }
+
+    /* Buttons */
+    .btn-row {
+        display: flex;
+        gap: .75rem;
+        margin-top: 1.5rem;
+    }
+
+    .btn-cancel {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .4rem;
+        padding: .65rem 1.2rem;
+        background: var(--warm);
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .88rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: .18s;
+    }
+
+        .btn-cancel:hover {
+            background: var(--cream);
+            color: var(--deep);
+        }
+
+    .btn-submit {
+        flex: 2;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        padding: .65rem 1.4rem;
+        background: var(--gold2);
+        color: var(--deep);
+        border: none;
+        border-radius: 10px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .88rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: .2s;
+        box-shadow: 0 2px 8px rgba(212,160,23,.3);
+    }
+
+        .btn-submit:hover {
+            background: var(--gold);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(212,160,23,.4);
         }
 </style>
 
+<div class="container-fluid px-4 py-4">
+
+    <!-- Breadcrumb -->
+    <div class="bc">
+        <a asp-action="Index"><i class="bi bi-house"></i> Sản phẩm</a>
+        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
+        <span class="bc-cur">Chỉnh sửa #@Model.ProductId</span>
+    </div>
+
+    <div class="cf-wrap">
+
+        <!-- Header -->
+        <div class="cf-head">
+            <div class="cf-head-label">Sản Phẩm</div>
+            <div class="cf-title">Cập nhật <em>Sản Phẩm</em></div>
+            <div class="cf-sub">ID: #@Model.ProductId — Chỉnh sửa thông tin chi tiết sản phẩm</div>
+        </div>
+
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            <input type="hidden" asp-for="ProductId" />
+            <input type="hidden" asp-for="ImageUrl" />
+
+            <!-- Thông tin cơ bản -->
+            <div class="cf-card">
+                <div class="cf-card-head">
+                    <i class="bi bi-box-seam-fill"></i>
+                    <span class="cf-card-head-title">Thông tin sản phẩm</span>
+                </div>
+                <div class="cf-card-body">
+                    <div class="field-group">
+                        <label class="field-label">Tên Sản Phẩm</label>
+                        <input asp-for="ProductName" class="field-input" placeholder="Nhập tên sản phẩm..." />
+                        <span asp-validation-for="ProductName" style="font-size:.78rem;color:var(--red);display:block;margin-top:.3rem"></span>
+                    </div>
+                    <div class="field-row">
+                        <div class="field-group">
+                            <label class="field-label">Giá (VNĐ)</label>
+                            <input asp-for="Price" type="number" class="field-input" />
+                        </div>
+                        <div class="field-group">
+                            <label class="field-label">Trạng Thái</label>
+                            <select asp-for="Status" class="field-select">
+                                <option value="Available">✓ Còn hàng</option>
+                                <option value="OutOfStock">⚠ Hết hàng</option>
+                                <option value="Discontinued">✕ Ngừng bán</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hình ảnh -->
+            <div class="cf-card">
+                <div class="cf-card-head">
+                    <i class="bi bi-image-fill"></i>
+                    <span class="cf-card-head-title">Hình ảnh sản phẩm</span>
+                </div>
+                <div class="cf-card-body">
+                    <div class="img-edit-box">
+                        <img id="previewEdit"
+                             src="@Model.ImageUrl"
+                             class="img-edit-thumb"
+                             onerror="this.src='/images/no-image.png'"
+                             alt="@Model.ProductName" />
+                        <div class="img-edit-right">
+                            <div class="img-edit-badge"><i class="bi bi-pencil-fill"></i> Thay đổi ảnh</div>
+                            <div class="img-edit-hint">Tải lên ảnh mới để thay thế ảnh hiện tại<br><small>Định dạng: JPG, PNG, WEBP</small></div>
+                            <input type="file" name="ImageFile" class="field-file" accept="image/*" id="imgEditInput" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="btn-row">
+                <a asp-action="Index" class="btn-cancel">
+                    <i class="bi bi-x-lg"></i> Hủy thay đổi
+                </a>
+                <button type="submit" class="btn-submit">
+                    <i class="bi bi-cloud-arrow-up-fill"></i> Lưu thay đổi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @section Scripts {
     <script>
-        // Cập nhật ảnh xem trước ngay lập tức khi người dùng chọn file mới
-        document.getElementById('imgEditInput').onchange = function (evt) {
+        document.getElementById('imgEditInput').onchange = function () {
             const [file] = this.files;
             if (file) {
                 document.getElementById('previewEdit').src = URL.createObjectURL(file);

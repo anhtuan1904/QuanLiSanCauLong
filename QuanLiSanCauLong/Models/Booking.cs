@@ -36,6 +36,10 @@ namespace QuanLiSanCauLong.Models
         [Column(TypeName = "decimal(10,2)")]
         public decimal CourtPrice { get; set; }
 
+        // --- THÊM DÒNG NÀY ĐỂ SỬA LỖI TRUY XUẤT ---
+        [Column(TypeName = "decimal(10,2)")]
+        public decimal PricePerHour { get; set; }
+
         [Column(TypeName = "decimal(10,2)")]
         public decimal ServiceFee { get; set; } = 0;
 

@@ -1,401 +1,614 @@
 ﻿@model IEnumerable<QuanLiSanCauLong.ViewModels.OrderViewModel>
 @{
-    ViewData["Title"] = "Quản lý Đơn Hàng";
+    ViewData["Title"] = "Quản Lý Đơn Hàng";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="container-fluid px-4 py-4" style="background:#f8f9fa; min-height:100vh;">
-
-    <h4 class="fw-bold mb-4">Quản Lý Đơn Hàng</h4>
-
-    <!-- Stats Cards - giống ảnh 3 -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 p-3 h-100">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="stat-icon bg-primary-soft mb-3">
-                            <i class="bi bi-box-seam text-primary"></i>
-                        </div>
-                        <div class="fs-2 fw-bold lh-1">@(ViewBag.TotalOrders ?? 0)</div>
-                        <div class="text-muted small mt-1">Tổng Đơn Hàng</div>
-                    </div>
-                    <span class="badge text-success" style="background:#e8f5e9;font-size:.8rem;">+12.5%</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 p-3 h-100">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="stat-icon bg-warning-soft mb-3">
-                            <i class="bi bi-funnel text-warning"></i>
-                        </div>
-                        <div class="fs-2 fw-bold lh-1">@(ViewBag.PendingOrders ?? 0)</div>
-                        <div class="text-muted small mt-1">Chờ Xử Lý</div>
-                    </div>
-                    <span class="badge text-warning" style="background:#fff8e1;font-size:.8rem;">+5</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 p-3 h-100">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="stat-icon bg-purple-soft mb-3">
-                            <i class="bi bi-truck text-purple"></i>
-                        </div>
-                        <div class="fs-2 fw-bold lh-1">@(ViewBag.ShippingOrders ?? 0)</div>
-                        <div class="text-muted small mt-1">Đang Giao</div>
-                    </div>
-                    <span class="badge text-purple" style="background:#f3e8ff;font-size:.8rem;">+3</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 p-3 h-100">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="stat-icon bg-success-soft mb-3">
-                            <i class="bi bi-check-circle text-success"></i>
-                        </div>
-                        <div class="fs-2 fw-bold lh-1">@(ViewBag.CompletedOrders ?? 0)</div>
-                        <div class="text-muted small mt-1">Hoàn Thành</div>
-                    </div>
-                    <span class="badge text-success" style="background:#e8f5e9;font-size:.8rem;">+28</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Table Card -->
-    <div class="card border-0 shadow-sm rounded-3">
-
-        <!-- Card Header -->
-        <div class="card-header bg-white border-0 pt-3 pb-0 px-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <div class="fw-bold">Quản Lý Đơn Hàng</div>
-                    <div class="text-muted small">Quản lý tất cả đơn hàng và booking</div>
-                </div>
-                <button class="btn btn-dark rounded-3 fw-semibold px-3" onclick="exportOrders()">
-                    <i class="bi bi-download me-1"></i>Xuất Excel
-                </button>
-            </div>
-
-            <!-- Tabs + Search row -->
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pb-3">
-                <!-- Tabs -->
-                <div class="d-flex gap-1 order-tabs">
-                    <button class="tab-btn active" data-filter="all">Tất Cả</button>
-                    <button class="tab-btn" data-filter="product">Sản Phẩm</button>
-                    <button class="tab-btn" data-filter="booking">Đặt Sân</button>
-                    <button class="tab-btn" data-filter="package">Gói Tập</button>
-                </div>
-                <!-- Search + Status filter -->
-                <div class="d-flex gap-2">
-                    <div class="search-box d-flex align-items-center px-2" style="background:#f5f5f5;border-radius:8px;width:200px;">
-                        <i class="bi bi-search text-muted me-1"></i>
-                        <input type="text" id="orderSearch" class="border-0 bg-transparent outline-none py-1 w-100"
-                               placeholder="Tìm kiếm đơn hàng..." style="outline:none;" oninput="filterOrders()">
-                    </div>
-                    <select id="statusFilter" class="form-select form-select-sm rounded-3 border-0 bg-light" style="width:120px;" onchange="filterOrders()">
-                        <option value="">Tất cả</option>
-                        <option value="Pending">Chờ xử lý</option>
-                        <option value="Confirmed">Đã xác nhận</option>
-                        <option value="Shipping">Đang giao</option>
-                        <option value="Completed">Hoàn thành</option>
-                        <option value="Cancelled">Đã hủy</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- Table -->
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead style="background:#f8f9fa;">
-                        <tr>
-                            <th class="border-0 py-3 ps-4 text-muted small fw-bold">MÃ ĐƠN</th>
-                            <th class="border-0 py-3 text-muted small fw-bold">KHÁCH HÀNG</th>
-                            <th class="border-0 py-3 text-muted small fw-bold">SẢN PHẨM/DỊCH VỤ</th>
-                            <th class="border-0 py-3 text-muted small fw-bold">TỔNG TIỀN</th>
-                            <th class="border-0 py-3 text-muted small fw-bold">NGÀY ĐẶT</th>
-                            <th class="border-0 py-3 text-muted small fw-bold">THANH TOÁN</th>
-                            <th class="border-0 py-3 text-muted small fw-bold">TRẠNG THÁI</th>
-                            <th class="border-0 py-3 pe-4 text-muted small fw-bold text-end">THAO TÁC</th>
-                        </tr>
-                    </thead>
-                    <tbody id="orderTableBody">
-                        @if (Model != null && Model.Any())
-                        {
-                            foreach (var order in Model)
-                            {
-                                var typeKey = order.OrderType?.ToLower() ?? "product";
-                                <tr data-filter="@typeKey" data-status="@order.OrderStatus" data-search="@(order.OrderCode + order.OrderStatus)">
-
-                                    <!-- Mã đơn -->
-                                    <td class="ps-4 py-3">
-                                        <div class="d-flex align-items-center gap-2">
-                                            @if (order.OrderType == "Booking")
-                                            {
-                                                <span class="type-icon-booking"><i class="bi bi-calendar-check"></i></span>
-                                            }
-                                            else if (order.OrderType == "Package")
-                                            {
-                                                <span class="type-icon-package"><i class="bi bi-box2"></i></span>
-                                            }
-                                            else
-                                            {
-                                                <span class="type-icon-product"><i class="bi bi-bag"></i></span>
-                                            }
-                                            <span class="fw-semibold">@order.OrderCode</span>
-                                        </div>
-                                    </td>
-
-                                    <!-- Khách hàng -->
-                                    <td class="py-3">
-                                        <div class="fw-semibold small">Khách hàng</div>
-                                        <div class="text-muted" style="font-size:.8rem;">0123 456 789</div>
-                                    </td>
-
-                                    <!-- Sản phẩm -->
-                                    <td class="py-3">
-                                        <div class="small text-truncate" style="max-width:180px;">
-                                            @string.Join(", ", order.OrderDetails.Take(2).Select(d => d.ProductName))
-                                            @(order.OrderDetails.Count > 2 ? "..." : "")
-                                        </div>
-                                    </td>
-
-                                    <!-- Tổng tiền -->
-                                    <td class="py-3">
-                                        <span class="fw-bold text-success">₫@order.TotalAmount.ToString("N0")</span>
-                                    </td>
-
-                                    <!-- Ngày đặt -->
-                                    <td class="py-3">
-                                        <div class="small">@order.CreatedAt.ToString("dd/MM/yyyy")</div>
-                                        <div class="text-muted" style="font-size:.8rem;">@order.CreatedAt.ToString("HH:mm")</div>
-                                    </td>
-
-                                    <!-- Thanh toán -->
-                                    <td class="py-3">
-                                        @if (order.PaymentStatus == "Paid")
-                                        {
-                                            <span class="status-badge status-paid">Đã Thanh Toán</span>
-                                        }
-                                        else if (order.PaymentStatus == "Refunded")
-                                        {
-                                            <span class="status-badge status-refunded">Đã Hoàn Tiền</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="status-badge status-unpaid">Chờ Thanh Toán</span>
-                                        }
-                                    </td>
-
-                                    <!-- Trạng thái -->
-                                    <td class="py-3">
-                                        @switch (order.OrderStatus)
-                                        {
-                                            case "Pending":
-                                                <span class="status-badge status-pending">Chờ Xử Lý</span>
-                                                break;
-                                            case "Confirmed":
-                                                <span class="status-badge status-confirmed">Đang Xử Lý</span>
-                                                break;
-                                            case "Shipping":
-                                                <span class="status-badge status-shipping">Đang Giao</span>
-                                                break;
-                                            case "Completed":
-                                                <span class="status-badge status-done">Hoàn Thành</span>
-                                                break;
-                                            case "Cancelled":
-                                                <span class="status-badge status-cancel">Đã Hủy</span>
-                                                break;
-                                            default:
-                                                <span class="status-badge status-pending">@order.OrderStatus</span>
-                                                break;
-                                        }
-                                    </td>
-
-                                    <!-- Thao tác -->
-                                    <td class="py-3 pe-4 text-end">
-                                        <a asp-action="Details" asp-route-id="@order.OrderId"
-                                           class="btn btn-sm btn-outline-secondary rounded-2" title="Chi tiết">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="8" class="text-center py-5 text-muted">
-                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                    Không có dữ liệu đơn hàng
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="card-footer bg-white border-0 py-3 px-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <small class="text-muted">Tổng: @(Model?.Count() ?? 0) đơn</small>
-            </div>
-        </div>
-    </div>
-</div>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
-    .stat-icon {
-        width: 46px;
-        height: 46px;
-        border-radius: 12px;
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #fdf8f0;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+    }
+
+    body, * {
+        font-family: 'Outfit',sans-serif;
+    }
+
+    .idx-head {
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 1.3rem;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
     }
 
-    .bg-primary-soft {
-        background: #e8eeff;
+    .idx-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: var(--deep);
     }
 
-    .bg-warning-soft {
-        background: #fff8e1;
-    }
+        .idx-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
 
-    .bg-success-soft {
-        background: #e8f5e9;
-    }
-
-    .bg-purple-soft {
-        background: #f3e8ff;
-    }
-
-    .text-purple {
-        color: #8b5cf6;
-    }
-
-    /* Tabs */
-    .tab-btn {
-        padding: 7px 16px;
-        border: 1px solid #e9ecef;
+    .export-btn {
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        border: none;
+        padding: .75rem 1.6rem;
+        font-family: 'Outfit',sans-serif;
+        font-size: .86rem;
+        font-weight: 700;
         border-radius: 8px;
-        background: #fff;
-        font-weight: 600;
-        font-size: .88rem;
-        color: #555;
         cursor: pointer;
-        transition: .2s;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        text-decoration: none;
+        transition: all .25s;
+    }
+
+        .export-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(212,160,23,.35);
+            color: var(--deep);
+        }
+
+    /* STATS */
+    .stat-strip {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1.75rem;
+    }
+
+    .stat-box {
+        background: #fff;
+        padding: 1.2rem 1.5rem;
+    }
+
+    .stat-n {
+        font-family: 'Playfair Display',serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--deep);
+        line-height: 1;
+    }
+
+    .stat-l {
+        font-size: .72rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: .3rem;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+    .stat-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+    }
+
+    /* TOOLBAR */
+    .toolbar {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+    }
+
+    .tab-group {
+        display: flex;
+        gap: .4rem;
+    }
+
+    .tab-btn {
+        padding: .55rem 1.1rem;
+        border: 1.5px solid var(--border);
+        border-radius: 7px;
+        background: #fff;
+        font-family: 'Outfit',sans-serif;
+        font-weight: 600;
+        font-size: .82rem;
+        color: var(--muted);
+        cursor: pointer;
+        transition: all .2s;
     }
 
         .tab-btn:hover {
-            background: #f5f5f5;
+            border-color: rgba(212,160,23,.5);
+            color: var(--deep);
+            background: var(--cream);
         }
 
         .tab-btn.active {
-            background: #1a1a1a;
-            color: #fff;
-            border-color: #1a1a1a;
+            background: var(--deep);
+            color: var(--gold2);
+            border-color: var(--deep);
         }
 
-    /* Type icons */
-    .type-icon-product, .type-icon-booking, .type-icon-package {
-        width: 32px;
-        height: 32px;
+    .tb-search {
+        position: relative;
+        min-width: 220px;
+    }
+
+        .tb-search input {
+            width: 100%;
+            padding: .65rem 1rem .65rem 2.3rem;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            font-family: 'Outfit',sans-serif;
+            font-size: .84rem;
+            color: var(--deep);
+            background: #fff;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+            .tb-search input:focus {
+                border-color: var(--gold);
+            }
+
+        .tb-search i {
+            position: absolute;
+            left: .8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: .85rem;
+        }
+
+    .tb-sel {
+        padding: .65rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .84rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
+        cursor: pointer;
+    }
+
+        .tb-sel:focus {
+            border-color: var(--gold);
+        }
+
+    /* TABLE */
+    .idx-table-wrap {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .idx-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .idx-table th {
+            background: var(--warm);
+            padding: .85rem 1rem;
+            font-size: .67rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .idx-table td {
+            padding: .95rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: .86rem;
+            vertical-align: middle;
+            color: var(--deep);
+        }
+
+        .idx-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .idx-table tr:hover td {
+            background: var(--cream);
+        }
+
+    .tbl-footer {
+        padding: .85rem 1.25rem;
+        border-top: 1px solid var(--border);
+        background: var(--warm);
+        font-size: .78rem;
+        color: var(--muted);
+    }
+
+    /* ORDER TYPE ICON */
+    .ot-icon {
+        width: 34px;
+        height: 34px;
         border-radius: 8px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: .95rem;
+        font-size: .9rem;
+        flex-shrink: 0;
     }
 
-    .type-icon-product {
-        background: #e8eeff;
-        color: #4361ee;
+    .ot-booking {
+        background: rgba(212,160,23,.14);
+        color: #92660a;
     }
 
-    .type-icon-booking {
-        background: #fff8e1;
-        color: #f59e0b;
+    .ot-product {
+        background: rgba(79,70,229,.08);
+        color: #4f46e5;
     }
 
-    .type-icon-package {
-        background: #fce7f3;
-        color: #ec4899;
+    .ot-package {
+        background: rgba(236,72,153,.08);
+        color: #be185d;
     }
 
-    /* Status badges */
-    .status-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: .78rem;
-        font-weight: 600;
+    /* CHIPS */
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        font-size: .68rem;
+        font-weight: 700;
+        padding: .28rem .7rem;
+        border-radius: 4px;
+        letter-spacing: .04em;
+        white-space: nowrap;
     }
 
-    .status-paid {
-        background: #e8f5e9;
-        color: #2e7d32;
+    .chip-paid {
+        background: rgba(22,163,74,.1);
+        color: #16a34a;
     }
 
-    .status-unpaid {
-        background: #fff8e1;
-        color: #b45309;
+    .chip-unpaid {
+        background: rgba(212,160,23,.13);
+        color: #92660a;
     }
 
-    .status-refunded {
-        background: #fce7f3;
-        color: #9d174d;
+    .chip-refunded {
+        background: rgba(201,75,42,.1);
+        color: #c94b2a;
     }
 
-    .status-pending {
-        background: #fff8e1;
-        color: #b45309;
+    .chip-pending {
+        background: rgba(212,160,23,.13);
+        color: #92660a;
     }
 
-    .status-confirmed {
-        background: #e8eeff;
-        color: #3730a3;
+    .chip-confirmed {
+        background: rgba(79,70,229,.09);
+        color: #4f46e5;
     }
 
-    .status-shipping {
-        background: #fce7f3;
+    .chip-shipping {
+        background: rgba(139,92,246,.1);
         color: #7c3aed;
     }
 
-    .status-done {
-        background: #e8f5e9;
-        color: #166534;
+    .chip-completed {
+        background: rgba(22,163,74,.1);
+        color: #16a34a;
     }
 
-    .status-cancel {
-        background: #fee2e2;
-        color: #991b1b;
+    .chip-cancelled {
+        background: rgba(201,75,42,.1);
+        color: #c94b2a;
     }
 
-    .table tbody tr {
-        cursor: default;
+    /* ACTION */
+    .act-g {
+        display: flex;
+        gap: .3rem;
     }
 
-        .table tbody tr:hover {
-            background: #fafafa;
+    .act-b {
+        width: 30px;
+        height: 30px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--muted);
+        transition: all .2s;
+        font-size: .78rem;
+        text-decoration: none;
+    }
+
+        .act-b:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(212,160,23,.07);
+        }
+
+    /* ALERTS */
+    .sys-alert {
+        padding: .9rem 1.25rem;
+        border-radius: 8px;
+        margin-bottom: 1.25rem;
+        font-size: .84rem;
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+    }
+
+        .sys-alert.success {
+            background: rgba(22,163,74,.08);
+            border: 1px solid rgba(22,163,74,.25);
+            color: #16a34a;
+        }
+
+        .sys-alert.error {
+            background: rgba(201,75,42,.06);
+            border: 1px solid rgba(201,75,42,.25);
+            color: #c94b2a;
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--muted);
+    }
+
+        .empty-state i {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 1rem;
+            opacity: .3;
         }
 </style>
 
+<div>
+
+    <!-- HEADER -->
+    <div class="idx-head">
+        <div>
+            <h1 class="idx-title">Quản Lý <em>Đơn Hàng</em></h1>
+            <div style="font-size:.82rem;color:var(--muted);margin-top:.25rem;">
+                Tổng cộng @(Model?.Count() ?? 0) đơn hàng trong hệ thống
+            </div>
+        </div>
+        <button class="export-btn" onclick="exportOrders()">
+            <i class="bi bi-download"></i> Xuất Excel
+        </button>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="sys-alert success"><i class="bi bi-check-circle-fill"></i>@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="sys-alert error"><i class="bi bi-exclamation-circle"></i>@TempData["ErrorMessage"]</div>
+    }
+
+    <!-- STATS STRIP -->
+    <div class="stat-strip">
+        <div class="stat-box">
+            <div class="stat-n">@(ViewBag.TotalOrders ?? 0)</div>
+            <div class="stat-l"><span class="stat-dot" style="background:var(--gold);"></span>Tổng Đơn Hàng</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-n" style="color:#92660a;">@(ViewBag.PendingOrders ?? 0)</div>
+            <div class="stat-l"><span class="stat-dot" style="background:#92660a;"></span>Chờ Xử Lý</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-n" style="color:#7c3aed;">@(ViewBag.ShippingOrders ?? 0)</div>
+            <div class="stat-l"><span class="stat-dot" style="background:#7c3aed;"></span>Đang Giao</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-n" style="color:#16a34a;">@(ViewBag.CompletedOrders ?? 0)</div>
+            <div class="stat-l"><span class="stat-dot" style="background:#16a34a;"></span>Hoàn Thành</div>
+        </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+        <div class="tab-group">
+            <button class="tab-btn active" data-filter="all">Tất Cả</button>
+            <button class="tab-btn" data-filter="product">Sản Phẩm</button>
+            <button class="tab-btn" data-filter="booking">Đặt Sân</button>
+            <button class="tab-btn" data-filter="package">Gói Tập</button>
+        </div>
+
+        <div class="tb-search" style="margin-left:auto;">
+            <i class="bi bi-search"></i>
+            <input type="text" id="orderSearch" placeholder="Tìm mã đơn, khách hàng..." oninput="filterOrders()" />
+        </div>
+
+        <select id="statusFilter" class="tb-sel" onchange="filterOrders()">
+            <option value="">Tình trạng</option>
+            <option value="Pending">Chờ xử lý</option>
+            <option value="Confirmed">Đã xác nhận</option>
+            <option value="Shipping">Đang giao</option>
+            <option value="Completed">Hoàn thành</option>
+            <option value="Cancelled">Đã hủy</option>
+        </select>
+    </div>
+
+    <!-- TABLE -->
+    <div class="idx-table-wrap">
+        <table class="idx-table">
+            <thead>
+                <tr>
+                    <th>Mã Đơn</th>
+                    <th>Khách Hàng</th>
+                    <th>Sản Phẩm / Dịch Vụ</th>
+                    <th>Tổng Tiền</th>
+                    <th>Ngày Đặt</th>
+                    <th>Thanh Toán</th>
+                    <th>Trạng Thái</th>
+                    <th>Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody id="orderTableBody">
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var order in Model)
+                    {
+                        var typeKey = order.OrderType?.ToLower() ?? "product";
+                        <tr data-filter="@typeKey" data-status="@order.OrderStatus"
+                            data-search="@(order.OrderCode + " " + order.OrderStatus)">
+
+                            <!-- Mã đơn -->
+                            <td>
+                                <div style="display:flex;align-items:center;gap:.7rem;">
+                                    @if (order.OrderType == "Booking")
+                                    {
+                                        <span class="ot-icon ot-booking"><i class="bi bi-calendar-check"></i></span>
+                                    }
+                                    else if (order.OrderType == "Package")
+                                    {
+                                        <span class="ot-icon ot-package"><i class="bi bi-box2"></i></span>
+                                    }
+                                    else
+                                    {
+                                        <span class="ot-icon ot-product"><i class="bi bi-bag"></i></span>
+                                    }
+                                    <div>
+                                        <div style="font-weight:700;font-size:.88rem;color:var(--deep);">@order.OrderCode</div>
+                                        <div style="font-size:.69rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">
+                                            @(order.OrderType == "Booking" ? "Đặt Sân" : order.OrderType == "Package" ? "Gói Tập" : "Sản Phẩm")
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Khách hàng -->
+                            <td>
+                                <div style="font-weight:600;font-size:.86rem;">Khách hàng</div>
+                                <div style="font-size:.73rem;color:var(--muted);">
+                                    <i class="bi bi-telephone" style="color:var(--gold);margin-right:.25rem;"></i>0123 456 789
+                                </div>
+                            </td>
+
+                            <!-- Sản phẩm -->
+                            <td>
+                                <div style="font-size:.84rem;max-width:175px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                    @string.Join(", ", order.OrderDetails.Take(2).Select(d => d.ProductName))
+                                    @(order.OrderDetails.Count > 2 ? "…" : "")
+                                </div>
+                                <div style="font-size:.71rem;color:var(--muted);margin-top:.1rem;">
+                                    @order.OrderDetails.Count sản phẩm
+                                </div>
+                            </td>
+
+                            <!-- Tổng tiền -->
+                            <td>
+                                <span style="font-weight:700;color:#16a34a;">₫@order.TotalAmount.ToString("N0")</span>
+                            </td>
+
+                            <!-- Ngày đặt -->
+                            <td>
+                                <div style="font-size:.84rem;">@order.CreatedAt.ToString("dd/MM/yyyy")</div>
+                                <div style="font-size:.72rem;color:var(--muted);">@order.CreatedAt.ToString("HH:mm")</div>
+                            </td>
+
+                            <!-- Thanh toán -->
+                            <td>
+                                @if (order.PaymentStatus == "Paid")
+                                {
+                                    <span class="chip chip-paid">✓ Đã TT</span>
+                                }
+                                else if (order.PaymentStatus == "Refunded")
+                                {
+                                    <span class="chip chip-refunded">↩ Hoàn Tiền</span>
+                                }
+                                else
+                                {
+                                    <span class="chip chip-unpaid">⏳ Chờ TT</span>
+                                }
+                            </td>
+
+                            <!-- Trạng thái -->
+                            <td>
+                                @switch (order.OrderStatus)
+                                {
+                                    case "Pending":
+                                        <span class="chip chip-pending">● Chờ Xử Lý</span>
+                                        break;
+                                    case "Confirmed":
+                                        <span class="chip chip-confirmed">✓ Xác Nhận</span>
+                                        break;
+                                    case "Shipping":
+                                        <span class="chip chip-shipping">🚚 Đang Giao</span>
+                                        break;
+                                    case "Completed":
+                                        <span class="chip chip-completed">✓ Hoàn Thành</span>
+                                        break;
+                                    case "Cancelled":
+                                        <span class="chip chip-cancelled">✕ Đã Hủy</span>
+                                        break;
+                                    default:
+                                        <span class="chip chip-pending">@order.OrderStatus</span>
+                                        break;
+                                }
+                            </td>
+
+                            <!-- Thao tác -->
+                            <td>
+                                <div class="act-g">
+                                    <a asp-action="Details" asp-route-id="@order.OrderId"
+                                       class="act-b" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+        @if (Model?.Any() != true)
+        {
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <div>Không có đơn hàng nào</div>
+            </div>
+        }
+
+        <div class="tbl-footer">
+            Hiển thị <strong>@(Model?.Count() ?? 0)</strong> đơn hàng
+        </div>
+    </div>
+
+</div>
+
 @section Scripts {
     <script>
-        // Tab filter
         document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 filterOrders();
@@ -403,15 +616,15 @@
         });
 
         function filterOrders() {
-            const tabFilter = document.querySelector('.tab-btn.active')?.dataset.filter ?? 'all';
+            const tabFilter   = document.querySelector('.tab-btn.active')?.dataset.filter ?? 'all';
             const statusFilter = document.getElementById('statusFilter').value;
-            const searchVal = document.getElementById('orderSearch').value.toLowerCase();
+            const searchVal   = document.getElementById('orderSearch').value.toLowerCase();
 
             document.querySelectorAll('#orderTableBody tr[data-filter]').forEach(row => {
-                const matchTab = tabFilter === 'all' || row.dataset.filter === tabFilter;
+                const matchTab    = tabFilter === 'all' || row.dataset.filter === tabFilter;
                 const matchStatus = !statusFilter || row.dataset.status === statusFilter;
-                const matchSearch = !searchVal || row.dataset.search.toLowerCase().includes(searchVal) ||
-                    row.textContent.toLowerCase().includes(searchVal);
+                const matchSearch = !searchVal || row.dataset.search.toLowerCase().includes(searchVal)
+                                    || row.textContent.toLowerCase().includes(searchVal);
                 row.style.display = (matchTab && matchStatus && matchSearch) ? '' : 'none';
             });
         }

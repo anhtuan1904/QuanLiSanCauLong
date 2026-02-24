@@ -3,15 +3,176 @@
     Layout = null;
 }
 
-<div class="modal-header border-0 px-4 pt-4 pb-0">
+<style>
+    :root {
+        --court-dark: #1a1a2e;
+        --court-gold: #e8c840;
+        --court-bg: #f5f0e8;
+        --court-border: #e8e0d0;
+        --court-muted: #7a7060;
+    }
+
+    .modal-header-court {
+        background: var(--court-dark);
+        color: #fff;
+        border-radius: 16px 16px 0 0;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+        .modal-header-court h5 {
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin: 0 0 2px;
+            color: #fff;
+        }
+
+        .modal-header-court p {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.6);
+            margin: 0;
+        }
+
+        .modal-header-court .btn-close {
+            filter: invert(1);
+            opacity: 0.7;
+        }
+
+    .court-form-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--court-muted);
+        margin-bottom: 5px;
+    }
+
+    .court-input, .court-select, .court-textarea {
+        border: 1.5px solid var(--court-border);
+        border-radius: 8px;
+        background: var(--court-bg);
+        color: #2d2d2d;
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+        width: 100%;
+        transition: all 0.2s;
+    }
+
+        .court-input:focus, .court-select:focus, .court-textarea:focus {
+            outline: none;
+            border-color: var(--court-gold);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(232,200,64,0.2);
+        }
+
+    .court-textarea {
+        resize: vertical;
+        min-height: 90px;
+    }
+
+    .section-divider {
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--court-dark);
+        padding: 0.25rem 0;
+        border-bottom: 2px solid var(--court-gold);
+        margin-bottom: 0.75rem;
+        display: inline-block;
+    }
+
+    .status-badge-edit {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(232,200,64,0.15);
+        border: 1.5px solid var(--court-gold);
+        color: #856404;
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        margin-left: 8px;
+    }
+
+    .btn-court-primary {
+        background: var(--court-gold);
+        color: var(--court-dark);
+        border: none;
+        border-radius: 10px;
+        padding: 0.6rem 1.75rem;
+        font-weight: 800;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .btn-court-primary:hover {
+            background: #d4b320;
+            box-shadow: 0 4px 12px rgba(232,200,64,0.4);
+        }
+
+    .btn-court-secondary {
+        background: var(--court-bg);
+        color: #2d2d2d;
+        border: 1.5px solid var(--court-border);
+        border-radius: 10px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .btn-court-secondary:hover {
+            background: #ede8de;
+        }
+
+    .featured-check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--court-bg);
+        border: 1.5px solid var(--court-border);
+        border-radius: 8px;
+        padding: 0.6rem 0.9rem;
+        cursor: pointer;
+    }
+
+        .featured-check input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--court-gold);
+            cursor: pointer;
+        }
+
+        .featured-check label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #2d2d2d;
+            cursor: pointer;
+            margin: 0;
+        }
+</style>
+
+<div class="modal-header-court">
     <div>
-        <h5 class="fw-bold mb-1">Chỉnh Sửa Tin Tuyển Dụng</h5>
-        <p class="text-muted small mb-0">Cập nhật thông tin cho <strong>@Model.JobTitle</strong></p>
+        <h5>
+            Chỉnh Sửa Tin Tuyển Dụng
+            <span class="status-badge-edit"><i class="bi bi-pencil-fill"></i> Đang chỉnh sửa</span>
+        </h5>
+        <p>Cập nhật thông tin cho vị trí <strong style="color:var(--court-gold);">@Model.JobTitle</strong></p>
     </div>
     <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
 </div>
 
-<div class="modal-body px-4 py-3">
+<div class="modal-body px-4 py-3" style="background:#fff;">
     <form asp-action="Edit" method="post">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="JobId" />
@@ -19,32 +180,41 @@
         <input type="hidden" asp-for="ViewCount" />
 
         <div class="row g-3">
+
+            <!-- Thông tin cơ bản -->
+            <div class="col-12">
+                <span class="section-divider">📋 Thông Tin Cơ Bản</span>
+            </div>
             <div class="col-md-8">
-                <label class="form-label fw-semibold small">Vị trí tuyển dụng <span class="text-danger">*</span></label>
-                <input asp-for="JobTitle" class="form-control" required />
+                <label class="court-form-label">Vị trí tuyển dụng <span class="text-danger">*</span></label>
+                <input asp-for="JobTitle" class="court-input" required />
             </div>
             <div class="col-md-4">
-                <label class="form-label fw-semibold small">Số lượng <span class="text-danger">*</span></label>
-                <input asp-for="VacancyCount" type="number" class="form-control" min="1" required />
+                <label class="court-form-label">Số lượng <span class="text-danger">*</span></label>
+                <input asp-for="VacancyCount" type="number" class="court-input" min="1" required />
             </div>
 
             <div class="col-12">
-                <label class="form-label fw-semibold small">Mô tả công việc <span class="text-danger">*</span></label>
-                <textarea asp-for="JobDescription" class="form-control" rows="4" required></textarea>
+                <label class="court-form-label">Mô tả công việc <span class="text-danger">*</span></label>
+                <textarea asp-for="JobDescription" class="court-textarea" rows="4" required></textarea>
             </div>
 
             <div class="col-md-6">
-                <label class="form-label fw-semibold small">Yêu cầu</label>
-                <textarea asp-for="Requirements" class="form-control" rows="3"></textarea>
+                <label class="court-form-label">Yêu cầu</label>
+                <textarea asp-for="Requirements" class="court-textarea" rows="3"></textarea>
             </div>
             <div class="col-md-6">
-                <label class="form-label fw-semibold small">Quyền lợi</label>
-                <textarea asp-for="Benefits" class="form-control" rows="3"></textarea>
+                <label class="court-form-label">Quyền lợi</label>
+                <textarea asp-for="Benefits" class="court-textarea" rows="3"></textarea>
             </div>
 
+            <!-- Phân loại -->
+            <div class="col-12 mt-2">
+                <span class="section-divider">🏷️ Phân Loại & Mức Lương</span>
+            </div>
             <div class="col-md-6">
-                <label class="form-label fw-semibold small">Loại hình</label>
-                <select asp-for="JobType" class="form-select">
+                <label class="court-form-label">Loại hình</label>
+                <select asp-for="JobType" class="court-select">
                     <option value="">-- Chọn loại hình --</option>
                     <option value="Full-time">Full-time</option>
                     <option value="Part-time">Part-time</option>
@@ -53,8 +223,8 @@
                 </select>
             </div>
             <div class="col-md-6">
-                <label class="form-label fw-semibold small">Cấp bậc</label>
-                <select asp-for="Level" class="form-select">
+                <label class="court-form-label">Cấp bậc</label>
+                <select asp-for="Level" class="court-select">
                     <option value="">-- Chọn cấp bậc --</option>
                     <option value="Intern">Intern</option>
                     <option value="Junior">Junior</option>
@@ -65,56 +235,64 @@
             </div>
 
             <div class="col-md-4">
-                <label class="form-label fw-semibold small">Lương tối thiểu</label>
-                <input asp-for="SalaryMin" type="number" class="form-control" />
+                <label class="court-form-label">Lương tối thiểu (VNĐ)</label>
+                <input asp-for="SalaryMin" type="number" class="court-input" />
             </div>
             <div class="col-md-4">
-                <label class="form-label fw-semibold small">Lương tối đa</label>
-                <input asp-for="SalaryMax" type="number" class="form-control" />
+                <label class="court-form-label">Lương tối đa (VNĐ)</label>
+                <input asp-for="SalaryMax" type="number" class="court-input" />
             </div>
             <div class="col-md-4">
-                <label class="form-label fw-semibold small">Hạn nộp hồ sơ</label>
-                <input asp-for="Deadline" type="date" class="form-control" />
+                <label class="court-form-label">Hạn nộp hồ sơ</label>
+                <input asp-for="Deadline" type="date" class="court-input" />
             </div>
 
-            <div class="col-md-12">
-                <label class="form-label fw-semibold small">Địa điểm</label>
-                <input asp-for="Location" class="form-control" />
+            <div class="col-12">
+                <label class="court-form-label">Địa điểm làm việc</label>
+                <input asp-for="Location" class="court-input" />
             </div>
 
-            <div class="col-md-4">
-                <label class="form-label fw-semibold small">Người liên hệ</label>
-                <input asp-for="ContactPerson" class="form-control" />
+            <!-- Liên hệ -->
+            <div class="col-12 mt-2">
+                <span class="section-divider">📞 Thông Tin Liên Hệ</span>
             </div>
             <div class="col-md-4">
-                <label class="form-label fw-semibold small">Email</label>
-                <input asp-for="ContactEmail" type="email" class="form-control" />
+                <label class="court-form-label">Người liên hệ</label>
+                <input asp-for="ContactPerson" class="court-input" />
             </div>
             <div class="col-md-4">
-                <label class="form-label fw-semibold small">Điện thoại</label>
-                <input asp-for="ContactPhone" class="form-control" />
+                <label class="court-form-label">Email</label>
+                <input asp-for="ContactEmail" type="email" class="court-input" />
+            </div>
+            <div class="col-md-4">
+                <label class="court-form-label">Điện thoại</label>
+                <input asp-for="ContactPhone" class="court-input" />
             </div>
 
+            <!-- Trạng thái -->
+            <div class="col-12 mt-2">
+                <span class="section-divider">⚙️ Trạng Thái</span>
+            </div>
             <div class="col-md-6">
-                <label class="form-label fw-semibold small">Trạng thái</label>
-                <select asp-for="Status" class="form-select">
+                <label class="court-form-label">Trạng thái hiện tại</label>
+                <select asp-for="Status" class="court-select">
                     <option value="Open">Đang tuyển</option>
                     <option value="Closed">Đã đóng</option>
                     <option value="Filled">Đã tuyển đủ</option>
                 </select>
             </div>
             <div class="col-md-6 d-flex align-items-end">
-                <div class="form-check">
-                    <input asp-for="IsFeatured" class="form-check-input" type="checkbox" />
-                    <label class="form-check-label fw-semibold">Tin nổi bật</label>
-                </div>
+                <label class="featured-check w-100">
+                    <input asp-for="IsFeatured" type="checkbox" />
+                    <span>⭐ Tin <strong>nổi bật</strong> (ưu tiên hiển thị)</span>
+                </label>
             </div>
         </div>
 
-        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-            <button type="button" class="btn btn-light px-4 rounded-3" data-bs-dismiss="modal">Hủy</button>
-            <button type="submit" class="btn btn-dark px-5 rounded-3">
-                <i class="bi bi-check-lg me-1"></i>Lưu Thay Đổi
+        <div class="d-flex justify-content-end gap-2 mt-4 pt-3" style="border-top:1px solid #e8e0d0;">
+            <button type="button" class="btn-court-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+            <button type="submit" class="btn-court-primary">
+                <i class="bi bi-check-circle-fill"></i> Lưu Thay Đổi
             </button>
         </div>
     </form>

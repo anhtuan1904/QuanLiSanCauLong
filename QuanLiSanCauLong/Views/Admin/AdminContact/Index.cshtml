@@ -4,140 +4,569 @@
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="container-fluid px-4 py-4" style="background:#f8f9fa; min-height:100vh;">
+<style>
+    :root {
+        --court-dark: #1a1a2e;
+        --court-gold: #e8c840;
+        --court-gold-hover: #d4b320;
+        --court-bg: #f5f0e8;
+        --court-card: #ffffff;
+        --court-border: #e8e0d0;
+        --court-text: #2d2d2d;
+        --court-muted: #7a7060;
+    }
 
-    <h4 class="fw-bold mb-4">💬 Quản Lý Liên Hệ & Hỗ Trợ</h4>
+    .page-wrapper {
+        background: var(--court-bg);
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--court-dark);
+        letter-spacing: -0.5px;
+    }
+
+        .page-title span {
+            color: var(--court-gold);
+            font-style: italic;
+        }
+
+    /* Stats */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: var(--court-card);
+        border: 1px solid var(--court-border);
+        border-radius: 12px;
+        padding: 1.25rem 1.5rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--court-dark);
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--court-muted);
+        margin-top: 4px;
+    }
+
+    .stat-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 4px;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+        background: var(--court-card);
+        border: 1px solid var(--court-border);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .filter-search {
+        position: relative;
+        flex: 1;
+        min-width: 200px;
+    }
+
+        .filter-search i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--court-muted);
+            font-size: 0.9rem;
+        }
+
+        .filter-search input {
+            padding-left: 36px;
+            border: 1.5px solid var(--court-border);
+            border-radius: 8px;
+            background: var(--court-bg);
+            color: var(--court-text);
+            height: 40px;
+            width: 100%;
+            font-size: 0.875rem;
+        }
+
+            .filter-search input:focus {
+                outline: none;
+                border-color: var(--court-gold);
+                background: #fff;
+                box-shadow: 0 0 0 3px rgba(232,200,64,0.15);
+            }
+
+    .filter-select {
+        border: 1.5px solid var(--court-border);
+        border-radius: 8px;
+        background: var(--court-bg);
+        color: var(--court-text);
+        height: 40px;
+        padding: 0 0.75rem;
+        font-size: 0.875rem;
+        cursor: pointer;
+    }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--court-gold);
+            box-shadow: 0 0 0 3px rgba(232,200,64,0.15);
+        }
+
+    .btn-filter {
+        background: var(--court-dark);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        height: 40px;
+        padding: 0 1.25rem;
+        font-weight: 700;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+
+        .btn-filter:hover {
+            background: #2d2d50;
+            color: #fff;
+        }
+
+    /* Table */
+    .table-card {
+        background: var(--court-card);
+        border: 1px solid var(--court-border);
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .court-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+        .court-table thead {
+            background: var(--court-dark);
+        }
+
+            .court-table thead th {
+                color: rgba(255,255,255,0.75);
+                font-size: 0.7rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.8px;
+                padding: 0.85rem 1rem;
+                border: none;
+                white-space: nowrap;
+            }
+
+                .court-table thead th:first-child {
+                    padding-left: 1.25rem;
+                    border-radius: 0;
+                }
+
+        .court-table tbody tr {
+            border-bottom: 1px solid var(--court-border);
+            transition: background 0.15s;
+        }
+
+            .court-table tbody tr:last-child {
+                border-bottom: none;
+            }
+
+            .court-table tbody tr:hover {
+                background: #faf7f0;
+            }
+
+            .court-table tbody tr.unread-row {
+                background: #fffbeb;
+            }
+
+                .court-table tbody tr.unread-row:hover {
+                    background: #fff8d6;
+                }
+
+        .court-table td {
+            padding: 0.85rem 1rem;
+            vertical-align: middle;
+            color: var(--court-text);
+            font-size: 0.875rem;
+        }
+
+            .court-table td:first-child {
+                padding-left: 1.25rem;
+            }
+
+    /* Sender info */
+    .sender-name {
+        font-weight: 700;
+        color: var(--court-dark);
+        font-size: 0.875rem;
+    }
+
+    .sender-meta {
+        font-size: 0.75rem;
+        color: var(--court-muted);
+        margin-top: 1px;
+    }
+
+    .subject-text {
+        font-size: 0.875rem;
+        color: var(--court-dark);
+    }
+
+        .subject-text.unread {
+            font-weight: 700;
+        }
+
+    .subject-preview {
+        font-size: 0.75rem;
+        color: var(--court-muted);
+        margin-top: 1px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 280px;
+    }
+
+    /* Badges */
+    .badge-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    /* Priority badges */
+    .priority-urgent {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fca5a5;
+    }
+
+    .priority-high {
+        background: #fffbeb;
+        color: #b45309;
+        border: 1px solid #fcd34d;
+    }
+
+    .priority-normal {
+        background: #f0f9ff;
+        color: #0369a1;
+        border: 1px solid #93c5fd;
+    }
+
+    .priority-low {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
+
+    /* Status badges */
+    .status-new {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fca5a5;
+    }
+
+    .status-inprogress {
+        background: #fffbeb;
+        color: #b45309;
+        border: 1px solid #fcd34d;
+    }
+
+    .status-resolved {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
+
+    .status-closed {
+        background: #f5f5f5;
+        color: #6b7280;
+        border: 1px solid #d1d5db;
+    }
+
+    /* Category badge */
+    .category-badge {
+        background: var(--court-bg);
+        color: var(--court-dark);
+        border: 1px solid var(--court-border);
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    /* Star */
+    .star-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 2px;
+        font-size: 1rem;
+        transition: transform 0.15s;
+    }
+
+        .star-btn:hover {
+            transform: scale(1.2);
+        }
+
+    .star-active {
+        color: var(--court-gold);
+    }
+
+    .star-inactive {
+        color: #ccc;
+    }
+
+    /* View button */
+    .btn-view-msg {
+        background: var(--court-dark);
+        color: #fff;
+        border: none;
+        border-radius: 7px;
+        padding: 0.35rem 0.85rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .btn-view-msg:hover {
+            background: var(--court-gold);
+            color: var(--court-dark);
+        }
+
+    /* Time */
+    .time-text {
+        font-size: 0.75rem;
+        color: var(--court-muted);
+        white-space: nowrap;
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        color: var(--court-muted);
+    }
+
+        .empty-state i {
+            font-size: 4rem;
+            opacity: 0.25;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+    /* Unread indicator */
+    .unread-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #ef4444;
+        display: inline-block;
+        margin-right: 4px;
+        vertical-align: middle;
+    }
+
+    /* Modal */
+    .modal-content {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    @@media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .court-table thead th:nth-child(4),
+        .court-table thead th:nth-child(5),
+        .court-table td:nth-child(4),
+        .court-table td:nth-child(5) {
+            display: none;
+        }
+    }
+</style>
+
+<div class="page-wrapper">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="page-title mb-1">Quản Lý <span>Liên Hệ</span></h1>
+            <p class="mb-0" style="color:var(--court-muted);font-size:0.9rem;">Tổng cộng @Model.Count() tin nhắn trong hệ thống</p>
+        </div>
+    </div>
 
     <!-- Stats -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3">
-                <div class="fs-2 fw-bold">@Model.Count()</div>
-                <div class="text-muted small">Tổng Tin Nhắn</div>
-            </div>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">@Model.Count()</div>
+            <div class="stat-label"><span class="stat-dot" style="background:#1a1a2e;"></span>Tổng Tin Nhắn</div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3">
-                <div class="fs-2 fw-bold text-danger">@Model.Count(m => m.Status == "New")</div>
-                <div class="text-muted small">Chưa Xử Lý</div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color:#dc2626;">@Model.Count(m => m.Status == "New")</div>
+            <div class="stat-label"><span class="stat-dot" style="background:#ef4444;"></span>Chưa Xử Lý</div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3">
-                <div class="fs-2 fw-bold text-warning">@Model.Count(m => m.Status == "InProgress")</div>
-                <div class="text-muted small">Đang Xử Lý</div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color:#b45309;">@Model.Count(m => m.Status == "InProgress")</div>
+            <div class="stat-label"><span class="stat-dot" style="background:#f59e0b;"></span>Đang Xử Lý</div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3">
-                <div class="fs-2 fw-bold text-success">@Model.Count(m => m.Status == "Resolved")</div>
-                <div class="text-muted small">Đã Giải Quyết</div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color:#166534;">@Model.Count(m => m.Status == "Resolved")</div>
+            <div class="stat-label"><span class="stat-dot" style="background:#22c55e;"></span>Đã Giải Quyết</div>
         </div>
     </div>
 
-    <!-- Filter -->
-    <div class="card border-0 shadow-sm rounded-3 mb-4 p-3">
-        <form method="get" class="row g-3 align-items-end">
-            <div class="col-md-3">
-                <input type="text" name="search" class="form-control" placeholder="Tìm kiếm..." />
-            </div>
-            <div class="col-md-2">
-                <select name="status" class="form-select">
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="New">Mới</option>
-                    <option value="InProgress">Đang xử lý</option>
-                    <option value="Resolved">Đã giải quyết</option>
-                    <option value="Closed">Đã đóng</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <select name="priority" class="form-select">
-                    <option value="">Mức ưu tiên</option>
-                    <option value="Urgent">Khẩn cấp</option>
-                    <option value="High">Cao</option>
-                    <option value="Normal">Bình thường</option>
-                    <option value="Low">Thấp</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <select name="category" class="form-select">
-                    <option value="">Danh mục</option>
-                    <option value="Support">Hỗ trợ</option>
-                    <option value="Feedback">Phản hồi</option>
-                    <option value="Question">Câu hỏi</option>
-                    <option value="Complaint">Khiếu nại</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Lọc</button>
-            </div>
-        </form>
-    </div>
+    <!-- Filter Bar -->
+    <form method="get" class="filter-bar">
+        <div class="filter-search">
+            <i class="bi bi-search"></i>
+            <input type="text" name="search" placeholder="Tìm tên, email, tiêu đề..." />
+        </div>
+        <select name="status" class="filter-select">
+            <option value="">Trạng thái</option>
+            <option value="New">Chưa xử lý</option>
+            <option value="InProgress">Đang xử lý</option>
+            <option value="Resolved">Đã giải quyết</option>
+            <option value="Closed">Đã đóng</option>
+        </select>
+        <select name="priority" class="filter-select">
+            <option value="">Ưu tiên</option>
+            <option value="Urgent">Khẩn cấp</option>
+            <option value="High">Cao</option>
+            <option value="Normal">Bình thường</option>
+            <option value="Low">Thấp</option>
+        </select>
+        <select name="category" class="filter-select">
+            <option value="">Danh mục</option>
+            <option value="Support">Hỗ trợ</option>
+            <option value="Feedback">Phản hồi</option>
+            <option value="Question">Câu hỏi</option>
+            <option value="Complaint">Khiếu nại</option>
+        </select>
+        <button type="submit" class="btn-filter">
+            <i class="bi bi-funnel-fill"></i> Lọc
+        </button>
+    </form>
 
-    <!-- Messages List -->
-    <div class="card border-0 shadow-sm rounded-3">
-        <div class="card-body p-0">
+    <!-- Table -->
+    <div class="table-card">
+        @if (Model.Any())
+        {
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="bg-light">
+                <table class="court-table">
+                    <thead>
                         <tr>
-                            <th class="px-4 py-3" width="3%"></th>
-                            <th class="py-3">Người Gửi</th>
-                            <th class="py-3">Tiêu Đề</th>
-                            <th class="py-3" width="12%">Danh Mục</th>
-                            <th class="py-3" width="10%">Ưu Tiên</th>
-                            <th class="py-3" width="12%">Trạng Thái</th>
-                            <th class="py-3" width="12%">Thời Gian</th>
-                            <th class="py-3 text-center" width="10%">Thao Tác</th>
+                            <th style="width:40px;"></th>
+                            <th>Người Gửi</th>
+                            <th>Tiêu Đề & Nội Dung</th>
+                            <th style="width:110px;">Danh Mục</th>
+                            <th style="width:110px;">Ưu Tiên</th>
+                            <th style="width:130px;">Trạng Thái</th>
+                            <th style="width:100px;">Thời Gian</th>
+                            <th style="width:90px; text-align:center;">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var msg in Model)
                         {
-                            var priorityClass = msg.Priority == "Urgent" ? "danger" : (msg.Priority == "High" ? "warning" : "secondary");
-                            var statusClass = msg.Status == "New" ? "danger" : (msg.Status == "InProgress" ? "warning" : (msg.Status == "Resolved" ? "success" : "secondary"));
-                            var rowClass = !msg.IsRead ? "table-active" : "";
+                            string priorityClass = msg.Priority == "Urgent" ? "priority-urgent"
+                            : msg.Priority == "High" ? "priority-high"
+                            : msg.Priority == "Normal" ? "priority-normal"
+                            : "priority-low";
+                            string priorityIcon = msg.Priority == "Urgent" ? "🔴"
+                            : msg.Priority == "High" ? "🟠"
+                            : msg.Priority == "Normal" ? "🔵"
+                            : "🟢";
+
+                            string statusClass = msg.Status == "New" ? "status-new"
+                            : msg.Status == "InProgress" ? "status-inprogress"
+                            : msg.Status == "Resolved" ? "status-resolved"
+                            : "status-closed";
+                            string statusText = msg.Status == "New" ? "Mới"
+                            : msg.Status == "InProgress" ? "Đang xử lý"
+                            : msg.Status == "Resolved" ? "Đã xử lý"
+                            : "Đã đóng";
+
+                            string rowClass = !msg.IsRead ? "unread-row" : "";
 
                             <tr class="@rowClass">
-                                <td class="px-4 align-middle">
-                                    @if (msg.IsStarred)
-                                    {
-                                        <i class="bi bi-star-fill text-warning" onclick="toggleStar(@msg.MessageId)" style="cursor:pointer;"></i>
-                                    }
-                                    else
-                                    {
-                                        <i class="bi bi-star text-muted" onclick="toggleStar(@msg.MessageId)" style="cursor:pointer;"></i>
-                                    }
+                                <td>
+                                    <button class="star-btn" onclick="toggleStar(@msg.MessageId)" title="@(msg.IsStarred ? "Bỏ gắn sao" : "Gắn sao")">
+                                        <i class="bi bi-star@(msg.IsStarred ? "-fill star-active" : " star-inactive")"></i>
+                                    </button>
                                 </td>
-                                <td class="align-middle">
-                                    <div class="fw-semibold">@msg.FullName</div>
-                                    <small class="text-muted">@msg.Email</small>
+                                <td>
+                                    <div class="sender-name">
+                                        @if (!msg.IsRead)
+                                        {
+                                            <span class="unread-dot"></span>
+                                        }
+                                        @msg.FullName
+                                    </div>
+                                    <div class="sender-meta"><i class="bi bi-envelope me-1"></i>@msg.Email</div>
                                     @if (!string.IsNullOrEmpty(msg.Phone))
                                     {
-                                        <br />
-                                
-                                        <small class="text-muted"><i class="bi bi-telephone"></i> @msg.Phone</small>
+                                        <div class="sender-meta"><i class="bi bi-telephone me-1"></i>@msg.Phone</div>
                                     }
                                 </td>
-                                <td class="align-middle">
-                                    <div class="@(!msg.IsRead ? "fw-bold" : "")">@msg.Subject</div>
-                                    <small class="text-muted">@(msg.Message.Substring(0, Math.Min(60, msg.Message.Length)))...</small>
+                                <td>
+                                    <div class="subject-text @(!msg.IsRead ? "unread" : "")">@msg.Subject</div>
+                                    <div class="subject-preview">@(msg.Message.Length > 70 ? msg.Message.Substring(0, 70) + "..." : msg.Message)</div>
                                 </td>
-                                <td class="align-middle">
-                                    <span class="badge bg-light text-dark">@msg.Category</span>
+                                <td>
+                                    <span class="category-badge">@msg.Category</span>
                                 </td>
-                                <td class="align-middle">
-                                    <span class="badge bg-@priorityClass">@msg.Priority</span>
+                                <td>
+                                    <span class="badge-pill @priorityClass">@priorityIcon @msg.Priority</span>
                                 </td>
-                                <td class="align-middle">
-                                    <span class="badge bg-@statusClass">@msg.Status</span>
+                                <td>
+                                    <span class="badge-pill @statusClass">@statusText</span>
                                 </td>
-                                <td class="align-middle">
-                                    <small class="text-muted">@msg.CreatedAt.ToString("dd/MM HH:mm")</small>
+                                <td>
+                                    <div class="time-text">@msg.CreatedAt.ToString("dd/MM/yyyy")</div>
+                                    <div class="time-text">@msg.CreatedAt.ToString("HH:mm")</div>
                                 </td>
-                                <td class="align-middle text-center">
-                                    <button class="btn btn-sm btn-outline-primary" onclick="viewDetails(@msg.MessageId)">
+                                <td style="text-align:center;">
+                                    <button class="btn-view-msg" onclick="viewDetails(@msg.MessageId)">
                                         <i class="bi bi-eye"></i> Xem
                                     </button>
                                 </td>
@@ -146,21 +575,34 @@
                     </tbody>
                 </table>
             </div>
-        </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="bi bi-chat-square-dots"></i>
+                <h5 style="color:var(--court-text);">Chưa có tin nhắn nào</h5>
+                <p>Tin nhắn từ khách hàng sẽ xuất hiện tại đây</p>
+            </div>
+        }
     </div>
 
 </div>
 
 <!-- Details Modal -->
 <div class="modal fade" id="detailsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content" id="detailsContent"></div>
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content" id="detailsContent">
+            <div class="p-5 text-center">
+                <div class="spinner-border" style="color:var(--court-gold);"></div>
+            </div>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
         function viewDetails(id) {
+            document.getElementById('detailsContent').innerHTML = '<div class="p-5 text-center"><div class="spinner-border" style="color:#e8c840;"></div></div>';
             fetch('/AdminContact/Details/' + id)
                 .then(r => r.text())
                 .then(html => {
@@ -172,7 +614,7 @@
         function toggleStar(id) {
             fetch('/AdminContact/ToggleStar/' + id, { method: 'POST' })
                 .then(r => r.json())
-                .then(res => { if(res.success) location.reload(); });
+                .then(res => { if (res.success) location.reload(); });
         }
     </script>
 }

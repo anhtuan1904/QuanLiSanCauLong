@@ -1,51 +1,568 @@
 ﻿@model QuanLiSanCauLong.Models.PriceSlot
-
 @{
-    ViewData["Title"] = "Cấu hình giá sân";
+    ViewData["Title"] = "Thêm Khung Giờ & Giá";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="container-fluid pb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #fdf8f0;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+        --green: #16a34a;
+        --red: #c94b2a;
+    }
+
+    body, * {
+        font-family: 'Outfit',sans-serif;
+    }
+
+    /* PAGE HEADER */
+    .pg-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .pg-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+        .pg-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    .pg-sub {
+        font-size: .82rem;
+        color: var(--muted);
+        margin-top: .2rem;
+    }
+
+    .btn-back {
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        background: #fff;
+        color: var(--deep);
+        border: 1.5px solid var(--border);
+        padding: .65rem 1.2rem;
+        border-radius: 8px;
+        font-size: .84rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all .2s;
+    }
+
+        .btn-back:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: var(--cream);
+        }
+
+    /* LAYOUT */
+    .form-layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    /* SECTION CARDS */
+    .sec-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+    }
+
+    .sec-hd {
+        background: var(--warm);
+        padding: 1rem 1.4rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .sec-num {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        font-weight: 800;
+        font-size: .78rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .sec-hdtxt {
+        font-family: 'Playfair Display',serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+    .sec-bd {
+        padding: 1.4rem;
+    }
+
+    /* FORM CONTROLS */
+    .f-group {
+        display: flex;
+        flex-direction: column;
+        gap: .4rem;
+    }
+
+    .f-label {
+        font-size: .78rem;
+        font-weight: 700;
+        color: var(--deep);
+        letter-spacing: .03em;
+    }
+
+        .f-label .req {
+            color: var(--red);
+            margin-left: .15rem;
+        }
+
+        .f-label .opt {
+            font-weight: 400;
+            color: var(--muted);
+            margin-left: .25rem;
+        }
+
+    .f-ctrl {
+        padding: .68rem 1rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .9rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s;
+    }
+
+        .f-ctrl:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(212,160,23,.1);
+        }
+
+        .f-ctrl::placeholder {
+            color: #cbbaa5;
+        }
+
+    .f-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .f-row-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .f-hint {
+        font-size: .72rem;
+        color: var(--muted);
+        margin-top: .2rem;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+        .f-hint i {
+            color: var(--gold);
+        }
+
+    /* PRICE INPUT */
+    .price-wrap {
+        position: relative;
+    }
+
+        .price-wrap .f-ctrl {
+            padding-left: 2rem;
+        }
+
+    .price-sym {
+        position: absolute;
+        left: .85rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--muted);
+        font-weight: 700;
+        font-size: .9rem;
+    }
+
+    /* DAY SELECTOR */
+    .day-grid {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: .6rem;
+    }
+
+    .day-btn-row {
+        display: flex;
+        gap: .5rem;
+        flex-wrap: wrap;
+        margin-bottom: .9rem;
+    }
+
+    .day-quick {
+        padding: .4rem .9rem;
+        background: #fff;
+        border: 1.5px solid var(--border);
+        border-radius: 20px;
+        font-size: .76rem;
+        font-weight: 600;
+        color: var(--deep);
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .day-quick:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: var(--cream);
+        }
+
+    .day-item input {
+        display: none;
+    }
+
+    .day-lbl {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: .6rem .4rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-size: .82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+        text-align: center;
+        background: #fff;
+    }
+
+        .day-lbl:hover {
+            border-color: var(--gold);
+            background: var(--cream);
+        }
+
+    .day-item input:checked + .day-lbl {
+        background: var(--deep);
+        color: var(--gold2);
+        border-color: var(--deep);
+    }
+
+    .day-weekend .day-lbl {
+        color: var(--red);
+    }
+
+    .day-item input:checked + .day-lbl {
+        color: var(--gold2);
+    }
+
+    /* PRICE PREVIEW */
+    .price-preview {
+        background: linear-gradient(135deg,rgba(26,18,9,.04),rgba(212,160,23,.08));
+        border: 1px solid rgba(212,160,23,.25);
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .pp-label {
+        font-size: .7rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--muted);
+    }
+
+    .pp-value {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--green);
+        line-height: 1;
+    }
+
+    .pp-break {
+        font-size: .74rem;
+        color: var(--muted);
+        margin-top: .15rem;
+    }
+
+    /* PEAK TOGGLE */
+    .peak-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.2rem;
+        background: var(--cream);
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .peak-toggle:hover {
+            border-color: var(--gold);
+        }
+
+        .peak-toggle.active {
+            background: rgba(201,75,42,.06);
+            border-color: rgba(201,75,42,.3);
+        }
+
+    .peak-info .peak-title {
+        font-weight: 700;
+        font-size: .9rem;
+        color: var(--deep);
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+    .peak-info .peak-sub {
+        font-size: .74rem;
+        color: var(--muted);
+        margin-top: .15rem;
+    }
+
+    .toggle-sw {
+        width: 42px;
+        height: 24px;
+        border-radius: 12px;
+        background: var(--border);
+        position: relative;
+        transition: background .2s;
+        flex-shrink: 0;
+    }
+
+        .toggle-sw::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            top: 3px;
+            left: 3px;
+            transition: transform .2s;
+        }
+
+        .toggle-sw.on {
+            background: var(--red);
+        }
+
+            .toggle-sw.on::after {
+                transform: translateX(18px);
+            }
+
+    /* RIGHT SIDEBAR */
+    .sidebar-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .sidebar-hd {
+        background: var(--deep);
+        padding: 1rem 1.3rem;
+    }
+
+        .sidebar-hd h3 {
+            font-family: 'Playfair Display',serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 0;
+        }
+
+        .sidebar-hd p {
+            font-size: .74rem;
+            color: rgba(255,255,255,.5);
+            margin: .2rem 0 0;
+        }
+
+    .sidebar-bd {
+        padding: 1.2rem;
+    }
+
+    .hint-item {
+        display: flex;
+        align-items: flex-start;
+        gap: .6rem;
+        padding: .55rem 0;
+        border-bottom: 1px solid var(--border);
+        font-size: .78rem;
+        color: var(--muted);
+    }
+
+        .hint-item:last-child {
+            border-bottom: none;
+        }
+
+        .hint-item i {
+            color: var(--gold);
+            margin-top: .1rem;
+            flex-shrink: 0;
+        }
+
+        .hint-item strong {
+            color: var(--deep);
+        }
+
+    /* STATUS CARD */
+    .status-card {
+        background: var(--cream);
+        border: 1.5px solid rgba(212,160,23,.25);
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .status-lbl {
+        font-weight: 700;
+        font-size: .88rem;
+        color: var(--deep);
+    }
+
+    .status-sub {
+        font-size: .74rem;
+        color: var(--muted);
+        margin-top: .1rem;
+    }
+
+    /* SUBMIT */
+    .submit-area {
+        display: flex;
+        gap: .75rem;
+        margin-top: 1.5rem;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        border: none;
+        padding: .85rem 2rem;
+        font-family: 'Outfit',sans-serif;
+        font-size: .95rem;
+        font-weight: 800;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all .25s;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        flex: 1;
+        justify-content: center;
+    }
+
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(212,160,23,.35);
+        }
+
+    .btn-cancel {
+        background: #fff;
+        color: var(--deep);
+        border: 1.5px solid var(--border);
+        padding: .85rem 1.4rem;
+        font-family: 'Outfit',sans-serif;
+        font-size: .88rem;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all .2s;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+        .btn-cancel:hover {
+            border-color: var(--muted);
+        }
+
+    /* VALIDATION */
+    .val-error {
+        font-size: .74rem;
+        color: var(--red);
+        margin-top: .25rem;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+        .val-error i {
+            font-size: .7rem;
+        }
+</style>
+
+<div>
+    <!-- PAGE HEADER -->
+    <div class="pg-head">
         <div>
-            <h3 class="fw-bold"><i class="bi bi-currency-dollar text-primary me-2"></i>Cấu hình giá sân</h3>
-            <p class="text-muted small mb-0">Thiết lập quy tắc giá và khung giờ cho các sân cầu lông</p>
+            <h1 class="pg-title">Thêm <em>Khung Giờ & Giá</em></h1>
+            <div class="pg-sub">Thiết lập quy tắc giá và khung giờ cho sân cầu lông</div>
         </div>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a asp-action="Index">Quản lý giá</a></li>
-                <li class="breadcrumb-item active">Thêm cấu hình</li>
-            </ol>
-        </nav>
+        <a asp-action="Index" class="btn-back"><i class="bi bi-arrow-left"></i> Quay lại</a>
     </div>
 
     <form asp-action="Create" method="post" id="createForm">
         @Html.AntiForgeryToken()
-        <div asp-validation-summary="ModelOnly" class="alert alert-danger shadow-sm border-0 mb-4" style="border-radius:12px;"></div>
 
-        <div class="row g-4">
+        <div asp-validation-summary="ModelOnly" class="sys-alert error" style="display:none"></div>
 
-            <!-- ══ CỘT TRÁI ══ -->
-            <div class="col-lg-8">
-
-                <!-- CARD 1: Đối tượng áp dụng -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h5 class="mb-0 fw-bold"><span class="badge bg-primary me-2">1</span>Đối tượng áp dụng</h5>
+        <div class="form-layout">
+            <!-- ══ LEFT COLUMN ══ -->
+            <div>
+                <!-- STEP 1: Cơ sở & Sân -->
+                <div class="sec-card">
+                    <div class="sec-hd">
+                        <div class="sec-num">1</div>
+                        <span class="sec-hdtxt">Đối tượng áp dụng</span>
                     </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label asp-for="SlotName" class="form-label fw-semibold">
-                                    Tên bảng giá <span class="text-muted fw-normal">(tuỳ chọn)</span>
-                                </label>
-                                <input asp-for="SlotName" class="form-control shadow-none"
-                                       placeholder="Ví dụ: Giá ngày thường, Giá cuối tuần, Giá lễ..." />
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Cơ sở <span class="text-danger">*</span></label>
-                                <select id="FacilitySelect" asp-for="FacilityId" class="form-select shadow-none" required>
-                                    <option value="">-- Chọn cơ sở --</option>
+                    <div class="sec-bd">
+                        <div class="f-group" style="margin-bottom:1rem">
+                            <label class="f-label">Tên bảng giá <span class="opt">(tuỳ chọn)</span></label>
+                            <input asp-for="SlotName" class="f-ctrl" placeholder="Giá ngày thường, Giá cuối tuần..." />
+                        </div>
+                        <div class="f-row" style="margin-bottom:1rem">
+                            <div class="f-group">
+                                <label class="f-label">Cơ sở <span class="req">*</span></label>
+                                <select id="FacilitySelect" asp-for="FacilityId" class="f-ctrl" required>
+                                    <option value="">— Chọn cơ sở —</option>
                                     @if (ViewBag.Facilities != null)
                                     {
                                         foreach (var f in ViewBag.Facilities as IEnumerable<QuanLiSanCauLong.Models.Facility>)
@@ -55,207 +572,180 @@
                                     }
                                 </select>
                             </div>
-                            <div class="col-md-6">
-                                <label asp-for="CourtId" class="form-label fw-semibold">Sân cụ thể <span class="text-danger">*</span></label>
-                                <select asp-for="CourtId" id="CourtSelect" class="form-select shadow-none" required>
-                                    <option value="">-- Chọn cơ sở trước --</option>
+                            <div class="f-group">
+                                <label class="f-label">Sân cụ thể <span class="req">*</span></label>
+                                <select asp-for="CourtId" id="CourtSelect" class="f-ctrl" required>
+                                    <option value="">— Chọn cơ sở trước —</option>
                                 </select>
-                                <span asp-validation-for="CourtId" class="text-danger small"></span>
+                                <span asp-validation-for="CourtId" class="val-error"><i class="bi bi-exclamation-circle"></i></span>
                             </div>
-                            <div class="col-md-6">
-                                <label asp-for="CourtType" class="form-label fw-semibold">Loại sân <span class="text-danger">*</span></label>
-                                <select asp-for="CourtType" class="form-select shadow-none">
-                                    <option value="Standard">Sân tiêu chuẩn (Standard)</option>
-                                    <option value="Professional">Sân chuyên nghiệp (Professional)</option>
-                                    <option value="Practice">Sân tập luyện (Practice)</option>
+                        </div>
+                        <div class="f-row">
+                            <div class="f-group">
+                                <label class="f-label">Loại sân</label>
+                                <select asp-for="CourtType" class="f-ctrl">
+                                    <option value="Standard">Tiêu chuẩn</option>
+                                    <option value="Professional">Chuyên nghiệp</option>
+                                    <option value="Practice">Tập luyện</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
-                                <label asp-for="CustomerType" class="form-label fw-semibold">Loại khách hàng</label>
-                                <select asp-for="CustomerType" class="form-select shadow-none">
-                                    <option value="All">Tất cả loại khách</option>
-                                    <option value="Retail">Khách vãng lai (Lẻ)</option>
-                                    <option value="Member">Khách cố định (Tháng)</option>
+                            <div class="f-group">
+                                <label class="f-label">Loại khách hàng</label>
+                                <select asp-for="CustomerType" class="f-ctrl">
+                                    <option value="All">Tất cả</option>
+                                    <option value="Retail">Vãng lai</option>
+                                    <option value="Member">Cố định / Tháng</option>
                                 </select>
-                                <div class="form-text" style="font-size:.75rem;">Giá cố định/tháng thường thấp hơn giá vãng lai</div>
+                                <span class="f-hint"><i class="bi bi-info-circle"></i>Cố định thường giá thấp hơn vãng lai</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- CARD 2: Ngày áp dụng -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h5 class="mb-0 fw-bold"><span class="badge bg-primary me-2">2</span>Ngày áp dụng</h5>
+                <!-- STEP 2: Ngày áp dụng -->
+                <div class="sec-card">
+                    <div class="sec-hd">
+                        <div class="sec-num">2</div>
+                        <span class="sec-hdtxt">Ngày áp dụng</span>
                     </div>
-                    <div class="card-body">
-                        <div class="d-flex gap-2 mb-3 flex-wrap">
-                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill"
-                                    onclick="selectDays([1,2,3,4,5])">
-                                <i class="bi bi-calendar-week me-1"></i>Thứ 2 – Thứ 6
-                            </button>
-                            <button type="button" class="btn btn-outline-warning btn-sm rounded-pill"
-                                    onclick="selectDays([6,0])">
-                                <i class="bi bi-sun me-1"></i>Thứ 7 &amp; CN
-                            </button>
-                            <button type="button" class="btn btn-outline-success btn-sm rounded-pill"
-                                    onclick="selectDays([0,1,2,3,4,5,6])">
-                                <i class="bi bi-check-all me-1"></i>Tất cả ngày
-                            </button>
-                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill"
-                                    onclick="selectDays([])">
-                                <i class="bi bi-x me-1"></i>Bỏ chọn
-                            </button>
+                    <div class="sec-bd">
+                        <div class="day-btn-row">
+                            <button type="button" class="day-quick" onclick="selectDays([1,2,3,4,5])">T2 – T6</button>
+                            <button type="button" class="day-quick" onclick="selectDays([6,0])">T7 & CN</button>
+                            <button type="button" class="day-quick" onclick="selectDays([0,1,2,3,4,5,6])">Tất cả</button>
+                            <button type="button" class="day-quick" onclick="selectDays([])">Bỏ chọn</button>
                         </div>
-
-                        <div class="row g-2">
+                        <div class="day-grid">
                             @{
                                 var days = new[] {
-                                                        (1, "Thứ Hai"),
-                                                        (2, "Thứ Ba"),
-                                                        (3, "Thứ Tư"),
-                                                        (4, "Thứ Năm"),
-                                                        (5, "Thứ Sáu"),
-                                                        (6, "Thứ Bảy"),
-                                                        (0, "Chủ Nhật"),
+                                                        (1,"Thứ Hai",false),(2,"Thứ Ba",false),(3,"Thứ Tư",false),(4,"Thứ Năm",false),
+                                                        (5,"Thứ Sáu",false),(6,"Thứ Bảy",true),(0,"Chủ Nhật",true)
                                                         };
                             }
-                            @foreach (var (val, label) in days)
+                            @foreach (var (val, label, isWe) in days)
                             {
-                                var isWeekend = val == 0 || val == 6;
-                                <div class="col-6 col-md-3">
-                                    <label class="day-label d-flex align-items-center gap-2 p-2 border rounded-3"
-                                           style="cursor:pointer; transition:.15s;">
-                                        <input type="checkbox" class="day-check form-check-input m-0"
-                                               value="@val" />
-                                        <span class="small fw-semibold @(isWeekend ? "text-warning" : "")">@label</span>
-                                    </label>
+                                <div class="day-item @(isWe ? "day-weekend" : "")">
+                                    <input type="checkbox" class="day-check" id="day@val" value="@val"
+                                           onchange="syncDays()">
+                                    <label class="day-lbl" for="day@val">@label</label>
                                 </div>
                             }
                         </div>
                         <input type="hidden" name="AppliedDays" id="appliedDaysInput" />
-                        <div class="form-text mt-2" style="font-size:.75rem;">
-                            <i class="bi bi-info-circle me-1 text-primary"></i>
-                            Hệ thống sẽ tạo bản ghi riêng cho từng ngày được chọn.
-                        </div>
+                        <div class="f-hint" style="margin-top:.75rem"><i class="bi bi-info-circle"></i>Mỗi ngày được chọn tạo một bản ghi giá riêng</div>
                     </div>
                 </div>
 
-                <!-- CARD 3: Khung giờ & Giá -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h5 class="mb-0 fw-bold"><span class="badge bg-primary me-2">3</span>Khung giờ &amp; Đơn giá</h5>
+                <!-- STEP 3: Khung giờ & Giá -->
+                <div class="sec-card">
+                    <div class="sec-hd">
+                        <div class="sec-num">3</div>
+                        <span class="sec-hdtxt">Khung giờ & Đơn giá</span>
                     </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label asp-for="StartTime" class="form-label fw-semibold">Giờ bắt đầu <span class="text-danger">*</span></label>
-                                <input asp-for="StartTime" class="form-control shadow-none" type="time" />
-                                <span asp-validation-for="StartTime" class="text-danger small"></span>
+                    <div class="sec-bd">
+                        <div class="f-row-3" style="margin-bottom:1rem">
+                            <div class="f-group">
+                                <label class="f-label">Giờ bắt đầu <span class="req">*</span></label>
+                                <input asp-for="StartTime" class="f-ctrl" type="time" />
+                                <span asp-validation-for="StartTime" class="val-error"><i class="bi bi-exclamation-circle"></i></span>
                             </div>
-                            <div class="col-md-4">
-                                <label asp-for="EndTime" class="form-label fw-semibold">Giờ kết thúc <span class="text-danger">*</span></label>
-                                <input asp-for="EndTime" class="form-control shadow-none" type="time" />
-                                <span asp-validation-for="EndTime" class="text-danger small"></span>
+                            <div class="f-group">
+                                <label class="f-label">Giờ kết thúc <span class="req">*</span></label>
+                                <input asp-for="EndTime" class="f-ctrl" type="time" />
+                                <span asp-validation-for="EndTime" class="val-error"><i class="bi bi-exclamation-circle"></i></span>
                             </div>
-                            <div class="col-md-4">
-                                <label asp-for="RoundingMinutes" class="form-label fw-semibold">Đơn vị làm tròn</label>
-                                <select asp-for="RoundingMinutes" class="form-select shadow-none">
+                            <div class="f-group">
+                                <label class="f-label">Làm tròn giờ</label>
+                                <select asp-for="RoundingMinutes" class="f-ctrl">
                                     <option value="15">15 phút</option>
                                     <option value="30">30 phút</option>
-                                    <option value="60" selected>60 phút (1 giờ)</option>
+                                    <option value="60" selected>60 phút</option>
                                 </select>
                             </div>
-
-                            <div class="col-md-6">
-                                <label asp-for="Price" class="form-label fw-semibold">Đơn giá (VNĐ/giờ) <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">₫</span>
-                                    <input asp-for="Price" class="form-control border-start-0 shadow-none"
-                                           type="number" step="1000" placeholder="100000" id="priceInput"
-                                           oninput="updatePricePreview()" />
+                        </div>
+                        <div class="f-row" style="margin-bottom:1rem">
+                            <div class="f-group">
+                                <label class="f-label">Đơn giá (₫/giờ) <span class="req">*</span></label>
+                                <div class="price-wrap">
+                                    <span class="price-sym">₫</span>
+                                    <input asp-for="Price" class="f-ctrl" type="number" step="1000" id="priceInput"
+                                           placeholder="100,000" oninput="calcTotal()" />
                                 </div>
-                                <span asp-validation-for="Price" class="text-danger small"></span>
+                                <span asp-validation-for="Price" class="val-error"><i class="bi bi-exclamation-circle"></i></span>
                             </div>
-
-                            <div class="col-md-6">
-                                <label asp-for="Surcharge" class="form-label fw-semibold">Phụ phí/giờ (VNĐ)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">₫</span>
-                                    <input asp-for="Surcharge" class="form-control border-start-0 shadow-none"
-                                           type="number" step="1000" placeholder="0" id="surchargeInput"
-                                           oninput="updatePricePreview()" />
-                                </div>
-                            </div>
-
-                            <div class="col-12">
-                                <label asp-for="SurchargeNote" class="form-label fw-semibold">
-                                    Mô tả phụ phí <span class="text-muted fw-normal">(tuỳ chọn)</span>
-                                </label>
-                                <input asp-for="SurchargeNote" class="form-control shadow-none"
-                                       placeholder="Ví dụ: Phí bật đèn 30.000đ/giờ, Phí nước uống đi kèm..." />
-                            </div>
-
-                            <!-- Preview tổng giá -->
-                            <div class="col-12">
-                                <div class="p-3 bg-success bg-opacity-10 border border-success-subtle rounded-3">
-                                    <div class="small text-muted mb-1">Giá khách trả thực tế mỗi giờ (đơn giá + phụ phí)</div>
-                                    <div class="fs-4 fw-bold text-success" id="totalPricePreview">0 ₫</div>
-                                    <div class="small text-muted" id="priceBreakdown"></div>
-                                </div>
-                            </div>
-
-                            <!-- Giờ cao điểm -->
-                            <div class="col-12">
-                                <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between border">
-                                    <div>
-                                        <h6 class="mb-1 fw-bold">
-                                            <i class="bi bi-fire text-danger me-1"></i>Giờ cao điểm (Peak Hour)
-                                        </h6>
-                                        <p class="text-muted small mb-0">Thường 17:00 – 22:00 các ngày trong tuần</p>
-                                    </div>
-                                    <div class="form-check form-switch fs-4 mb-0">
-                                        <input asp-for="IsPeakHour" class="form-check-input" type="checkbox" role="switch">
-                                    </div>
+                            <div class="f-group">
+                                <label class="f-label">Phụ phí (₫/giờ) <span class="opt">(tuỳ chọn)</span></label>
+                                <div class="price-wrap">
+                                    <span class="price-sym">₫</span>
+                                    <input asp-for="Surcharge" class="f-ctrl" type="number" step="1000" id="surInput"
+                                           placeholder="0" oninput="calcTotal()" />
                                 </div>
                             </div>
                         </div>
+                        <div class="f-group" style="margin-bottom:1rem">
+                            <label class="f-label">Mô tả phụ phí <span class="opt">(tuỳ chọn)</span></label>
+                            <input asp-for="SurchargeNote" class="f-ctrl" placeholder="Phí bật đèn 30.000đ/giờ..." />
+                        </div>
+
+                        <!-- Price Preview -->
+                        <div class="price-preview">
+                            <div>
+                                <div class="pp-label">Khách trả / giờ</div>
+                                <div class="pp-value" id="totalPreview">0 ₫</div>
+                                <div class="pp-break" id="priceBreak"></div>
+                            </div>
+                            <i class="bi bi-calculator" style="font-size:2rem;color:rgba(212,160,23,.3)"></i>
+                        </div>
+
+                        <!-- Peak Toggle -->
+                        <div class="peak-toggle" id="peakToggle" style="margin-top:1rem" onclick="togglePeak()">
+                            <div class="peak-info">
+                                <div class="peak-title"><i class="bi bi-fire" style="color:var(--red)"></i> Giờ cao điểm (Peak Hour)</div>
+                                <div class="peak-sub">Thường 17:00 – 22:00 các ngày trong tuần</div>
+                            </div>
+                            <div class="toggle-sw" id="peakSw"></div>
+                        </div>
+                        <input asp-for="IsPeakHour" id="isPeakInput" type="hidden" value="false" />
                     </div>
                 </div>
 
-                <div class="d-flex gap-3 justify-content-end">
-                    <a asp-action="Index" class="btn btn-light px-4 py-2 fw-semibold border shadow-sm">Hủy bỏ</a>
-                    <button type="submit" class="btn btn-dark px-5 py-2 fw-semibold shadow-sm"
-                            onclick="return validateAndPrepare()">
-                        <i class="bi bi-check-circle me-2"></i>Lưu cấu hình
+                <div class="submit-area">
+                    <a asp-action="Index" class="btn-cancel"><i class="bi bi-x"></i> Hủy</a>
+                    <button type="submit" class="btn-submit" onclick="return prepareSubmit()">
+                        <i class="bi bi-check-circle-fill"></i> Lưu Cấu Hình Giá
                     </button>
                 </div>
             </div>
 
-            <!-- ══ CỘT PHẢI ══ -->
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
-                    <div class="card-body">
-                        <h6 class="fw-bold mb-3">Trạng thái kích hoạt</h6>
-                        <div class="form-check">
-                            <input asp-for="IsActive" class="form-check-input" type="checkbox" checked>
-                            <label class="form-check-label small fw-semibold" asp-for="IsActive">
-                                Kích hoạt ngay lập tức
-                            </label>
+            <!-- ══ RIGHT SIDEBAR ══ -->
+            <div>
+                <!-- Status -->
+                <div class="sidebar-card" style="margin-bottom:1rem">
+                    <div style="padding:1.1rem 1.3rem; border-bottom:1px solid var(--border)">
+                        <div style="font-weight:700;font-size:.9rem;color:var(--deep);margin-bottom:.75rem">Trạng thái kích hoạt</div>
+                        <div class="status-card">
+                            <div>
+                                <div class="status-lbl">✓ Kích hoạt ngay</div>
+                                <div class="status-sub">Cấu hình có hiệu lực ngay khi lưu</div>
+                            </div>
+                            <input asp-for="IsActive" type="checkbox" checked
+                                   style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer" />
                         </div>
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm bg-primary text-white" style="border-radius:12px;">
-                    <div class="card-body p-4">
-                        <h6 class="fw-bold mb-3"><i class="bi bi-lightbulb me-2"></i>Hướng dẫn</h6>
-                        <ul class="list-unstyled mb-0 small opacity-90">
-                            <li class="mb-2"><i class="bi bi-check2-circle me-2"></i>Chọn <strong>Cơ sở</strong> để tải danh sách sân.</li>
-                            <li class="mb-2"><i class="bi bi-check2-circle me-2"></i>Chọn <strong>nhiều ngày</strong>: mỗi ngày sẽ tạo một bản ghi riêng.</li>
-                            <li class="mb-2"><i class="bi bi-check2-circle me-2"></i><strong>Phụ phí</strong> cộng thêm vào giá khi tính tiền.</li>
-                            <li class="mb-2"><i class="bi bi-check2-circle me-2"></i><strong>Đơn vị làm tròn</strong>: tính giờ theo 15/30/60 phút.</li>
-                            <li class="mb-0"><i class="bi bi-check2-circle me-2"></i><strong>Giờ cao điểm</strong> dùng để lọc và báo cáo doanh thu.</li>
-                        </ul>
+                <!-- Guide -->
+                <div class="sidebar-card">
+                    <div class="sidebar-hd">
+                        <h3>Hướng dẫn</h3>
+                        <p>Cách cấu hình khung giờ & giá</p>
+                    </div>
+                    <div class="sidebar-bd">
+                        <div class="hint-item"><i class="bi bi-1-circle-fill"></i><span>Chọn <strong>Cơ sở</strong> → danh sách sân sẽ tự tải</span></div>
+                        <div class="hint-item"><i class="bi bi-2-circle-fill"></i><span>Chọn <strong>nhiều ngày</strong> — mỗi ngày tạo bản ghi riêng</span></div>
+                        <div class="hint-item"><i class="bi bi-3-circle-fill"></i><span><strong>Phụ phí</strong> cộng thêm vào giá khi tính tiền khách</span></div>
+                        <div class="hint-item"><i class="bi bi-4-circle-fill"></i><span><strong>Làm tròn</strong>: tính giờ theo 15/30/60 phút</span></div>
+                        <div class="hint-item"><i class="bi bi-fire" style="color:var(--red)"></i><span><strong>Giờ cao điểm</strong> dùng để lọc & báo cáo doanh thu</span></div>
                     </div>
                 </div>
             </div>
@@ -265,58 +755,69 @@
 
 @section Scripts {
     <script>
-        function updatePricePreview() {
-            const price     = parseFloat(document.getElementById('priceInput').value) || 0;
-            const surcharge = parseFloat(document.getElementById('surchargeInput').value) || 0;
-            const total     = price + surcharge;
-            document.getElementById('totalPricePreview').textContent = total.toLocaleString('vi-VN') + ' ₫';
-            document.getElementById('priceBreakdown').textContent = surcharge > 0
-                ? `Đơn giá: ${price.toLocaleString('vi-VN')}₫ + Phụ phí: ${surcharge.toLocaleString('vi-VN')}₫`
-                : '';
-        }
+        // ── Load courts (dùng AdminCourt/GetByFacility) ──
+        document.getElementById('FacilitySelect').addEventListener('change', function () {
+            const fId = this.value;
+            const sel = document.getElementById('CourtSelect');
+            if (!fId) { sel.innerHTML = '<option value="">— Chọn cơ sở trước —</option>'; return; }
+            sel.innerHTML = '<option value="">Đang tải sân...</option>';
 
+            fetch(`/AdminCourt/GetByFacility?facilityId=${fId}`)
+                .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+                .then(data => {
+                    const courts = data.courts ?? data;
+                    sel.innerHTML = '<option value="">— Chọn sân cụ thể —</option>';
+                    if (!courts.length) {
+                        sel.innerHTML += '<option disabled>Cơ sở này chưa có sân</option>';
+                        return;
+                    }
+                    courts.forEach(c => {
+                        const num  = c.courtNumber ?? c.CourtNumber;
+                        const type = c.courtType   ?? c.CourtType;
+                        sel.innerHTML += `<option value="${c.courtId ?? c.CourtId}">Sân ${num} (${type})</option>`;
+                    });
+                })
+                .catch(() => {
+                    sel.innerHTML = '<option value="">— Chọn cơ sở trước —</option>';
+                });
+        });
+
+        // ── Day selector ──
         function selectDays(vals) {
             document.querySelectorAll('.day-check').forEach(cb => {
                 cb.checked = vals.includes(parseInt(cb.value));
-                applyDayStyle(cb);
             });
+            syncDays();
         }
-
-        function applyDayStyle(cb) {
-            const lbl = cb.closest('.day-label');
-            lbl.style.background   = cb.checked ? '#e8f4fd' : '';
-            lbl.style.borderColor  = cb.checked ? '#0d6efd' : '';
-        }
-
-        document.querySelectorAll('.day-check').forEach(cb => {
-            cb.addEventListener('change', () => applyDayStyle(cb));
-        });
-
-        document.getElementById('FacilitySelect').addEventListener('change', function() {
-            const fId = this.value;
-            const sel = document.getElementById('CourtSelect');
-            sel.innerHTML = '<option value="">-- Đang tải... --</option>';
-            if (!fId) { sel.innerHTML = '<option value="">-- Chọn cơ sở trước --</option>'; return; }
-
-            fetch(`/AdminPriceSlot/GetCourtsByFacility?facilityId=${fId}`)
-                .then(r => r.json())
-                .then(data => {
-                    sel.innerHTML = '<option value="">-- Chọn sân cụ thể --</option>';
-                    data.forEach(c => {
-                        sel.innerHTML += `<option value="${c.courtId}">Sân ${c.courtNumber} (${c.courtType})</option>`;
-                    });
-                })
-                .catch(() => sel.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>');
-        });
-
-        function validateAndPrepare() {
-            const checked = document.querySelectorAll('.day-check:checked');
-            if (checked.length === 0) {
-                alert('Vui lòng chọn ít nhất một ngày áp dụng!');
-                return false;
-            }
+        function syncDays() {
             document.getElementById('appliedDaysInput').value =
-                Array.from(checked).map(c => c.value).join(',');
+                Array.from(document.querySelectorAll('.day-check:checked')).map(c => c.value).join(',');
+        }
+
+        // ── Price calc ──
+        function calcTotal() {
+            const p = parseFloat(document.getElementById('priceInput').value) || 0;
+            const s = parseFloat(document.getElementById('surInput').value)   || 0;
+            document.getElementById('totalPreview').textContent = (p+s).toLocaleString('vi-VN') + ' ₫';
+            document.getElementById('priceBreak').textContent = s > 0
+                ? `${p.toLocaleString('vi-VN')}₫ + ${s.toLocaleString('vi-VN')}₫ phụ phí` : '';
+        }
+
+        // ── Peak toggle ──
+        let peakOn = false;
+        function togglePeak() {
+            peakOn = !peakOn;
+            document.getElementById('peakSw').classList.toggle('on', peakOn);
+            document.getElementById('peakToggle').classList.toggle('active', peakOn);
+            document.getElementById('isPeakInput').value = peakOn ? 'true' : 'false';
+        }
+
+        // ── Submit validation ──
+        function prepareSubmit() {
+            const checked = document.querySelectorAll('.day-check:checked');
+            if (!checked.length) { alert('Vui lòng chọn ít nhất một ngày áp dụng!'); return false; }
+            if (!document.getElementById('CourtSelect').value) { alert('Vui lòng chọn sân!'); return false; }
+            document.getElementById('appliedDaysInput').value = Array.from(checked).map(c => c.value).join(',');
             return true;
         }
     </script>

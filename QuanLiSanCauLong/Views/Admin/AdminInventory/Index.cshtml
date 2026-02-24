@@ -1,154 +1,705 @@
 ﻿@model QuanLiSanCauLong.ViewModels.InventoryListViewModel
 
 @{
-    ViewData["Title"] = "Kho Hàng";
+    ViewData["Title"] = "Quản lý Kho Hàng";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<style>
+    :root {
+        --court-dark: #1a1a2e;
+        --court-gold: #e8c840;
+        --court-gold-h: #d4b320;
+        --court-bg: #f5f0e8;
+        --court-card: #ffffff;
+        --court-border: #e8e0d0;
+        --court-text: #2d2d2d;
+        --court-muted: #7a7060;
+    }
+
+    .page-wrapper {
+        background: var(--court-bg);
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--court-dark);
+        letter-spacing: -.5px;
+    }
+
+        .page-title span {
+            color: var(--court-gold);
+            font-style: italic;
+        }
+
+    /* Header buttons */
+    .btn-gold {
+        background: var(--court-gold);
+        color: var(--court-dark);
+        border: none;
+        font-weight: 700;
+        padding: .6rem 1.3rem;
+        border-radius: 10px;
+        font-size: .875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: .2s;
+        white-space: nowrap;
+        text-decoration: none;
+    }
+
+        .btn-gold:hover {
+            background: var(--court-gold-h);
+            color: var(--court-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(232,200,64,.4);
+        }
+
+    .btn-dark-outline {
+        background: var(--court-card);
+        color: var(--court-dark);
+        border: 1.5px solid var(--court-dark);
+        font-weight: 700;
+        padding: .6rem 1.3rem;
+        border-radius: 10px;
+        font-size: .875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: .2s;
+        white-space: nowrap;
+    }
+
+        .btn-dark-outline:hover {
+            background: var(--court-dark);
+            color: #fff;
+        }
+
+    .btn-alert {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1.5px solid #fca5a5;
+        font-weight: 700;
+        padding: .6rem 1.3rem;
+        border-radius: 10px;
+        font-size: .875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        transition: .2s;
+        white-space: nowrap;
+    }
+
+        .btn-alert:hover {
+            background: #dc2626;
+            color: #fff;
+        }
+
+    /* Stats */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: var(--court-card);
+        border: 1px solid var(--court-border);
+        border-radius: 12px;
+        padding: 1.25rem 1.5rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--court-dark);
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: .7rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--court-muted);
+        margin-top: 4px;
+    }
+
+    .stat-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 4px;
+    }
+
+    /* Filter bar */
+    .filter-bar {
+        background: var(--court-card);
+        border: 1px solid var(--court-border);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        gap: .75rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .search-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 220px;
+    }
+
+        .search-wrap i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--court-muted);
+            font-size: .875rem;
+        }
+
+        .search-wrap input {
+            padding-left: 36px;
+            border: 1.5px solid var(--court-border);
+            border-radius: 8px;
+            background: var(--court-bg);
+            color: var(--court-text);
+            height: 40px;
+            width: 100%;
+            font-size: .875rem;
+        }
+
+            .search-wrap input:focus {
+                outline: none;
+                border-color: var(--court-gold);
+                background: #fff;
+                box-shadow: 0 0 0 3px rgba(232,200,64,.15);
+            }
+
+    .f-select {
+        border: 1.5px solid var(--court-border);
+        border-radius: 8px;
+        background: var(--court-bg);
+        color: var(--court-text);
+        height: 40px;
+        padding: 0 .75rem;
+        font-size: .875rem;
+        cursor: pointer;
+    }
+
+        .f-select:focus {
+            outline: none;
+            border-color: var(--court-gold);
+            box-shadow: 0 0 0 3px rgba(232,200,64,.15);
+        }
+
+    .btn-reset {
+        border: 1.5px solid var(--court-border);
+        border-radius: 8px;
+        background: var(--court-card);
+        color: var(--court-muted);
+        height: 40px;
+        padding: 0 1rem;
+        font-size: .8rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: .2s;
+    }
+
+        .btn-reset:hover {
+            background: var(--court-dark);
+            color: #fff;
+            border-color: var(--court-dark);
+        }
+
+    /* Inventory cards */
+    .inv-card {
+        background: var(--court-card);
+        border: 1px solid var(--court-border);
+        border-radius: 14px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1rem;
+        transition: all .2s;
+        display: flex;
+        gap: 1.25rem;
+        align-items: center;
+    }
+
+        .inv-card:hover {
+            border-color: var(--court-gold);
+            box-shadow: 0 6px 20px rgba(26,26,46,.1);
+            transform: translateY(-2px);
+        }
+
+        .inv-card.low-border {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .inv-card.out-border {
+            border-left: 4px solid #dc2626;
+        }
+
+    /* Thumb */
+    .inv-thumb {
+        width: 56px;
+        height: 56px;
+        border-radius: 10px;
+        overflow: hidden;
+        background: var(--court-bg);
+        border: 1px solid var(--court-border);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--court-muted);
+    }
+
+        .inv-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    /* Product name */
+    .inv-name {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--court-dark);
+        margin-bottom: 2px;
+    }
+
+    .inv-meta {
+        font-size: .75rem;
+        color: var(--court-muted);
+        display: flex;
+        gap: .75rem;
+        flex-wrap: wrap;
+    }
+
+        .inv-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+    /* Tags */
+    .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: .68rem;
+        font-weight: 700;
+    }
+
+    .tag-low {
+        background: #fffbeb;
+        color: #b45309;
+        border: 1px solid #fcd34d;
+    }
+
+    .tag-out {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fca5a5;
+    }
+
+    .tag-ok {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
+
+    .tag-expiring {
+        background: #fff7ed;
+        color: #c2410c;
+        border: 1px solid #fdba74;
+    }
+
+    .tag-expired {
+        background: #fef2f2;
+        color: #9f1239;
+        border: 1px solid #fda4af;
+    }
+
+    .tag-batch {
+        background: var(--court-bg);
+        color: var(--court-muted);
+        border: 1px solid var(--court-border);
+    }
+
+    /* Stock display */
+    .stock-block {
+        text-align: center;
+        min-width: 80px;
+    }
+
+    .stock-num {
+        font-size: 1.5rem;
+        font-weight: 800;
+        line-height: 1;
+        color: var(--court-dark);
+    }
+
+        .stock-num.low {
+            color: #b45309;
+        }
+
+        .stock-num.out {
+            color: #dc2626;
+        }
+
+    .stock-lbl {
+        font-size: .65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--court-muted);
+        margin-top: 2px;
+    }
+
+    /* Progress bar */
+    .inv-bar {
+        height: 5px;
+        border-radius: 4px;
+        background: #e5e7eb;
+        margin-top: 6px;
+        overflow: hidden;
+    }
+
+    .inv-bar-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width .4s;
+    }
+
+    /* Action buttons */
+    .act-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: .35rem .8rem;
+        border-radius: 8px;
+        font-size: .75rem;
+        font-weight: 700;
+        border: 1.5px solid;
+        cursor: pointer;
+        transition: .15s;
+        background: transparent;
+    }
+
+    .act-in {
+        border-color: #22c55e;
+        color: #166534;
+    }
+
+        .act-in:hover {
+            background: #22c55e;
+            color: #fff;
+            border-color: #22c55e;
+        }
+
+    .act-out {
+        border-color: #f59e0b;
+        color: #b45309;
+    }
+
+        .act-out:hover {
+            background: #f59e0b;
+            color: #fff;
+            border-color: #f59e0b;
+        }
+
+    .act-adj {
+        border-color: var(--court-border);
+        color: var(--court-muted);
+    }
+
+        .act-adj:hover {
+            background: var(--court-dark);
+            color: #fff;
+            border-color: var(--court-dark);
+        }
+
+    .act-hist {
+        border-color: var(--court-border);
+        color: var(--court-muted);
+    }
+
+        .act-hist:hover {
+            background: var(--court-dark);
+            color: #fff;
+            border-color: var(--court-dark);
+        }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        color: var(--court-muted);
+    }
+
+        .empty-state i {
+            font-size: 4rem;
+            opacity: .2;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+    /* Modal */
+    .modal-content {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+
+    @@media(max-width:768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+
+        .inv-card {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+
+<div class="page-wrapper">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4" style="flex-wrap:wrap;gap:1rem;">
         <div>
-            <h2 class="fw-bold mb-1">Kho Hàng</h2>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0 small">
-                    <li class="breadcrumb-item text-muted">Sản Phẩm</li>
-                    <li class="breadcrumb-item text-primary fw-bold">Kho Hàng</li>
-                </ol>
-            </nav>
+            <h1 class="page-title mb-1">Quản Lý <span>Kho Hàng</span></h1>
+            <p class="mb-0" style="color:var(--court-muted);font-size:.9rem;">Theo dõi tồn kho, nhập xuất và biến động hàng hoá</p>
         </div>
-        <div class="d-flex gap-2">
-            <button type="button" class="btn btn-dark btn-sm rounded-3 px-3 shadow-sm" onclick="openInventoryModal('@Url.Action("StockIn")')">
-                <i class="bi bi-plus-lg me-2"></i>Nhập Kho
+        <div class="d-flex gap-2 flex-wrap">
+            <a asp-action="LowStock" class="btn-alert">
+                <i class="bi bi-exclamation-triangle-fill"></i> Cảnh báo (@Model.LowStockCount)
+            </a>
+            <button class="btn-dark-outline" onclick="openInventoryModal('@Url.Action("StockOut")')">
+                <i class="bi bi-box-arrow-up"></i> Xuất Kho
             </button>
-            <button type="button" class="btn btn-outline-dark btn-sm rounded-3 px-3 shadow-sm" onclick="openInventoryModal('@Url.Action("StockOut")')">
-                <i class="bi bi-box-arrow-up me-2"></i>Xuất Kho
+            <button class="btn-gold" onclick="openInventoryModal('@Url.Action("StockIn")')">
+                <i class="bi bi-box-arrow-in-down"></i> Nhập Kho
             </button>
         </div>
     </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-soft-primary p-3 rounded-3 text-primary"><i class="bi bi-tag fs-4"></i></div>
-                    <div>
-                        <h4 class="fw-bold mb-0">@(Model.Items?.Select(i => i.CategoryName).Distinct().Count() ?? 0)</h4>
-                        <small class="text-muted">Danh Mục</small>
-                    </div>
-                </div>
-            </div>
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">@(Model.Items?.Select(i => i.CategoryName).Distinct().Count() ?? 0)</div>
+            <div class="stat-label"><span class="stat-dot" style="background:#1a1a2e;"></span>Danh Mục</div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-soft-success p-3 rounded-3 text-success"><i class="bi bi-box-seam fs-4"></i></div>
-                    <div>
-                        <h4 class="fw-bold mb-0">@(Model.Items?.Count ?? 0)</h4>
-                        <small class="text-muted">Sản Phẩm</small>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color:#166534;">@(Model.Items?.Count ?? 0)</div>
+            <div class="stat-label"><span class="stat-dot" style="background:#22c55e;"></span>Sản Phẩm</div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-soft-info p-3 rounded-3 text-info"><i class="bi bi-warehouse fs-4"></i></div>
-                    <div>
-                        <h4 class="fw-bold mb-0">@(Model.Items?.Sum(i => i.Quantity) ?? 0)</h4>
-                        <small class="text-muted">Tồn Kho</small>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color:@(Model.ExpiringCount > 0 ? "#b45309" : "var(--court-dark)");">@Model.ExpiringCount</div>
+            <div class="stat-label"><span class="stat-dot" style="background:#f59e0b;"></span>Sắp Hết HSD</div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-soft-danger p-3 rounded-3 text-danger"><i class="bi bi-exclamation-triangle fs-4"></i></div>
-                    <div>
-                        <h4 class="fw-bold mb-0">@Model.LowStockCount</h4>
-                        <small class="text-muted">Cảnh Báo</small>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color:@(Model.LowStockCount > 0 ? "#dc2626" : "var(--court-dark)");">@Model.LowStockCount</div>
+            <div class="stat-label"><span class="stat-dot" style="background:#ef4444;"></span>Cảnh Báo Kho</div>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="card-body p-4">
-            <div class="mb-4">
-                <div class="input-group bg-light rounded-3 p-1" style="max-width: 400px;">
-                    <span class="input-group-text border-0 bg-transparent text-muted"><i class="bi bi-search"></i></span>
-                    <input type="text" id="inventorySearch" class="form-control border-0 bg-transparent" placeholder="Tìm kiếm trong kho...">
-                </div>
-            </div>
-
-            <div class="inventory-container">
-                @if (Model.Items != null && Model.Items.Any())
+    <!-- Filter bar -->
+    <div class="filter-bar">
+        <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" id="inventorySearch" placeholder="Tìm tên, SKU, mã vạch, số lô..." />
+        </div>
+        <select id="filterCategory" class="f-select">
+            <option value="">Tất cả danh mục</option>
+            @if (ViewBag.Categories != null)
+            {
+                foreach (var cat in ViewBag.Categories)
                 {
-                    @foreach (var item in Model.Items)
-                    {
-                        <div class="inventory-item-card border rounded-4 p-4 mb-3 transition-all hover-shadow">
-                            <div class="row align-items-center g-3">
-                                <div class="col-lg-4">
-                                    <h5 class="fw-bold mb-1">@item.ProductName</h5>
-                                    <div class="d-flex align-items-center gap-2 mb-2">
-                                        <span class="text-muted small">SKU: @item.ProductCode • @item.FacilityName</span>
-                                    </div>
-                                    @if (item.IsLowStock)
-                                    {
-                                        <span class="badge bg-danger-subtle text-danger rounded-pill px-3">Cảnh báo tồn thấp</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-success-subtle text-success rounded-pill px-3">Tốt</span>
-                                    }
-                                </div>
-                                <div class="col-lg-6">
-                                    <div class="row g-2 text-center">
-                                        <div class="col-3">
-                                            <div class="bg-light p-2 rounded-3">
-                                                <h5 class="fw-bold mb-0 @(item.IsLowStock ? "text-danger" : "")">@item.Quantity</h5>
-                                                <small class="text-muted small-8">Tổng Kho</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-3">
-                                            <div class="bg-yellow-subtle p-2 rounded-3">
-                                                <h5 class="fw-bold mb-0 text-warning">0</h5>
-                                                <small class="text-muted small-8">Đã Đặt</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-3">
-                                            <div class="bg-info-subtle p-2 rounded-3 text-info">
-                                                <h5 class="fw-bold mb-0">@(item.MaxQuantity - item.Quantity < 0 ? 0 : item.MaxQuantity - item.Quantity)</h5>
-                                                <small class="text-muted small-8">Có Sẵn</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-3">
-                                            <div class="bg-danger-subtle p-2 rounded-3 text-danger">
-                                                <h5 class="fw-bold mb-0">@(item.Quantity<item.MinQuantity? item.MinQuantity - item.Quantity : 0)</h5>
-                                                <small class="text-muted small-8">Mức Nhập</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-2 text-end">
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <button onclick="openInventoryModal('@Url.Action("Adjustment", new { inventoryId = item.InventoryId })')" class="btn btn-light btn-sm rounded-circle"><i class="bi bi-pencil"></i></button>
-                                        <button onclick="openInventoryModal('@Url.Action("History", new { productId = item.ProductId })')" class="btn btn-light btn-sm rounded-circle"><i class="bi bi-clock-history"></i></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    }
+                    <option value="@cat.CategoryName">@cat.CategoryName</option>
                 }
+            }
+        </select>
+        <select id="filterStock" class="f-select">
+            <option value="">Tồn kho</option>
+            <option value="low">⚠️ Tồn thấp</option>
+            <option value="out">❌ Hết hàng</option>
+            <option value="ok">✅ Đủ hàng</option>
+        </select>
+        <select id="filterExpiry" class="f-select">
+            <option value="">Tình trạng HSD</option>
+            <option value="expired">Đã hết hạn</option>
+            <option value="expiring">Sắp hết (30 ngày)</option>
+            <option value="ok">Còn hạn</option>
+            <option value="none">Không có HSD</option>
+        </select>
+        <button id="btnResetFilter" class="btn-reset">
+            <i class="bi bi-arrow-counterclockwise"></i> Đặt lại
+        </button>
+    </div>
+
+    <!-- Inventory List -->
+    <div id="inventoryContainer">
+        @if (Model.Items != null && Model.Items.Any())
+        {
+            foreach (var item in Model.Items)
+            {
+                var isLow = item.IsLowStock;
+                var stockClass = item.Quantity == 0 ? "out" : isLow ? "low" : "ok";
+                var expiryStatus = "none";
+                if (item.ExpiryDate.HasValue)
+                {
+                    expiryStatus = item.ExpiryDate.Value < DateTime.Now ? "expired"
+                    : item.ExpiryDate.Value <= DateTime.Now.AddDays(30) ? "expiring"
+                    : "ok";
+                }
+                var cardBorder = item.Quantity == 0 ? "out-border" : isLow ? "low-border" : "";
+                var pct = item.MaxQuantity > 0 ? Math.Min(100, (int)((double)item.Quantity / item.MaxQuantity * 100)) : 0;
+                var barColor = pct < 20 ? "#ef4444" : pct < 50 ? "#f59e0b" : "#22c55e";
+
+                <div class="inv-card @cardBorder"
+                     data-name="@item.ProductName?.ToLower()"
+                     data-sku="@item.SKU?.ToLower()"
+                     data-barcode="@item.Barcode?.ToLower()"
+                     data-batch="@item.BatchNumber?.ToLower()"
+                     data-category="@item.CategoryName"
+                     data-stock="@stockClass"
+                     data-expiry="@expiryStatus">
+
+                    <!-- Thumb -->
+                    <div class="inv-thumb">
+                        @if (!string.IsNullOrEmpty(item.ImageUrl))
+                        {
+                            <img src="@item.ImageUrl" alt="@item.ProductName" onerror="this.src='/images/no-image.png'" />
+                        }
+                        else
+                        {
+
+                            <i class="bi bi-box-seam"></i>
+                        }
+                    </div>
+
+                    <!-- Info -->
+                    <div style="flex:1;min-width:0;">
+                        <div class="inv-name">@item.ProductName</div>
+                        <div class="inv-meta">
+                            @if (!string.IsNullOrEmpty(item.SKU))
+                            {
+                                <span><i class="bi bi-upc"></i>@item.SKU</span>
+                            }
+                            @if (!string.IsNullOrEmpty(item.CategoryName))
+                            {
+                                <span><i class="bi bi-tag"></i>@item.CategoryName</span>
+                            }
+                            @if (!string.IsNullOrEmpty(item.BatchNumber))
+                            {
+                                <span><i class="bi bi-layers"></i>Lô: @item.BatchNumber</span>
+                            }
+                            @if (!string.IsNullOrEmpty(item.SupplierName))
+                            {
+                                <span><i class="bi bi-building"></i>@item.SupplierName</span>
+                            }
+                        </div>
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            @if (item.Quantity == 0)
+                            {
+                                <span class="tag tag-out"><i class="bi bi-x-circle"></i>Hết hàng</span>
+                            }
+                            else if (isLow)
+                            {
+
+                                <span class="tag tag-low"><i class="bi bi-exclamation-triangle"></i>Tồn thấp</span>
+                            }
+                            else
+                            {
+
+                                <span class="tag tag-ok"><i class="bi bi-check-circle"></i>Đủ hàng</span>
+                            }
+                            @if (expiryStatus == "expired")
+                            {
+                                <span class="tag tag-expired"><i class="bi bi-calendar-x"></i>Hết hạn</span>
+                            }
+                            else if (expiryStatus == "expiring")
+                            {
+
+                                <span class="tag tag-expiring"><i class="bi bi-clock"></i>Sắp HSD</span>
+                            }
+                            @if (item.ExpiryDate.HasValue)
+                            {
+                                <span class="tag tag-batch">HSD: @item.ExpiryDate.Value.ToString("dd/MM/yyyy")</span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Stock number -->
+                    <div class="stock-block">
+                        <div class="stock-num @(item.Quantity == 0 ? "out" : isLow ? "low" : "")">@item.Quantity</div>
+                        <div class="stock-lbl">@item.Unit</div>
+                        @if (item.MinStockLevel > 0)
+                        {
+                            <div style="font-size:.65rem;color:var(--court-muted);margin-top:2px;">min: @item.MinStockLevel</div>
+                        }
+                        @if (item.MaxQuantity > 0)
+                        {
+                            <div class="inv-bar" style="width:80px;margin:4px auto 0;">
+                                <div class="inv-bar-fill" style="width:@pct%;background:@barColor;"></div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex gap-2 flex-wrap" style="justify-content:flex-end;min-width:200px;">
+                        <button class="act-btn act-in"
+                                onclick="openInventoryModal('@Url.Action("StockIn")?productId=@item.ProductId')">
+                            <i class="bi bi-box-arrow-in-down"></i>Nhập
+                        </button>
+                        <button class="act-btn act-out"
+                                onclick="openInventoryModal('@Url.Action("StockOut")?productId=@item.ProductId')">
+                            <i class="bi bi-box-arrow-up"></i>Xuất
+                        </button>
+                        <button class="act-btn act-adj" title="Điều chỉnh"
+                                onclick="openInventoryModal('@Url.Action("Adjustment", new { inventoryId = item.InventoryId })')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="act-btn act-hist" title="Lịch sử"
+                                onclick="openInventoryModal('@Url.Action("History", new { productId = item.ProductId })')">
+                            <i class="bi bi-clock-history"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <h5 style="color:var(--court-text);">Kho đang trống</h5>
+                <p>Nhập sản phẩm vào kho để bắt đầu quản lý.</p>
             </div>
-        </div>
+        }
     </div>
 </div>
 
+<!-- Modal -->
 <div class="modal fade" id="inventoryModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4" id="modalContainer">
+        <div class="modal-content" id="modalContainer">
+            <div class="p-5 text-center"><div class="spinner-border" style="color:var(--court-gold);"></div></div>
         </div>
     </div>
 </div>
@@ -156,68 +707,42 @@
 @section Scripts {
     <script>
         function openInventoryModal(url) {
-            // Kiểm tra xem Modal có tồn tại không
-            const modalElement = document.getElementById('inventoryModal');
-            if (!modalElement) {
-                console.error("Không tìm thấy ID inventoryModal trong HTML");
-                return;
-            }
-
-            const modal = new bootstrap.Modal(modalElement);
-            $('#modalContainer').html('<div class="p-5 text-center"><div class="spinner-border text-primary"></div></div>');
+            const el = document.getElementById('inventoryModal');
+            if (!el) return;
+            const modal = new bootstrap.Modal(el);
+            document.getElementById('modalContainer').innerHTML =
+                '<div class="p-5 text-center"><div class="spinner-border" style="color:#e8c840;"></div></div>';
             modal.show();
-
             $.get(url)
-                .done(function(data) {
-                    $('#modalContainer').html(data);
-                })
-                .fail(function() {
-                    $('#modalContainer').html('<div class="p-4 text-center text-danger">Lỗi tải dữ liệu. Vui lòng thử lại.</div>');
-                });
+                .done(data => $('#modalContainer').html(data))
+                .fail(() => $('#modalContainer').html('<div class="p-4 text-center text-danger">Lỗi tải dữ liệu.</div>'));
         }
+
+        function applyFilters() {
+            const q      = document.getElementById('inventorySearch').value.toLowerCase();
+            const cat    = document.getElementById('filterCategory').value;
+            const stock  = document.getElementById('filterStock').value;
+            const expiry = document.getElementById('filterExpiry').value;
+            document.querySelectorAll('.inv-card').forEach(card => {
+                const matchQ     = !q || card.dataset.name?.includes(q) || card.dataset.sku?.includes(q)
+                                     || card.dataset.barcode?.includes(q) || card.dataset.batch?.includes(q);
+                const matchCat   = !cat    || card.dataset.category === cat;
+                const matchStock = !stock  || card.dataset.stock === stock;
+                const matchExp   = !expiry || card.dataset.expiry === expiry;
+                card.style.display = (matchQ && matchCat && matchStock && matchExp) ? '' : 'none';
+            });
+        }
+
+        ['inventorySearch','filterCategory','filterStock','filterExpiry'].forEach(id => {
+            document.getElementById(id)?.addEventListener(id === 'inventorySearch' ? 'input' : 'change', applyFilters);
+        });
+
+        document.getElementById('btnResetFilter').addEventListener('click', () => {
+            ['inventorySearch','filterCategory','filterStock','filterExpiry'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            applyFilters();
+        });
     </script>
 }
-
-<style>
-    .bg-soft-primary {
-        background-color: #f0f3ff;
-        color: #0d6efd;
-    }
-
-    .bg-soft-success {
-        background-color: #f0fff4;
-        color: #198754;
-    }
-
-    .bg-soft-info {
-        background-color: #f0faff;
-        color: #0dcaf0;
-    }
-
-    .bg-soft-danger {
-        background-color: #fff5f5;
-        color: #dc3545;
-    }
-
-    .bg-yellow-subtle {
-        background-color: #fffdf0;
-    }
-
-    .small-8 {
-        font-size: 0.75rem;
-    }
-
-    .inventory-item-card {
-        transition: all 0.2s;
-        border: 1px solid #eee !important;
-    }
-
-        .inventory-item-card:hover {
-            border-color: #0d6efd !important;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        }
-
-    .hover-shadow:hover {
-        transform: translateY(-2px);
-    }
-</style>

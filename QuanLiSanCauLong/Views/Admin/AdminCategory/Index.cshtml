@@ -1,135 +1,612 @@
 ﻿@model IEnumerable<QuanLiSanCauLong.Models.ProductCategory>
-
 @{
-    ViewData["Title"] = "Quản lý danh mục";
+    ViewData["Title"] = "Quản lý Danh Mục";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="container-fluid py-5 min-vh-100 detail-page-bg">
-    <div class="d-flex justify-content-between align-items-end mb-5">
+@functions {
+    string TypeIcon(string t) => t switch
+    {
+        "Food" => "bi-egg-fried",
+        "Beverage" => "bi-cup-straw",
+        "Equipment" => "bi-gear-wide-connected",
+        "Clothing" => "bi-bag-heart",
+        "Accessory" => "bi-watch",
+        _ => "bi-folder2-open"
+    };
+    string TypeLabel(string t) => t switch
+    {
+        "Food" => "🍱 Đồ ăn",
+        "Beverage" => "🥤 Thức uống",
+        "Equipment" => "🏸 Dụng cụ",
+        "Clothing" => "👕 Quần áo",
+        "Accessory" => "🧢 Phụ kiện",
+        _ => "📦 Khác"
+    };
+    string TypeColor(string t) => t switch
+    {
+        "Food" => "#b45309",
+        "Beverage" => "#0369a1",
+        "Equipment" => "#166534",
+        "Clothing" => "#7e22ce",
+        "Accessory" => "#be185d",
+        _ => "#4b5563"
+    };
+    string TypeBg(string t) => t switch
+    {
+        "Food" => "#fffbeb",
+        "Beverage" => "#f0f9ff",
+        "Equipment" => "#f0fdf4",
+        "Clothing" => "#faf5ff",
+        "Accessory" => "#fdf2f8",
+        _ => "#f9fafb"
+    };
+}
+
+<style>
+    :root {
+        --court-dark: #1a1a2e;
+        --court-gold: #e8c840;
+        --court-gold-hover: #d4b320;
+        --court-bg: #f5f0e8;
+        --court-card: #ffffff;
+        --court-border: #e8e0d0;
+        --court-text: #2d2d2d;
+        --court-muted: #7a7060;
+    }
+
+    .page-wrapper {
+        background: var(--court-bg);
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    /* Header */
+    .page-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--court-dark);
+        letter-spacing: -.5px;
+    }
+
+        .page-title span {
+            color: var(--court-gold);
+            font-style: italic;
+        }
+
+    .btn-add-new {
+        background: var(--court-gold);
+        color: var(--court-dark);
+        border: none;
+        font-weight: 700;
+        padding: .65rem 1.5rem;
+        border-radius: 10px;
+        font-size: .9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        transition: all .2s;
+        white-space: nowrap;
+    }
+
+        .btn-add-new:hover {
+            background: var(--court-gold-hover);
+            color: var(--court-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(232,200,64,.4);
+        }
+
+    /* Stats */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: var(--court-card);
+        border: 1px solid var(--court-border);
+        border-radius: 12px;
+        padding: 1.25rem 1.5rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--court-dark);
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: .7rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--court-muted);
+        margin-top: 4px;
+    }
+
+    .stat-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 4px;
+    }
+
+    /* Toolbar */
+    .toolbar {
+        background: var(--court-card);
+        border: 1px solid var(--court-border);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        gap: .75rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .search-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 200px;
+        max-width: 340px;
+    }
+
+        .search-wrap i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--court-muted);
+            font-size: .9rem;
+        }
+
+        .search-wrap input {
+            padding-left: 36px;
+            border: 1.5px solid var(--court-border);
+            border-radius: 8px;
+            background: var(--court-bg);
+            color: var(--court-text);
+            height: 40px;
+            width: 100%;
+            font-size: .875rem;
+        }
+
+            .search-wrap input:focus {
+                outline: none;
+                border-color: var(--court-gold);
+                background: #fff;
+                box-shadow: 0 0 0 3px rgba(232,200,64,.15);
+            }
+
+    .filter-sel {
+        border: 1.5px solid var(--court-border);
+        border-radius: 8px;
+        background: var(--court-bg);
+        color: var(--court-text);
+        height: 40px;
+        padding: 0 .75rem;
+        font-size: .875rem;
+        cursor: pointer;
+    }
+
+        .filter-sel:focus {
+            outline: none;
+            border-color: var(--court-gold);
+            box-shadow: 0 0 0 3px rgba(232,200,64,.15);
+        }
+
+    .filter-count {
+        font-size: .8rem;
+        color: var(--court-muted);
+        margin-left: .25rem;
+        white-space: nowrap;
+    }
+
+    /* Category Grid */
+    .cat-grid {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: 1.2rem;
+    }
+
+    .cat-card {
+        background: var(--court-card);
+        border: 1px solid var(--court-border);
+        border-radius: 14px;
+        overflow: hidden;
+        transition: all .25s;
+        display: flex;
+        flex-direction: column;
+    }
+
+        .cat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(26,26,46,.12);
+            border-color: var(--court-gold);
+        }
+
+    /* Card visual area */
+    .cat-visual {
+        height: 110px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .cat-visual .big-ico {
+            font-size: 5.5rem;
+            opacity: .12;
+            position: absolute;
+        }
+
+        .cat-visual .center-ico {
+            font-size: 2.8rem;
+            z-index: 1;
+            filter: drop-shadow(0 3px 8px rgba(0,0,0,.15));
+        }
+
+        .cat-visual img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    /* Card body */
+    .cat-body {
+        padding: 1rem 1.1rem;
+        flex: 1;
+    }
+
+    .cat-name {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--court-dark);
+        margin-bottom: .4rem;
+    }
+
+    .type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: .7rem;
+        font-weight: 700;
+        margin-bottom: .6rem;
+        border: 1px solid rgba(0,0,0,.08);
+    }
+
+    /* Rule chips */
+    .rule-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .35rem;
+        margin-bottom: .75rem;
+    }
+
+    .rule-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: .68rem;
+        font-weight: 700;
+    }
+
+    .rc-hsd {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fca5a5;
+    }
+
+    .rc-fifo {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #93c5fd;
+    }
+
+    .rc-lot {
+        background: #f9fafb;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+
+    .rc-var {
+        background: #fffbeb;
+        color: #b45309;
+        border: 1px solid #fcd34d;
+    }
+
+    /* Mini stats */
+    .cat-stats {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .cs-item {
+        text-align: center;
+    }
+
+    .cs-val {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--court-dark);
+        line-height: 1;
+    }
+
+    .cs-lbl {
+        font-size: .65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--court-muted);
+        margin-top: 2px;
+    }
+
+    /* Card footer */
+    .cat-foot {
+        display: flex;
+        border-top: 1px solid var(--court-border);
+        background: #faf8f4;
+    }
+
+    .cf-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: .55rem 0;
+        font-size: .75rem;
+        font-weight: 700;
+        color: var(--court-muted);
+        text-decoration: none;
+        cursor: pointer;
+        background: none;
+        border: none;
+        border-right: 1px solid var(--court-border);
+        transition: all .18s;
+    }
+
+        .cf-btn:last-child {
+            border-right: none;
+        }
+
+        .cf-btn:hover {
+            background: var(--court-dark);
+            color: #fff;
+        }
+
+        .cf-btn.danger:hover {
+            background: #dc2626;
+            color: #fff;
+        }
+
+    /* Empty */
+    .empty-wrap {
+        text-align: center;
+        padding: 5rem 2rem;
+        color: var(--court-muted);
+        grid-column: 1/-1;
+    }
+
+        .empty-wrap i {
+            font-size: 4rem;
+            opacity: .2;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+    /* Toast */
+    .toast-wrap {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+        z-index: 9999;
+    }
+
+    .toast-msg {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .7rem 1.1rem;
+        border-radius: 10px;
+        font-size: .85rem;
+        font-weight: 600;
+        box-shadow: 0 4px 16px rgba(0,0,0,.12);
+        animation: slideIn .3s ease;
+    }
+
+    .toast-ok {
+        background: var(--court-dark);
+        color: #fff;
+    }
+
+    .toast-err {
+        background: #dc2626;
+        color: #fff;
+    }
+
+    @@keyframes slideIn {
+        from {
+            transform: translateX(100px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @@media(max-width:900px) {
+        .stats-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+
+        .cat-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+    }
+
+    @@media(max-width:600px) {
+        .cat-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="page-wrapper">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
-            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-2 fw-bold text-uppercase letter-spacing-1">Hệ thống quản trị</span>
-            <h2 class="fw-bold text-dark mb-1">Quản Lý Danh Mục</h2>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index" class="text-decoration-none text-muted">Dashboard</a></li>
-                    <li class="breadcrumb-item active text-primary fw-semibold">Danh mục sản phẩm</li>
-                </ol>
-            </nav>
+            <h1 class="page-title mb-1">Quản Lý <span>Danh Mục</span></h1>
+            <p class="mb-0" style="color:var(--court-muted);font-size:.9rem;">Phân loại và tổ chức sản phẩm · <strong>@Model.Count()</strong> danh mục</p>
         </div>
-        <a asp-action="Create" class="btn btn-primary shadow-lg px-4 py-2 rounded-pill fw-bold transition-all hover-lift">
-            <i class="bi bi-plus-lg me-2"></i>Thêm danh mục mới
+        <a asp-action="Create" class="btn-add-new">
+            <i class="bi bi-plus-circle-fill"></i> Thêm Danh Mục
         </a>
     </div>
 
-    <div class="row g-4 mb-5">
-        <div class="col-12 col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 glass-card-stat p-2">
-                <div class="card-body d-flex align-items-center">
-                    <div class="stats-icon bg-gradient-primary text-white rounded-4 shadow-sm me-3">
-                        <i class="bi bi-collection-fill"></i>
-                    </div>
-                    <div>
-                        <p class="text-muted small fw-bold mb-0">TỔNG LOẠI</p>
-                        <h3 class="fw-bold mb-0">@Model.Count()</h3>
-                    </div>
-                </div>
-            </div>
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">@Model.Count()</div>
+            <div class="stat-label"><span class="stat-dot" style="background:#1a1a2e;"></span>Tổng Danh Mục</div>
         </div>
-        <div class="col-12 col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 glass-card-stat p-2">
-                <div class="card-body d-flex align-items-center">
-                    <div class="stats-icon bg-gradient-success text-white rounded-4 shadow-sm me-3">
-                        <i class="bi bi-box-seam-fill"></i>
-                    </div>
-                    <div>
-                        <p class="text-muted small fw-bold mb-0">SẢN PHẨM</p>
-                        <h3 class="fw-bold mb-0">@Model.Sum(c => c.Products?.Count ?? 0)</h3>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color:#166534;">@Model.Sum(c => c.Products?.Count ?? 0)</div>
+            <div class="stat-label"><span class="stat-dot" style="background:#22c55e;"></span>Tổng Sản Phẩm</div>
         </div>
-        <div class="col-12 col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 glass-card-stat p-2">
-                <div class="card-body d-flex align-items-center">
-                    <div class="stats-icon bg-gradient-warning text-white rounded-4 shadow-sm me-3">
-                        <i class="bi bi-egg-fried"></i>
-                    </div>
-                    <div>
-                        <p class="text-muted small fw-bold mb-0">ẨM THỰC</p>
-                        <h3 class="fw-bold mb-0">@Model.Count(c => c.CategoryType == "Food" || c.CategoryType == "Beverage")</h3>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color:#b45309;">@Model.Count(c => c.CategoryType == "Food" || c.CategoryType == "Beverage")</div>
+            <div class="stat-label"><span class="stat-dot" style="background:#f59e0b;"></span>Ẩm Thực</div>
         </div>
-        <div class="col-12 col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 glass-card-stat p-2">
-                <div class="card-body d-flex align-items-center">
-                    <div class="stats-icon bg-gradient-info text-white rounded-4 shadow-sm me-3">
-                        <i class="bi bi-shield-check"></i>
-                    </div>
-                    <div>
-                        <p class="text-muted small fw-bold mb-0">HỆ THỐNG</p>
-                        <h5 class="fw-bold mb-0 text-success">Online</h5>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color:#1d4ed8;">@Model.Count(c => c.CategoryType != "Food" && c.CategoryType != "Beverage")</div>
+            <div class="stat-label"><span class="stat-dot" style="background:#60a5fa;"></span>Hàng Hoá</div>
         </div>
     </div>
 
-    <div class="row g-4">
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchInput" placeholder="Tìm tên danh mục..." oninput="applyFilter()" />
+        </div>
+        <select id="filterType" class="filter-sel" onchange="applyFilter()">
+            <option value="">Tất cả loại</option>
+            <option value="Food">🍱 Đồ ăn</option>
+            <option value="Beverage">🥤 Thức uống</option>
+            <option value="Clothing">👕 Quần áo</option>
+            <option value="Equipment">🏸 Dụng cụ</option>
+            <option value="Accessory">🧢 Phụ kiện</option>
+            <option value="Other">📦 Khác</option>
+        </select>
+        <span class="filter-count" id="filterCount">@Model.Count() danh mục</span>
+    </div>
+
+    <!-- Grid -->
+    <div class="cat-grid" id="categoryGrid">
         @if (Model != null && Model.Any())
         {
-            foreach (var category in Model)
+            foreach (var cat in Model)
             {
-                <div class="col-md-6 col-lg-4 col-xl-3">
-                    <div class="card h-100 border-0 shadow-sm rounded-5 category-card overflow-hidden">
-                        <div class="card-body p-4 d-flex flex-column">
-                            <div class="d-flex justify-content-between align-items-start mb-4">
-                                <div class="cat-icon-box @GetBoxClass(category.CategoryType) overflow-hidden p-0">
-                                    @if (!string.IsNullOrEmpty(category.ImageUrl))
-                                    {
-                                        <img src="@category.ImageUrl" class="w-100 h-100 object-fit-cover shadow-sm"
-                                             onerror="this.onerror=null; this.src='/images/no-image.png';" />
-                                    }
-                                    else
-                                    {
-                                        <i class="bi @(GetIconByCategory(category.CategoryType)) fs-4"></i>
-                                    }
+                var productCount = cat.Products?.Count ?? 0;
+                var activeCount = cat.Products?.Count(p => p.Status == "Active") ?? 0;
+                var lowCount = cat.Products?.Count(p => p.StockQuantity <= p.MinStockLevel) ?? 0;
+                var iconClass = TypeIcon(cat.CategoryType);
+                var typeColor = TypeColor(cat.CategoryType);
+                var typeBg = TypeBg(cat.CategoryType);
+                var visualBg = $"linear-gradient(135deg, {typeBg}, {typeBg}dd)";
+
+                <div class="category-col" data-name="@cat.CategoryName?.ToLower()" data-type="@cat.CategoryType">
+                    <div class="cat-card">
+
+                        <!-- Visual -->
+                        <div class="cat-visual" style="background:@visualBg;">
+                            @if (!string.IsNullOrEmpty(cat.ImageUrl))
+                            {
+                                <img src="@cat.ImageUrl" alt="@cat.CategoryName" onerror="this.src='/images/no-image.png'" />
+                            }
+                            else
+                            {
+                                <i class="bi @iconClass big-ico" style="color:@typeColor;"></i>
+                                <i class="bi @iconClass center-ico" style="color:@typeColor;"></i>
+                            }
+                        </div>
+
+                        <!-- Body -->
+                        <div class="cat-body">
+                            <div class="cat-name">@cat.CategoryName</div>
+
+                            <span class="type-badge" style="background:@typeBg;color:@typeColor;">
+                                @TypeLabel(cat.CategoryType)
+                            </span>
+
+                            <div class="rule-chips">
+                                @if (cat.RequiresExpiry)
+                                {
+                                    <span class="rule-chip rc-hsd"><i class="bi bi-calendar-x"></i>HSD</span>
+                                }
+                                @if (cat.UseFIFO)
+                                {
+                                    <span class="rule-chip rc-fifo"><i class="bi bi-arrow-left-right"></i>FIFO</span>
+                                }
+                                @if (cat.RequiresBatch)
+                                {
+                                    <span class="rule-chip rc-lot"><i class="bi bi-upc"></i>Lô</span>
+                                }
+                                @if (cat.HasVariants)
+                                {
+                                    <span class="rule-chip rc-var"><i class="bi bi-layers"></i>Biến thể</span>
+                                }
+                            </div>
+
+                            <div class="cat-stats">
+                                <div class="cs-item">
+                                    <div class="cs-val">@productCount</div>
+                                    <div class="cs-lbl">Sản phẩm</div>
                                 </div>
-
-                                <div class="dropdown">
-                                    <button class="btn btn-icon rounded-circle shadow-none" data-bs-toggle="dropdown">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-4 p-2">
-                                        <li><a class="dropdown-item rounded-3 py-2" asp-action="Edit" asp-route-id="@category.CategoryId"><i class="bi bi-pencil-square me-2 text-warning"></i>Sửa thông tin</a></li>
-                                        <li><a class="dropdown-item rounded-3 py-2" asp-action="Details" asp-route-id="@category.CategoryId"><i class="bi bi-info-circle me-2 text-info"></i>Chi tiết</a></li>
-                                        <li><hr class="dropdown-divider opacity-50"></li>
-                                        <li><a class="dropdown-item rounded-3 py-2 text-danger" href="javascript:void(0)" onclick="deleteCategory(@category.CategoryId, '@category.CategoryName')"><i class="bi bi-trash3 me-2"></i>Xóa danh mục</a></li>
-                                    </ul>
+                                <div class="cs-item">
+                                    <div class="cs-val" style="color:#166534;">@activeCount</div>
+                                    <div class="cs-lbl">Đang bán</div>
                                 </div>
+                                @if (lowCount > 0)
+                                {
+                                    <div class="cs-item">
+                                        <div class="cs-val" style="color:#dc2626;">@lowCount</div>
+                                        <div class="cs-lbl">Tồn thấp</div>
+                                    </div>
+                                }
                             </div>
+                        </div>
 
-                            <h5 class="fw-bold text-dark mb-1">@category.CategoryName</h5>
-                            <div class="mb-3">
-                                <span class="badge @(GetBadgeClass(category.CategoryType)) rounded-pill px-3 py-1 fw-medium">
-                                    @category.CategoryType
-                                </span>
-                            </div>
-
-                            <p class="text-muted small line-clamp mb-4 flex-grow-1">
-                                @(string.IsNullOrEmpty(category.Description) ? "Chưa có mô tả chi tiết cho danh mục này." : category.Description)
-                            </p>
-
-                            <div class="d-flex align-items-center justify-content-between pt-3 border-top">
-                                <span class="text-secondary small fw-bold">
-                                    <i class="bi bi-stack me-1"></i> @(category.Products?.Count ?? 0) Sản phẩm
-                                </span>
-                                <a asp-action="Details" asp-route-id="@category.CategoryId" class="btn-view-more text-primary fw-bold text-decoration-none small">
-                                    Xem thêm <i class="bi bi-arrow-right ms-1"></i>
-                                </a>
-                            </div>
+                        <!-- Footer -->
+                        <div class="cat-foot">
+                            <a asp-action="Details" asp-route-id="@cat.CategoryId" class="cf-btn">
+                                <i class="bi bi-eye"></i> Xem
+                            </a>
+                            <a asp-action="Edit" asp-route-id="@cat.CategoryId" class="cf-btn">
+                                <i class="bi bi-pencil"></i> Sửa
+                            </a>
+                            <a href="/Admin/AdminProduct?categoryId=@cat.CategoryId" class="cf-btn">
+                                <i class="bi bi-box-seam"></i> SP
+                            </a>
+                            <button onclick="deleteCategory(@cat.CategoryId, '@cat.CategoryName')" class="cf-btn danger">
+                                <i class="bi bi-trash3"></i> Xóa
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -137,179 +614,57 @@
         }
         else
         {
-            <div class="col-12 text-center py-5">
-                <div class="empty-state p-5 rounded-5 bg-white shadow-sm border border-light">
-                    <i class="bi bi-inboxes display-1 text-light mb-4 d-block"></i>
-                    <h4 class="fw-bold text-dark">Chưa có danh mục nào</h4>
-                    <p class="text-muted">Dữ liệu hiện đang trống, vui lòng thêm danh mục mới để bắt đầu.</p>
-                    <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow">Thêm ngay</a>
-                </div>
+            <div class="empty-wrap">
+                <i class="bi bi-collection"></i>
+                <h5 style="font-weight:800;color:var(--court-dark);">Chưa có danh mục nào</h5>
+                <p>Thêm danh mục đầu tiên để bắt đầu phân loại sản phẩm</p>
+                <a asp-action="Create" class="btn-add-new mt-3"><i class="bi bi-plus-circle-fill"></i> Thêm ngay</a>
             </div>
         }
     </div>
 </div>
 
-@functions {
-    // FIX: Class cho màu nền của Box chứa Ảnh/Icon (Đậm hơn, không bị mờ trắng)
-    public string GetBoxClass(string type) => type switch
-    {
-        "Food" => "box-warning-solid",
-        "Beverage" => "box-info-solid",
-        "Equipment" => "box-success-solid",
-        _ => "box-secondary-solid"
-    };
-
-    public string GetBadgeClass(string type) => type switch
-    {
-        "Food" => "bg-warning bg-opacity-10 text-warning",
-        "Beverage" => "bg-info bg-opacity-10 text-info",
-        "Equipment" => "bg-success bg-opacity-10 text-success",
-        _ => "bg-secondary bg-opacity-10 text-secondary"
-    };
-
-    public string GetIconByCategory(string type) => type switch
-    {
-        "Food" => "bi-egg-fried",
-        "Beverage" => "bi-cup-straw",
-        "Equipment" => "bi-gear-wide-connected",
-        _ => "bi-folder2-open"
-    };
-}
-
-<style>
-    /* Nền và Hiệu ứng chung */
-    .detail-page-bg {
-        background: #f4f7fe;
-    }
-
-    .letter-spacing-1 {
-        letter-spacing: 1px;
-    }
-
-    /* Stats Cards */
-    .glass-card-stat {
-        background: #fff;
-        border: 1px solid #edf2f7 !important;
-    }
-
-    .stats-icon {
-        width: 50px;
-        height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-    }
-
-    .bg-gradient-primary {
-        background: linear-gradient(135deg, #4361ee, #4895ef);
-    }
-
-    .bg-gradient-success {
-        background: linear-gradient(135deg, #2ec4b6, #cbf3f0);
-    }
-
-    .bg-gradient-warning {
-        background: linear-gradient(135deg, #ff9f1c, #ffbf69);
-    }
-
-    .bg-gradient-info {
-        background: linear-gradient(135deg, #4cc9f0, #4361ee);
-    }
-
-    /* Category Card */
-    .category-card {
-        background: #fff;
-        border: 1px solid #edf2f7 !important;
-        transition: all 0.3s ease;
-    }
-
-        .category-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05) !important;
-        }
-
-    /* FIX: Styles cho Icon/Image Box sắc nét hơn */
-    .cat-icon-box {
-        width: 60px;
-        height: 60px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .object-fit-cover {
-        object-fit: cover;
-    }
-
-    /* Màu nền đặc giúp không bị mờ trắng */
-    .box-warning-solid {
-        background-color: #fff7ed;
-        color: #f59e0b;
-        border: 1px solid #ffedd5;
-    }
-
-    .box-info-solid {
-        background-color: #f0f9ff;
-        color: #0ea5e9;
-        border: 1px solid #e0f2fe;
-    }
-
-    .box-success-solid {
-        background-color: #f0fdf4;
-        color: #22c55e;
-        border: 1px solid #dcfce7;
-    }
-
-    .box-secondary-solid {
-        background-color: #f8fafc;
-        color: #64748b;
-        border: 1px solid #f1f5f9;
-    }
-
-    .line-clamp {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        min-height: 40px;
-    }
-
-    .rounded-5 {
-        border-radius: 1.5rem !important;
-    }
-</style>
+<div class="toast-wrap" id="toastWrap"></div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        function applyFilter() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            const t = document.getElementById('filterType').value;
+            let cnt = 0;
+            document.querySelectorAll('.category-col').forEach(col => {
+                const ok = (!q || col.dataset.name.includes(q)) && (!t || col.dataset.type === t);
+                col.style.display = ok ? '' : 'none';
+                if (ok) cnt++;
+            });
+            document.getElementById('filterCount').textContent = `${cnt} danh mục`;
+        }
+
         function deleteCategory(id, name) {
             Swal.fire({
                 title: 'Xóa danh mục?',
-                html: `Bạn đang chuẩn bị xóa <b>${name}</b>.`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Đúng, xóa nó!',
-                cancelButtonText: 'Hủy'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch(`/Admin/AdminCategory/Delete/${id}`, {
-                        method: 'POST'
-                    })
+                html: `Bạn đang chuẩn bị xóa <b>${name}</b>.<br>Hành động này không thể hoàn tác.`,
+                icon: 'warning', showCancelButton: true,
+                confirmButtonColor: '#dc2626', cancelButtonColor: '#1a1a2e',
+                confirmButtonText: 'Xóa ngay', cancelButtonText: 'Hủy bỏ'
+            }).then(r => {
+                if (!r.isConfirmed) return;
+                fetch(`/Admin/AdminCategory/Delete/${id}`, { method: 'POST' })
                     .then(r => r.json())
-                    .then(data => {
-                        if(data.success) {
-                            Swal.fire('Thành công', data.message, 'success').then(() => location.reload());
-                        } else {
-                            Swal.fire('Lỗi!', data.message, 'error');
-                        }
+                    .then(d => {
+                        if (d.success) { showToast(d.message, 'ok'); setTimeout(() => location.reload(), 900); }
+                        else Swal.fire('Không thể xóa!', d.message, 'error');
                     });
-                }
             });
+        }
+
+        function showToast(msg, type = 'ok') {
+            const el = document.createElement('div');
+            el.className = `toast-msg toast-${type}`;
+            el.innerHTML = `<i class="bi bi-${type === 'ok' ? 'check-circle-fill' : 'exclamation-circle-fill'}"></i> ${msg}`;
+            document.getElementById('toastWrap').appendChild(el);
+            setTimeout(() => el.remove(), 3000);
         }
     </script>
 }

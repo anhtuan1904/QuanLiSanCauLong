@@ -18,6 +18,7 @@ namespace QuanLiSanCauLong.Models
         [StringLength(100)]
         [Display(Name = "Tên bảng giá")]
         public string? SlotName { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         // Loại sân áp dụng: Standard / Professional / Practice
         [Required]

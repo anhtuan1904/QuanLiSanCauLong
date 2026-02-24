@@ -4,259 +4,634 @@
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="container-fluid px-4 py-4">
+<style>
+    :root {
+        --court-dark: #1a1a2e;
+        --court-gold: #e8c840;
+        --court-gold-hover: #d4b320;
+        --court-bg: #f5f0e8;
+        --court-card: #ffffff;
+        --court-border: #e8e0d0;
+        --court-text: #2d2d2d;
+        --court-muted: #7a7060;
+    }
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    .page-wrapper {
+        background: var(--court-bg);
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--court-dark);
+        letter-spacing: -0.5px;
+    }
+
+        .page-title span {
+            color: var(--court-gold);
+            font-style: italic;
+        }
+
+    .btn-add-new {
+        background: var(--court-gold);
+        color: var(--court-dark);
+        border: none;
+        font-weight: 700;
+        padding: 0.65rem 1.5rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+        .btn-add-new:hover {
+            background: var(--court-gold-hover);
+            color: var(--court-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(232, 200, 64, 0.4);
+        }
+
+    .btn-secondary-outline {
+        background: transparent;
+        color: var(--court-dark);
+        border: 2px solid var(--court-dark);
+        font-weight: 600;
+        padding: 0.6rem 1.4rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+        .btn-secondary-outline:hover {
+            background: var(--court-dark);
+            color: #fff;
+        }
+
+    /* Stats */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: var(--court-card);
+        border: 1px solid var(--court-border);
+        border-radius: 12px;
+        padding: 1.25rem 1.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--court-muted);
+        margin-top: 4px;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--court-dark);
+        line-height: 1;
+    }
+
+    .stat-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 4px;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+        background: var(--court-card);
+        border: 1px solid var(--court-border);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .filter-search {
+        position: relative;
+        flex: 1;
+        min-width: 220px;
+    }
+
+        .filter-search i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--court-muted);
+            font-size: 0.9rem;
+        }
+
+        .filter-search input {
+            padding-left: 36px;
+            border: 1px solid var(--court-border);
+            border-radius: 8px;
+            background: var(--court-bg);
+            color: var(--court-text);
+            height: 40px;
+            width: 100%;
+            font-size: 0.875rem;
+        }
+
+            .filter-search input:focus {
+                outline: none;
+                border-color: var(--court-gold);
+                background: #fff;
+                box-shadow: 0 0 0 3px rgba(232,200,64,0.15);
+            }
+
+    .filter-select {
+        border: 1px solid var(--court-border);
+        border-radius: 8px;
+        background: var(--court-bg);
+        color: var(--court-text);
+        height: 40px;
+        padding: 0 2rem 0 0.75rem;
+        font-size: 0.875rem;
+        cursor: pointer;
+        appearance: auto;
+    }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--court-gold);
+            box-shadow: 0 0 0 3px rgba(232,200,64,0.15);
+        }
+
+    .btn-filter {
+        background: var(--court-dark);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        height: 40px;
+        padding: 0 1.25rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+        .btn-filter:hover {
+            background: #2d2d50;
+            color: #fff;
+        }
+
+    /* Job Cards */
+    .jobs-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+
+    .job-card {
+        background: var(--court-card);
+        border: 1px solid var(--court-border);
+        border-radius: 14px;
+        padding: 1.5rem;
+        transition: all 0.25s;
+        cursor: default;
+    }
+
+        .job-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(26,26,46,0.12);
+            border-color: var(--court-gold);
+        }
+
+    .job-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--court-dark);
+        margin-bottom: 0.5rem;
+    }
+
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+
+    .badge-open {
+        background: #d4edda;
+        color: #1a6b2e;
+    }
+
+    .badge-closed {
+        background: #e2e3e5;
+        color: #4a4a5a;
+    }
+
+    .badge-filled {
+        background: #cce5ff;
+        color: #1a5fa0;
+    }
+
+    .badge-featured {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .badge-expiring {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+    .job-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.4rem 1rem;
+        margin: 0.75rem 0;
+    }
+
+    .job-meta-item {
+        font-size: 0.8rem;
+        color: var(--court-muted);
+    }
+
+        .job-meta-item strong {
+            color: var(--court-text);
+        }
+
+    .salary-box {
+        background: #f0faf3;
+        border: 1px solid #c3e6cb;
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        margin: 0.75rem 0;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #1a6b2e;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .job-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--court-border);
+        margin-top: 0.75rem;
+    }
+
+    .job-footer-meta {
+        font-size: 0.75rem;
+        color: var(--court-muted);
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .action-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+
+    .btn-action {
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 0.4rem 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        border: 1.5px solid;
+        background: transparent;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .btn-view {
+        border-color: #0ea5e9;
+        color: #0ea5e9;
+    }
+
+        .btn-view:hover {
+            background: #0ea5e9;
+            color: #fff;
+        }
+
+    .btn-edit {
+        border-color: var(--court-dark);
+        color: var(--court-dark);
+    }
+
+        .btn-edit:hover {
+            background: var(--court-dark);
+            color: #fff;
+        }
+
+    .btn-delete {
+        border-color: #ef4444;
+        color: #ef4444;
+    }
+
+        .btn-delete:hover {
+            background: #ef4444;
+            color: #fff;
+        }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        color: var(--court-muted);
+    }
+
+        .empty-state i {
+            font-size: 4rem;
+            opacity: 0.3;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+    /* Modal overrides */
+    .modal-content {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    .modal-header-court {
+        background: var(--court-dark);
+        color: #fff;
+        border-radius: 16px 16px 0 0;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .modal-header-court .btn-close {
+            filter: invert(1);
+            opacity: 0.8;
+        }
+
+    .delete-modal .modal-body {
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .delete-icon-wrap {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: #fef2f2;
+        border: 2px solid #fca5a5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 1.75rem;
+        color: #ef4444;
+    }
+
+    .btn-confirm-delete {
+        background: #ef4444;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 700;
+        width: 100%;
+    }
+
+    .btn-cancel {
+        background: var(--court-bg);
+        color: var(--court-text);
+        border: 1px solid var(--court-border);
+        border-radius: 10px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 600;
+        width: 100%;
+    }
+
+    @@media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .jobs-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="page-wrapper">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
-            <h4 class="fw-bold mb-1">💼 Quản Lý Tuyển Dụng</h4>
-            <p class="text-muted small mb-0">Quản lý các tin tuyển dụng và hồ sơ ứng tuyển</p>
+            <h1 class="page-title mb-1">Quản Lý <span>Tuyển Dụng</span></h1>
+            <p class="mb-0" style="color:var(--court-muted);font-size:0.9rem;">Quản lý các tin tuyển dụng và hồ sơ ứng tuyển</p>
         </div>
         <div class="d-flex gap-2">
-            <a asp-action="Applications" class="btn btn-outline-primary rounded-3 px-4">
-                <i class="bi bi-person-badge me-1"></i> Hồ Sơ Ứng Tuyển
+            <a asp-action="Applications" class="btn-secondary-outline text-decoration-none">
+                <i class="bi bi-person-badge"></i> Hồ Sơ Ứng Tuyển
             </a>
-            <button class="btn btn-dark px-4 fw-bold rounded-3" data-bs-toggle="modal" data-bs-target="#modalJob" onclick="openCreateModal()">
-                <i class="bi bi-plus-lg me-1"></i> Thêm Tin Tuyển Dụng
+            <button class="btn-add-new" data-bs-toggle="modal" data-bs-target="#modalJob" onclick="openCreateModal()">
+                <i class="bi bi-plus-circle-fill"></i> Thêm Tin Mới
             </button>
         </div>
     </div>
 
-    <!-- Stats Row -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 p-3">
-                <div class="d-flex align-items-center">
-                    <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-3 p-3 me-3">
-                        <i class="bi bi-briefcase-fill fs-4"></i>
-                    </div>
-                    <div>
-                        <div class="fs-2 fw-bold">@Model.Count()</div>
-                        <div class="text-muted small">Tổng Tin Tuyển Dụng</div>
-                    </div>
-                </div>
-            </div>
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">@Model.Count()</div>
+            <div class="stat-label"><span class="stat-dot" style="background:#1a1a2e;"></span>Tổng Tin Tuyển Dụng</div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 p-3">
-                <div class="d-flex align-items-center">
-                    <div class="icon-box bg-success bg-opacity-10 text-success rounded-3 p-3 me-3">
-                        <i class="bi bi-door-open-fill fs-4"></i>
-                    </div>
-                    <div>
-                        <div class="fs-2 fw-bold text-success">@Model.Count(j => j.Status == "Open")</div>
-                        <div class="text-muted small">Đang Tuyển</div>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color:#1a6b2e;">@Model.Count(j => j.Status == "Open")</div>
+            <div class="stat-label"><span class="stat-dot" style="background:#22c55e;"></span>Đang Tuyển</div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 p-3">
-                <div class="d-flex align-items-center">
-                    <div class="icon-box bg-warning bg-opacity-10 text-warning rounded-3 p-3 me-3">
-                        <i class="bi bi-hourglass-split fs-4"></i>
-                    </div>
-                    <div>
-                        <div class="fs-2 fw-bold text-warning">@Model.Count(j => j.Deadline.HasValue && j.Deadline > DateTime.Now)</div>
-                        <div class="text-muted small">Sắp Hết Hạn</div>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color:#b45309;">@Model.Count(j => j.Deadline.HasValue && j.Deadline > DateTime.Now)</div>
+            <div class="stat-label"><span class="stat-dot" style="background:#f59e0b;"></span>Còn Hạn Nộp</div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 p-3">
-                <div class="d-flex align-items-center">
-                    <div class="icon-box bg-info bg-opacity-10 text-info rounded-3 p-3 me-3">
-                        <i class="bi bi-people-fill fs-4"></i>
-                    </div>
-                    <div>
-                        <div class="fs-2 fw-bold text-info">@Model.Sum(j => j.VacancyCount)</div>
-                        <div class="text-muted small">Vị Trí Tuyển</div>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color:#c2410c;">@Model.Sum(j => j.VacancyCount)</div>
+            <div class="stat-label"><span class="stat-dot" style="background:#ef4444;"></span>Vị Trí Tuyển</div>
         </div>
     </div>
 
-    <!-- Filter -->
-    <div class="card border-0 shadow-sm rounded-3 mb-4 p-3">
-        <form method="get" class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label small text-muted fw-semibold">Tìm kiếm</label>
-                <input type="text" name="search" class="form-control" placeholder="Tên vị trí..." />
-            </div>
-            <div class="col-md-3">
-                <label class="form-label small text-muted fw-semibold">Trạng thái</label>
-                <select name="status" class="form-select">
-                    <option value="">Tất cả</option>
-                    <option value="Open">Đang tuyển</option>
-                    <option value="Closed">Đã đóng</option>
-                    <option value="Filled">Đã tuyển đủ</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label small text-muted fw-semibold">Loại hình</label>
-                <select name="jobType" class="form-select">
-                    <option value="">Tất cả</option>
-                    <option value="Full-time">Full-time</option>
-                    <option value="Part-time">Part-time</option>
-                    <option value="Contract">Contract</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Lọc</button>
-            </div>
-        </form>
-    </div>
+    <!-- Filter Bar -->
+    <form method="get" class="filter-bar">
+        <div class="filter-search">
+            <i class="bi bi-search"></i>
+            <input type="text" name="search" placeholder="Tìm tên vị trí..." />
+        </div>
+        <select name="status" class="filter-select">
+            <option value="">Trạng thái</option>
+            <option value="Open">Đang tuyển</option>
+            <option value="Closed">Đã đóng</option>
+            <option value="Filled">Đã tuyển đủ</option>
+        </select>
+        <select name="jobType" class="filter-select">
+            <option value="">Loại hình</option>
+            <option value="Full-time">Full-time</option>
+            <option value="Part-time">Part-time</option>
+            <option value="Contract">Contract</option>
+            <option value="Internship">Internship</option>
+        </select>
+        <button type="submit" class="btn-filter">
+            <i class="bi bi-funnel-fill"></i> Lọc
+        </button>
+    </form>
 
-    <!-- Jobs List -->
-    <div class="row g-4">
-        @foreach (var job in Model)
-        {
-            var statusClass = job.Status == "Open" ? "success" : (job.Status == "Filled" ? "info" : "secondary");
-            var statusText = job.Status == "Open" ? "Đang tuyển" : (job.Status == "Filled" ? "Đã tuyển đủ" : "Đã đóng");
-            var isExpiring = job.Deadline.HasValue && job.Deadline.Value.Date <= DateTime.Now.AddDays(7).Date;
-
-            <div class="col-lg-6">
-                <div class="card border-0 shadow-sm rounded-3 h-100 hover-card">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="flex-grow-1">
-                                <h5 class="fw-bold mb-2">@job.JobTitle</h5>
-                                <div class="d-flex flex-wrap gap-2 mb-2">
-                                    <span class="badge bg-@statusClass">@statusText</span>
-                                    @if (job.IsFeatured)
-                                    {
-                                        <span class="badge bg-warning text-dark"><i class="bi bi-star-fill me-1"></i>Nổi bật</span>
-                                    }
-                                    @if (isExpiring && job.Status == "Open")
-                                    {
-                                        <span class="badge bg-danger"><i class="bi bi-clock-fill me-1"></i>Sắp hết hạn</span>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="job-info mb-3">
-                            <div class="row g-2 small">
-                                <div class="col-6">
-                                    <i class="bi bi-briefcase text-muted me-1"></i>
-                                    <span class="text-muted">Loại:</span>
-                                    <strong>@job.JobType</strong>
-                                </div>
-                                <div class="col-6">
-                                    <i class="bi bi-diagram-3 text-muted me-1"></i>
-                                    <span class="text-muted">Cấp:</span>
-                                    <strong>@job.Level</strong>
-                                </div>
-                                <div class="col-6">
-                                    <i class="bi bi-geo-alt text-muted me-1"></i>
-                                    <span class="text-muted">Địa điểm:</span>
-                                    <strong>@job.Location</strong>
-                                </div>
-                                <div class="col-6">
-                                    <i class="bi bi-people text-muted me-1"></i>
-                                    <span class="text-muted">Số lượng:</span>
-                                    <strong>@job.VacancyCount vị trí</strong>
-                                </div>
-                            </div>
-                        </div>
-
-                        @if (job.SalaryMin.HasValue || job.SalaryMax.HasValue)
-                        {
-                            <div class="salary-range mb-3 p-3 bg-light rounded-3">
-                                <small class="text-muted d-block mb-1">Mức lương:</small>
-                                <div class="fw-bold text-success">
-                                    @if (job.SalaryMin.HasValue && job.SalaryMax.HasValue)
-                                    {
-                                        <span>@job.SalaryMin.Value.ToString("N0")đ - @job.SalaryMax.Value.ToString("N0")đ</span>
-                                    }
-                                    else if (job.SalaryMin.HasValue)
-                                    {
-                                        <span>Từ @job.SalaryMin.Value.ToString("N0")đ</span>
-                                    }
-                                    else
-                                    {
-                                        <span>Lên đến @job.SalaryMax.Value.ToString("N0")đ</span>
-                                    }
-                                </div>
-                            </div>
-                        }
-
-                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <div class="small text-muted">
-                                @if (job.Deadline.HasValue)
-                                {
-                                    <i class="bi bi-calendar-x me-1"></i>
-                                    <span>Hạn: @job.Deadline.Value.ToString("dd/MM/yyyy")</span>
-                                }
-                                <span class="mx-2">•</span>
-                                <i class="bi bi-eye me-1"></i>
-                                <span>@job.ViewCount lượt xem</span>
-                            </div>
-                        </div>
-
-                        <div class="row g-2 mt-3">
-                            <div class="col-4">
-                                <button class="btn btn-outline-info w-100 btn-sm" onclick="openDetailsModal(@job.JobId)">
-                                    <i class="bi bi-eye"></i> Xem
-                                </button>
-                            </div>
-                            <div class="col-4">
-                                <button class="btn btn-outline-primary w-100 btn-sm" onclick="openEditModal(@job.JobId)">
-                                    <i class="bi bi-pencil"></i> Sửa
-                                </button>
-                            </div>
-                            <div class="col-4">
-                                <button class="btn btn-outline-danger w-100 btn-sm" onclick="confirmDelete(@job.JobId, '@job.JobTitle')">
-                                    <i class="bi bi-trash"></i> Xóa
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
-    </div>
-
-    @if (!Model.Any())
+    <!-- Jobs Grid -->
+    @if (Model.Any())
     {
-        <div class="text-center py-5">
-            <i class="bi bi-inbox display-1 text-muted"></i>
-            <h4 class="mt-3 text-muted">Chưa có tin tuyển dụng nào</h4>
-            <p class="text-muted">Nhấn nút "Thêm Tin Tuyển Dụng" để bắt đầu</p>
+        <div class="jobs-grid">
+            @foreach (var job in Model)
+            {
+                var isExpiring = job.Deadline.HasValue && job.Deadline.Value.Date <= DateTime.Now.AddDays(7).Date;
+                string statusClass = job.Status == "Open" ? "badge-open" : (job.Status == "Filled" ? "badge-filled" : "badge-closed");
+                string statusText = job.Status == "Open" ? "● Đang tuyển" : (job.Status == "Filled" ? "● Đã tuyển đủ" : "● Đã đóng");
+
+                <div class="job-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="job-title">@job.JobTitle</div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-1 mb-2">
+                        <span class="badge-status @statusClass">@statusText</span>
+                        @if (job.IsFeatured)
+                        {
+                            <span class="badge-status badge-featured"><i class="bi bi-star-fill"></i> Nổi bật</span>
+                        }
+                        @if (isExpiring && job.Status == "Open")
+                        {
+                            <span class="badge-status badge-expiring"><i class="bi bi-clock-fill"></i> Sắp hết hạn</span>
+                        }
+                    </div>
+
+                    <div class="job-meta">
+                        <div class="job-meta-item">
+                            <i class="bi bi-briefcase me-1"></i><strong>@job.JobType</strong>
+                        </div>
+                        <div class="job-meta-item">
+                            <i class="bi bi-diagram-3 me-1"></i><strong>@job.Level</strong>
+                        </div>
+                        <div class="job-meta-item">
+                            <i class="bi bi-geo-alt me-1"></i><strong>@job.Location</strong>
+                        </div>
+                        <div class="job-meta-item">
+                            <i class="bi bi-people me-1"></i><strong>@job.VacancyCount vị trí</strong>
+                        </div>
+                    </div>
+
+                    @if (job.SalaryMin.HasValue || job.SalaryMax.HasValue)
+                    {
+                        <div class="salary-box">
+                            <i class="bi bi-cash-coin"></i>
+                            @if (job.SalaryMin.HasValue && job.SalaryMax.HasValue)
+                            {
+                                <span>@job.SalaryMin.Value.ToString("N0")đ – @job.SalaryMax.Value.ToString("N0")đ</span>
+                            }
+                            else if (job.SalaryMin.HasValue)
+                            {
+                                <span>Từ @job.SalaryMin.Value.ToString("N0")đ</span>
+                            }
+                            else
+                            {
+                                <span>Đến @job.SalaryMax.Value.ToString("N0")đ</span>
+                            }
+                        </div>
+                    }
+
+                    <div class="job-footer">
+                        <div class="job-footer-meta">
+                            @if (job.Deadline.HasValue)
+                            {
+                                <span><i class="bi bi-calendar-x me-1"></i>Hạn: @job.Deadline.Value.ToString("dd/MM/yyyy")</span>
+                            }
+                            <span><i class="bi bi-eye me-1"></i>@job.ViewCount lượt xem</span>
+                        </div>
+                    </div>
+
+                    <div class="action-row">
+                        <button class="btn-action btn-view" onclick="openDetailsModal(@job.JobId)">
+                            <i class="bi bi-eye"></i> Xem
+                        </button>
+                        <button class="btn-action btn-edit" onclick="openEditModal(@job.JobId)">
+                            <i class="bi bi-pencil"></i> Sửa
+                        </button>
+                        <button class="btn-action btn-delete" onclick="confirmDelete(@job.JobId, '@job.JobTitle')">
+                            <i class="bi bi-trash"></i> Xóa
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="bi bi-briefcase"></i>
+            <h5 style="color:var(--court-text);">Chưa có tin tuyển dụng nào</h5>
+            <p>Nhấn "Thêm Tin Mới" để bắt đầu</p>
         </div>
     }
 
 </div>
 
-<!-- Modal -->
+<!-- Main Modal -->
 <div class="modal fade" id="modalJob" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg rounded-4" id="modalJobContent">
+        <div class="modal-content" id="modalJobContent">
             <div class="p-5 text-center">
-                <div class="spinner-border text-dark"></div>
+                <div class="spinner-border" style="color:var(--court-gold);"></div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Delete Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-body p-4 text-center">
-                <div class="mb-3">
-                    <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 rounded-circle" style="width:72px;height:72px;">
-                        <i class="bi bi-exclamation-triangle text-danger fs-2"></i>
-                    </div>
+<div class="modal fade delete-modal" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:380px;">
+        <div class="modal-content">
+            <div class="modal-body" style="padding:2rem;text-align:center;">
+                <div class="delete-icon-wrap">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
                 </div>
-                <h5 class="fw-bold mb-2">Xác nhận xóa?</h5>
-                <p class="text-muted small mb-4">Bạn có chắc muốn xóa tin tuyển dụng <strong id="deleteName" class="text-dark"></strong>?</p>
+                <h5 style="font-weight:800;color:var(--court-dark);">Xác nhận xóa?</h5>
+                <p style="font-size:0.875rem;color:var(--court-muted);margin-bottom:1.5rem;">
+                    Bạn có chắc muốn xóa tin tuyển dụng<br><strong id="deleteName" style="color:var(--court-dark);"></strong>?
+                </p>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-light w-100 rounded-3 fw-semibold py-2" data-bs-dismiss="modal">Hủy</button>
-                    <form id="deleteForm" method="post" class="w-100">
+                    <button class="btn-cancel" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <form id="deleteForm" method="post" style="width:100%;">
                         @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-danger w-100 rounded-3 fw-semibold py-2">Xác nhận xóa</button>
+                        <button type="submit" class="btn-confirm-delete">Xác nhận xóa</button>
                     </form>
                 </div>
             </div>
@@ -264,38 +639,17 @@
     </div>
 </div>
 
-<style>
-    .hover-card {
-        transition: all 0.3s;
-        border: 1px solid #e9ecef !important;
-    }
-
-        .hover-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
-            border-color: #6c33f2 !important;
-        }
-
-    .icon-box {
-        width: 60px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-</style>
-
 @section Scripts {
     <script>
         function openCreateModal() {
-            document.getElementById('modalJobContent').innerHTML = '<div class="p-5 text-center"><div class="spinner-border text-dark"></div></div>';
+            document.getElementById('modalJobContent').innerHTML = '<div class="p-5 text-center"><div class="spinner-border" style="color:#e8c840;"></div></div>';
             fetch('/AdminJob/Create')
                 .then(r => r.text())
                 .then(html => { document.getElementById('modalJobContent').innerHTML = html; });
         }
 
         function openEditModal(id) {
-            document.getElementById('modalJobContent').innerHTML = '<div class="p-5 text-center"><div class="spinner-border text-dark"></div></div>';
+            document.getElementById('modalJobContent').innerHTML = '<div class="p-5 text-center"><div class="spinner-border" style="color:#e8c840;"></div></div>';
             var modal = new bootstrap.Modal(document.getElementById('modalJob'));
             modal.show();
             fetch('/AdminJob/Edit/' + id)
@@ -304,7 +658,7 @@
         }
 
         function openDetailsModal(id) {
-            document.getElementById('modalJobContent').innerHTML = '<div class="p-5 text-center"><div class="spinner-border text-dark"></div></div>';
+            document.getElementById('modalJobContent').innerHTML = '<div class="p-5 text-center"><div class="spinner-border" style="color:#e8c840;"></div></div>';
             var modal = new bootstrap.Modal(document.getElementById('modalJob'));
             modal.show();
             fetch('/AdminJob/Details/' + id)
@@ -314,7 +668,7 @@
 
         function confirmDelete(id, title) {
             document.getElementById('deleteName').textContent = title;
-            document.getElementById('deleteForm').onsubmit = function(e) {
+            document.getElementById('deleteForm').onsubmit = function (e) {
                 e.preventDefault();
                 const token = this.querySelector('[name=__RequestVerificationToken]').value;
                 fetch('/AdminJob/Delete/' + id, {

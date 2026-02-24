@@ -1,99 +1,591 @@
 ﻿@model IEnumerable<QuanLiSanCauLong.Models.Inventory>
 
 @{
-    ViewData["Title"] = "Cảnh báo hết hàng";
+    ViewData["Title"] = "Cảnh báo tồn kho";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    var now = DateTime.Now;
+    var soon = DateTime.Now.AddDays(30);
+    var expiredItems = Model?.Where(i => { var ed = ((QuanLiSanCauLong.Models.Product)i.Product)?.ExpiryDate; return ed.HasValue && ed.Value < now; }) ?? Enumerable.Empty<QuanLiSanCauLong.Models.Inventory>();
+    var expiringItems = Model?.Where(i => { var ed = ((QuanLiSanCauLong.Models.Product)i.Product)?.ExpiryDate; return ed.HasValue && ed.Value >= now && ed.Value <= soon; }) ?? Enumerable.Empty<QuanLiSanCauLong.Models.Inventory>();
+    var lowStockItems = Model?.Where(i => i.Quantity <= i.MinQuantity) ?? Enumerable.Empty<QuanLiSanCauLong.Models.Inventory>();
+    var outOfStock = Model?.Where(i => i.Quantity == 0) ?? Enumerable.Empty<QuanLiSanCauLong.Models.Inventory>();
 }
 
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<style>
+    :root {
+        --court-dark: #1a1a2e;
+        --court-gold: #e8c840;
+        --court-gold-h: #d4b320;
+        --court-bg: #f5f0e8;
+        --court-card: #ffffff;
+        --court-border: #e8e0d0;
+        --court-text: #2d2d2d;
+        --court-muted: #7a7060;
+    }
+
+    .page-wrapper {
+        background: var(--court-bg);
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--court-dark);
+        letter-spacing: -.5px;
+    }
+
+        .page-title span {
+            color: var(--court-gold);
+            font-style: italic;
+        }
+
+    /* Header buttons */
+    .btn-outline-court {
+        background: var(--court-card);
+        color: var(--court-text);
+        border: 1.5px solid var(--court-border);
+        font-weight: 700;
+        padding: .55rem 1.2rem;
+        border-radius: 10px;
+        font-size: .875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: .2s;
+        white-space: nowrap;
+    }
+
+        .btn-outline-court:hover {
+            background: var(--court-dark);
+            color: #fff;
+            border-color: var(--court-dark);
+        }
+
+    /* Stat cards */
+    .alert-stats {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .astat {
+        background: var(--court-card);
+        border: 1px solid var(--court-border);
+        border-radius: 12px;
+        padding: 1.1rem 1.25rem;
+        border-left: 4px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+    }
+
+        .astat.a-out {
+            border-left-color: #dc2626;
+        }
+
+        .astat.a-low {
+            border-left-color: #f59e0b;
+        }
+
+        .astat.a-exp {
+            border-left-color: #ea580c;
+        }
+
+        .astat.a-xprd {
+            border-left-color: var(--court-dark);
+        }
+
+    .astat-ico {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .astat-val {
+        font-size: 1.75rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .astat-lbl {
+        font-size: .68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--court-muted);
+        margin-top: 2px;
+    }
+
+    /* Tabs */
+    .alert-tabs {
+        display: flex;
+        gap: .5rem;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+    }
+
+    .atab {
+        background: var(--court-card);
+        border: 1.5px solid var(--court-border);
+        color: var(--court-muted);
+        padding: .45rem 1.1rem;
+        border-radius: 20px;
+        font-size: .82rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: .18s;
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+    }
+
+        .atab:hover {
+            border-color: var(--court-dark);
+            color: var(--court-dark);
+        }
+
+        .atab.active {
+            background: var(--court-dark);
+            color: #fff;
+            border-color: var(--court-dark);
+        }
+
+        .atab .cnt {
+            background: rgba(255,255,255,.2);
+            border-radius: 10px;
+            padding: 1px 7px;
+            font-size: .7rem;
+        }
+
+        .atab:not(.active) .cnt {
+            background: var(--court-bg);
+            color: var(--court-muted);
+        }
+
+    /* Table card */
+    .table-card {
+        background: var(--court-card);
+        border: 1px solid var(--court-border);
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .alert-tbl {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .alert-tbl thead tr {
+            background: var(--court-dark);
+        }
+
+        .alert-tbl thead th {
+            color: rgba(255,255,255,.65);
+            font-size: .67rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            padding: .75rem 1rem;
+            border: none;
+            white-space: nowrap;
+        }
+
+        .alert-tbl tbody tr {
+            border-bottom: 1px solid var(--court-border);
+            transition: background .12s;
+        }
+
+            .alert-tbl tbody tr:last-child {
+                border-bottom: none;
+            }
+
+            .alert-tbl tbody tr:hover {
+                background: #faf8f0;
+            }
+
+        .alert-tbl td {
+            padding: .85rem 1rem;
+            vertical-align: middle;
+            font-size: .875rem;
+        }
+
+    /* Product cell */
+    .alert-thumb {
+        width: 44px;
+        height: 44px;
+        border-radius: 9px;
+        overflow: hidden;
+        background: var(--court-bg);
+        border: 1px solid var(--court-border);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--court-muted);
+    }
+
+        .alert-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .prod-name-cell {
+        font-weight: 700;
+        color: var(--court-dark);
+        font-size: .875rem;
+    }
+
+    .fw-mono {
+        font-family: monospace;
+        letter-spacing: .3px;
+    }
+
+    /* Stock badges */
+    .stock-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 11px;
+        border-radius: 20px;
+        font-size: .78rem;
+        font-weight: 800;
+    }
+
+    .sb-out {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fca5a5;
+    }
+
+    .sb-low {
+        background: #fffbeb;
+        color: #b45309;
+        border: 1px solid #fcd34d;
+    }
+
+    .sb-ok {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
+
+    /* Expiry cell */
+    .exp-ok {
+        color: #166534;
+        font-weight: 700;
+    }
+
+    .exp-soon {
+        color: #ea580c;
+        font-weight: 700;
+    }
+
+    .exp-dead {
+        color: #dc2626;
+        font-weight: 700;
+    }
+
+    /* Tags */
+    .pi-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: .68rem;
+        font-weight: 700;
+    }
+
+    .pi-cat {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #93c5fd;
+    }
+
+    /* Action btns */
+    .act-in-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: .35rem .85rem;
+        background: #f0fdf4;
+        color: #166534;
+        border: 1.5px solid #86efac;
+        border-radius: 8px;
+        font-size: .75rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: .15s;
+    }
+
+        .act-in-sm:hover {
+            background: #22c55e;
+            color: #fff;
+            border-color: #22c55e;
+        }
+
+    .act-view {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        background: var(--court-dark);
+        color: #fff;
+        border-radius: 8px;
+        font-size: .85rem;
+        text-decoration: none;
+        transition: .15s;
+    }
+
+        .act-view:hover {
+            background: var(--court-gold);
+            color: var(--court-dark);
+        }
+
+    /* Empty & Success states */
+    .success-state {
+        background: var(--court-card);
+        border: 1px solid var(--court-border);
+        border-radius: 14px;
+        padding: 5rem 2rem;
+        text-align: center;
+    }
+
+        .success-state i {
+            font-size: 4rem;
+            color: var(--court-gold);
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+    /* Modal */
+    .modal-content {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+
+    @@media(max-width:900px) {
+        .alert-stats {
+            grid-template-columns: repeat(2,1fr);
+        }
+    }
+
+    @@media print {
+        .btn-outline-court, .modal, nav {
+            display: none !important;
+        }
+    }
+</style>
+
+<div class="page-wrapper">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4" style="flex-wrap:wrap;gap:1rem;">
         <div>
-            <h2 class="fw-bold mb-1 text-danger">
-                <i class="bi bi-exclamation-octagon-fill me-2"></i>Cảnh Báo Tồn Kho
-            </h2>
-            <p class="text-muted small mb-0">Danh sách các sản phẩm đã chạm hoặc dưới mức tối thiểu</p>
+            <div style="display:inline-flex;align-items:center;gap:.4rem;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:20px;padding:3px 12px;font-size:.72rem;font-weight:700;margin-bottom:.5rem;">
+                <i class="bi bi-exclamation-octagon-fill"></i> CẢNH BÁO HỆ THỐNG
+            </div>
+            <h1 class="page-title mb-1">Cảnh Báo <span>Tồn Kho</span></h1>
+            <p class="mb-0" style="color:var(--court-muted);font-size:.9rem;">Sản phẩm chạm ngưỡng tối thiểu, hết hàng hoặc sắp hết hạn</p>
         </div>
         <div class="d-flex gap-2">
-            <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-3 px-3">
-                <i class="bi bi-arrow-left me-2"></i>Quay lại kho
+            <a asp-action="Index" class="btn-outline-court">
+                <i class="bi bi-arrow-left"></i> Quay lại kho
             </a>
-            <button onclick="window.print()" class="btn btn-light btn-sm rounded-3 px-3 border">
-                <i class="bi bi-printer me-2"></i>In danh sách
+            <button onclick="window.print()" class="btn-outline-court">
+                <i class="bi bi-printer"></i> In danh sách
             </button>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
+    <!-- Stats -->
+    <div class="alert-stats">
+        <div class="astat a-out">
+            <div class="astat-ico" style="background:#fef2f2;color:#dc2626;"><i class="bi bi-x-circle-fill"></i></div>
+            <div>
+                <div class="astat-val" style="color:#dc2626;">@outOfStock.Count()</div>
+                <div class="astat-lbl">Hết hàng hoàn toàn</div>
+            </div>
+        </div>
+        <div class="astat a-low">
+            <div class="astat-ico" style="background:#fffbeb;color:#b45309;"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <div>
+                <div class="astat-val" style="color:#b45309;">@lowStockItems.Count()</div>
+                <div class="astat-lbl">Tồn kho thấp</div>
+            </div>
+        </div>
+        <div class="astat a-exp">
+            <div class="astat-ico" style="background:#fff7ed;color:#ea580c;"><i class="bi bi-calendar-x-fill"></i></div>
+            <div>
+                <div class="astat-val" style="color:#ea580c;">@expiringItems.Count()</div>
+                <div class="astat-lbl">Sắp hết hạn (30 ngày)</div>
+            </div>
+        </div>
+        <div class="astat a-xprd">
+            <div class="astat-ico" style="background:#f3f4f6;color:#374151;"><i class="bi bi-slash-circle-fill"></i></div>
+            <div>
+                <div class="astat-val" style="color:var(--court-dark);">@expiredItems.Count()</div>
+                <div class="astat-lbl">Đã hết hạn</div>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model?.Any() ?? true)
+    {
+        <!-- All good -->
+        <div class="success-state">
+            <i class="bi bi-check-circle-fill"></i>
+            <h4 style="font-weight:800;color:var(--court-dark);">Tuyệt vời! Không có cảnh báo nào</h4>
+            <p style="color:var(--court-muted);">Tất cả sản phẩm đang ở mức tồn kho tốt và còn hạn sử dụng.</p>
+            <a asp-action="Index" class="btn-outline-court mt-3 d-inline-flex"><i class="bi bi-arrow-left"></i> Về trang kho</a>
+        </div>
+    }
+    else
+    {
+        <!-- Tabs -->
+        <div class="alert-tabs" id="alertTabs">
+            <button class="atab active" data-filter="all">
+                Tất cả <span class="cnt">@Model.Count()</span>
+            </button>
+            <button class="atab" data-filter="out">
+                <i class="bi bi-x-circle"></i> Hết hàng <span class="cnt">@outOfStock.Count()</span>
+            </button>
+            <button class="atab" data-filter="low">
+                <i class="bi bi-exclamation-triangle"></i> Tồn thấp <span class="cnt">@lowStockItems.Count()</span>
+            </button>
+            <button class="atab" data-filter="expiring">
+                <i class="bi bi-clock"></i> Sắp HSD <span class="cnt">@expiringItems.Count()</span>
+            </button>
+            <button class="atab" data-filter="expired">
+                <i class="bi bi-slash-circle"></i> Hết hạn <span class="cnt">@expiredItems.Count()</span>
+            </button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-card">
+            <div style="overflow-x:auto;">
+                <table class="alert-tbl" id="alertTable">
+                    <thead>
                         <tr>
-                            <th class="ps-4 py-3 text-uppercase small fw-bold text-muted">Cơ sở</th>
-                            <th class="py-3 text-uppercase small fw-bold text-muted">Sản phẩm</th>
-                            <th class="py-3 text-center text-uppercase small fw-bold text-muted">Tồn hiện tại</th>
-                            <th class="py-3 text-center text-uppercase small fw-bold text-muted">Hạn mức tối thiểu</th>
-                            <th class="py-3 text-uppercase small fw-bold text-muted">Tình trạng</th>
-                            <th class="pe-4 py-3 text-end text-uppercase small fw-bold text-muted">Hành động</th>
+                            <th class="ps-4">Sản phẩm</th>
+                            <th>Danh mục / Lô</th>
+                            <th style="text-align:center;">Tồn hiện tại</th>
+                            <th style="text-align:center;">Tối thiểu</th>
+                            <th>Hạn sử dụng</th>
+                            <th>Nhà cung cấp</th>
+                            <th style="text-align:right;" class="pe-4">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Model != null && Model.Any())
+                        @foreach (var item in Model)
                         {
-                            foreach (var item in Model)
-                            {
-                                <tr>
-                                    <td class="ps-4">
-                                        <div class="d-flex align-items-center">
-                                            <div class="bg-soft-secondary p-2 rounded-3 me-2">
-                                                <i class="bi bi-geo-alt text-secondary"></i>
-                                            </div>
-                                            <span class="fw-semibold">@item.Facility.FacilityName</span>
+                            var rowOut = item.Quantity == 0;
+                            var rowLow = !rowOut && item.Quantity <= item.MinQuantity;
+                            var prodExpiry = item.Product?.ExpiryDate;
+                            var rowExpired = prodExpiry.HasValue && prodExpiry.Value < DateTime.Now;
+                            var rowExpiring = prodExpiry.HasValue && !rowExpired && prodExpiry.Value <= DateTime.Now.AddDays(30);
+                            var rowFilter = rowOut ? "out" : rowLow ? "low" : "";
+                            if (rowExpired) rowFilter += " expired";
+                            else if (rowExpiring) rowFilter += " expiring";
+
+                            <tr data-filter="@rowFilter.Trim()">
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="alert-thumb">
+                                            @if (!string.IsNullOrEmpty(item.Product?.ImageUrl))
+                                            {
+                                                <img src="@item.Product.ImageUrl" onerror="this.src='/images/no-image.png'" />
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-box-seam"></i>
+                                            }
                                         </div>
-                                    </td>
-                                    <td>
-                                        <div class="fw-bold text-dark">@item.Product.ProductName</div>
-                                        <div class="text-muted" style="font-size: 0.75rem;">Mã: @item.Product.ProductCode</div>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge @(item.Quantity == 0 ? "bg-dark" : "bg-soft-danger text-danger") fs-6 px-3 rounded-pill">
-                                            @item.Quantity @item.Product.Unit
-                                        </span>
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="text-muted fw-bold">@item.MinQuantity</div>
-                                        <div class="text-muted small">@item.Product.Unit</div>
-                                    </td>
-                                    <td>
-                                        @if (item.Quantity == 0)
-                                        {
-                                            <span class="badge bg-danger rounded-pill px-3">
-                                                <i class="bi bi-x-circle me-1"></i>Hết sạch
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-warning text-dark rounded-pill px-3">
-                                                <i class="bi bi-graph-down-arrow me-1"></i>Sắp hết
-                                            </span>
-                                        }
-                                    </td>
-                                    <td class="pe-4 text-end">
-                                        <a asp-action="StockIn" asp-route-facilityId="@item.FacilityId"
-                                           class="btn btn-dark btn-sm rounded-3 px-3 shadow-sm">
-                                            <i class="bi bi-cart-plus me-1"></i> Nhập thêm
+                                        <div>
+                                            <div class="prod-name-cell">@item.Product?.ProductName</div>
+                                            @if (!string.IsNullOrEmpty(item.Product?.SKU))
+                                            {
+                                                <div class="fw-mono" style="font-size:.72rem;color:var(--court-muted);">@item.Product.SKU</div>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.Product?.Category?.CategoryName))
+                                    {
+                                        <span class="pi-tag pi-cat mb-1 d-inline-flex"><i class="bi bi-tag"></i>@item.Product.Category.CategoryName</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(item.Product?.BatchNumber))
+                                    {
+                                        <div class="fw-mono" style="font-size:.72rem;color:var(--court-muted);"><i class="bi bi-upc me-1"></i>@item.Product.BatchNumber</div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(item.Product?.StorageLocation))
+                                    {
+                                        <div style="font-size:.72rem;color:var(--court-muted);"><i class="bi bi-pin-map me-1"></i>@item.Product.StorageLocation</div>
+                                    }
+                                </td>
+                                <td style="text-align:center;">
+                                    @if (rowOut)
+                                    {
+                                        <span class="stock-badge sb-out"><i class="bi bi-x-circle"></i>Hết hàng</span>
+                                    }
+                                    else if (rowLow)
+                                    {
+
+                                        <span class="stock-badge sb-low"><i class="bi bi-exclamation-triangle"></i>@item.Quantity @item.Product?.Unit</span>
+                                    }
+                                    else
+                                    {
+
+                                        <span class="stock-badge sb-ok"><i class="bi bi-check-circle"></i>@item.Quantity @item.Product?.Unit</span>
+                                    }
+                                </td>
+                                <td style="text-align:center;">
+                                    <div style="font-weight:700;color:var(--court-muted);">@item.MinQuantity</div>
+                                    <div style="font-size:.7rem;color:var(--court-muted);">@item.Product?.Unit</div>
+                                </td>
+                                <td>
+                                    @if (prodExpiry.HasValue)
+                                    {
+                                        var daysLeft = (prodExpiry.Value - DateTime.Now).Days;
+                                        <div class="@(rowExpired ? "exp-dead" : rowExpiring ? "exp-soon" : "exp-ok")">
+                                            @prodExpiry.Value.ToString("dd/MM/yyyy")
+                                        </div>
+                                        <div style="font-size:.72rem;color:var(--court-muted);">
+                                            @(rowExpired ? $"Đã quá {-daysLeft} ngày" : $"Còn {daysLeft} ngày")
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:var(--court-muted);">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span style="font-size:.82rem;color:var(--court-muted);">
+                                        @(item.Product?.Supplier?.SupplierName ?? "—")
+                                    </span>
+                                </td>
+                                <td class="pe-4" style="text-align:right;">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button class="act-in-sm"
+                                                onclick="openInventoryModal('@Url.Action("StockIn")?productId=@item.Product?.ProductId')">
+                                            <i class="bi bi-box-arrow-in-down"></i> Nhập thêm
+                                        </button>
+                                        <a href="/Admin/AdminProduct/Details/@item.Product?.ProductId" class="act-view">
+                                            <i class="bi bi-eye"></i>
                                         </a>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="6" class="text-center py-5">
-                                    <div class="py-4">
-                                        <i class="bi bi-check-circle text-success display-4 d-block mb-3"></i>
-                                        <p class="text-muted">Tuyệt vời! Không có sản phẩm nào sắp hết hàng.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -102,35 +594,43 @@
                 </table>
             </div>
         </div>
+    }
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="inventoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="modalContainer">
+            <div class="p-5 text-center"><div class="spinner-border" style="color:#e8c840;"></div></div>
+        </div>
     </div>
 </div>
 
-<style>
-    /* Nền màu nhạt cho các icon và badge */
-    .bg-soft-danger {
-        background-color: #fef2f2;
-    }
+@section Scripts {
+    <script>
+        // Tab filter
+        document.querySelectorAll('#alertTabs .atab').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('#alertTabs .atab').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                const filter = this.dataset.filter;
+                document.querySelectorAll('#alertTable tbody tr').forEach(row => {
+                    const f = row.dataset.filter || '';
+                    row.style.display = (filter === 'all' || f.includes(filter)) ? '' : 'none';
+                });
+            });
+        });
 
-    .bg-soft-secondary {
-        background-color: #f8f9fa;
-    }
-
-    /* Hiệu ứng dòng khi hover */
-    .table-hover tbody tr:hover {
-        background-color: #fffafb;
-        transition: background-color 0.2s ease;
-    }
-
-    /* Tinh chỉnh bảng */
-    .table td, .table th {
-        border-bottom: 1px solid #f1f1f1;
-        padding-top: 1rem;
-        padding-bottom: 1rem;
-    }
-
-    /* Style cho nút Nhập thêm */
-    .btn-dark:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-    }
-</style>
+        function openInventoryModal(url) {
+            const el = document.getElementById('inventoryModal');
+            if (!el) return;
+            const modal = new bootstrap.Modal(el);
+            document.getElementById('modalContainer').innerHTML =
+                '<div class="p-5 text-center"><div class="spinner-border" style="color:#e8c840;"></div></div>';
+            modal.show();
+            $.get(url)
+                .done(data => $('#modalContainer').html(data))
+                .fail(() => $('#modalContainer').html('<div class="p-4 text-center text-danger">Lỗi tải dữ liệu.</div>'));
+        }
+    </script>
+}

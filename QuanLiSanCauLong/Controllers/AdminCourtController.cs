@@ -74,14 +74,13 @@ namespace QuanLiSanCauLong.Controllers
         {
             ViewBag.Facilities = await _context.Facilities.Where(f => f.IsActive).ToListAsync();
             ViewBag.MaxCourts = DEFAULT_MAX_COURTS;
-            // SỬA TẠI ĐÂY: Truyền một object mới vào View
             var model = new Court
             {
-                CourtType = "Indoor", // Thiết lập mặc định để khớp với UI của bạn
+                CourtType = "Indoor",
                 SurfaceType = "PVC",
                 Status = "Available"
             };
-            return View();
+            return View(model);
         }
 
         [HttpPost]
@@ -186,7 +185,6 @@ namespace QuanLiSanCauLong.Controllers
                 {
                     try
                     {
-                        // Kiểm tra giới hạn nếu chuyển sang facility khác
                         if (court.FacilityId != model.FacilityId)
                         {
                             var (canAdd, current, max) =
@@ -219,7 +217,6 @@ namespace QuanLiSanCauLong.Controllers
                             court.HasAC = model.HasAC;
                             court.Description = model.Description;
 
-                            // Xóa ảnh được chọn
                             if (!string.IsNullOrEmpty(DeletedImageIds))
                             {
                                 var idsToDelete = DeletedImageIds.Split(',')
@@ -237,7 +234,6 @@ namespace QuanLiSanCauLong.Controllers
                                     }
                             }
 
-                            // Đổi ảnh chính
                             if (NewPrimaryImageId > 0 && court.CourtImages != null)
                             {
                                 foreach (var img in court.CourtImages) img.IsPrimary = false;
@@ -250,7 +246,6 @@ namespace QuanLiSanCauLong.Controllers
                                 }
                             }
 
-                            // Upload ảnh mới
                             if (CourtImages?.Count > 0)
                             {
                                 int maxOrder = court.CourtImages?.Any() == true
@@ -278,7 +273,6 @@ namespace QuanLiSanCauLong.Controllers
                                 }
                             }
 
-                            // Đảm bảo luôn có ảnh chính
                             if (court.CourtImages?.Any() == true &&
                                 !court.CourtImages.Any(img => img.IsPrimary))
                             {
@@ -321,7 +315,7 @@ namespace QuanLiSanCauLong.Controllers
             var court = await _context.Courts
                 .Include(c => c.Facility)
                 .Include(c => c.PriceSlots)
-                .Include(c => c.Bookings).ThenInclude(b => b.User)
+                .Include(c => c.Bookings!).ThenInclude(b => b.User)
                 .Include(c => c.CourtImages)
                 .FirstOrDefaultAsync(c => c.CourtId == id);
 
@@ -330,7 +324,319 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         // ══════════════════════════════════════════════════════════
-        //  AJAX APIs
+        //  PRICESLOT MANAGEMENT — SỬA LỖI OVERLAP
+        // ══════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Lấy danh sách khung giờ của một sân (trả về JSON cho View)
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetPriceSlots(int courtId)
+        {
+            var slots = await _context.PriceSlots
+                .Where(ps => ps.CourtId == courtId)
+                .OrderBy(ps => ps.DayOfWeek)
+                .ThenBy(ps => ps.StartTime)
+                .Select(ps => new
+                {
+                    SlotId = ps.PriceSlotId,
+                    ps.CourtId,
+                    DayOfWeek = (int?)ps.DayOfWeek,
+                    DayLabel = ps.DayOfWeek == null ? "Tất cả" :
+                                ps.DayOfWeek == System.DayOfWeek.Sunday ? "Chủ nhật" :
+                                ps.DayOfWeek == System.DayOfWeek.Monday ? "Thứ Hai" :
+                                ps.DayOfWeek == System.DayOfWeek.Tuesday ? "Thứ Ba" :
+                                ps.DayOfWeek == System.DayOfWeek.Wednesday ? "Thứ Tư" :
+                                ps.DayOfWeek == System.DayOfWeek.Thursday ? "Thứ Năm" :
+                                ps.DayOfWeek == System.DayOfWeek.Friday ? "Thứ Sáu" :
+                                ps.DayOfWeek == System.DayOfWeek.Saturday ? "Thứ Bảy" : "",
+                    StartTime = ps.StartTime.ToString().Substring(0, 5),
+                    EndTime = ps.EndTime.ToString().Substring(0, 5),
+                    Price = ps.Price,
+                    ps.IsActive
+                })
+                .ToListAsync();
+
+            return Json(new { success = true, slots });
+        }
+
+        /// <summary>
+        /// Thêm khung giờ — ĐÃ SỬA LOGIC OVERLAP
+        ///
+        /// Lỗi cũ: dùng điều kiện  startNew < endExisting && endNew > startExisting
+        /// nhưng so sánh TimeSpan bằng >= thay vì > khiến 2 khung giờ liền nhau
+        /// (6:00-7:00 và 7:00-8:00) bị coi là trùng.
+        ///
+        /// Fix: Hai khung giờ A và B chỉ THỰC SỰ TRÙNG khi:
+        ///      A.Start < B.End  VÀ  A.End > B.Start
+        /// Hai khung giờ liền nhau (A.End == B.Start) KHÔNG phải trùng.
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> AddPriceSlot(
+            int courtId, int dayOfWeek,
+            string startTime, string endTime,
+            decimal price, bool isActive = true)
+        {
+            try
+            {
+                // Validate court tồn tại
+                var court = await _context.Courts.FindAsync(courtId);
+                if (court == null)
+                    return Json(new { success = false, message = "Không tìm thấy sân!" });
+
+                // Parse thời gian
+                if (!TimeSpan.TryParse(startTime, out var start) ||
+                    !TimeSpan.TryParse(endTime, out var end))
+                    return Json(new { success = false, message = "Định dạng giờ không hợp lệ! (VD: 06:00)" });
+
+                if (start >= end)
+                    return Json(new { success = false, message = "Giờ bắt đầu phải nhỏ hơn giờ kết thúc!" });
+
+                if (price < 0)
+                    return Json(new { success = false, message = "Giá không được âm!" });
+
+                // ✅ KIỂM TRA OVERLAP — ĐÃ SỬA
+                // DayOfWeek trong model là DayOfWeek? (nullable enum) → cast int sang (DayOfWeek)
+                var targetDay = (System.DayOfWeek)dayOfWeek;
+                var overlap = await _context.PriceSlots
+                    .Where(ps => ps.CourtId == courtId
+                              && ps.DayOfWeek == targetDay
+                              && start < ps.EndTime
+                              && end > ps.StartTime)
+                    .FirstOrDefaultAsync();
+
+                if (overlap != null)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = $"Khung giờ {start:hh\\:mm}–{end:hh\\:mm} bị trùng với " +
+                                  $"khung giờ đã có ({overlap.StartTime:hh\\:mm}–{overlap.EndTime:hh\\:mm})!"
+                    });
+                }
+
+                var slot = new PriceSlot
+                {
+                    CourtId = courtId,
+                    FacilityId = court.FacilityId,
+                    DayOfWeek = (System.DayOfWeek)dayOfWeek,
+                    CourtType = court.CourtType,
+                    StartTime = start,
+                    EndTime = end,
+                    Price = price,
+                    IsActive = isActive
+                };
+
+                _context.PriceSlots.Add(slot);
+                await _context.SaveChangesAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    message = $"Thêm khung giờ {start:hh\\:mm}–{end:hh\\:mm} thành công!",
+                    slot = new
+                    {
+                        SlotId = slot.PriceSlotId,
+                        DayOfWeek = (int)slot.DayOfWeek!,
+                        DayLabel = GetDayLabel(dayOfWeek),
+                        StartTime = slot.StartTime.ToString(@"hh\:mm"),
+                        EndTime = slot.EndTime.ToString(@"hh\:mm"),
+                        slot.Price,
+                        slot.IsActive
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Sửa khung giờ — cũng áp dụng logic overlap đã fix, bỏ qua chính nó
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> EditPriceSlot(
+            int slotId, int dayOfWeek,
+            string startTime, string endTime,
+            decimal price, bool isActive = true)
+        {
+            try
+            {
+                var slot = await _context.PriceSlots.FindAsync(slotId);
+                if (slot == null)
+                    return Json(new { success = false, message = "Không tìm thấy khung giờ!" });
+
+                if (!TimeSpan.TryParse(startTime, out var start) ||
+                    !TimeSpan.TryParse(endTime, out var end))
+                    return Json(new { success = false, message = "Định dạng giờ không hợp lệ!" });
+
+                if (start >= end)
+                    return Json(new { success = false, message = "Giờ bắt đầu phải nhỏ hơn giờ kết thúc!" });
+
+                // ✅ Kiểm tra overlap, BỎ QUA chính slot đang sửa
+                var targetDayEdit = (System.DayOfWeek)dayOfWeek;
+                var overlap = await _context.PriceSlots
+                    .Where(ps => ps.CourtId == slot.CourtId
+                              && ps.DayOfWeek == targetDayEdit
+                              && ps.PriceSlotId != slotId
+                              && start < ps.EndTime
+                              && end > ps.StartTime)
+                    .FirstOrDefaultAsync();
+
+                if (overlap != null)
+                    return Json(new
+                    {
+                        success = false,
+                        message = $"Khung giờ bị trùng với ({overlap.StartTime:hh\\:mm}–{overlap.EndTime:hh\\:mm})!"
+                    });
+
+                slot.DayOfWeek = (System.DayOfWeek)dayOfWeek;
+                slot.StartTime = start;
+                slot.EndTime = end;
+                slot.Price = price;
+                slot.IsActive = isActive;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Cập nhật khung giờ thành công!",
+                    slot = new
+                    {
+                        SlotId = slot.PriceSlotId,
+                        DayOfWeek = (int)slot.DayOfWeek!,
+                        DayLabel = GetDayLabel(dayOfWeek),
+                        StartTime = slot.StartTime.ToString(@"hh\:mm"),
+                        EndTime = slot.EndTime.ToString(@"hh\:mm"),
+                        slot.Price,
+                        slot.IsActive
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Xóa khung giờ — kiểm tra không có booking tương lai
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> DeletePriceSlot(int slotId)
+        {
+            try
+            {
+                var slot = await _context.PriceSlots.FindAsync(slotId);
+                if (slot == null)
+                    return Json(new { success = false, message = "Không tìm thấy khung giờ!" });
+
+                // Kiểm tra booking tương lai dùng khung giờ này
+                var hasFutureBooking = await _context.Bookings
+                    .AnyAsync(b => b.CourtId == slot.CourtId
+                               && b.BookingDate >= DateTime.Today
+                               && b.StartTime == slot.StartTime
+                               && b.Status != "Cancelled");
+
+                if (hasFutureBooking)
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Không thể xóa khung giờ đang có lịch đặt trong tương lai!"
+                    });
+
+                _context.PriceSlots.Remove(slot); await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Xóa khung giờ thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Bật/tắt trạng thái khung giờ
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> TogglePriceSlot(int slotId)
+        {
+            var slot = await _context.PriceSlots.FindAsync(slotId);
+            if (slot == null)
+                return Json(new { success = false, message = "Không tìm thấy khung giờ!" });
+
+            slot.IsActive = !slot.IsActive;
+            await _context.SaveChangesAsync();
+
+            return Json(new
+            {
+                success = true,
+                isActive = slot.IsActive,
+                message = slot.IsActive ? "Đã kích hoạt khung giờ!" : "Đã tắt khung giờ!"
+            });
+        }
+
+        /// <summary>
+        /// Sao chép toàn bộ khung giờ từ một ngày sang ngày khác trong cùng sân
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> CopyDaySlots(int courtId, int fromDay, int toDay)
+        {
+            try
+            {
+                if (fromDay == toDay)
+                    return Json(new { success = false, message = "Không thể sao chép vào cùng ngày!" });
+
+                var fromDayEnum = (System.DayOfWeek)fromDay;
+                var toDayEnum = (System.DayOfWeek)toDay;
+
+                var sourceSlots = await _context.PriceSlots
+                    .Where(ps => ps.CourtId == courtId && ps.DayOfWeek == fromDayEnum)
+                    .ToListAsync();
+
+                if (!sourceSlots.Any())
+                    return Json(new { success = false, message = "Ngày nguồn không có khung giờ nào!" });
+
+                // Xóa khung giờ cũ của ngày đích
+                var existingTarget = await _context.PriceSlots
+                    .Where(ps => ps.CourtId == courtId && ps.DayOfWeek == toDayEnum)
+                    .ToListAsync();
+                _context.PriceSlots.RemoveRange(existingTarget);
+
+                // Copy sang ngày đích
+                foreach (var src in sourceSlots)
+                {
+                    _context.PriceSlots.Add(new PriceSlot
+                    {
+                        CourtId = courtId,
+                        FacilityId = src.FacilityId,
+                        DayOfWeek = toDayEnum,
+                        CourtType = src.CourtType,
+                        StartTime = src.StartTime,
+                        EndTime = src.EndTime,
+                        Price = src.Price,
+                        IsActive = src.IsActive
+                    });
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    message = $"Đã sao chép {sourceSlots.Count} khung giờ từ {GetDayLabel(fromDay)} sang {GetDayLabel(toDay)}!"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════
+        //  AJAX APIs (GIỮ NGUYÊN)
         // ══════════════════════════════════════════════════════════
 
         [HttpGet]
@@ -388,7 +694,6 @@ namespace QuanLiSanCauLong.Controllers
             });
         }
 
-        // API: Tạo sân qua Ajax (không kèm ảnh)
         [HttpPost]
         public async Task<IActionResult> CreateAjax([FromBody] Court model)
         {
@@ -435,7 +740,6 @@ namespace QuanLiSanCauLong.Controllers
             }
         }
 
-        // API: Sửa sân qua Ajax
         [HttpPost]
         public async Task<IActionResult> EditAjax([FromBody] Court model)
         {
@@ -485,7 +789,6 @@ namespace QuanLiSanCauLong.Controllers
             }
         }
 
-        // API: Xóa sân
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
@@ -520,7 +823,6 @@ namespace QuanLiSanCauLong.Controllers
             }
         }
 
-        // API: Danh sách sân theo facility (cho dropdown đặt sân)
         [HttpGet]
         public async Task<IActionResult> GetByFacility(int facilityId)
         {
@@ -551,6 +853,22 @@ namespace QuanLiSanCauLong.Controllers
         // ══════════════════════════════════════════════════════════
         //  PRIVATE HELPERS
         // ══════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Chuyển số ngày → tên tiếng Việt
+        /// 0=Chủ nhật, 1=Thứ 2 ... 6=Thứ 7 (theo DayOfWeek chuẩn .NET)
+        /// </summary>
+        private static string GetDayLabel(int day) => day switch
+        {
+            0 => "Chủ nhật",
+            1 => "Thứ Hai",
+            2 => "Thứ Ba",
+            3 => "Thứ Tư",
+            4 => "Thứ Năm",
+            5 => "Thứ Sáu",
+            6 => "Thứ Bảy",
+            _ => $"Ngày {day}"
+        };
 
         private string GetCourtImageFolder()
         {

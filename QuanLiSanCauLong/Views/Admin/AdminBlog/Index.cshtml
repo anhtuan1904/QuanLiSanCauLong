@@ -4,203 +4,854 @@
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="container-fluid px-4 py-4" style="background:#f8f9fa; min-height:100vh;">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #fdf8f0;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+    }
+
+    body, * {
+        font-family: 'Outfit',sans-serif;
+    }
+
+    /* HEADER */
+    .idx-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .idx-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+        .idx-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    .add-btn {
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        border: none;
+        padding: .75rem 1.6rem;
+        font-family: 'Outfit',sans-serif;
+        font-size: .86rem;
+        font-weight: 700;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        text-decoration: none;
+        transition: all .25s;
+    }
+
+        .add-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(212,160,23,.35);
+            color: var(--deep);
+        }
+
+    /* STAT STRIP */
+    .stat-strip {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1.75rem;
+    }
+
+    .stat-box {
+        background: #fff;
+        padding: 1.2rem 1.5rem;
+    }
+
+    .stat-n {
+        font-family: 'Playfair Display',serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--deep);
+        line-height: 1;
+    }
+
+    .stat-l {
+        font-size: .72rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: .3rem;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+    .stat-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+    }
+
+    /* TOOLBAR */
+    .toolbar {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+    }
+
+    .tb-search {
+        position: relative;
+        flex: 1;
+        min-width: 200px;
+        max-width: 300px;
+    }
+
+        .tb-search input {
+            width: 100%;
+            padding: .65rem 1rem .65rem 2.3rem;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            font-family: 'Outfit',sans-serif;
+            font-size: .84rem;
+            color: var(--deep);
+            background: #fff;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+            .tb-search input:focus {
+                border-color: var(--gold);
+            }
+
+        .tb-search i {
+            position: absolute;
+            left: .8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+        }
+
+    .tb-sel {
+        padding: .65rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .84rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
+        cursor: pointer;
+    }
+
+        .tb-sel:focus {
+            border-color: var(--gold);
+        }
+
+    .view-btns {
+        display: flex;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        overflow: hidden;
+        margin-left: auto;
+    }
+
+    .vb {
+        padding: .6rem .9rem;
+        background: #fff;
+        border: none;
+        cursor: pointer;
+        font-size: .82rem;
+        color: var(--muted);
+        transition: all .15s;
+    }
+
+        .vb.active {
+            background: var(--deep);
+            color: var(--gold2);
+        }
+
+        .vb:hover:not(.active) {
+            background: var(--warm);
+        }
+
+    /* TABLE */
+    .idx-table-wrap {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .idx-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .idx-table th {
+            background: var(--warm);
+            padding: .8rem 1rem;
+            font-size: .67rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .idx-table td {
+            padding: .9rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: .86rem;
+            vertical-align: middle;
+            color: var(--deep);
+        }
+
+        .idx-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .idx-table tr:hover td {
+            background: var(--cream);
+        }
+
+    /* POST BADGE */
+    .post-badge {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Playfair Display',serif;
+        font-weight: 700;
+        font-size: .85rem;
+        color: var(--deep);
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        flex-shrink: 0;
+    }
+
+    .post-name-cell {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .pn-info .pn-title {
+        font-weight: 700;
+        font-size: .88rem;
+        color: var(--deep);
+        line-height: 1.2;
+    }
+
+    .pn-info .pn-sub {
+        font-size: .72rem;
+        color: var(--muted);
+        margin-top: .15rem;
+        display: flex;
+        align-items: center;
+        gap: .25rem;
+    }
+
+        .pn-info .pn-sub i {
+            color: var(--gold);
+            font-size: .6rem;
+        }
+
+    /* STATUS & TYPE CHIPS */
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        font-size: .68rem;
+        font-weight: 700;
+        padding: .25rem .65rem;
+        border-radius: 4px;
+        letter-spacing: .04em;
+    }
+
+    .chip-published {
+        background: rgba(22,163,74,.1);
+        color: #16a34a;
+    }
+
+    .chip-draft {
+        background: rgba(212,160,23,.12);
+        color: #92660a;
+    }
+
+    .chip-archived {
+        background: rgba(201,75,42,.1);
+        color: #c94b2a;
+    }
+
+    .chip-category {
+        background: rgba(79,70,229,.08);
+        color: #4f46e5;
+    }
+
+    .chip-featured {
+        background: rgba(212,160,23,.15);
+        color: #92660a;
+    }
+
+    /* ACTION BUTTONS */
+    .act-g {
+        display: flex;
+        gap: .3rem;
+    }
+
+    .act-b {
+        width: 30px;
+        height: 30px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--muted);
+        transition: all .2s;
+        font-size: .78rem;
+        text-decoration: none;
+    }
+
+        .act-b:hover.view {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(212,160,23,.07);
+        }
+
+        .act-b:hover.edit {
+            border-color: #4f46e5;
+            color: #4f46e5;
+            background: rgba(79,70,229,.07);
+        }
+
+        .act-b:hover.del {
+            border-color: #c94b2a;
+            color: #c94b2a;
+            background: rgba(201,75,42,.07);
+        }
+
+    /* CARD VIEW */
+    .posts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill,minmax(300px,1fr));
+        gap: 1.25rem;
+    }
+
+    .pc {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all .2s;
+    }
+
+        .pc:hover {
+            box-shadow: 0 5px 20px rgba(26,18,9,.07);
+            transform: translateY(-1px);
+        }
+
+    .pc-img {
+        position: relative;
+        aspect-ratio: 16/9;
+        background: var(--warm);
+    }
+
+        .pc-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .pc-img-empty {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        font-size: 2rem;
+        opacity: .25;
+    }
+
+    .pc-status {
+        position: absolute;
+        top: .7rem;
+        right: .7rem;
+    }
+
+    .pc-featured-badge {
+        position: absolute;
+        top: .7rem;
+        left: .7rem;
+    }
+
+    .pc-body {
+        padding: 1.1rem 1.25rem;
+    }
+
+    .pc-title {
+        font-weight: 700;
+        font-size: .95rem;
+        color: var(--deep);
+        margin-bottom: .3rem;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .pc-category {
+        font-size: .75rem;
+        color: var(--muted);
+        margin-bottom: .75rem;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+        .pc-category i {
+            color: var(--gold);
+        }
+
+    .pc-tags {
+        display: flex;
+        gap: .4rem;
+        flex-wrap: wrap;
+        margin-bottom: .75rem;
+    }
+
+    .pc-excerpt {
+        font-size: .78rem;
+        color: var(--muted);
+        font-weight: 300;
+        line-height: 1.5;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .pc-footer {
+        padding: .85rem 1.25rem;
+        border-top: 1px solid var(--border);
+        background: var(--warm);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .pc-meta {
+        font-size: .75rem;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+    }
+
+    /* SUCCESS/ERROR ALERTS */
+    .sys-alert {
+        padding: .9rem 1.25rem;
+        border-radius: 8px;
+        margin-bottom: 1.25rem;
+        font-size: .84rem;
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+    }
+
+        .sys-alert.success {
+            background: rgba(22,163,74,.08);
+            border: 1px solid rgba(22,163,74,.25);
+            color: #16a34a;
+        }
+
+        .sys-alert.error {
+            background: rgba(201,75,42,.06);
+            border: 1px solid rgba(201,75,42,.25);
+            color: #c94b2a;
+        }
+
+    /* EMPTY STATE */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--muted);
+    }
+
+        .empty-state i {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 1rem;
+            opacity: .3;
+        }
+
+    /* MODAL OVERRIDES */
+    .modal-content {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        font-family: 'Outfit',sans-serif;
+    }
+
+    .modal-custom-header {
+        padding: 1.4rem 1.75rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--warm);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+        .modal-custom-header h5 {
+            font-family: 'Playfair Display',serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--deep);
+            margin: 0;
+        }
+
+        .modal-custom-header p {
+            font-size: .8rem;
+            color: var(--muted);
+            margin: 0;
+        }
+
+    .modal-close-btn {
+        background: none;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 1.1rem;
+        padding: .3rem;
+        transition: color .2s;
+    }
+
+        .modal-close-btn:hover {
+            color: var(--deep);
+        }
+
+    .hidden {
+        display: none !important;
+    }
+</style>
+
+<div>
+
+    <!-- HEADER -->
+    <div class="idx-head">
         <div>
-            <h4 class="fw-bold mb-1">📝 Quản Lý Bài Viết</h4>
-            <p class="text-muted small mb-0">Quản lý tin tức, blog và nội dung website</p>
+            <h1 class="idx-title">Quản Lý <em>Bài Viết</em></h1>
+            <div style="font-size:.82rem;color:var(--muted);margin-top:.25rem;">
+                Tổng cộng @(Model?.Count() ?? 0) bài viết trong hệ thống
+            </div>
         </div>
-        <button class="btn btn-dark px-4 fw-bold rounded-3" data-bs-toggle="modal" data-bs-target="#modalPost" onclick="openCreateModal()">
-            <i class="bi bi-plus-lg me-1"></i> Thêm Bài Viết
+        <button class="add-btn" data-bs-toggle="modal" data-bs-target="#modalPost" onclick="openCreateModal()">
+            <i class="bi bi-plus-circle"></i> Thêm Bài Viết
         </button>
     </div>
 
-    <!-- Stats Row -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 p-3">
-                <div class="fs-2 fw-bold text-dark">@Model.Count()</div>
-                <div class="text-muted small">Tổng Bài Viết</div>
-            </div>
+    <!-- ALERTS -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="sys-alert success"><i class="bi bi-check-circle-fill"></i>@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="sys-alert error"><i class="bi bi-exclamation-circle"></i>@TempData["ErrorMessage"]</div>
+    }
+
+    <!-- STATS -->
+    <div class="stat-strip">
+        <div class="stat-box">
+            <div class="stat-n">@(Model?.Count() ?? 0)</div>
+            <div class="stat-l"><span class="stat-dot" style="background:var(--gold);"></span>Tổng Bài Viết</div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 p-3">
-                <div class="fs-2 fw-bold text-success">@Model.Count(p => p.Status == "Published")</div>
-                <div class="text-muted small">Đã Xuất Bản</div>
-            </div>
+        <div class="stat-box">
+            <div class="stat-n" style="color:#16a34a;">@(Model?.Count(p => p.Status == "Published") ?? 0)</div>
+            <div class="stat-l"><span class="stat-dot" style="background:#16a34a;"></span>Đã Xuất Bản</div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 p-3">
-                <div class="fs-2 fw-bold text-warning">@Model.Count(p => p.Status == "Draft")</div>
-                <div class="text-muted small">Bản Nháp</div>
-            </div>
+        <div class="stat-box">
+            <div class="stat-n" style="color:#92660a;">@(Model?.Count(p => p.Status == "Draft") ?? 0)</div>
+            <div class="stat-l"><span class="stat-dot" style="background:#92660a;"></span>Bản Nháp</div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 p-3">
-                <div class="fs-2 fw-bold text-primary">@Model.Sum(p => p.ViewCount)</div>
-                <div class="text-muted small">Tổng Lượt Xem</div>
-            </div>
+        <div class="stat-box">
+            <div class="stat-n" style="color:#4f46e5;">@(Model?.Sum(p => p.ViewCount) ?? 0)</div>
+            <div class="stat-l"><span class="stat-dot" style="background:#4f46e5;"></span>Tổng Lượt Xem</div>
         </div>
     </div>
 
-    <!-- Filter Card -->
-    <div class="card border-0 shadow-sm rounded-3 mb-4 p-3">
-        <form method="get" class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label small text-muted fw-semibold">Tìm kiếm</label>
-                <input type="text" name="search" class="form-control" placeholder="Tìm theo tiêu đề..." value="@ViewBag.Search" />
+    <!-- TOOLBAR -->
+    <form method="get" style="display:contents;">
+        <div class="toolbar">
+            <div class="tb-search">
+                <i class="bi bi-search"></i>
+                <input type="text" name="search" placeholder="Tìm tiêu đề bài viết..." id="searchInput"
+                       value="@ViewBag.Search" onkeyup="liveSearch()" />
             </div>
-            <div class="col-md-3">
-                <label class="form-label small text-muted fw-semibold">Danh mục</label>
-                <select name="categoryId" class="form-select">
-                    <option value="">Tất cả danh mục</option>
-                    @foreach (var cat in ViewBag.Categories as List<QuanLiSanCauLong.Models.BlogCategory> ?? new())
+
+            <select name="categoryId" class="tb-sel" onchange="this.form.submit()">
+                <option value="">Tất cả danh mục</option>
+                @foreach (var cat in ViewBag.Categories as List<QuanLiSanCauLong.Models.BlogCategory> ?? new())
+                {
+                    <option value="@cat.CategoryId">@cat.CategoryName</option>
+                }
+            </select>
+
+            <select name="status" class="tb-sel" onchange="this.form.submit()">
+                <option value="">Tình trạng</option>
+                <option value="Published" selected="@(ViewBag.Search == "Published")">Đã xuất bản</option>
+                <option value="Draft" selected="@(ViewBag.Search == "Draft")">Bản nháp</option>
+                <option value="Archived" selected="@(ViewBag.Search == "Archived")">Lưu trữ</option>
+            </select>
+
+            <div class="view-btns">
+                <button type="button" class="vb" id="vbTable" onclick="switchView('table')" title="Dạng bảng">
+                    <i class="bi bi-table"></i>
+                </button>
+                <button type="button" class="vb active" id="vbCard" onclick="switchView('card')" title="Dạng thẻ">
+                    <i class="bi bi-grid-3x3-gap"></i>
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- ═══════ TABLE VIEW ═══════ -->
+    <div id="tableView" class="idx-table-wrap hidden">
+        <table class="idx-table">
+            <thead>
+                <tr>
+                    <th>Bài Viết</th>
+                    <th>Danh Mục</th>
+                    <th>Trạng Thái</th>
+                    <th>Lượt Xem</th>
+                    <th>Ngày Tạo</th>
+                    <th>Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model?.Any() == true)
+                {
+                    foreach (var post in Model)
                     {
-                        <option value="@cat.CategoryId">@cat.CategoryName</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label small text-muted fw-semibold">Trạng thái</label>
-                <select name="status" class="form-select">
-                    <option value="">Tất cả</option>
-                    <option value="Published">Đã xuất bản</option>
-                    <option value="Draft">Bản nháp</option>
-                    <option value="Archived">Lưu trữ</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Lọc</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Posts Table -->
-    <div class="card border-0 shadow-sm rounded-3">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="px-4 py-3" width="5%">#</th>
-                            <th class="py-3">Bài Viết</th>
-                            <th class="py-3" width="15%">Danh Mục</th>
-                            <th class="py-3" width="12%">Trạng Thái</th>
-                            <th class="py-3" width="10%">Lượt Xem</th>
-                            <th class="py-3" width="12%">Ngày Tạo</th>
-                            <th class="py-3 text-center" width="15%">Thao Tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var post in Model)
-                        {
-                            var statusClass = post.Status == "Published" ? "success" : (post.Status == "Draft" ? "warning" : "secondary");
-                            var statusText = post.Status == "Published" ? "Đã xuất bản" : (post.Status == "Draft" ? "Bản nháp" : "Lưu trữ");
-
-                            <tr>
-                                <td class="px-4 align-middle">
-                                    @if (post.IsFeatured)
+                        <tr class="post-row"
+                            data-title="@post.Title.ToLower()"
+                            data-category="@(post.Category?.CategoryName ?? "").ToLower()">
+                            <td>
+                                <div class="post-name-cell">
+                                    @if (!string.IsNullOrEmpty(post.FeaturedImage))
                                     {
-                                        <i class="bi bi-star-fill text-warning" title="Nổi bật"></i>
+                                        <img src="@post.FeaturedImage" style="width:48px;height:36px;object-fit:cover;border-radius:6px;border:1px solid var(--border);" alt="@post.Title" />
                                     }
-                                </td>
-                                <td class="align-middle">
-                                    <div class="d-flex align-items-center gap-3">
-                                        @if (!string.IsNullOrEmpty(post.FeaturedImage))
+                                    else
+                                    {
+                                        <div class="post-badge">✍</div>
+                                    }
+                                    <div class="pn-info">
+                                        <div class="pn-title">
+                                            @if (post.IsFeatured)
+                                            {
+                                                <i class="bi bi-star-fill" style="color:var(--gold);font-size:.7rem;margin-right:.3rem;" title="Nổi bật"></i>
+                                            }
+                                            @post.Title
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(post.Excerpt))
                                         {
-                                            <img src="@post.FeaturedImage" class="rounded" style="width:60px;height:45px;object-fit:cover;" alt="@post.Title" />
-                                        }
-                                        else
-                                        {
-                                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width:60px;height:45px;">
-                                                <i class="bi bi-image text-muted"></i>
+                                            <div class="pn-sub">
+                                                @(post.Excerpt.Length > 55 ? post.Excerpt.Substring(0, 55) + "…" : post.Excerpt)
                                             </div>
                                         }
-                                        <div>
-                                            <div class="fw-semibold">@post.Title</div>
-                                            <small class="text-muted">
-                                                @if (!string.IsNullOrEmpty(post.Excerpt))
-                                                {
-                                                    @(post.Excerpt.Length > 50 ? post.Excerpt.Substring(0, 50) + "..." : post.Excerpt)
-                                                }
-                                            </small>
-                                        </div>
                                     </div>
-                                </td>
-                                <td class="align-middle">
-                                    <span class="badge bg-light text-dark">@post.Category?.CategoryName</span>
-                                </td>
-                                <td class="align-middle">
-                                    <span class="badge bg-@statusClass">@statusText</span>
-                                </td>
-                                <td class="align-middle">
-                                    <i class="bi bi-eye text-muted me-1"></i>@post.ViewCount.ToString("N0")
-                                </td>
-                                <td class="align-middle">
-                                    <small class="text-muted">@post.CreatedAt.ToString("dd/MM/yyyy")</small>
-                                </td>
-                                <td class="align-middle text-center">
-                                    <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-primary" onclick="openEditModal(@post.PostId)" title="Sửa">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button class="btn btn-outline-danger" onclick="confirmDelete(@post.PostId, '@post.Title')" title="Xóa">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="chip chip-category">@(post.Category?.CategoryName ?? "—")</span>
+                            </td>
+                            <td>
+                                @switch (post.Status)
+                                {
+                                    case "Published":
+                                        <span class="chip chip-published">✓ Đã Xuất Bản</span>
+                                        break;
+                                    case "Draft":
+                                        <span class="chip chip-draft">● Bản Nháp</span>
+                                        break;
+                                    default:
+                                        <span class="chip chip-archived">⊘ Lưu Trữ</span>
+                                        break;
+                                }
+                            </td>
+                            <td style="font-size:.82rem;color:var(--muted);">
+                                <i class="bi bi-eye" style="margin-right:.3rem;"></i>
+                                @post.ViewCount.ToString("N0")
+                            </td>
+                            <td style="font-size:.82rem;color:var(--muted);">
+                                @post.CreatedAt.ToString("dd/MM/yyyy")
+                            </td>
+                            <td>
+                                <div class="act-g">
+                                    <button class="act-b view" onclick="openViewModal(@post.PostId)" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="act-b edit" onclick="openEditModal(@post.PostId)" title="Chỉnh sửa"
+                                            data-bs-toggle="modal" data-bs-target="#modalPost">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="act-b del" onclick="confirmDelete(@post.PostId,'@Html.Raw(post.Title.Replace("'", "&#39;"))')" title="Xóa">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+        @if (Model?.Any() != true)
+        {
+            <div class="empty-state">
+                <i class="bi bi-newspaper"></i>
+                Không có bài viết nào. <button class="add-btn" style="display:inline-flex;margin-top:.75rem;"
+                                               data-bs-toggle="modal" data-bs-target="#modalPost" onclick="openCreateModal()">
+                    Thêm ngay
+                </button>
+            </div>
+        }
+    </div>
+
+    <!-- ═══════ CARD VIEW ═══════ -->
+    <div id="cardView" class="posts-grid">
+        @if (Model?.Any() == true)
+        {
+            foreach (var post in Model)
+            {
+                <div class="pc post-card-item"
+                     data-title="@post.Title.ToLower()"
+                     data-category="@(post.Category?.CategoryName ?? "").ToLower()">
+                    <div class="pc-img">
+                        @if (!string.IsNullOrEmpty(post.FeaturedImage))
+                        {
+                            <img src="@post.FeaturedImage" alt="@post.Title" />
                         }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<!-- Modal -->
-<div class="modal fade" id="modalPost" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg rounded-4" id="modalPostContent">
-            <div class="p-5 text-center">
-                <div class="spinner-border text-dark"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-body p-4 text-center">
-                <div class="mb-3">
-                    <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 rounded-circle" style="width:72px;height:72px;">
-                        <i class="bi bi-exclamation-triangle text-danger fs-2"></i>
+                        else
+                        {
+                            <div class="pc-img-empty"><i class="bi bi-newspaper"></i></div>
+                        }
+                        <div class="pc-status">
+                            @switch (post.Status)
+                            {
+                                case "Published":
+                                    <span class="chip chip-published">✓ Xuất bản</span>
+                                    break;
+                                case "Draft":
+                                    <span class="chip chip-draft">● Nháp</span>
+                                    break;
+                                default:
+                                    <span class="chip chip-archived">⊘ Lưu trữ</span>
+                                    break;
+                            }
+                        </div>
+                        @if (post.IsFeatured)
+                        {
+                            <div class="pc-featured-badge">
+                                <span class="chip chip-featured">⭐ Nổi bật</span>
+                            </div>
+                        }
+                    </div>
+                    <div class="pc-body">
+                        <div class="pc-title">@post.Title</div>
+                        <div class="pc-category">
+                            <i class="bi bi-folder2"></i>
+                            @(post.Category?.CategoryName ?? "—")
+                            @if (!string.IsNullOrEmpty(post.Tags))
+                            {
+                                <span style="color:var(--border);">·</span>
+                                @post.Tags.Split(',').First().Trim()
+                            }
+                        </div>
+                        @if (!string.IsNullOrEmpty(post.Excerpt))
+                        {
+                            <div class="pc-excerpt">@post.Excerpt</div>
+                        }
+                    </div>
+                    <div class="pc-footer">
+                        <div class="pc-meta">
+                            <i class="bi bi-eye"></i>
+                            @post.ViewCount.ToString("N0") lượt xem
+                            <span style="color:var(--border);">·</span>
+                            @post.CreatedAt.ToString("dd/MM/yy")
+                        </div>
+                        <div class="act-g">
+                            <button class="act-b view" onclick="openViewModal(@post.PostId)" title="Xem">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="act-b edit" onclick="openEditModal(@post.PostId)" title="Sửa"
+                                    data-bs-toggle="modal" data-bs-target="#modalPost">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="act-b del" onclick="confirmDelete(@post.PostId,'@Html.Raw(post.Title.Replace("'", "&#39;"))')" title="Xóa">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <h5 class="fw-bold mb-2">Xác nhận xóa?</h5>
-                <p class="text-muted small mb-4">Bạn có chắc muốn xóa bài viết <strong id="deleteName" class="text-dark"></strong>?</p>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-light w-100 rounded-3 fw-semibold py-2" data-bs-dismiss="modal">Hủy</button>
-                    <form id="deleteForm" method="post" class="w-100">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-danger w-100 rounded-3 fw-semibold py-2">Xác nhận xóa</button>
-                    </form>
-                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state" style="grid-column:1/-1;">
+                <i class="bi bi-newspaper"></i>
+                <div>Không tìm thấy bài viết nào</div>
+                <button class="add-btn" style="display:inline-flex;margin-top:.75rem;"
+                        data-bs-toggle="modal" data-bs-target="#modalPost" onclick="openCreateModal()">
+                    + Thêm bài viết mới
+                </button>
+            </div>
+        }
+    </div>
+
+</div>
+
+<!-- MAIN MODAL -->
+<div class="modal fade" id="modalPost" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" id="modalPostContent">
+            <div style="padding:3rem;text-align:center;color:var(--muted);">
+                <div class="spinner-border" style="color:var(--gold);"></div>
+                <p style="margin-top:.75rem;font-size:.84rem;">Đang tải...</p>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <!-- TinyMCE Self-hosted (Miễn phí vĩnh viễn - không cần API key) -->
     <script src="~/lib/tinymce/tinymce.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @Html.AntiForgeryToken()
     <script>
-        // Fix focus issue trong Bootstrap Modal
+        // Fix TinyMCE focus in modal
         document.addEventListener('focusin', (e) => {
             if (e.target.closest(".tox-tinymce-aux, .moxman-window, .tam-assetmanager-root") !== null) {
                 e.stopImmediatePropagation();
@@ -211,8 +862,8 @@
 
         function openCreateModal() {
             destroyEditor();
-            document.getElementById('modalPostContent').innerHTML = '<div class="p-5 text-center"><div class="spinner-border text-dark"></div><p class="mt-2">Đang tải...</p></div>';
-
+            document.getElementById('modalPostContent').innerHTML =
+                '<div style="padding:3rem;text-align:center;color:var(--muted);"><div class="spinner-border" style="color:var(--gold);"></div><p style="margin-top:.75rem;font-size:.84rem;">Đang tải...</p></div>';
             fetch('/AdminBlog/Create')
                 .then(r => r.text())
                 .then(html => {
@@ -223,10 +874,10 @@
 
         function openEditModal(id) {
             destroyEditor();
-            document.getElementById('modalPostContent').innerHTML = '<div class="p-5 text-center"><div class="spinner-border text-dark"></div><p class="mt-2">Đang tải...</p></div>';
+            document.getElementById('modalPostContent').innerHTML =
+                '<div style="padding:3rem;text-align:center;color:var(--muted);"><div class="spinner-border" style="color:var(--gold);"></div><p style="margin-top:.75rem;font-size:.84rem;">Đang tải...</p></div>';
             var modal = new bootstrap.Modal(document.getElementById('modalPost'));
             modal.show();
-
             fetch('/AdminBlog/Edit/' + id)
                 .then(r => r.text())
                 .then(html => {
@@ -235,91 +886,107 @@
                 });
         }
 
+        function openViewModal(id) {
+            destroyEditor();
+            document.getElementById('modalPostContent').innerHTML =
+                '<div style="padding:3rem;text-align:center;color:var(--muted);"><div class="spinner-border" style="color:var(--gold);"></div><p style="margin-top:.75rem;font-size:.84rem;">Đang tải...</p></div>';
+            var modal = new bootstrap.Modal(document.getElementById('modalPost'));
+            modal.show();
+            fetch('/AdminBlog/Details/' + id)
+                .then(r => r.text())
+                .then(html => {
+                    document.getElementById('modalPostContent').innerHTML = html;
+                });
+        }
+
         function destroyEditor() {
-            if (currentEditor) {
-                currentEditor.remove();
-                currentEditor = null;
-            }
+            if (currentEditor) { currentEditor.remove(); currentEditor = null; }
         }
 
         function initTinyMCE() {
             const textarea = document.querySelector('#editor-content');
-            if (!textarea) {
-                console.error('❌ Textarea #editor-content không tìm thấy');
-                return;
-            }
-
+            if (!textarea) return;
             tinymce.init({
-                selector: '#editor-content',
-                height: 500,
-                menubar: true,
-                plugins: [
-                    'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                    'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                    'insertdatetime', 'media', 'table', 'help', 'wordcount'
-                ],
-                toolbar: 'undo redo | blocks fontsize | ' +
-                    'bold italic underline forecolor backcolor | alignleft aligncenter ' +
-                    'alignright alignjustify | bullist numlist outdent indent | ' +
+                selector: '#editor-content', height: 500, menubar: true,
+                plugins: ['advlist','autolink','lists','link','image','charmap','preview',
+                    'anchor','searchreplace','visualblocks','code','fullscreen',
+                    'insertdatetime','media','table','help','wordcount'],
+                toolbar: 'undo redo | blocks fontsize | bold italic underline forecolor backcolor | ' +
+                    'alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | ' +
                     'removeformat | link image media table | code fullscreen help',
-
-                // ⭐ Quan trọng: chỉ đường dẫn đến thư mục self-hosted
-                base_url: '/lib/tinymce',
-                suffix: '.min',
-
-                content_style: 'body { font-family: Arial, sans-serif; font-size: 16px; line-height: 1.6; padding: 10px; }',
-
-                // Upload ảnh dưới dạng base64
-                images_upload_handler: function (blobInfo, success, failure) {
+                base_url: '/lib/tinymce', suffix: '.min',
+                content_style: 'body { font-family: Outfit, sans-serif; font-size:15px; line-height:1.7; padding:12px; }',
+                images_upload_handler: function(blobInfo, success, failure) {
                     const reader = new FileReader();
                     reader.onload = () => success(reader.result);
                     reader.onerror = () => failure('Upload thất bại');
                     reader.readAsDataURL(blobInfo.blob());
                 },
-
                 paste_data_images: true,
-
-                setup: function (editor) {
+                setup: function(editor) {
                     currentEditor = editor;
-
-                    editor.on('init', function () {
-                        console.log('✅ TinyMCE Self-hosted khởi tạo thành công!');
-                    });
-
-                    // Auto-sync nội dung về textarea
-                    editor.on('change input undo redo', function () {
-                        editor.save();
-                    });
+                    editor.on('change input undo redo', function() { editor.save(); });
                 }
             });
         }
 
-        // Cleanup khi đóng modal
-        document.getElementById('modalPost').addEventListener('hidden.bs.modal', function () {
-            destroyEditor();
-        });
+        document.getElementById('modalPost').addEventListener('hidden.bs.modal', destroyEditor);
 
-        function confirmDelete(id, title) {
-            document.getElementById('deleteName').textContent = title;
-            document.getElementById('deleteForm').onsubmit = function (e) {
-                e.preventDefault();
-                const token = this.querySelector('[name=__RequestVerificationToken]').value;
-                fetch('/AdminBlog/Delete/' + id, {
-                    method: 'POST',
-                    headers: {
-                        'RequestVerificationToken': token,
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: '__RequestVerificationToken=' + encodeURIComponent(token)
-                })
-                .then(r => r.json())
-                .then(res => {
-                    bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
-                    if (res.success) location.reload();
-                    else alert(res.message);
-                });
-            };
-            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        // View toggle
+        let currentView = 'card';
+        function switchView(v) {
+            currentView = v;
+            document.getElementById('tableView').classList.toggle('hidden', v !== 'table');
+            document.getElementById('cardView').classList.toggle('hidden',  v !== 'card');
+            document.getElementById('vbTable').classList.toggle('active', v === 'table');
+            document.getElementById('vbCard').classList.toggle('active',  v === 'card');
+            localStorage.setItem('blogView', v);
         }
+
+        // Live search
+        function liveSearch() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            document.querySelectorAll('.post-row, .post-card-item').forEach(el => {
+                const match = el.dataset.title.includes(q) || el.dataset.category.includes(q);
+                el.style.display = match ? '' : 'none';
+            });
+        }
+
+        // Delete with SweetAlert2
+        function confirmDelete(id, title) {
+            Swal.fire({
+                title: `Xóa bài viết này?`,
+                html: `Bài viết <strong>${title}</strong> sẽ bị xóa vĩnh viễn!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#c94b2a',
+                cancelButtonColor: '#8a7560',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy',
+                reverseButtons: true
+            }).then(r => {
+                if (!r.isConfirmed) return;
+                const fd = new FormData();
+                fd.append('__RequestVerificationToken',
+                    document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+                fetch('/AdminBlog/Delete/' + id, { method: 'POST', body: fd })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({ icon:'success', title:'Đã xóa!', text: data.message,
+                                timer:1500, showConfirmButton:false }).then(() => location.reload());
+                        } else {
+                            Swal.fire('Lỗi!', data.message, 'error');
+                        }
+                    })
+                    .catch(() => Swal.fire('Lỗi!', 'Không thể kết nối máy chủ', 'error'));
+            });
+        }
+
+        // Restore saved view
+        (function() {
+            const saved = localStorage.getItem('blogView') || 'card';
+            switchView(saved);
+        })();
     </script>
 }

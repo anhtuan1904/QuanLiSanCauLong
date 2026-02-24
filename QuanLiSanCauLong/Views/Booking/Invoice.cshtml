@@ -1,5 +1,612 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model QuanLiSanCauLong.ViewModels.BookingHistoryViewModel
 @{
+    ViewData["Title"] = "Hoá đơn #" + Model.BookingCode;
+    Layout = null; // In không cần layout
 }
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hoá đơn @Model.BookingCode</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <style>
+        @@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --D: #1a1209;
+            --G: #d4a017;
+            --G2: #f5c842;
+            --W: #f5ede0;
+            --S: #ede5d8;
+            --GN: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit',sans-serif;
+            background: #f0ebe3;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .no-print {
+            margin-bottom: 1.2rem;
+            display: flex;
+            gap: .75rem;
+        }
+
+        .btn-print {
+            padding: .65rem 1.4rem;
+            background: linear-gradient(135deg,var(--G),var(--G2));
+            color: var(--D);
+            border: none;
+            border-radius: 7px;
+            font-family: 'Outfit',sans-serif;
+            font-weight: 800;
+            font-size: .88rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: .45rem;
+            transition: all .2s;
+        }
+
+            .btn-print:hover {
+                box-shadow: 0 6px 20px rgba(212,160,23,.4);
+            }
+
+        .btn-back {
+            padding: .65rem 1.2rem;
+            background: #fff;
+            color: var(--D);
+            border: 1.5px solid var(--S);
+            border-radius: 7px;
+            font-family: 'Outfit',sans-serif;
+            font-weight: 600;
+            font-size: .85rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            transition: all .2s;
+        }
+
+            .btn-back:hover {
+                border-color: var(--D);
+                color: var(--D);
+            }
+
+        .invoice {
+            background: #fff;
+            width: 100%;
+            max-width: 680px;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,.1);
+        }
+
+        /* Header */
+        .inv-hd {
+            background: var(--D);
+            padding: 2rem 2.2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .inv-hd::before {
+                content: '';
+                position: absolute;
+                top: -40px;
+                right: -40px;
+                width: 180px;
+                height: 180px;
+                border-radius: 50%;
+                background: rgba(212,160,23,.08);
+            }
+
+            .inv-hd::after {
+                content: '';
+                position: absolute;
+                bottom: -60px;
+                left: 10px;
+                width: 140px;
+                height: 140px;
+                border-radius: 50%;
+                background: rgba(212,160,23,.05);
+            }
+
+        .inv-logo {
+            font-family: 'Playfair Display',serif;
+            font-size: 1.5rem;
+            font-style: italic;
+            font-weight: 700;
+            color: var(--G2);
+            margin-bottom: .25rem;
+        }
+
+        .inv-sub {
+            font-size: .72rem;
+            color: rgba(255,255,255,.5);
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .inv-code-row {
+            margin-top: 1.4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .inv-label {
+            font-size: .62rem;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.4);
+            margin-bottom: .2rem;
+        }
+
+        .inv-code {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: .04em;
+        }
+
+        .inv-date {
+            text-align: right;
+        }
+
+        .inv-date-val {
+            font-size: .88rem;
+            font-weight: 600;
+            color: rgba(255,255,255,.8);
+        }
+
+        .inv-stripe {
+            height: 4px;
+            background: linear-gradient(90deg,var(--G),var(--G2),transparent);
+        }
+
+        /* Status badge */
+        .inv-status-row {
+            padding: 1rem 2.2rem;
+            background: var(--W);
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            border-bottom: 1px solid var(--S);
+        }
+
+        .status-badge {
+            padding: .32rem .85rem;
+            border-radius: 20px;
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+
+            .status-badge.confirmed {
+                background: #d1fae5;
+                color: #065f46;
+            }
+
+            .status-badge.completed {
+                background: #dbeafe;
+                color: #1e40af;
+            }
+
+            .status-badge.cancelled {
+                background: #fee2e2;
+                color: #991b1b;
+            }
+
+            .status-badge.pending {
+                background: #fef3c7;
+                color: #92400e;
+            }
+
+        .pay-badge {
+            padding: .32rem .85rem;
+            border-radius: 20px;
+            font-size: .72rem;
+            font-weight: 700;
+        }
+
+            .pay-badge.paid {
+                background: #d1fae5;
+                color: #065f46;
+            }
+
+            .pay-badge.unpaid {
+                background: #fef3c7;
+                color: #92400e;
+            }
+
+        /* Body */
+        .inv-bd {
+            padding: 1.8rem 2.2rem;
+        }
+
+        .section-title {
+            font-size: .62rem;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: #8c7a68;
+            margin-bottom: .9rem;
+            padding-bottom: .45rem;
+            border-bottom: 1.5px solid var(--S);
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+        }
+
+            .section-title i {
+                color: var(--G);
+            }
+
+        /* Info grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .75rem 1.5rem;
+            margin-bottom: 1.6rem;
+        }
+
+        .info-lbl {
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #8c7a68;
+            margin-bottom: .2rem;
+        }
+
+        .info-val {
+            font-size: .88rem;
+            font-weight: 600;
+            color: var(--D);
+        }
+
+        /* Table */
+        .inv-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.6rem;
+        }
+
+            .inv-table th {
+                font-size: .62rem;
+                font-weight: 800;
+                letter-spacing: .1em;
+                text-transform: uppercase;
+                color: #8c7a68;
+                padding: .55rem .75rem;
+                background: var(--W);
+                text-align: left;
+                border-bottom: 2px solid var(--S);
+            }
+
+                .inv-table th:last-child {
+                    text-align: right;
+                }
+
+            .inv-table td {
+                padding: .65rem .75rem;
+                font-size: .84rem;
+                color: var(--D);
+                border-bottom: 1px solid #f5f0ea;
+            }
+
+                .inv-table td:last-child {
+                    text-align: right;
+                    font-weight: 600;
+                }
+
+            .inv-table tr:last-child td {
+                border-bottom: none;
+            }
+
+        .td-name {
+            font-weight: 600;
+        }
+
+        .td-sub {
+            font-size: .72rem;
+            color: #8c7a68;
+            margin-top: .15rem;
+        }
+
+        /* Summary */
+        .sum-rows {
+            border-top: 2px solid var(--S);
+            padding-top: 1rem;
+        }
+
+        .sum-row {
+            display: flex;
+            justify-content: space-between;
+            padding: .38rem 0;
+            font-size: .84rem;
+        }
+
+            .sum-row .lbl {
+                color: #8c7a68;
+            }
+
+            .sum-row .val {
+                font-weight: 600;
+                color: var(--D);
+            }
+
+                .sum-row .val.gn {
+                    color: var(--GN);
+                }
+
+                .sum-row .val.rd {
+                    color: #dc2626;
+                }
+
+        .sum-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-top: .75rem;
+            padding-top: .75rem;
+            border-top: 2px solid var(--D);
+        }
+
+            .sum-total .lbl {
+                font-size: .92rem;
+                font-weight: 700;
+                color: var(--D);
+            }
+
+            .sum-total .val {
+                font-size: 1.6rem;
+                font-weight: 800;
+                color: var(--D);
+            }
+
+        /* Footer */
+        .inv-ft {
+            background: var(--W);
+            border-top: 1px solid var(--S);
+            padding: 1.2rem 2.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .inv-ft-note {
+            font-size: .74rem;
+            color: #8c7a68;
+            display: flex;
+            align-items: flex-start;
+            gap: .4rem;
+            max-width: 340px;
+            line-height: 1.5;
+        }
+
+            .inv-ft-note i {
+                color: var(--G);
+                margin-top: 1px;
+                flex-shrink: 0;
+            }
+
+        .inv-ft-qr {
+            text-align: center;
+        }
+
+            .inv-ft-qr .qr-lbl {
+                font-size: .62rem;
+                color: #8c7a68;
+                margin-top: .3rem;
+            }
+
+        @@media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .invoice {
+                box-shadow: none;
+                border-radius: 0;
+                max-width: 100%;
+            }
+        }
+
+        @@media(max-width:600px) {
+            .inv-hd, .inv-bd, .inv-ft {
+                padding-left: 1.3rem;
+                padding-right: 1.3rem;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .inv-ft {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <a href="javascript:history.back()" class="btn-back"><i class="bi bi-arrow-left"></i> Quay lại</a>
+        <button class="btn-print" onclick="window.print()"><i class="bi bi-printer-fill"></i> In hoá đơn</button>
+    </div>
+
+    <div class="invoice">
+        <!-- Header -->
+        <div class="inv-hd">
+            <div class="inv-logo">🏸 QuanLiSanCauLong</div>
+            <div class="inv-sub">Hoá đơn đặt sân</div>
+            <div class="inv-code-row">
+                <div>
+                    <div class="inv-label">Mã hoá đơn</div>
+                    <div class="inv-code">#@Model.BookingCode</div>
+                </div>
+                <div class="inv-date">
+                    <div class="inv-label">Ngày đặt</div>
+                    <div class="inv-date-val">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+            </div>
+        </div>
+        <div class="inv-stripe"></div>
+
+        <!-- Status -->
+        <div class="inv-status-row">
+            <span>Trạng thái:</span>
+            @{
+                var sc = Model.Status switch
+                {
+                                    "Confirmed" => "confirmed",
+                                    "Completed" => "completed",
+                                    "Cancelled" => "cancelled",
+                    _ => "pending"
+                };
+                var sl = Model.Status switch
+                {
+                                    "Confirmed" => "Đã xác nhận",
+                                    "Completed" => "Hoàn thành",
+                                    "Cancelled" => "Đã huỷ",
+                                    "Pending" => "Chờ xác nhận",
+                    _ => Model.Status
+                };
+            }
+            <span class="status-badge @sc">@sl</span>
+            <span style="margin-left:auto">Thanh toán:</span>
+            <span class="pay-badge @(Model.PaymentStatus == "Paid" ? "paid" : "unpaid")">
+                @(Model.PaymentStatus == "Paid" ? "Đã thanh toán" : "Chưa thanh toán")
+            </span>
+        </div>
+
+        <div class="inv-bd">
+            <!-- Booking Info -->
+            <div class="section-title"><i class="bi bi-calendar-check"></i> Thông tin đặt sân</div>
+            <div class="info-grid">
+                <div>
+                    <div class="info-lbl">Cơ sở</div>
+                    <div class="info-val">@Model.FacilityName</div>
+                </div>
+                <div>
+                    <div class="info-lbl">Sân</div>
+                    <div class="info-val">@Model.CourtNumber <span style="font-size:.75rem;color:#8c7a68">(@Model.CourtType)</span></div>
+                </div>
+                <div>
+                    <div class="info-lbl">Ngày chơi</div>
+                    <div class="info-val">@Model.BookingDate.ToString("dd/MM/yyyy") <span style="font-size:.75rem;color:#8c7a68">(@Model.BookingDate.ToString("dddd", new System.Globalization.CultureInfo("vi-VN")))</span></div>
+                </div>
+                <div>
+                    <div class="info-lbl">Khung giờ</div>
+                    <div class="info-val">@Model.StartTime.ToString(@"hh\:mm") – @Model.EndTime.ToString(@"hh\:mm") <span style="font-size:.75rem;color:#8c7a68">(@Model.Duration phút)</span></div>
+                </div>
+                <div>
+                    <div class="info-lbl">Phương thức TT</div>
+                    <div class="info-val">@Model.PaymentMethod</div>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Note))
+                {
+                    <div>
+                        <div class="info-lbl">Ghi chú</div>
+                        <div class="info-val">@Model.Note</div>
+                    </div>
+                }
+            </div>
+
+            <!-- Line Items -->
+            <div class="section-title"><i class="bi bi-receipt"></i> Chi tiết thanh toán</div>
+            <table class="inv-table">
+                <thead>
+                    <tr>
+                        <th>Mô tả</th>
+                        <th style="text-align:center">SL</th>
+                        <th style="text-align:right">Đơn giá</th>
+                        <th>Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Court -->
+                    <tr>
+                        <td>
+                            <div class="td-name">Thuê sân @Model.CourtNumber</div>
+                            <div class="td-sub">@Model.FacilityName · @Model.StartTime.ToString(@"hh\:mm")–@Model.EndTime.ToString(@"hh\:mm")</div>
+                        </td>
+                        <td style="text-align:center">1</td>
+                        <td style="text-align:right">@Model.TotalPrice.ToString("N0")đ</td>
+                        <td style="color:var(--GN)">@Model.TotalPrice.ToString("N0")đ</td>
+                    </tr>
+
+                    <!-- Products -->
+                    @if (Model.RelatedOrders != null)
+                    {
+                        @foreach (var order in Model.RelatedOrders)
+                        {
+                            @foreach (var od in order.OrderDetails)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="td-name">@od.ProductName</div>
+                                        <div class="td-sub">Sản phẩm đi kèm</div>
+                                    </td>
+                                    <td style="text-align:center">@od.Quantity @od.Unit</td>
+                                    <td style="text-align:right">@od.UnitPrice.ToString("N0")đ</td>
+                                    <td>@od.TotalPrice.ToString("N0")đ</td>
+                                </tr>
+                            }
+                        }
+                    }
+                </tbody>
+            </table>
+
+            <!-- Summary -->
+            <div class="sum-rows">
+                <div class="sum-row"><span class="lbl">Tiền sân</span><span class="val gn">@Model.TotalPrice.ToString("N0")đ</span></div>
+                @if (Model.RelatedOrders != null && Model.RelatedOrders.Any())
+                {
+                    <div class="sum-row">
+                        <span class="lbl">Sản phẩm đi kèm</span>
+                        <span class="val">@Model.RelatedOrders.Sum(o => o.TotalAmount).ToString("N0")đ</span>
+                    </div>
+                }
+                <div class="sum-total">
+                    <span class="lbl">TỔNG CỘNG</span>
+                    <span class="val">@((Model.TotalPrice + (Model.RelatedOrders != null ? Model.RelatedOrders.Sum(o => o.TotalAmount) : 0)).ToString("N0"))đ</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="inv-ft">
+            <div class="inv-ft-note">
+                <i class="bi bi-info-circle-fill"></i>
+                <span>Vui lòng xuất trình hoá đơn này khi check-in. Có mặt trước <strong>15 phút</strong> để xác nhận đặt sân.</span>
+            </div>
+            <div class="inv-ft-qr">
+                <div style="width:60px;height:60px;background:var(--S);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#8c7a68;font-size:1.5rem"><i class="bi bi-qr-code"></i></div>
+                <div class="qr-lbl">Mã QR check-in</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

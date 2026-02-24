@@ -121,7 +121,9 @@ namespace QuanLiSanCauLong.Data
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-
+            // Thêm vào phần "Cấu hình cũ" trong DbContext
+            modelBuilder.Entity<Product>().Property(p => p.SalePrice).HasPrecision(10, 2);
+            modelBuilder.Entity<Product>().Property(p => p.COGSPrice).HasPrecision(10, 2);
             // --- Cấu hình Precision cho các trường Decimal hệ thống mới ---
             modelBuilder.Entity<JobPosting>().Property(j => j.SalaryMin).HasPrecision(18, 2);
             modelBuilder.Entity<JobPosting>().Property(j => j.SalaryMax).HasPrecision(18, 2);

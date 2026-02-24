@@ -547,6 +547,25 @@
                     </div>
                 </div>
 
+                <!-- Duration Selection -->
+                <div class="time-section">
+                    <div class="section-label">
+                        <i class="bi bi-hourglass-split"></i>
+                        Thời lượng đặt sân
+                    </div>
+                    <div class="time-grid" id="durationGrid">
+                        <div class="time-slot selected" data-duration="15" onclick="selectDuration(this)">
+                            <div class="time-label">15 phút</div>
+                        </div>
+                        <div class="time-slot" data-duration="30" onclick="selectDuration(this)">
+                            <div class="time-label">30 phút</div>
+                        </div>
+                        <div class="time-slot" data-duration="60" onclick="selectDuration(this)">
+                            <div class="time-label">1 tiếng</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Search Button -->
                 <button class="btn-search" onclick="searchCourts()">
                     <i class="bi bi-search"></i>
@@ -582,7 +601,26 @@
 <script>
     let selectedDate = null;
     let selectedTime = null;
+    let selectedDuration = 15; // mặc định 15 phút
     const facilityId = @ViewBag.FacilityId;
+
+    // Tính endTime = startTime + duration (phút)
+    function calcEndTime(startTime, durationMinutes) {
+        const [h, m] = startTime.split(':').map(Number);
+        const totalMinutes = h * 60 + m + durationMinutes;
+        const endH = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
+        const endM = (totalMinutes % 60).toString().padStart(2, '0');
+        return `${endH}:${endM}`;
+    }
+
+    // Select duration
+    function selectDuration(element) {
+        document.querySelectorAll('#durationGrid .time-slot').forEach(item => {
+            item.classList.remove('selected');
+        });
+        element.classList.add('selected');
+        selectedDuration = parseInt(element.getAttribute('data-duration'));
+    }
 
     // Generate date grid (next 14 days)
     function initDateGrid() {
@@ -647,7 +685,7 @@
 
     // Select time
     function selectTime(element) {
-        document.querySelectorAll('.time-slot').forEach(item => {
+        document.querySelectorAll('#timeGrid .time-slot').forEach(item => {
             item.classList.remove('selected');
         });
         element.classList.add('selected');
@@ -703,7 +741,7 @@
         const resultsInfo = document.getElementById('resultsInfo');
 
         resultsCount.innerHTML = `Tìm thấy <strong>${courts.length}</strong> sân trống`;
-        resultsInfo.textContent = `Ngày ${selectedDate} - Khung giờ ${selectedTime}`;
+        resultsInfo.textContent = `Ngày ${selectedDate} - Khung giờ ${selectedTime} (${selectedDuration} phút)`;
 
         if (courts.length === 0) {
             courtsList.innerHTML = `
@@ -713,7 +751,9 @@
                 </div>
             `;
         } else {
-            courtsList.innerHTML = courts.map(court => `
+            courtsList.innerHTML = courts.map(court => {
+                const bookedEndTime = calcEndTime(court.startTime, selectedDuration);
+                return `
                 <div class="court-card">
                     <div class="court-header">
                         <div class="court-name">${court.courtNumber}</div>
@@ -722,7 +762,7 @@
                     <div class="court-details">
                         <div class="court-detail-item">
                             <i class="bi bi-clock"></i>
-                            <span>${court.startTime} - ${court.endTime}</span>
+                            <span>${court.startTime} - ${bookedEndTime} (${selectedDuration} phút)</span>
                         </div>
                         ${court.hasLighting ? '<div class="court-detail-item"><i class="bi bi-lightbulb"></i><span>Có đèn</span></div>' : ''}
                         ${court.hasAC ? '<div class="court-detail-item"><i class="bi bi-snow"></i><span>Điều hòa</span></div>' : ''}
@@ -733,12 +773,21 @@
                             ${court.price.toLocaleString('vi-VN')}
                             <span class="unit">VNĐ</span>
                         </div>
-                        <button class="btn-book" onclick="bookCourt(${court.courtId}, '${selectedDate}', '${court.startTime}', '${court.endTime}')">
-                            <i class="bi bi-calendar-check me-2"></i>Đặt sân ngay
-                        </button>
+                        <div style="display:flex;gap:.5rem">
+                            <a href="/Court/Details/${court.courtId}?bookingDate=${selectedDate}&startTime=${court.startTime}&endTime=${bookedEndTime}"
+                               target="_blank"
+                               style="padding:.55rem .85rem;border:1.5px solid currentColor;border-radius:7px;font-size:.78rem;font-weight:600;color:#6b5744;text-decoration:none;display:flex;align-items:center;gap:.35rem;transition:all .2s"
+                               onmouseover="this.style.borderColor='var(--D)';this.style.color='var(--D)'"
+                               onmouseout="this.style.borderColor='currentColor';this.style.color='#6b5744'">
+                                <i class="bi bi-eye"></i> Chi tiết
+                            </a>
+                            <button class="btn-book" onclick="bookCourt(${court.courtId}, '${selectedDate}', '${court.startTime}', '${bookedEndTime}')">
+                                <i class="bi bi-calendar-check me-2"></i>Đặt sân ngay
+                            </button>
+                        </div>
                     </div>
                 </div>
-            `).join('');
+            `;}).join('');
         }
 
         resultsSection.classList.add('show');
