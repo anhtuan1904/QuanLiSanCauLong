@@ -105,15 +105,40 @@ namespace QuanLiSanCauLong.ViewModels
     {
         public int CourtId { get; set; }
         public string CourtNumber { get; set; }
-        public string CourtType { get; set; }
-        public string Status { get; set; }
+
+        // Loại sân & mặt sân
+        public string CourtType { get; set; }           // "Indoor" | "Outdoor"
+        public string CourtTypeLabel { get; set; }      // "Trong nhà" | "Ngoài trời"
+        public string SurfaceType { get; set; }         // "Wooden" | "Synthetic" | v.v.
+        public string SurfaceTypeLabel { get; set; }    // nhãn hiển thị
+
+        // Thông tin vật lý
+        public string FloorNumber { get; set; }         // ví dụ: "Tầng 2"
+        public bool HasLighting { get; set; }
+        public bool HasAC { get; set; }
+
+        // Giá & trạng thái
+        public decimal? HourlyRate { get; set; }
+        public string Status { get; set; }              // "Active" | "Maintenance"
+        public string StatusLabel { get; set; }         // "Hoạt động" | "Đang bảo trì"
+
+        // Mô tả & hình ảnh
         public string Description { get; set; }
+        public string ImagePath { get; set; }           // ảnh đại diện chính
+        public List<CourtImageViewModel> CourtImages { get; set; } = new List<CourtImageViewModel>();
+
+        // Features cũ (giữ lại tương thích)
         public List<string> Features { get; set; } = new List<string>();
 
-        // Danh sách khung giờ trống
+        // Danh sách khung giờ
         public List<TimeSlotViewModel> Slots { get; set; } = new List<TimeSlotViewModel>();
     }
-
+    public class CourtImageViewModel
+    {
+        public string ImagePath { get; set; }
+        public bool IsPrimary { get; set; }
+        public int DisplayOrder { get; set; }
+    }
     /// <summary>
     /// ViewModel cho lịch đặt của user
     /// </summary>

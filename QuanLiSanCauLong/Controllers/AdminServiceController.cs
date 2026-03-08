@@ -101,9 +101,7 @@ namespace QuanLiSanCauLong.Controllers
         public async Task<IActionResult> CourseDetails(int id)
         {
             var course = await _context.Courses.FindAsync(id);
-            if (course == null) return Content("<p class='text-danger p-4'>Không tìm thấy khóa học</p>");
-            course.ViewCount++;
-            await _context.SaveChangesAsync();
+            if (course == null) return NotFound();
             return PartialView("CourseDetails", course);
         }
 
@@ -190,11 +188,9 @@ namespace QuanLiSanCauLong.Controllers
         [HttpGet]
         public async Task<IActionResult> StringingDetails(int id)
         {
-            var s = await _context.StringingServices.FindAsync(id);
-            if (s == null) return Content("<p class='text-danger p-4'>Không tìm thấy dịch vụ</p>");
-            s.ViewCount++;
-            await _context.SaveChangesAsync();
-            return PartialView("StringingDetails", s);
+            var stringing = await _context.StringingServices.FindAsync(id);
+            if (stringing == null) return NotFound();
+            return PartialView("StringingDetails", stringing);
         }
 
         [HttpPost]
@@ -293,11 +289,9 @@ namespace QuanLiSanCauLong.Controllers
         [HttpGet]
         public async Task<IActionResult> TournamentDetails(int id)
         {
-            var t = await _context.Tournaments.FindAsync(id);
-            if (t == null) return Content("<p class='text-danger p-4'>Không tìm thấy giải đấu</p>");
-            t.ViewCount++;
-            await _context.SaveChangesAsync();
-            return PartialView("TournamentDetails", t);
+            var tournament = await _context.Tournaments.FindAsync(id);
+            if (tournament == null) return NotFound();
+            return PartialView("TournamentDetails", tournament);
         }
 
         [HttpPost]
@@ -345,5 +339,6 @@ namespace QuanLiSanCauLong.Controllers
                 .Replace(" ", "-");
             return System.Text.RegularExpressions.Regex.Replace(slug, @"[^a-z0-9\-]", "");
         }
+
     }
 }

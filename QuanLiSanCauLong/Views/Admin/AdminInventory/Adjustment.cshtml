@@ -352,7 +352,7 @@
             <p>Cập nhật số lượng thực tế sau kiểm kê</p>
         </div>
     </div>
-    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+    <button type="button" class="btn-close shadow-none" onclick="this.closest('.modal-overlay').classList.remove('show')"></button>
 </div>
 
 <form asp-action="Adjustment" method="post" id="adjustForm">
@@ -401,13 +401,25 @@
             }
         </div>
 
+        <!-- Variant selector (nếu sản phẩm có size) -->
+        <div id="variantSection" style="display:none;margin-bottom:1rem;">
+            <div class="section-div"><i class="bi bi-grid-3x3-gap me-1"></i>Chọn Phân Loại (Size)</div>
+            <div class="fl mb-3">
+                <label>Phân loại cần điều chỉnh</label>
+                <select name="variantId" id="variantSelect" class="fc">
+                    <option value="">-- Điều chỉnh toàn sản phẩm --</option>
+                </select>
+                <small id="variantStockInfo" style="font-size:.75rem;color:var(--court-muted);display:block;margin-top:.3rem;"></small>
+            </div>
+        </div>
+
         <!-- Before / After -->
         <div class="section-div"><i class="bi bi-arrow-left-right me-1"></i>Số Lượng Trước / Sau</div>
         <div class="row g-2 mb-3 align-items-end">
             <div class="col-md-5 fl">
                 <label>Hệ thống ghi nhận</label>
                 <div class="fc-unit">
-                    <input type="text" class="fc fc-readonly" value="@Model.Quantity" readonly />
+                    <input type="text" id="currentQtyDisplay" class="fc fc-readonly" value="@Model.Quantity" readonly />
                     <span class="unit-label">@Model.Product?.Unit</span>
                 </div>
             </div>
@@ -461,7 +473,7 @@
     </div>
 
     <div class="modal-foot-court">
-        <button type="button" class="btn-cancel-modal" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn-cancel-modal" onclick="this.closest('.modal-overlay').classList.remove('show')">Hủy</button>
         <button type="submit" class="btn-submit-modal">
             <i class="bi bi-check2-circle"></i> Cập Nhật Tồn Kho
         </button>
@@ -469,7 +481,50 @@
 </form>
 
 <script>
-    const currentQty = @Model.Quantity;
+    // Base quantity from Inventory record (whole product)
+    let currentQty = @Model.Quantity;
+    const productId = @(Model.Product?.ProductId ?? 0);
+    const unitName  = '@(Model.Product?.Unit ?? "")';
+
+    // Load variants on page ready
+    document.addEventListener('DOMContentLoaded', async () => {
+        calcDiff();
+        if (productId > 0) {
+            try {
+                const res  = await fetch(`/Admin/AdminProduct/GetVariants?productId=${productId}`);
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    const sec = document.getElementById('variantSection');
+                    const sel = document.getElementById('variantSelect');
+                    sec.style.display = '';
+                    data.forEach(v => {
+                        const opt = document.createElement('option');
+                        opt.value = v.variantId;
+                        opt.dataset.stock = v.stockQuantity;
+                        opt.textContent = `${v.displayName}  —  Tồn: ${v.stockQuantity}  |  KD: ${v.availableQuantity}`;
+                        sel.appendChild(opt);
+                    });
+                    sel.onchange = () => {
+                        const opt = sel.selectedOptions[0];
+                        if (opt && opt.value) {
+                            const s = parseInt(opt.dataset.stock);
+                            currentQty = s;
+                            document.getElementById('currentQtyDisplay').value = s;
+                            document.getElementById('newQtyInput').value = s;
+                            document.getElementById('variantStockInfo').textContent =
+                                `Tồn hiện tại của variant này: ${s} ${unitName}`;
+                        } else {
+                            currentQty = @Model.Quantity;
+                            document.getElementById('currentQtyDisplay').value = @Model.Quantity;
+                            document.getElementById('newQtyInput').value = @Model.Quantity;
+                            document.getElementById('variantStockInfo').textContent = '';
+                        }
+                        calcDiff();
+                    };
+                }
+            } catch(e) { /* no variants */ }
+        }
+    });
 
     function calcDiff() {
         const newQty = parseInt(document.getElementById('newQtyInput').value) || 0;
@@ -484,17 +539,15 @@
         if (diff > 0) {
             box.classList.add('diff-up');
             ico.className = 'bi bi-arrow-up-circle-fill';
-            txt.innerHTML = `Tăng <strong>+${diff} @Model.Product?.Unit</strong> so với hệ thống`;
+            txt.innerHTML = `Tăng <strong>+${diff} ${unitName}</strong> so với hệ thống`;
         } else if (diff < 0) {
             box.classList.add('diff-down');
             ico.className = 'bi bi-arrow-down-circle-fill';
-            txt.innerHTML = `Giảm <strong>${diff} @Model.Product?.Unit</strong> so với hệ thống`;
+            txt.innerHTML = `Giảm <strong>${diff} ${unitName}</strong> so với hệ thống`;
         } else {
             box.classList.add('diff-same');
             ico.className = 'bi bi-check-circle-fill';
             txt.innerHTML = `Số lượng <strong>khớp</strong> với hệ thống, không có chênh lệch`;
         }
     }
-
-    document.addEventListener('DOMContentLoaded', calcDiff);
 </script>

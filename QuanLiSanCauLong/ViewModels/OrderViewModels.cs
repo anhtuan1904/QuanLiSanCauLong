@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-
 namespace QuanLiSanCauLong.ViewModels
 {
     /// <summary>
@@ -29,9 +28,11 @@ namespace QuanLiSanCauLong.ViewModels
         public decimal TotalAmount { get; set; }
         public string OrderStatus { get; set; }
         public string PaymentStatus { get; set; }
-        public string Note { get; set; } // <--- THÊM DÒNG NÀY
+        public string Note { get; set; }
         public DateTime CreatedAt { get; set; }
-        public List<OrderDetailViewModel> OrderDetails { get; set; }
+        public DateTime? UpdatedAt { get; set; }    // Thêm: thời điểm cập nhật (Confirm/Cancel)
+        public DateTime? CompletedAt { get; set; }  // Thêm: thời điểm hoàn thành
+        public List<OrderDetailViewModel> OrderDetails { get; set; } = new();
     }
 
     /// <summary>
@@ -44,7 +45,7 @@ namespace QuanLiSanCauLong.ViewModels
         public decimal TotalAmount { get; set; }
         public string OrderStatus { get; set; }
         public string PaymentStatus { get; set; }
-        public List<OrderDetailViewModel> OrderDetails { get; set; }
+        public List<OrderDetailViewModel> OrderDetails { get; set; } = new();
     }
 
     /// <summary>
@@ -53,43 +54,12 @@ namespace QuanLiSanCauLong.ViewModels
     public class OrderDetailViewModel
     {
         public string ProductName { get; set; }
+        /// <summary>Tên phân loại size/màu — null nếu sản phẩm không có variant</summary>
+        public string VariantDisplay { get; set; }
         public int Quantity { get; set; }
         public string Unit { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal DiscountAmount { get; set; }
         public decimal TotalPrice { get; set; }
     }
-/*    // =====================================================================
-    // ORDER VIEW MODELS
-    // =====================================================================
-    public class OrderViewModel
-    {
-        public int OrderId { get; set; }
-        public string OrderCode { get; set; }
-        public string OrderType { get; set; }
-        public decimal TotalAmount { get; set; }
-        public string OrderStatus { get; set; }
-        public List<OrderDetailViewModel> OrderDetails { get; set; } = new();
-    }
-
-    public class OrderDetailViewModel
-    {
-        public string ProductName { get; set; }
-        public int Quantity { get; set; }
-        public string Unit { get; set; }
-        public decimal UnitPrice { get; set; }
-        public decimal TotalPrice { get; set; }
-    }
-
-    // =====================================================================
-    // ORDER ITEM (dùng trong CreateBookingViewModel)
-    // =====================================================================
-    public class OrderItemViewModel
-    {
-        public int ProductId { get; set; }
-        public decimal Price { get; set; }
-        public int Quantity { get; set; }
-        public decimal TotalPrice => Price * Quantity;
-    }
-*/
 }

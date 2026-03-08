@@ -3,253 +3,504 @@
     ViewData["Title"] = Model.Title;
 }
 
-<div class="blog-detail-container">
-    <div class="container py-3">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none text-purple">Trang chủ</a></li>
-                <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none text-purple">Tin tức</a></li>
-                <li class="breadcrumb-item active">Chi tiết</li>
-            </ol>
-        </nav>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --deep: #1a1209;
+        --cream: #fdf8f0;
+        --warm: #f5efe0;
+        --muted: #8a7560;
+        --border: #e8ddc8;
+    }
+
+    body, * {
+        font-family: 'Outfit', sans-serif;
+        box-sizing: border-box;
+    }
+
+    /* BREADCRUMB */
+    .bd-bc {
+        background: var(--deep);
+        padding: .75rem 0;
+        border-bottom: 1px solid rgba(212,160,23,.18);
+    }
+
+    .bd-bc-inner {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+
+    .bd-bc a {
+        color: var(--gold2);
+        text-decoration: none;
+        font-size: .76rem;
+        font-weight: 600;
+        opacity: .8;
+    }
+
+        .bd-bc a:hover {
+            opacity: 1;
+        }
+
+    .bd-bc-sep {
+        color: rgba(255,255,255,.25);
+        font-size: .65rem;
+    }
+
+    .bd-bc-cur {
+        color: rgba(255,255,255,.35);
+        font-size: .76rem;
+        font-style: italic;
+    }
+
+    /* ARTICLE HERO */
+    .bd-hero {
+        background: var(--deep);
+        padding: 3.5rem 0 4rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .bd-hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 50% 80% at 80% 50%, rgba(212,160,23,.06), transparent 65%);
+            pointer-events: none;
+        }
+
+    .bd-hero-inner {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .bd-cat {
+        display: inline-block;
+        background: var(--gold);
+        color: var(--deep);
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        padding: .25rem .8rem;
+        border-radius: 2px;
+        margin-bottom: 1.5rem;
+    }
+
+    .bd-feat-badge {
+        display: inline-block;
+        background: rgba(220,38,38,.15);
+        border: 1px solid rgba(220,38,38,.3);
+        color: #f87171;
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        padding: .25rem .8rem;
+        border-radius: 2px;
+        margin-bottom: 1.5rem;
+        margin-left: .5rem;
+    }
+
+    .bd-title {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(1.9rem, 4vw, 3rem);
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.2;
+        margin-bottom: 1.25rem;
+    }
+
+    .bd-excerpt {
+        font-size: 1rem;
+        color: rgba(255,255,255,.5);
+        font-weight: 300;
+        line-height: 1.8;
+        max-width: 640px;
+        margin-bottom: 2rem;
+    }
+
+    .bd-meta {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .bd-meta-item {
+        font-size: .78rem;
+        color: rgba(255,255,255,.4);
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+    }
+
+        .bd-meta-item i {
+            color: var(--gold);
+            font-size: .72rem;
+        }
+
+    /* FEATURED IMAGE */
+    .bd-img-wrap {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        margin-top: -2rem;
+        position: relative;
+        z-index: 2;
+    }
+
+        .bd-img-wrap img {
+            width: 100%;
+            max-height: 520px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            box-shadow: 0 24px 60px rgba(26,18,9,.18);
+        }
+
+    /* BODY */
+    .bd-body {
+        background: var(--cream);
+        padding: 4rem 0 6rem;
+    }
+
+    .bd-body-inner {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    /* Content styling */
+    .bd-content {
+        font-size: .975rem;
+        line-height: 1.95;
+        color: #2d2418;
+        text-align: justify;
+    }
+
+        .bd-content h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: var(--deep);
+            margin: 3rem 0 1.2rem;
+            padding-bottom: .6rem;
+            border-bottom: 2px solid var(--gold);
+        }
+
+        .bd-content h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--deep);
+            margin: 2.5rem 0 1rem;
+        }
+
+        .bd-content p {
+            margin-bottom: 1.5rem;
+        }
+
+        .bd-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            margin: 2rem 0;
+            box-shadow: 0 8px 28px rgba(26,18,9,.12);
+            border: 1px solid var(--border);
+        }
+
+        .bd-content ul, .bd-content ol {
+            margin-bottom: 1.5rem;
+            padding-left: 1.75rem;
+        }
+
+        .bd-content li {
+            margin-bottom: .75rem;
+        }
+
+        .bd-content blockquote {
+            border-left: 3px solid var(--gold);
+            padding: 1.25rem 1.5rem;
+            margin: 2rem 0;
+            background: var(--warm);
+            border-radius: 0 6px 6px 0;
+            font-style: italic;
+            color: var(--muted);
+        }
+
+        .bd-content a {
+            color: var(--gold);
+            text-decoration: underline;
+        }
+
+    /* TAGS */
+    .bd-tags {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .bd-tags-label {
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .15em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: .75rem;
+    }
+
+    .bd-tag {
+        display: inline-block;
+        background: var(--warm);
+        border: 1px solid var(--border);
+        color: var(--muted);
+        font-size: .72rem;
+        font-weight: 600;
+        padding: .28rem .8rem;
+        border-radius: 3px;
+        margin: .2rem;
+        text-decoration: none;
+        transition: all .2s;
+    }
+
+        .bd-tag:hover {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: var(--deep);
+        }
+
+    /* SHARE */
+    .bd-share {
+        margin-top: 2.5rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .bd-share-label {
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .15em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: .75rem;
+    }
+
+    .bd-share-btns {
+        display: flex;
+        gap: .5rem;
+        flex-wrap: wrap;
+    }
+
+    .bd-share-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .45rem 1.1rem;
+        border-radius: 3px;
+        font-size: .76rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--muted);
+        transition: all .2s;
+        text-decoration: none;
+    }
+
+        .bd-share-btn:hover {
+            background: var(--deep);
+            border-color: var(--deep);
+            color: var(--gold2);
+        }
+
+    /* REVIEW SECTION */
+    #reviewSection {
+        margin-top: 3.5rem;
+        padding-top: 2.5rem;
+        border-top: 2px solid var(--border);
+    }
+
+    .bd-review-loading {
+        text-align: center;
+        padding: 2.5rem;
+        color: var(--muted);
+    }
+
+    .bd-review-loading-spinner {
+        width: 28px;
+        height: 28px;
+        border: 2px solid var(--border);
+        border-top-color: var(--gold);
+        border-radius: 50%;
+        animation: spin .7s linear infinite;
+        margin: 0 auto 1rem;
+    }
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* BACK BUTTON */
+    .bd-back-wrap {
+        text-align: center;
+        margin-top: 4rem;
+        padding-top: 2.5rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .bd-back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .6rem;
+        background: var(--deep);
+        color: var(--gold2);
+        border: none;
+        padding: .9rem 2.5rem;
+        font-family: 'Playfair Display', serif;
+        font-size: .95rem;
+        font-weight: 700;
+        border-radius: 3px;
+        text-decoration: none;
+        transition: all .3s;
+    }
+
+        .bd-back-btn:hover {
+            background: var(--gold);
+            color: var(--deep);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(212,160,23,.3);
+        }
+
+    @@media (max-width: 640px) {
+        .bd-hero {
+            padding: 2.5rem 0 3rem;
+        }
+
+        .bd-title {
+            font-size: 1.9rem;
+        }
+
+        .bd-img-wrap {
+            margin-top: -1.5rem;
+        }
+    }
+</style>
+
+<!-- BREADCRUMB -->
+<div class="bd-bc">
+    <div class="bd-bc-inner">
+        <a asp-controller="Home" asp-action="Index"><i class="bi bi-house me-1"></i>Trang chủ</a>
+        <span class="bd-bc-sep"><i class="bi bi-chevron-right"></i></span>
+        <a asp-controller="Blog" asp-action="Index">Tin tức</a>
+        <span class="bd-bc-sep"><i class="bi bi-chevron-right"></i></span>
+        <span class="bd-bc-cur">Chi tiết</span>
     </div>
+</div>
 
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <article class="post-article">
-                    <div class="post-meta mb-4">
-                        <span class="badge bg-purple-soft text-purple rounded-pill px-4 py-2 me-2">
-                            <i class="bi bi-folder me-1"></i>@Model.Category?.CategoryName
-                        </span>
-                        @if (Model.IsFeatured)
-                        {
-                            <span class="badge bg-danger rounded-pill px-4 py-2">
-                                <i class="bi bi-star-fill me-1"></i>Nổi bật
-                            </span>
-                        }
-                    </div>
-
-                    <h1 class="post-title display-4 fw-bold mb-4">@Model.Title</h1>
-
-                    @if (!string.IsNullOrEmpty(Model.Excerpt))
-                    {
-                        <p class="lead text-muted mb-4" style="font-size: 1.15rem; line-height: 1.8;">@Model.Excerpt</p>
-                    }
-
-                    <div class="author-box d-flex align-items-center p-4 rounded-4 bg-light mb-5">
-                        <div class="author-avatar me-3">
-                            <div class="rounded-circle bg-gradient-purple d-flex align-items-center justify-content-center"
-                                 style="width: 60px; height: 60px;">
-                                <i class="bi bi-person-fill text-white fs-3"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="fw-bold fs-5">@Model.AuthorId</div>
-                            <div class="text-muted small">
-                                <i class="bi bi-calendar3 me-1"></i>Đăng ngày @(Model.PublishedAt?.ToString("dd/MM/yyyy") ?? Model.CreatedAt.ToString("dd/MM/yyyy"))
-                                <span class="mx-2">•</span>
-                                <i class="bi bi-eye me-1"></i>@Model.ViewCount.ToString("N0") lượt xem
-                            </div>
-                        </div>
-                        @if (!string.IsNullOrEmpty(Model.Tags))
-                        {
-                            <div class="ms-auto d-none d-md-block">
-                                @foreach (var tag in Model.Tags.Split(','))
-                                {
-                                    <span class="badge bg-white text-secondary me-1">#@tag.Trim()</span>
-                                }
-                            </div>
-                        }
-                    </div>
-
-                    @if (!string.IsNullOrEmpty(Model.FeaturedImage))
-                    {
-                        <div class="featured-image mb-5">
-                            <img src="@Model.FeaturedImage" class="img-fluid rounded-4 shadow-lg w-100"
-                                 style="max-height: 600px; object-fit: cover;" alt="@Model.Title">
-                        </div>
-                    }
-
-                    <div class="post-content fs-5" style="line-height: 1.9; color: #2d3748;">
-                        @Html.Raw(Model.Content)
-                    </div>
-
-                    @if (!string.IsNullOrEmpty(Model.Tags))
-                    {
-                        <div class="post-tags mt-5 pt-4 border-top">
-                            <h6 class="fw-bold mb-3">Tags:</h6>
-                            <div class="d-flex flex-wrap gap-2">
-                                @foreach (var tag in Model.Tags.Split(','))
-                                {
-                                    <a href="#" class="badge bg-purple-soft text-purple text-decoration-none px-3 py-2 rounded-pill">
-                                        #@tag.Trim()
-                                    </a>
-                                }
-                            </div>
-                        </div>
-                    }
-
-                    <div class="share-section mt-5 pt-4 border-top">
-                        <h6 class="fw-bold mb-3">Chia sẻ bài viết:</h6>
-                        <div class="d-flex gap-2">
-                            <a href="#" class="btn btn-outline-primary btn-sm rounded-pill">
-                                <i class="bi bi-facebook me-1"></i>Facebook
-                            </a>
-                            <a href="#" class="btn btn-outline-info btn-sm rounded-pill">
-                                <i class="bi bi-twitter me-1"></i>Twitter
-                            </a>
-                            <a href="#" class="btn btn-outline-success btn-sm rounded-pill">
-                                <i class="bi bi-whatsapp me-1"></i>WhatsApp
-                            </a>
-                            <button class="btn btn-outline-secondary btn-sm rounded-pill" onclick="copyLink()">
-                                <i class="bi bi-link-45deg me-1"></i>Copy Link
-                            </button>
-                        </div>
-                    </div>
-
-                    <hr class="my-5" />
-
-                    <div id="reviewSection" class="mt-5">
-                        <div class="text-center py-4">
-                            <div class="spinner-border text-purple" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <p class="mt-2 text-muted">Đang tải đánh giá và bình luận...</p>
-                        </div>
-                    </div>
-
-                    <div class="text-center mt-5 pt-4">
-                        <a asp-action="Index" class="btn btn-purple btn-lg rounded-pill px-5 shadow-sm">
-                            <i class="bi bi-arrow-left me-2"></i>Quay lại danh sách
-                        </a>
-                    </div>
-                </article>
-            </div>
+<!-- HERO -->
+<div class="bd-hero">
+    <div class="bd-hero-inner">
+        @if (!string.IsNullOrEmpty(Model.Category?.CategoryName))
+        {
+            <span class="bd-cat">@Model.Category.CategoryName</span>
+        }
+        @if (Model.IsFeatured)
+        {
+            <span class="bd-feat-badge"><i class="bi bi-star-fill me-1" style="font-size:.55rem"></i>Nổi bật</span>
+        }
+        <h1 class="bd-title">@Model.Title</h1>
+        @if (!string.IsNullOrEmpty(Model.Excerpt))
+        {
+            <p class="bd-excerpt">@Model.Excerpt</p>
+        }
+        <div class="bd-meta">
+            <div class="bd-meta-item"><i class="bi bi-calendar3"></i>@((Model.PublishedAt ?? Model.CreatedAt).ToString("dd/MM/yyyy"))</div>
+            <div class="bd-meta-item"><i class="bi bi-eye"></i>@Model.ViewCount.ToString("N0") lượt xem</div>
+            @if (!string.IsNullOrEmpty(Model.Tags))
+            {
+                <div class="bd-meta-item"><i class="bi bi-tags"></i>@Model.Tags.Replace(",", " · ")</div>
+            }
         </div>
     </div>
 </div>
 
-<style>
-    .text-purple {
-        color: #6c33f2;
-    }
+<!-- FEATURED IMAGE -->
+@if (!string.IsNullOrEmpty(Model.FeaturedImage))
+{
+    <div class="bd-img-wrap">
+        <img src="@Model.FeaturedImage" alt="@Model.Title" />
+    </div>
+}
 
-    .bg-purple {
-        background-color: #6c33f2;
-    }
+<!-- BODY -->
+<div class="bd-body">
+    <div class="bd-body-inner">
+        <div class="bd-content">
+            @Html.Raw(Model.Content)
+        </div>
 
-    .bg-purple-soft {
-        background-color: #f3f0ff;
-    }
-
-    .bg-gradient-purple {
-        background: linear-gradient(135deg, #6c33f2, #8b5cf6);
-    }
-
-    .btn-purple {
-        background: linear-gradient(135deg, #6c33f2, #8b5cf6);
-        border: none;
-        color: white;
-        font-weight: 600;
-        transition: all 0.3s;
-    }
-
-        .btn-purple:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(108, 51, 242, 0.3) !important;
-            color: white;
+        @if (!string.IsNullOrEmpty(Model.Tags))
+        {
+            <div class="bd-tags">
+                <div class="bd-tags-label">Tags</div>
+                @foreach (var tag in Model.Tags.Split(','))
+                {
+                    <a href="#" class="bd-tag">#@tag.Trim()</a>
+                }
+            </div>
         }
 
-    .rounded-4 {
-        border-radius: 1.25rem !important;
-    }
+        <div class="bd-share">
+            <div class="bd-share-label">Chia sẻ bài viết</div>
+            <div class="bd-share-btns">
+                <a href="#" class="bd-share-btn"><i class="bi bi-facebook"></i>Facebook</a>
+                <a href="#" class="bd-share-btn"><i class="bi bi-twitter-x"></i>Twitter</a>
+                <a href="#" class="bd-share-btn"><i class="bi bi-whatsapp"></i>WhatsApp</a>
+                <button class="bd-share-btn" onclick="copyLink()"><i class="bi bi-link-45deg"></i>Copy Link</button>
+            </div>
+        </div>
 
-    .post-title {
-        color: #1a202c;
-        line-height: 1.3;
-    }
+        <div id="reviewSection">
+            <div class="bd-review-loading">
+                <div class="bd-review-loading-spinner"></div>
+                <p style="font-size:.84rem">Đang tải bình luận...</p>
+            </div>
+        </div>
 
-    .post-content {
-        text-align: justify;
-    }
-
-        .post-content img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 1rem;
-            margin: 2.5rem 0;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-
-        .post-content h2 {
-            font-weight: 700;
-            color: #2d3748;
-            margin-top: 3rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .post-content h3 {
-            font-weight: 600;
-            color: #4a5568;
-            margin-top: 2.5rem;
-            margin-bottom: 1.25rem;
-        }
-
-        .post-content p {
-            margin-bottom: 1.5rem;
-        }
-
-        .post-content ul, .post-content ol {
-            margin-bottom: 1.5rem;
-            padding-left: 2rem;
-        }
-
-        .post-content li {
-            margin-bottom: 0.75rem;
-        }
-
-        .post-content blockquote {
-            border-left: 4px solid #6c33f2;
-            padding: 1.5rem;
-            margin: 2rem 0;
-            font-style: italic;
-            color: #4a5568;
-            background: #f7fafc;
-            border-radius: 0.5rem;
-        }
-
-    .author-box {
-        border: 1px solid #e2e8f0;
-    }
-
-    .share-section .btn {
-        font-weight: 500;
-    }
-</style>
+        <div class="bd-back-wrap">
+            <a asp-controller="Blog" asp-action="Index" class="bd-back-btn">
+                <i class="bi bi-arrow-left"></i> Quay lại danh sách
+            </a>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script>
         function copyLink() {
-            const url = window.location.href;
-            navigator.clipboard.writeText(url).then(() => {
-                alert('Đã copy link bài viết!');
-            });
+            navigator.clipboard.writeText(window.location.href)
+                .then(() => alert('Đã copy link bài viết!'));
         }
-
         $(document).ready(function () {
-            // Sửa từ BlogId thành PostId theo Model BlogPost
             const postId = '@Model.PostId';
-
             $.ajax({
                 url: '/BlogReview/Index',
                 type: 'GET',
-                data: { blogId: postId }, // Vẫn giữ tên tham số blogId nếu Controller yêu cầu vậy
-                success: function (data) {
-                    $('#reviewSection').html(data);
-                },
+                data: { blogId: postId },
+                success: function (data) { $('#reviewSection').html(data); },
                 error: function () {
-                    $('#reviewSection').html('<p class="text-danger">Không thể tải phần đánh giá lúc này.</p>');
+                    $('#reviewSection').html('<p style="color:var(--muted);font-size:.86rem;padding:1rem 0">Không thể tải phần bình luận lúc này.</p>');
                 }
             });
         });

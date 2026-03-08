@@ -313,6 +313,19 @@
             color: #166534;
         }
 
+        /* Badge riêng cho đơn Transfer đang chờ xác nhận thanh toán */
+        .sb.awaiting-transfer {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            animation: pulse-blue 2s ease-in-out infinite;
+        }
+
+        @@keyframes pulse-blue {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .7; }
+        }
+
     /* Products attached */
     .bk-prods {
         padding: .65rem 1.4rem .65rem 1.8rem;
@@ -698,7 +711,28 @@
                             <div class="bk-header">
                                 <span class="bk-facility">@b.FacilityName</span>
                                 <span class="bk-code">@b.BookingCode</span>
-                                <span class="sb @b.Status.ToLower()">@b.Status</span>
+                                @{
+                                    bool isAwaitingTransfer = b.PaymentMethod == "Transfer"
+                                        && (b.PaymentStatus?.ToLower() == "unpaid" || b.PaymentStatus?.ToLower() == "pending")
+                                        && b.Status == "Pending";
+                                }
+                                @if (isAwaitingTransfer)
+                                {
+                                    <span class="sb awaiting-transfer"><i class="bi bi-bank me-1"></i>Chờ xác nhận CK</span>
+                                }
+                                else
+                                {
+                                    <span class="sb @b.Status.ToLower()">
+                                        @(b.Status switch {
+                                            "Pending" => "Chờ xác nhận",
+                                            "Confirmed" => "Đã xác nhận",
+                                            "Playing" => "Đang chơi",
+                                            "Completed" => "Hoàn thành",
+                                            "Cancelled" => "Đã hủy",
+                                            _ => b.Status
+                                        })
+                                    </span>
+                                }
                             </div>
                             <div class="bk-meta">
                                 <div class="bm"><i class="bi bi-grid-3x3-gap"></i> <span>Sân <strong>@b.CourtNumber</strong></span> <span style="background:var(--S);color:#4a3728;font-size:.6rem;padding:.1rem .45rem;border-radius:3px">@b.CourtType</span></div>
@@ -706,7 +740,22 @@
                                 <div class="bm"><i class="bi bi-clock"></i> <strong>@b.StartTime.ToString(@"hh\:mm") – @b.EndTime.ToString(@"hh\:mm")</strong></div>
                                 <div class="bm">
                                     <i class="bi bi-credit-card"></i> <span>@b.PaymentMethod</span>
-                                    <span class="sb @(b.PaymentStatus?.ToLower() == "paid" ? "confirmed" : "pending")" style="font-size:.6rem">@b.PaymentStatus</span>
+                                    @{
+                                        string payClass, payLabel;
+                                        if (b.PaymentStatus?.ToLower() == "paid")
+                                        {
+                                            payClass = "confirmed"; payLabel = "Đã thanh toán";
+                                        }
+                                        else if (b.PaymentMethod == "Transfer")
+                                        {
+                                            payClass = "awaiting-transfer"; payLabel = "Chờ xác nhận CK";
+                                        }
+                                        else
+                                        {
+                                            payClass = "pending"; payLabel = "Chưa thanh toán";
+                                        }
+                                    }
+                                    <span class="sb @payClass" style="font-size:.6rem">@payLabel</span>
                                 </div>
                                 <div class="bm"><i class="bi bi-clock-history"></i> <span style="color:#8c7a68">@b.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span></div>
                             </div>
@@ -732,6 +781,13 @@
                         </div>
                     </div>
                 </div>
+                @if (isAwaitingTransfer)
+                {
+                    <div style="background:#eff6ff;border-top:1px solid #bfdbfe;padding:.65rem 1.4rem .65rem 1.8rem;display:flex;align-items:center;gap:.6rem;font-size:.78rem;color:#1d4ed8">
+                        <i class="bi bi-info-circle-fill" style="flex-shrink:0"></i>
+                        <span>Đơn chuyển khoản đang chờ admin xác nhận. Vui lòng đảm bảo đã chuyển khoản đúng nội dung <strong>@b.BookingCode</strong>.</span>
+                    </div>
+                }
                 @if (b.RelatedOrders != null && b.RelatedOrders.Any(o => o.OrderDetails.Any()))
                 {
                     <div class="bk-prods">

@@ -246,7 +246,7 @@
             <p>Xuất hàng bán lẻ, hỏng, điều chuyển hoặc trả nhà cung cấp</p>
         </div>
     </div>
-    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+    <button type="button" class="btn-close shadow-none" onclick="this.closest('.modal-overlay').classList.remove('show')"></button>
 </div>
 
 <form asp-action="StockOut" method="post" id="stockOutForm">
@@ -276,7 +276,7 @@
         <div class="row g-3 mb-3">
             <div class="col-md-6 fl">
                 <label>Lý do xuất kho</label>
-                <select asp-for="OutReason" class="fc" id="outReasonSelect" onchange="toggleReturnFields(this.value)">
+                <select asp-for="OutReason" class="fc" id="outReasonSelect">
                     <option value="Sale">🛒 Bán lẻ cho khách</option>
                     <option value="Defective">❌ Hàng lỗi / hư hỏng</option>
                     <option value="Transfer">🔄 Điều chuyển nội bộ</option>
@@ -321,7 +321,7 @@
         <!-- Product table -->
         <div class="d-flex justify-content-between align-items-center mb-2">
             <span class="section-div" style="margin-bottom:0;"><i class="bi bi-list-ul me-1"></i>Chi Tiết Hàng Xuất</span>
-            <button type="button" class="btn-add-row" onclick="addRowOut()">
+            <button type="button" class="btn-add-row" id="stockOutAddRowBtn">
                 <i class="bi bi-plus-circle"></i> Thêm dòng
             </button>
         </div>
@@ -330,7 +330,8 @@
             <table class="prod-tbl" id="productTableOut">
                 <thead>
                     <tr>
-                        <th style="min-width:200px;">Sản phẩm</th>
+                        <th style="min-width:180px;">Sản phẩm</th>
+                        <th style="min-width:130px;">Phân loại (Size)</th>
                         <th style="width:110px;">Số lượng xuất</th>
                         <th style="width:80px;">ĐVT</th>
                         <th style="width:40px;text-align:center;">×</th>
@@ -339,7 +340,7 @@
                 <tbody id="productTableOutBody">
                     <tr class="product-row-out">
                         <td>
-                            <select name="Items[0].ProductId" class="fc" onchange="fillUnitOut(this, 0)">
+                            <select name="Items[0].ProductId" class="fc stockout-product-sel">
                                 <option value="">-- Chọn sản phẩm --</option>
                                 @if (ViewBag.Products != null)
                                 {
@@ -353,9 +354,14 @@
                             </select>
                             <small class="row-meta"></small>
                         </td>
-                        <td><input name="Items[0].Quantity" type="number" class="fc" placeholder="Tồn: 0" min="1" /></td>
+                        <td>
+                            <select name="Items[0].VariantId" class="fc variant-select-out" disabled>
+                                <option value="">— Chọn SP trước —</option>
+                            </select>
+                        </td>
+                        <td><input name="Items[0].Quantity" type="number" class="fc" placeholder="KD: 0" min="1" /></td>
                         <td><input name="Items[0].Unit" type="text" class="fc fw-mono" placeholder="—" readonly /></td>
-                        <td style="text-align:center;"><button type="button" class="btn-remove" onclick="removeRowOut(this)"><i class="bi bi-trash3"></i></button></td>
+                        <td style="text-align:center;"><button type="button" class="btn-remove stockout-remove-btn"><i class="bi bi-trash3"></i></button></td>
                     </tr>
                 </tbody>
             </table>
@@ -368,7 +374,7 @@
     </div>
 
     <div class="modal-foot-court">
-        <button type="button" class="btn-cancel-modal" data-bs-dismiss="modal">Hủy bỏ</button>
+        <button type="button" class="btn-cancel-modal" onclick="this.closest('.modal-overlay').classList.remove('show')">Hủy bỏ</button>
         <button type="submit" class="btn-submit-out">
             <i class="bi bi-box-arrow-up"></i> Xác nhận xuất kho
         </button>
@@ -376,58 +382,134 @@
 </form>
 
 <script>
-    let rowIndexOut = 1;
+(function () {
+    // Product data được serialize an toàn từ server
+    const productDataRaw = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        ViewBag.Products == null
+            ? new object[] {}
+            : ((IEnumerable<QuanLiSanCauLong.Models.Product>)ViewBag.Products)
+                .Select(p => new {
+                    id    = p.ProductId,
+                    unit  = p.Unit ?? "",
+                    name  = p.ProductName ?? "",
+                    stock = p.StockQuantity
+                })
+                .ToArray()
+    ));
     const productDataOut = {};
-    @if (ViewBag.Products != null)
-    {
-            foreach (var p in ViewBag.Products)
-            {
-                    @:productDataOut[@p.ProductId] = { unit: '@(p.Unit ?? "")', stock: @p.StockQuantity, name: '@Html.Raw(p.ProductName?.Replace("'", "\\\'"))' };
-            }
+    productDataRaw.forEach(p => { productDataOut[p.id] = { unit: p.unit, name: p.name, stock: p.stock }; });
+
+    let rowIndexOut = 1;
+
+    function buildProductOptsOut() {
+        return '<option value="">-- Chọn sản phẩm --</option>' +
+            Object.entries(productDataOut).map(([id, d]) =>
+                `<option value="${id}" data-unit="${d.unit}" data-stock="${d.stock}">${d.name}</option>`
+            ).join('');
     }
 
-    function fillUnitOut(select, idx) {
-        const id = select.value;
+    async function fillUnitOut(select) {
+        const id  = select.value;
         const row = select.closest('tr');
-        const unitInput = row.querySelector('input[name*=".Unit"]');
-        const qtyInput  = row.querySelector('input[name*=".Quantity"]');
-        const meta = row.querySelector('.row-meta');
+        const unitInput  = row.querySelector('input[name*=".Unit"]');
+        const qtyInput   = row.querySelector('input[name*=".Quantity"]');
+        const meta       = row.querySelector('.row-meta');
+        const variantSel = row.querySelector('.variant-select-out');
+
         if (id && productDataOut[id]) {
             if (unitInput) unitInput.value = productDataOut[id].unit;
-            if (qtyInput) qtyInput.placeholder = `Tồn: ${productDataOut[id].stock}`;
-            if (meta) meta.textContent = `Tồn kho: ${productDataOut[id].stock} ${productDataOut[id].unit}`;
+
+            if (variantSel) {
+                variantSel.innerHTML = '<option value="">Đang tải...</option>';
+                variantSel.disabled = true;
+                try {
+                    const res  = await fetch(`/Admin/AdminProduct/GetVariants?productId=${id}`);
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        variantSel.innerHTML = '<option value="">-- Chọn size/màu --</option>' +
+                            data.map(v => {
+                                const avail = v.availableQuantity;
+                                const warn  = avail === 0 ? ' ⚠ Hết' : avail <= 2 ? ' ⚠ Sắp hết' : '';
+                                return `<option value="${v.variantId}" data-avail="${avail}">${v.displayName} — KD: ${avail}${warn}</option>`;
+                            }).join('');
+                        variantSel.disabled = false;
+                        variantSel.onchange = () => {
+                            const opt   = variantSel.selectedOptions[0];
+                            const avail = opt?.dataset?.avail ?? 0;
+                            if (qtyInput) qtyInput.placeholder = `Tối đa: ${avail}`;
+                            if (meta)     meta.textContent = `Khả dụng: ${avail} ${productDataOut[id].unit}`;
+                        };
+                    } else {
+                        variantSel.innerHTML = '<option value="">Không có phân loại</option>';
+                        variantSel.disabled = true;
+                        const avail = productDataOut[id].stock;
+                        if (qtyInput) qtyInput.placeholder = `Tối đa: ${avail}`;
+                        if (meta) meta.textContent = `Tồn kho: ${avail} ${productDataOut[id].unit}`;
+                    }
+                } catch {
+                    variantSel.innerHTML = '<option value="">Không tải được</option>';
+                    variantSel.disabled = false;
+                }
+            }
         } else {
             if (unitInput) unitInput.value = '';
-            if (qtyInput) qtyInput.placeholder = 'Tồn: 0';
-            if (meta) meta.textContent = '';
+            if (qtyInput)  qtyInput.placeholder = 'KD: 0';
+            if (meta)      meta.textContent = '';
+            if (variantSel) { variantSel.innerHTML = '<option value="">— Chọn SP trước —</option>'; variantSel.disabled = true; }
         }
     }
 
     function addRowOut() {
-        const opts = Object.entries(productDataOut)
-            .map(([id, d]) => `<option value="${id}" data-unit="${d.unit}" data-stock="${d.stock}">${d.name} (Tồn: ${d.stock})</option>`)
-            .join('');
+        const idx = rowIndexOut;
         const row = `
         <tr class="product-row-out">
             <td>
-                <select name="Items[${rowIndexOut}].ProductId" class="fc" onchange="fillUnitOut(this,${rowIndexOut})">
-                    <option value="">-- Chọn sản phẩm --</option>${opts}
+                <select name="Items[${idx}].ProductId" class="fc stockout-product-sel">
+                    ${buildProductOptsOut()}
                 </select>
                 <small class="row-meta"></small>
             </td>
-            <td><input name="Items[${rowIndexOut}].Quantity" type="number" class="fc" placeholder="Tồn: 0" min="1" /></td>
-            <td><input name="Items[${rowIndexOut}].Unit" type="text" class="fc fw-mono" placeholder="—" readonly /></td>
-            <td style="text-align:center;"><button type="button" class="btn-remove" onclick="removeRowOut(this)"><i class="bi bi-trash3"></i></button></td>
+            <td>
+                <select name="Items[${idx}].VariantId" class="fc variant-select-out" disabled>
+                    <option value="">— Chọn SP trước —</option>
+                </select>
+            </td>
+            <td><input name="Items[${idx}].Quantity" type="number" class="fc" placeholder="KD: 0" min="1" /></td>
+            <td><input name="Items[${idx}].Unit" type="text" class="fc fw-mono" placeholder="—" readonly /></td>
+            <td style="text-align:center;"><button type="button" class="btn-remove stockout-remove-btn"><i class="bi bi-trash3"></i></button></td>
         </tr>`;
-        document.getElementById('productTableOutBody').insertAdjacentHTML('beforeend', row);
+        const tbody = document.getElementById('productTableOutBody');
+        tbody.insertAdjacentHTML('beforeend', row);
+        attachRowEventsOut(tbody.lastElementChild);
         rowIndexOut++;
     }
 
     function removeRowOut(btn) {
-        if (document.querySelectorAll('.product-row-out').length > 1) btn.closest('tr').remove();
+        if (document.querySelectorAll('#productTableOutBody .product-row-out').length > 1)
+            btn.closest('tr').remove();
     }
 
-    function toggleReturnFields(val) {
-        document.getElementById('returnFields').classList.toggle('d-none', val !== 'Return');
+    function attachRowEventsOut(row) {
+        const sel = row.querySelector('.stockout-product-sel');
+        if (sel) sel.addEventListener('change', () => fillUnitOut(sel));
+        const removeBtn = row.querySelector('.stockout-remove-btn');
+        if (removeBtn) removeBtn.addEventListener('click', () => removeRowOut(removeBtn));
     }
+
+    // Init first row
+    document.querySelectorAll('#productTableOutBody .product-row-out').forEach(attachRowEventsOut);
+
+    // Add row button
+    const addBtn = document.getElementById('stockOutAddRowBtn');
+    if (addBtn) addBtn.addEventListener('click', addRowOut);
+
+    // Toggle return fields
+    const outReason = document.getElementById('outReasonSelect');
+    if (outReason) {
+        outReason.addEventListener('change', function () {
+            const rf = document.getElementById('returnFields');
+            if (rf) rf.classList.toggle('d-none', this.value !== 'Return');
+        });
+    }
+})();
 </script>

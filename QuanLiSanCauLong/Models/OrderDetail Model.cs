@@ -15,6 +15,12 @@ namespace QuanLiSanCauLong.Models
         [Required]
         public int ProductId { get; set; }
 
+        /// <summary>
+        /// Phân loại (size/màu) được chọn khi đặt hàng.
+        /// NULL = sản phẩm không có variant (không phân loại size).
+        /// </summary>
+        public int? VariantId { get; set; }
+
         [Required]
         public int Quantity { get; set; }
 
@@ -37,5 +43,8 @@ namespace QuanLiSanCauLong.Models
 
         [ForeignKey("ProductId")]
         public virtual Product Product { get; set; }
+
+        [ForeignKey("VariantId")]
+        public virtual ProductVariant Variant { get; set; }
     }
 }

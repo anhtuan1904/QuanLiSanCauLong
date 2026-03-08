@@ -573,6 +573,7 @@
         animation: spin .7s linear infinite;
         margin: 0 auto 1rem;
     }
+
     @@keyframes spin {
         to {
             transform: rotate(360deg);
@@ -766,19 +767,27 @@
                                 }
                             </td>
                             <td>
-                                @switch (c.Status)
+                                @{
+                                    var autoFull = c.IsFull || c.Status == "Full";
+                                }
+                                @if (autoFull)
                                 {
-                                    case "Active":
-                                        <span class="chip chip-green">● Hoạt động</span>
-                                        break;
-                                    case "Full":
-
-                                        <span class="chip chip-red">⊗ Đã đầy</span>
-                                        break;
-                                    default:
-
-                                        <span class="chip chip-neutral">○ Ngừng</span>
-                                        break;
+                                    <span class="chip chip-red">⊗ Đã đầy</span>
+                                }
+                                else
+                                {
+                                    @switch (c.Status)
+                                    {
+                                        case "Active":
+                                            <span class="chip chip-green">● Hoạt động</span>
+                                            break;
+                                        case "Full":
+                                            <span class="chip chip-red">⊗ Đã đầy</span>
+                                            break;
+                                        default:
+                                            <span class="chip chip-neutral">○ Ngừng</span>
+                                            break;
+                                    }
                                 }
                             </td>
                             <td>
@@ -947,9 +956,9 @@
                                         @{
                                             var stClass = t.Status switch
                                             {
-                                                            "Ongoing" => "chip-green",
-                                                            "Upcoming" => "chip-blue",
-                                                            "Completed" => "chip-neutral",
+                                                                        "Ongoing" => "chip-green",
+                                                                        "Upcoming" => "chip-blue",
+                                                                        "Completed" => "chip-neutral",
                                                 _ => "chip-red"
                                             };
                                         }
@@ -1004,7 +1013,7 @@
 <!-- ═══ UNIVERSAL MODAL ═══ -->
 <style>
     /* Modal scroll fix - Bootstrap modal-dialog-scrollable cần đúng cấu trúc header/body/footer
-       Vì partial views dùng custom structure, ta tự handle scroll */
+           Vì partial views dùng custom structure, ta tự handle scroll */
     #modalService .modal-dialog {
         display: flex;
         align-items: center;
@@ -1108,7 +1117,18 @@
             bootstrap.Modal.getOrCreateInstance(document.getElementById('modalService')).show();
             fetch(url)
                 .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
-                .then(html => { document.getElementById('modalServiceContent').innerHTML = html; })
+                .then(html => {
+                    const container = document.getElementById('modalServiceContent');
+                    container.innerHTML = html;
+                    // Re-execute scripts vì innerHTML không tự chạy <script> tags
+                    container.querySelectorAll('script').forEach(oldScript => {
+                        const newScript = document.createElement('script');
+                        // Copy attributes
+                        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                        newScript.textContent = oldScript.textContent;
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+                })
                 .catch(err => {
                     document.getElementById('modalServiceContent').innerHTML =
                         `<div style="padding:2rem;color:#c94b2a;"><i class="bi bi-exclamation-circle me-2"></i>Lỗi tải form: ${err.message}</div>`;

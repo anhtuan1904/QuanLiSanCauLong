@@ -10,7 +10,37 @@ namespace QuanLiSanCauLong.ViewModels
     {
         public List<FacilityCardViewModel> FeaturedFacilities { get; set; }
         public SystemStatsViewModel Stats { get; set; }
+        public List<BlogPostCardViewModel> LatestPosts { get; set; } = new List<BlogPostCardViewModel>();
     }
+
+    /// <summary>
+    /// ViewModel cho thẻ bài viết blog (dùng ở trang chủ và blog index)
+    /// </summary>
+    public class BlogPostCardViewModel
+    {
+        public int PostId { get; set; }
+        public string Title { get; set; }
+        public string Slug { get; set; }
+        public string Excerpt { get; set; }
+        public string FeaturedImage { get; set; }
+        public string AuthorName { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public bool IsFeatured { get; set; }
+        public int ViewCount { get; set; }
+        public BlogCategoryViewModel Category { get; set; }
+    }
+
+    public class BlogCategoryViewModel
+    {
+        public int CategoryId { get; set; }
+        public string CategoryName { get; set; }
+    }
+
+    /// <summary>
+    /// ViewModel cho trang review blog
+    /// </summary>
+
+
 
     /// <summary>
     /// ViewModel cho thẻ hiển thị cơ sở trên trang chủ

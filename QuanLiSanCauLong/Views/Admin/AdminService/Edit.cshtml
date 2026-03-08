@@ -294,10 +294,10 @@
                 <div class="fg">
                     <label class="fg-label">Trạng Thái</label>
                     <div class="status-opts">
-                        <div class="status-opt @(Model.Status == "Active" ? "selected" : "")" id="st-Active" onclick="selectStatus('Active')">
+                        <div class="status-opt @(Model.Status == "Active" ? "selected" : "")" id="st-Active" data-val="Active">
                             <span class="status-dot" style="background:#16a34a;"></span> Hoạt Động
                         </div>
-                        <div class="status-opt @(Model.Status == "Inactive" ? "selected" : "")" id="st-Inactive" onclick="selectStatus('Inactive')">
+                        <div class="status-opt @(Model.Status == "Inactive" ? "selected" : "")" id="st-Inactive" data-val="Inactive">
                             <span class="status-dot" style="background:#c94b2a;"></span> Ngừng Hoạt Động
                         </div>
                     </div>
@@ -333,11 +333,24 @@
 </div>
 
 <script>
-function selectStatus(val) {
-    document.querySelectorAll('.status-opt').forEach(c => c.classList.remove('selected'));
-    document.getElementById('st-' + val).classList.add('selected');
-    document.getElementById('statusInput').value = val;
-}
+(function() {
+    // selectStatus scoped — tránh conflict khi nhiều modal
+    function selectStatus(val) {
+        document.querySelectorAll('#modalServiceContent .status-opt').forEach(function(c) {
+            c.classList.remove('selected');
+        });
+        var target = document.getElementById('st-' + val);
+        if (target) target.classList.add('selected');
+        var si = document.getElementById('statusInput');
+        if (si) si.value = val;
+    }
+
+    // Attach click handlers thay vì dùng inline onclick
+    document.querySelectorAll('#modalServiceContent .status-opt').forEach(function(opt) {
+        opt.addEventListener('click', function() { selectStatus(this.dataset.val || this.id.replace('st-','')); });
+    });
+    // Fallback: expose selectStatus cho inline onclick nếu cần
+    window._editSelectStatus = selectStatus;
 
 (function() {
     const existingImages = @Html.Raw(Json.Serialize(images.Select(i => new { 
@@ -417,5 +430,6 @@ function selectStatus(val) {
         newFiles.forEach(f => { if (f) dt.items.add(f); });
         imgInput.files = dt.files;
     }
+})();
 })();
 </script>

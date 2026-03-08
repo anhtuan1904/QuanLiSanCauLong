@@ -298,9 +298,6 @@ namespace QuanLiSanCauLong.Controllers
             }
         }
 
-        // ──────────────────────────────────────────────────────────────
-        // DETAILS (trả về PartialView dùng trong Modal)
-        // ──────────────────────────────────────────────────────────────
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
@@ -311,13 +308,62 @@ namespace QuanLiSanCauLong.Controllers
 
             if (facility == null) return NotFound();
 
-            // Truyền thẳng Facility model vào _Details partial view
-            // (không dùng FacilityDetailsViewModel để tránh mapping phức tạp)
-            ViewBag.FacilityImages = facility.FacilityImages
-                .OrderBy(i => i.DisplayOrder)
-                .ToList();
+            var vm = new FacilityDetailsViewModel
+            {
+                FacilityId = facility.FacilityId,
+                FacilityName = facility.FacilityName,
+                Address = facility.Address,
+                City = facility.City,
+                District = facility.District,
+                Phone = facility.Phone,
+                Description = facility.Description,
+                OpenTime = facility.OpenTime,
+                CloseTime = facility.CloseTime,
+                Latitude = facility.Latitude,
+                Longitude = facility.Longitude,
+                TotalCourts = facility.Courts?.Count ?? 0,
+                SelectedDate = DateTime.Today,
 
-            return PartialView("_Details", facility);
+                ImageUrls = facility.FacilityImages
+                    .OrderBy(i => i.DisplayOrder)
+                    .Select(i => i.ImagePath)
+                    .ToList(),
+
+                Amenities = string.IsNullOrEmpty(facility.Amenities)
+                    ? new List<FacilityAmenityViewModel>()
+                    : facility.Amenities
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(a => new FacilityAmenityViewModel
+                        {
+                            AmenityName = a.Trim(),
+                            IsAvailable = true
+                        })
+                        .ToList(),
+
+                Courts = facility.Courts?.Select(c => new FacilityCourtViewModel
+                {
+                    CourtId = c.CourtId,
+                    CourtNumber = c.CourtNumber,
+                    CourtType = c.CourtType,
+                    CourtTypeLabel = c.CourtTypeLabel,
+                    SurfaceType = c.SurfaceType,
+                    SurfaceTypeLabel = c.SurfaceTypeLabel,
+                    FloorNumber = c.FloorNumber,
+                    HasLighting = c.HasLighting,
+                    HasAC = c.HasAC,
+                    Description = c.Description,
+                    ImagePath = c.ImagePath,
+                    HourlyRate = c.HourlyRate,
+                    Status = c.Status,
+                    StatusLabel = c.StatusLabel,
+                    Slots = new List<TimeSlotViewModel>()
+                }).ToList() ?? new List<FacilityCourtViewModel>(),
+
+                UserBookings = new List<UserBookingViewModel>(),
+                RecentReviews = new List<FacilityReviewViewModel>(),
+            };
+
+            return PartialView("Details", vm);
         }
 
         // ──────────────────────────────────────────────────────────────

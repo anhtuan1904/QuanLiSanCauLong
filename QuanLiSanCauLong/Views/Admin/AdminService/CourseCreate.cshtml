@@ -1,6 +1,8 @@
 ﻿@model QuanLiSanCauLong.Models.Course
 @{
     Layout = null;
+    // Tạo ID duy nhất để tránh conflict khi modal inject nhiều lần
+    var uid = Guid.NewGuid().ToString("N")[..8];
 }
 
 <style>
@@ -19,7 +21,6 @@
         box-sizing: border-box;
     }
 
-    /* Flex layout để header/footer cố định, body scroll */
     .sc-wrapper {
         display: flex;
         flex-direction: column;
@@ -215,15 +216,18 @@
         cursor: pointer;
         transition: all .2s;
         text-align: center;
+        user-select: none;
     }
 
         .lv-card:hover {
             border-color: rgba(212,160,23,.5);
+            background: rgba(212,160,23,.03);
         }
 
         .lv-card.selected {
             border-color: var(--gold);
-            background: rgba(212,160,23,.06);
+            background: rgba(212,160,23,.1);
+            box-shadow: 0 0 0 3px rgba(212,160,23,.15);
         }
 
     .lv-icon {
@@ -263,6 +267,7 @@
         font-weight: 600;
         color: var(--muted);
         transition: all .2s;
+        user-select: none;
     }
 
         .status-opt:hover {
@@ -271,14 +276,16 @@
 
         .status-opt.selected {
             border-color: var(--gold);
-            background: rgba(212,160,23,.07);
+            background: rgba(212,160,23,.1);
             color: var(--deep);
+            box-shadow: 0 0 0 3px rgba(212,160,23,.15);
         }
 
     .status-dot {
         width: 8px;
         height: 8px;
         border-radius: 50%;
+        flex-shrink: 0;
     }
 
     /* TOGGLE */
@@ -320,11 +327,18 @@
         text-align: center;
         cursor: pointer;
         transition: all .2s;
+        position: relative;
+        overflow: hidden;
     }
 
         .img-upload-zone:hover {
             border-color: var(--gold);
             background: rgba(212,160,23,.04);
+        }
+
+        .img-upload-zone.has-preview {
+            border-color: var(--gold);
+            padding: 0;
         }
 
     .upload-icon {
@@ -341,6 +355,46 @@
         .upload-text strong {
             color: var(--deep);
         }
+
+    .img-preview {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 8px;
+        display: none;
+    }
+
+        .img-preview.show {
+            display: block;
+        }
+
+    .img-upload-inner {
+        padding: 1.25rem;
+    }
+
+    .img-url-row {
+        display: flex;
+        gap: .5rem;
+        margin-top: .75rem;
+    }
+
+        .img-url-row .fg-input {
+            flex: 1;
+            font-size: .8rem;
+        }
+
+    .btn-url-confirm {
+        padding: .5rem .9rem;
+        background: var(--gold);
+        border: none;
+        border-radius: 6px;
+        font-size: .78rem;
+        font-weight: 700;
+        color: var(--deep);
+        cursor: pointer;
+        white-space: nowrap;
+        font-family: 'Outfit',sans-serif;
+    }
 
     /* FOOTER */
     .sc-footer {
@@ -396,7 +450,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- WRAPPER -->
-<div class="sc-wrapper">
+<div class="sc-wrapper" id="scWrapper-@uid">
 
     <!-- HEADER -->
     <div class="sc-header">
@@ -412,7 +466,7 @@
 
     <!-- BODY -->
     <div class="sc-body">
-        <form id="frmCourseCreate" method="post" enctype="multipart/form-data">
+        <form id="frmCourseCreate-@uid" method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
 
             <!-- 1. THÔNG TIN CƠ BẢN -->
@@ -439,11 +493,11 @@
                     <div class="fg-row3 fg" style="margin-bottom:0;">
                         <div>
                             <label class="fg-label">Thời Lượng (tuần)</label>
-                            <input name="DurationWeeks" type="number" class="fg-input" placeholder="8" />
+                            <input name="DurationWeeks" type="number" class="fg-input" placeholder="8" min="1" />
                         </div>
                         <div>
                             <label class="fg-label">Sĩ Số Tối Đa</label>
-                            <input name="MaxStudents" type="number" class="fg-input" placeholder="15" />
+                            <input name="MaxStudents" type="number" class="fg-input" placeholder="15" min="1" />
                         </div>
                         <div>
                             <label class="fg-label">Thứ Tự Hiển Thị</label>
@@ -460,8 +514,8 @@
                     <span class="sc-card-title">Trình Độ Học Viên</span>
                 </div>
                 <div class="sc-card-body">
-                    <input name="Level" type="hidden" id="levelInput" value="" />
-                    <div class="level-cards" id="levelCards">
+                    <input name="Level" type="hidden" id="levelInput-@uid" value="" />
+                    <div class="level-cards" id="levelCards-@uid">
                         <div class="lv-card" data-level="Beginner">
                             <span class="lv-icon">🌱</span>
                             <div class="lv-name">Cơ Bản</div>
@@ -478,6 +532,9 @@
                             <div class="lv-sub">Advanced</div>
                         </div>
                     </div>
+                    <p id="levelRequired-@uid" style="display:none;color:#c94b2a;font-size:.75rem;margin-top:.5rem;">
+                        <i class="bi bi-exclamation-circle me-1"></i>Vui lòng chọn trình độ
+                    </p>
                 </div>
             </div>
 
@@ -515,11 +572,11 @@
                     <div class="fg-row2" style="margin-bottom:0;">
                         <div>
                             <label class="fg-label">Học Phí (VNĐ)</label>
-                            <input name="TuitionFee" type="number" class="fg-input" placeholder="2.500.000" />
+                            <input name="TuitionFee" type="number" class="fg-input" placeholder="2500000" min="0" />
                         </div>
                         <div>
                             <label class="fg-label">Học Phí Khuyến Mãi</label>
-                            <input name="DiscountFee" type="number" class="fg-input" placeholder="2.000.000" />
+                            <input name="DiscountFee" type="number" class="fg-input" placeholder="2000000" min="0" />
                         </div>
                     </div>
                 </div>
@@ -532,18 +589,33 @@
                     <span class="sc-card-title">Hình Ảnh & Trạng Thái</span>
                 </div>
                 <div class="sc-card-body">
+                    <!-- ẢNH ĐẠI DIỆN -->
                     <div class="fg">
                         <label class="fg-label">Ảnh Đại Diện</label>
-                        <div class="img-upload-zone" id="scUploadZone">
-                            <div class="upload-icon"><i class="bi bi-cloud-upload"></i></div>
-                            <div class="upload-text"><strong>Click để tải ảnh lên</strong> hoặc kéo thả</div>
-                            <div id="imgName" style="font-size:.75rem;color:var(--gold);margin-top:.3rem;"></div>
+                        <div class="img-upload-zone" id="scUploadZone-@uid">
+                            <img class="img-preview" id="imgPreview-@uid" src="" alt="Preview" />
+                            <div class="img-upload-inner" id="uploadInner-@uid">
+                                <div class="upload-icon"><i class="bi bi-cloud-upload"></i></div>
+                                <div class="upload-text"><strong>Click để tải ảnh lên</strong> hoặc kéo thả</div>
+                                <div id="imgName-@uid" style="font-size:.75rem;color:var(--gold);margin-top:.3rem;"></div>
+                            </div>
                         </div>
-                        <input type="file" id="featuredImgInput" name="featuredImage" accept="image/*" style="display:none" />
+                        <input type="file" id="featuredImgFile-@uid" name="featuredImageFile" accept="image/*" style="display:none" />
+                        <!-- Nhập URL ảnh -->
+                        <div class="img-url-row">
+                            <input type="text" id="imgUrlInput-@uid" name="FeaturedImage" class="fg-input"
+                                   placeholder="Hoặc nhập URL ảnh: https://..." />
+                            <button type="button" class="btn-url-confirm" id="btnUrlConfirm-@uid">
+                                <i class="bi bi-check2"></i> Áp dụng
+                            </button>
+                        </div>
+                        <div class="fg-hint">Upload file ảnh hoặc nhập URL rồi nhấn Áp dụng</div>
                     </div>
+
+                    <!-- TRẠNG THÁI -->
                     <div class="fg">
                         <label class="fg-label">Trạng Thái</label>
-                        <div class="status-opts" id="statusOpts">
+                        <div class="status-opts" id="statusOpts-@uid">
                             <div class="status-opt selected" data-status="Active">
                                 <span class="status-dot" style="background:#16a34a;"></span> Đang Hoạt Động
                             </div>
@@ -554,8 +626,9 @@
                                 <span class="status-dot" style="background:#c94b2a;"></span> Đã Đầy
                             </div>
                         </div>
-                        <input name="Status" type="hidden" id="statusInput" value="Active" />
+                        <input name="Status" type="hidden" id="statusInput-@uid" value="Active" />
                     </div>
+
                     <div class="fg" style="margin-bottom:0;">
                         <label class="toggle-item">
                             <input name="IsFeatured" type="checkbox" value="true" />
@@ -573,8 +646,8 @@
         <button type="button" class="btn-sc-cancel" data-bs-dismiss="modal">
             <i class="bi bi-x-circle"></i> Hủy
         </button>
-        <button type="button" class="btn-sc-save" id="btnCourseSubmit"
-                data-form="frmCourseCreate" data-url="/AdminService/CourseCreate">
+        <button type="button" class="btn-sc-save" id="btnCourseSubmit-@uid"
+                data-form="frmCourseCreate-@uid" data-url="/AdminService/CourseCreate">
             <i class="bi bi-plus-circle"></i> Thêm Khóa Học
         </button>
     </div>
@@ -583,46 +656,152 @@
 
 <script>
     (function() {
-        // Scope toàn bộ JS trong IIFE để tránh conflict khi inject vào modal
+        var UID = '@uid';
 
-        // Level cards
-        var levelCards = document.getElementById('levelCards');
+        // ── Helper: querySelector trong wrapper của UID này
+        function el(id) { return document.getElementById(id + '-' + UID); }
+
+        // ── LEVEL CARDS ──────────────────────────────────────
+        var levelCards = el('levelCards');
         if (levelCards) {
-            levelCards.addEventListener('click', function(e) {
-                var card = e.target.closest('.lv-card');
-                if (!card) return;
-                levelCards.querySelectorAll('.lv-card').forEach(function(c) { c.classList.remove('selected'); });
-                card.classList.add('selected');
-                document.getElementById('levelInput').value = card.dataset.level;
+            levelCards.querySelectorAll('.lv-card').forEach(function(card) {
+                card.addEventListener('click', function() {
+                    levelCards.querySelectorAll('.lv-card').forEach(function(c) {
+                        c.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                    el('levelInput').value = this.dataset.level;
+                    // Ẩn thông báo lỗi nếu đã chọn
+                    var req = el('levelRequired');
+                    if (req) req.style.display = 'none';
+                });
             });
         }
 
-        // Status opts
-        var statusOpts = document.getElementById('statusOpts');
+        // ── STATUS OPTIONS ────────────────────────────────────
+        var statusOpts = el('statusOpts');
         if (statusOpts) {
-            statusOpts.addEventListener('click', function(e) {
-                var opt = e.target.closest('.status-opt');
-                if (!opt) return;
-                statusOpts.querySelectorAll('.status-opt').forEach(function(c) { c.classList.remove('selected'); });
-                opt.classList.add('selected');
-                document.getElementById('statusInput').value = opt.dataset.status;
+            statusOpts.querySelectorAll('.status-opt').forEach(function(opt) {
+                opt.addEventListener('click', function() {
+                    statusOpts.querySelectorAll('.status-opt').forEach(function(c) {
+                        c.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                    el('statusInput').value = this.dataset.status;
+                });
             });
         }
 
-        // Submit button
-        var btnSubmit = document.getElementById('btnCourseSubmit');
+        // ── IMAGE UPLOAD (file) ───────────────────────────────
+        var uploadZone  = el('scUploadZone');
+        var fileInput   = el('featuredImgFile');
+        var imgPreview  = el('imgPreview');
+        var uploadInner = el('uploadInner');
+        var imgNameEl   = el('imgName');
+
+        function showPreview(src, label) {
+            if (!imgPreview) return;
+            imgPreview.src = src;
+            imgPreview.classList.add('show');
+            if (uploadInner) uploadInner.style.display = 'none';
+            if (uploadZone)  uploadZone.classList.add('has-preview');
+        }
+
+        function resetPreview() {
+            if (!imgPreview) return;
+            imgPreview.src = '';
+            imgPreview.classList.remove('show');
+            if (uploadInner) uploadInner.style.display = '';
+            if (uploadZone)  uploadZone.classList.remove('has-preview');
+        }
+
+        if (uploadZone && fileInput) {
+            uploadZone.addEventListener('click', function(e) {
+                // Không kích hoạt khi click vào preview (cho phép reset)
+                if (e.target === imgPreview) { resetPreview(); fileInput.value = ''; return; }
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function() {
+                if (!this.files || !this.files[0]) return;
+                var file = this.files[0];
+                if (imgNameEl) imgNameEl.textContent = file.name;
+                var reader = new FileReader();
+                reader.onload = function(ev) { showPreview(ev.target.result, file.name); };
+                reader.readAsDataURL(file);
+            });
+
+            // Drag & drop
+            uploadZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.borderColor = 'var(--gold)';
+            });
+            uploadZone.addEventListener('dragleave', function() {
+                this.style.borderColor = '';
+            });
+            uploadZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '';
+                var file = e.dataTransfer.files[0];
+                if (!file || !file.type.startsWith('image/')) return;
+                var dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+                if (imgNameEl) imgNameEl.textContent = file.name;
+                var reader = new FileReader();
+                reader.onload = function(ev) { showPreview(ev.target.result, file.name); };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // ── IMAGE URL ─────────────────────────────────────────
+        var btnUrlConfirm = el('btnUrlConfirm');
+        var imgUrlInput   = el('imgUrlInput');
+
+        if (btnUrlConfirm && imgUrlInput) {
+            btnUrlConfirm.addEventListener('click', function() {
+                var url = imgUrlInput.value.trim();
+                if (!url) { resetPreview(); return; }
+                showPreview(url, url);
+                // Khi dùng URL, xóa file đã chọn nếu có
+                if (fileInput) fileInput.value = '';
+            });
+
+            imgUrlInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') { e.preventDefault(); btnUrlConfirm.click(); }
+            });
+        }
+
+        // ── SUBMIT ────────────────────────────────────────────
+        var btnSubmit = el('btnCourseSubmit');
         if (btnSubmit) {
             btnSubmit.addEventListener('click', function() {
                 var formId = this.dataset.form;
                 var url    = this.dataset.url;
                 var form   = document.getElementById(formId);
                 if (!form) return;
+
+                // Validate: bắt buộc chọn trình độ
+                var levelVal = el('levelInput') ? el('levelInput').value : '';
+                if (!levelVal) {
+                    var req = el('levelRequired');
+                    if (req) req.style.display = 'block';
+                    levelCards && levelCards.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
+                }
+
                 if (!form.checkValidity()) { form.reportValidity(); return; }
-                // Dùng hàm submitServiceForm đã có ở Index
+
+                // Disable nút tránh double-submit
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang lưu...';
+
+                var formData = new FormData(form);
+
                 if (typeof submitServiceForm === 'function') {
                     submitServiceForm(formId, url);
                 } else {
-                    fetch(url, { method: 'POST', body: new FormData(form) })
+                    fetch(url, { method: 'POST', body: formData })
                         .then(function(r) { return r.json(); })
                         .then(function(res) {
                             if (res.success) {
@@ -631,22 +810,18 @@
                                 location.reload();
                             } else {
                                 alert(res.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+                                btnSubmit.disabled = false;
+                                btnSubmit.innerHTML = '<i class="bi bi-plus-circle"></i> Thêm Khóa Học';
                             }
                         })
-                        .catch(function(err) { alert('Lỗi kết nối: ' + err.message); });
+                        .catch(function(err) {
+                            alert('Lỗi kết nối: ' + err.message);
+                            btnSubmit.disabled = false;
+                            btnSubmit.innerHTML = '<i class="bi bi-plus-circle"></i> Thêm Khóa Học';
+                        });
                 }
             });
         }
 
-        // Image upload name display
-        var scUploadZone = document.getElementById('scUploadZone');
-        var imgInput = document.getElementById('featuredImgInput');
-        if (scUploadZone && imgInput) {
-            scUploadZone.addEventListener('click', function() { imgInput.click(); });
-            imgInput.addEventListener('change', function() {
-                var nameEl = document.getElementById('imgName');
-                if (nameEl) nameEl.textContent = this.files[0] ? this.files[0].name : '';
-            });
-        }
     })();
 </script>

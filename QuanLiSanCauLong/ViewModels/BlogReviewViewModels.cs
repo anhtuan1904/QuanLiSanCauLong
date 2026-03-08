@@ -26,7 +26,6 @@ namespace QuanLiSanCauLong.ViewModels
         public bool HasAdminReply => !string.IsNullOrEmpty(AdminReply);
         public DateTime CreatedAt { get; set; }
         public string TimeAgo { get; set; } = string.Empty;
-        // Người dùng hiện tại đã like chưa (inject từ controller)
         public bool UserHasLiked { get; set; }
         public bool UserHasDisliked { get; set; }
     }
@@ -76,7 +75,6 @@ namespace QuanLiSanCauLong.ViewModels
         public int TotalReviews { get; set; }
         public int ApprovedCount { get; set; }
         public Dictionary<int, int> StarDistribution { get; set; } = new();
-        // Key = 1..5, Value = count
 
         // Reaction counts
         public int HelpfulCount { get; set; }
@@ -92,10 +90,12 @@ namespace QuanLiSanCauLong.ViewModels
         public int TotalPages { get; set; } = 1;
         public int PageSize { get; set; } = 10;
 
+        // ✅ FIX: Thêm property còn thiếu cho nút "Xem thêm"
+        public bool HasMoreReviews => CurrentPage < TotalPages;
+
         // Filter
         public int? FilterRating { get; set; }
         public string? SortBy { get; set; } = "newest";
-        // newest | oldest | highest | lowest | helpful
 
         // Form submit mới
         public BlogReviewSubmitViewModel SubmitForm { get; set; } = new();
@@ -111,26 +111,22 @@ namespace QuanLiSanCauLong.ViewModels
     {
         public List<AdminBlogReviewRowViewModel> Reviews { get; set; } = new();
 
-        // Filter
         public string? FilterStatus { get; set; }
         public int? FilterRating { get; set; }
         public int? FilterBlogId { get; set; }
         public string? SearchQuery { get; set; }
         public string SortBy { get; set; } = "newest";
 
-        // Phân trang
         public int CurrentPage { get; set; } = 1;
         public int TotalPages { get; set; } = 1;
         public int TotalCount { get; set; }
 
-        // Thống kê nhanh
         public int PendingCount { get; set; }
         public int ApprovedCount { get; set; }
         public int RejectedCount { get; set; }
         public int SpamCount { get; set; }
         public double OverallAverage { get; set; }
 
-        // Dropdown list blog titles
         public List<BlogDropdownItem> BlogList { get; set; } = new();
     }
 

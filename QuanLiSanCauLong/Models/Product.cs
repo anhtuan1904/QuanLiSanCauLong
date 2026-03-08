@@ -16,10 +16,10 @@ namespace QuanLiSanCauLong.Models
         public string ProductName { get; set; }
 
         [StringLength(50)]
-        public string ProductCode { get; set; }   // Dùng trong Controller/View
+        public string ProductCode { get; set; }
 
         [StringLength(50)]
-        public string SKU { get; set; }           // Giữ lại để tương thích
+        public string SKU { get; set; }
 
         [StringLength(100)]
         public string Barcode { get; set; }
@@ -32,7 +32,7 @@ namespace QuanLiSanCauLong.Models
 
         public string ImageUrl { get; set; }
 
-        public string Metadata { get; set; }      // SEO / extra info
+        public string Metadata { get; set; }
 
         // ===== 2. THUỘC TÍNH CHI TIẾT =====
         [StringLength(100)] public string Origin { get; set; }
@@ -45,7 +45,16 @@ namespace QuanLiSanCauLong.Models
         public string TechnicalSpecs { get; set; }
 
         // ===== 3. TỒN KHO & VỊ TRÍ =====
+        /// <summary>
+        /// Tổng tồn kho (tổng các Variant.StockQuantity).
+        /// Vẫn giữ để tương thích với các query cũ — cập nhật bằng cách
+        /// gọi Product.SyncStockFromVariants() sau mỗi thay đổi variant.
+        /// </summary>
         public int StockQuantity { get; set; } = 0;
+
+        /// <summary>Tổng số lượng đang treo trên toàn sản phẩm</summary>
+        public int ReservedQuantity { get; set; } = 0;
+
         public int MinStockLevel { get; set; } = 0;
 
         [Required]
@@ -66,15 +75,14 @@ namespace QuanLiSanCauLong.Models
         public DateTime? ExpiryDate { get; set; }
 
         // ===== 5. GIÁ TRỊ TÀI CHÍNH =====
-        // Precision cấu hình trong DbContext - KHÔNG dùng [Column(TypeName)] ở đây
-        public decimal CostPrice { get; set; } = 0;   // Giá nhập
-        public decimal COGSPrice { get; set; } = 0;   // Giá vốn
-        public decimal SalePrice { get; set; }         // Giá bán lẻ
-        public decimal Price { get; set; }             // Alias SalePrice - dùng trong View/Controller
+        public decimal CostPrice { get; set; } = 0;
+        public decimal COGSPrice { get; set; } = 0;
+        public decimal SalePrice { get; set; }
+        public decimal Price { get; set; }
 
         // ===== 6. QUẢN LÝ TRẠNG THÁI =====
         [StringLength(20)]
-        public string Status { get; set; } = "Active"; // Active|Inactive|Defective|Returned|Liquidating
+        public string Status { get; set; } = "Active";
 
         public bool IsActive { get; set; } = true;
 
@@ -98,9 +106,15 @@ namespace QuanLiSanCauLong.Models
         public virtual ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
         public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 
+        /// <summary>Danh sách các phân loại (size/màu) của sản phẩm này</summary>
+        public virtual ICollection<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
+
         // ===== 10. COMPUTED (NOT MAPPED) =====
         [NotMapped]
-        public bool IsLowStock => MinStockLevel > 0 && StockQuantity <= MinStockLevel;
+        public int AvailableQuantity => StockQuantity - ReservedQuantity;
+
+        [NotMapped]
+        public bool IsLowStock => MinStockLevel > 0 && AvailableQuantity <= MinStockLevel;
 
         [NotMapped]
         public bool IsExpired => ExpiryDate.HasValue && ExpiryDate.Value < DateTime.Now;
@@ -109,5 +123,18 @@ namespace QuanLiSanCauLong.Models
         public bool IsExpiringSoon => ExpiryDate.HasValue
                                       && !IsExpired
                                       && ExpiryDate.Value <= DateTime.Now.AddDays(30);
+
+        /// <summary>
+        /// Đồng bộ StockQuantity và ReservedQuantity từ tổng các Variants.
+        /// Gọi sau mỗi thao tác nhập/xuất/điều chỉnh variant.
+        /// </summary>
+        public void SyncStockFromVariants()
+        {
+            if (Variants != null && Variants.Any())
+            {
+                StockQuantity = Variants.Where(v => v.IsActive).Sum(v => v.StockQuantity);
+                ReservedQuantity = Variants.Where(v => v.IsActive).Sum(v => v.ReservedQuantity);
+            }
+        }
     }
 }

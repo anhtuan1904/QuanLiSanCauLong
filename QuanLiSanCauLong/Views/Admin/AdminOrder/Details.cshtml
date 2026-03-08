@@ -586,7 +586,7 @@
     </div>
 
     <!-- ORDER TYPE BANNER -->
-    @if (Model.OrderType == "WithBooking")
+    @if (Model.OrderType == "booking")
     {
         <div class="type-banner booking">
             <i class="bi bi-link-45deg" style="font-size:1.1rem;"></i>
@@ -632,6 +632,12 @@
                                             <div class="prod-icon"><i class="bi bi-box-seam"></i></div>
                                             <div>
                                                 <div style="font-weight:700;font-size:.88rem;">@item.ProductName</div>
+                                                @if (!string.IsNullOrEmpty(item.VariantDisplay))
+                                                {
+                                                    <div style="font-size:.73rem;color:#4f46e5;margin-top:.1rem;font-weight:600;">
+                                                        <i class="bi bi-grid-3x3-gap" style="font-size:.65rem;"></i> @item.VariantDisplay
+                                                    </div>
+                                                }
                                                 <div style="font-size:.73rem;color:var(--muted);margin-top:.1rem;">
                                                     Đơn vị: @item.Unit
                                                 </div>
@@ -792,12 +798,13 @@
                             <div class="tl-title">Đơn hàng được tạo</div>
                             <div class="tl-time">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
                         </div>
-                        @if (Model.OrderStatus != "Pending")
+                        @if (Model.OrderStatus == "Confirmed" || Model.OrderStatus == "Shipping"
+                                                || Model.OrderStatus == "Completed" || Model.OrderStatus == "Cancelled")
                         {
                             <div class="tl-item">
                                 <div class="tl-dot" style="background:#4f46e5;"></div>
-                                <div class="tl-title">Đã xác nhận</div>
-                                <div class="tl-time">@Model.CreatedAt.AddMinutes(5).ToString("dd/MM/yyyy HH:mm")</div>
+                                <div class="tl-title">Đã xác nhận đơn</div>
+                                <div class="tl-time">@(Model.UpdatedAt.HasValue? Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm") : "—")</div>
                             </div>
                         }
                         @if (Model.OrderStatus == "Shipping")
@@ -805,15 +812,15 @@
                             <div class="tl-item">
                                 <div class="tl-dot" style="background:#7c3aed;"></div>
                                 <div class="tl-title">Đang giao hàng</div>
-                                <div class="tl-time">@Model.CreatedAt.AddHours(1).ToString("dd/MM/yyyy HH:mm")</div>
+                                <div class="tl-time">—</div>
                             </div>
                         }
                         @if (Model.OrderStatus == "Completed")
                         {
                             <div class="tl-item">
                                 <div class="tl-dot" style="background:var(--gold);"></div>
-                                <div class="tl-title">Hoàn thành</div>
-                                <div class="tl-time">@Model.CreatedAt.AddHours(2).ToString("dd/MM/yyyy HH:mm")</div>
+                                <div class="tl-title">Hoàn thành đơn hàng</div>
+                                <div class="tl-time">@(Model.CompletedAt.HasValue? Model.CompletedAt.Value.ToString("dd/MM/yyyy HH:mm") : Model.UpdatedAt.HasValue? Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm") : "—")</div>
                             </div>
                         }
                         @if (Model.OrderStatus == "Cancelled")
@@ -821,7 +828,7 @@
                             <div class="tl-item">
                                 <div class="tl-dot" style="background:#c94b2a;"></div>
                                 <div class="tl-title">Đã hủy đơn</div>
-                                <div class="tl-time">—</div>
+                                <div class="tl-time">@(Model.UpdatedAt.HasValue? Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm") : "—")</div>
                             </div>
                         }
                     </div>

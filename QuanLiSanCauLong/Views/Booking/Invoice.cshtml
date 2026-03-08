@@ -234,6 +234,12 @@
                 color: #92400e;
             }
 
+            .pay-badge.awaiting {
+                background: #eff6ff;
+                color: #1d4ed8;
+                border: 1px solid #bfdbfe;
+            }
+
         /* Body */
         .inv-bd {
             padding: 1.8rem 2.2rem;
@@ -480,24 +486,24 @@
             @{
                 var sc = Model.Status switch
                 {
-                                    "Confirmed" => "confirmed",
-                                    "Completed" => "completed",
-                                    "Cancelled" => "cancelled",
+                                            "Confirmed" => "confirmed",
+                                            "Completed" => "completed",
+                                            "Cancelled" => "cancelled",
                     _ => "pending"
                 };
                 var sl = Model.Status switch
                 {
-                                    "Confirmed" => "Đã xác nhận",
-                                    "Completed" => "Hoàn thành",
-                                    "Cancelled" => "Đã huỷ",
-                                    "Pending" => "Chờ xác nhận",
+                                            "Confirmed" => "Đã xác nhận",
+                                            "Completed" => "Hoàn thành",
+                                            "Cancelled" => "Đã huỷ",
+                                            "Pending" => "Chờ xác nhận",
                     _ => Model.Status
                 };
             }
             <span class="status-badge @sc">@sl</span>
             <span style="margin-left:auto">Thanh toán:</span>
             <span class="pay-badge @(Model.PaymentStatus == "Paid" ? "paid" : "unpaid")">
-                @(Model.PaymentStatus == "Paid" ? "Đã thanh toán" : "Chưa thanh toán")
+                @(Model.PaymentStatus == "Paid" ? "Đã thanh toán" : (Model.PaymentMethod == "Transfer" ? "Chờ xác nhận CK" : "Chưa thanh toán"))
             </span>
         </div>
 
@@ -602,10 +608,40 @@
                 <i class="bi bi-info-circle-fill"></i>
                 <span>Vui lòng xuất trình hoá đơn này khi check-in. Có mặt trước <strong>15 phút</strong> để xác nhận đặt sân.</span>
             </div>
-            <div class="inv-ft-qr">
-                <div style="width:60px;height:60px;background:var(--S);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#8c7a68;font-size:1.5rem"><i class="bi bi-qr-code"></i></div>
-                <div class="qr-lbl">Mã QR check-in</div>
-            </div>
+            @if (Model.PaymentMethod == "Transfer" && Model.PaymentStatus?.ToLower() != "paid")
+            {
+                <div class="inv-ft-qr" style="text-align:left;min-width:200px">
+                    <div style="font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8c7a68;margin-bottom:.5rem">Thông tin chuyển khoản</div>
+                    @if (ViewBag.BankName != null)
+                    {
+                        <div style="font-size:.78rem;color:var(--D);margin-bottom:.2rem"><span style="color:#8c7a68">Ngân hàng:</span> <strong>@ViewBag.BankName</strong></div>
+                    }
+                    @if (ViewBag.BankAccount != null)
+                    {
+                        <div style="font-size:.78rem;color:var(--D);margin-bottom:.2rem"><span style="color:#8c7a68">Số TK:</span> <strong>@ViewBag.BankAccount</strong></div>
+                    }
+                    @if (ViewBag.BankAccountName != null)
+                    {
+                        <div style="font-size:.78rem;color:var(--D);margin-bottom:.2rem"><span style="color:#8c7a68">Chủ TK:</span> <strong>@ViewBag.BankAccountName</strong></div>
+                    }
+                    <div style="font-size:.78rem;color:var(--D);margin-top:.4rem;background:#eff6ff;border-radius:5px;padding:.4rem .65rem;border:1px solid #bfdbfe">
+                        <i class="bi bi-chat-text" style="color:#1d4ed8"></i>
+                        Nội dung CK: <strong style="color:#1d4ed8">@Model.BookingCode</strong>
+                    </div>
+                    @if (ViewBag.QrUrl != null)
+                    {
+                        <img src="@ViewBag.QrUrl" alt="QR chuyển khoản" style="width:80px;height:80px;margin-top:.6rem;border-radius:6px;border:1px solid var(--S)">
+                        <div class="qr-lbl">QR chuyển khoản</div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="inv-ft-qr">
+                    <div style="width:60px;height:60px;background:var(--S);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#8c7a68;font-size:1.5rem"><i class="bi bi-qr-code"></i></div>
+                    <div class="qr-lbl">Mã QR check-in</div>
+                </div>
+            }
         </div>
     </div>
 </body>

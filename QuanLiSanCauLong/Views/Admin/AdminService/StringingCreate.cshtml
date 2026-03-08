@@ -1,6 +1,7 @@
 ﻿@model QuanLiSanCauLong.Models.StringingService
 @{
     Layout = null;
+    var uid = Guid.NewGuid().ToString("N")[..8];
 }
 
 <style>
@@ -314,12 +315,59 @@
         text-align: center;
         cursor: pointer;
         transition: all .2s;
+        position: relative;
+        overflow: hidden;
     }
 
         .img-upload-zone:hover {
             border-color: var(--gold);
             background: rgba(212,160,23,.04);
         }
+
+        .img-upload-zone.has-preview {
+            border-color: var(--gold);
+            padding: 0;
+        }
+
+    .img-preview-ss {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 8px;
+        display: none;
+    }
+
+        .img-preview-ss.show {
+            display: block;
+        }
+
+    .img-upload-inner-ss {
+        padding: 1.5rem;
+    }
+
+    .img-url-row {
+        display: flex;
+        gap: .5rem;
+        margin-top: .75rem;
+    }
+
+        .img-url-row .fg-input {
+            flex: 1;
+            font-size: .8rem;
+        }
+
+    .btn-url-confirm {
+        padding: .5rem .9rem;
+        background: var(--gold);
+        border: none;
+        border-radius: 6px;
+        font-size: .78rem;
+        font-weight: 700;
+        color: var(--deep);
+        cursor: pointer;
+        white-space: nowrap;
+        font-family: 'Outfit',sans-serif;
+    }
 
     .upload-icon {
         font-size: 1.8rem;
@@ -405,7 +453,7 @@
     </div>
 
     <div class="ss-body">
-        <form id="frmStringingCreate" method="post" enctype="multipart/form-data">
+        <form id="frmStringingCreate-@uid" method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
 
             <!-- 1. THÔNG TIN CƠ BẢN -->
@@ -457,8 +505,8 @@
                     <span class="ss-card-title">Thương Hiệu Dây</span>
                 </div>
                 <div class="ss-card-body">
-                    <input name="Brand" type="hidden" id="brandInput" value="" />
-                    <div class="brand-cards" id="brandCards">
+                    <input name="Brand" type="hidden" id="brandInput-@uid" value="" />
+                    <div class="brand-cards" id="brandCards-@uid">
                         <div class="br-card" data-brand="Yonex">
                             <div class="br-logo">🏸</div>
                             <div class="br-name">Yonex</div>
@@ -517,16 +565,27 @@
                 <div class="ss-card-body">
                     <div class="fg">
                         <label class="fg-label">Ảnh Đại Diện</label>
-                        <div class="img-upload-zone" id="ssUploadZone">
-                            <div class="upload-icon"><i class="bi bi-cloud-upload"></i></div>
-                            <div class="upload-text"><strong>Click để tải ảnh lên</strong> hoặc kéo thả</div>
-                            <div id="imgNameSS" style="font-size:.75rem;color:var(--gold);margin-top:.3rem;"></div>
+                        <div class="img-upload-zone" id="ssUploadZone-@uid">
+                            <img class="img-preview-ss" id="imgPreviewSS-@uid" src="" alt="Preview" />
+                            <div class="img-upload-inner-ss" id="uploadInnerSS-@uid">
+                                <div class="upload-icon"><i class="bi bi-cloud-upload"></i></div>
+                                <div class="upload-text"><strong>Click để tải ảnh lên</strong> hoặc kéo thả</div>
+                                <div id="imgNameSS-@uid" style="font-size:.75rem;color:var(--gold);margin-top:.3rem;"></div>
+                            </div>
                         </div>
-                        <input type="file" id="imgInputSS" name="featuredImage" accept="image/*" style="display:none" />
+                        <input type="file" id="imgInputSS-@uid" name="featuredImageFile" accept="image/*" style="display:none" />
+                        <div class="img-url-row">
+                            <input type="text" id="imgUrlSS-@uid" name="FeaturedImage" class="fg-input"
+                                   placeholder="Hoặc nhập URL ảnh: https://..." />
+                            <button type="button" class="btn-url-confirm" id="btnUrlSS-@uid">
+                                <i class="bi bi-check2"></i> Áp dụng
+                            </button>
+                        </div>
+                        <div class="fg-hint">Upload file hoặc nhập URL rồi nhấn Áp dụng</div>
                     </div>
                     <div class="fg">
                         <label class="fg-label">Trạng Thái</label>
-                        <div class="status-opts" id="ssStatusOpts">
+                        <div class="status-opts" id="ssStatusOpts-@uid">
                             <div class="status-opt selected" data-status="Active">
                                 <span class="status-dot" style="background:#16a34a;"></span> Hoạt Động
                             </div>
@@ -534,7 +593,7 @@
                                 <span class="status-dot" style="background:var(--muted);"></span> Ngừng
                             </div>
                         </div>
-                        <input name="Status" type="hidden" id="statusInput" value="Active" />
+                        <input name="Status" type="hidden" id="statusInputSS-@uid" value="Active" />
                     </div>
                     <div class="fg" style="margin-bottom:0;">
                         <label class="fg-label">Cài Đặt Hiển Thị</label>
@@ -560,51 +619,94 @@
         <button type="button" class="btn-cancel" data-bs-dismiss="modal">
             <i class="bi bi-x-circle"></i> Hủy
         </button>
-        <button type="button" class="btn-save" id="btnStringingSubmit"
-                data-form="frmStringingCreate" data-url="/AdminService/StringingCreate">
+        <button type="button" class="btn-save" id="btnStringingSubmit-@uid"
+                data-form="frmStringingCreate-@uid" data-url="/AdminService/StringingCreate">
             <i class="bi bi-plus-circle"></i> Thêm Dịch Vụ
         </button>
     </div><!-- /ss-wrapper -->
 
     <script>
         (function() {
-            // Brand cards
-            var brandCards = document.getElementById('brandCards');
+            var UID = '@uid';
+            function el(id) { return document.getElementById(id + '-' + UID); }
+
+            // ── BRAND CARDS ──────────────────────────────────────
+            var brandCards = el('brandCards');
             if (brandCards) {
-                brandCards.addEventListener('click', function(e) {
-                    var card = e.target.closest('.br-card');
-                    if (!card) return;
-                    brandCards.querySelectorAll('.br-card').forEach(function(c) { c.classList.remove('selected'); });
-                    card.classList.add('selected');
-                    document.getElementById('brandInput').value = card.dataset.brand;
+                brandCards.querySelectorAll('.br-card').forEach(function(card) {
+                    card.addEventListener('click', function() {
+                        brandCards.querySelectorAll('.br-card').forEach(function(c) { c.classList.remove('selected'); });
+                        this.classList.add('selected');
+                        el('brandInput').value = this.dataset.brand;
+                    });
                 });
             }
 
-            // Status opts
-            var ssStatusOpts = document.getElementById('ssStatusOpts');
+            // ── STATUS OPTS ──────────────────────────────────────
+            var ssStatusOpts = el('ssStatusOpts');
             if (ssStatusOpts) {
-                ssStatusOpts.addEventListener('click', function(e) {
-                    var opt = e.target.closest('.status-opt');
-                    if (!opt) return;
-                    ssStatusOpts.querySelectorAll('.status-opt').forEach(function(c) { c.classList.remove('selected'); });
-                    opt.classList.add('selected');
-                    document.getElementById('statusInput').value = opt.dataset.status;
+                ssStatusOpts.querySelectorAll('.status-opt').forEach(function(opt) {
+                    opt.addEventListener('click', function() {
+                        ssStatusOpts.querySelectorAll('.status-opt').forEach(function(c) { c.classList.remove('selected'); });
+                        this.classList.add('selected');
+                        el('statusInputSS').value = this.dataset.status;
+                    });
                 });
             }
 
-            // Image upload name display
-            var ssUploadZone = document.getElementById('ssUploadZone');
-            var imgInputSS = document.getElementById('imgInputSS');
-            if (ssUploadZone && imgInputSS) {
-                ssUploadZone.addEventListener('click', function() { imgInputSS.click(); });
-                imgInputSS.addEventListener('change', function() {
-                    var nameEl = document.getElementById('imgNameSS');
-                    if (nameEl) nameEl.textContent = this.files[0] ? this.files[0].name : '';
+            // ── IMAGE UPLOAD (file) ───────────────────────────────
+            var uploadZone  = el('ssUploadZone');
+            var fileInput   = el('imgInputSS');
+            var imgPreview  = el('imgPreviewSS');
+            var uploadInner = el('uploadInnerSS');
+
+            function showPreview(src) {
+                if (!imgPreview) return;
+                imgPreview.src = src;
+                imgPreview.classList.add('show');
+                if (uploadInner) uploadInner.style.display = 'none';
+                if (uploadZone)  uploadZone.classList.add('has-preview');
+            }
+            function resetPreview() {
+                if (!imgPreview) return;
+                imgPreview.src = '';
+                imgPreview.classList.remove('show');
+                if (uploadInner) uploadInner.style.display = '';
+                if (uploadZone)  uploadZone.classList.remove('has-preview');
+            }
+
+            if (uploadZone && fileInput) {
+                uploadZone.addEventListener('click', function(e) {
+                    if (e.target === imgPreview) { resetPreview(); fileInput.value = ''; return; }
+                    fileInput.click();
+                });
+                fileInput.addEventListener('change', function() {
+                    if (!this.files || !this.files[0]) return;
+                    var nameEl = el('imgNameSS');
+                    if (nameEl) nameEl.textContent = this.files[0].name;
+                    var reader = new FileReader();
+                    reader.onload = function(ev) { showPreview(ev.target.result); };
+                    reader.readAsDataURL(this.files[0]);
                 });
             }
 
-            // Submit
-            var btnSubmit = document.getElementById('btnStringingSubmit');
+            // ── IMAGE URL ─────────────────────────────────────────
+            var btnUrlSS   = el('btnUrlSS');
+            var imgUrlInput = el('imgUrlSS');
+            if (btnUrlSS && imgUrlInput) {
+                btnUrlSS.addEventListener('click', function() {
+                    var url = imgUrlInput.value.trim();
+                    if (!url) { resetPreview(); return; }
+                    showPreview(url);
+                    if (fileInput) fileInput.value = '';
+                });
+                imgUrlInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') { e.preventDefault(); btnUrlSS.click(); }
+                });
+            }
+
+            // ── SUBMIT ────────────────────────────────────────────
+            var btnSubmit = el('btnStringingSubmit');
             if (btnSubmit) {
                 btnSubmit.addEventListener('click', function() {
                     var formId = this.dataset.form;
@@ -612,6 +714,8 @@
                     var form   = document.getElementById(formId);
                     if (!form) return;
                     if (!form.checkValidity()) { form.reportValidity(); return; }
+                    btnSubmit.disabled = true;
+                    btnSubmit.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang lưu...';
                     if (typeof submitServiceForm === 'function') {
                         submitServiceForm(formId, url);
                     } else {
@@ -622,9 +726,17 @@
                                     var modal = bootstrap.Modal.getInstance(document.getElementById('modalService'));
                                     if (modal) modal.hide();
                                     location.reload();
-                                } else { alert(res.message || 'Có lỗi xảy ra.'); }
+                                } else {
+                                    alert(res.message || 'Có lỗi xảy ra.');
+                                    btnSubmit.disabled = false;
+                                    btnSubmit.innerHTML = '<i class="bi bi-plus-circle"></i> Thêm Dịch Vụ';
+                                }
                             })
-                            .catch(function(err) { alert('Lỗi kết nối: ' + err.message); });
+                            .catch(function(err) {
+                                alert('Lỗi kết nối: ' + err.message);
+                                btnSubmit.disabled = false;
+                                btnSubmit.innerHTML = '<i class="bi bi-plus-circle"></i> Thêm Dịch Vụ';
+                            });
                     }
                 });
             }

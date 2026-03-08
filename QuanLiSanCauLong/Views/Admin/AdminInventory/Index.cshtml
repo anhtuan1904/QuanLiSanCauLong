@@ -1,748 +1,702 @@
 ﻿@model QuanLiSanCauLong.ViewModels.InventoryListViewModel
 
 @{
-    ViewData["Title"] = "Quản lý Kho Hàng";
+    ViewData["Title"] = "Quản lý Kho hàng";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
 <style>
+    @@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+
     :root {
-        --court-dark: #1a1a2e;
-        --court-gold: #e8c840;
-        --court-gold-h: #d4b320;
-        --court-bg: #f5f0e8;
-        --court-card: #ffffff;
-        --court-border: #e8e0d0;
-        --court-text: #2d2d2d;
-        --court-muted: #7a7060;
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #f5f4ec;
+        --warm: #f0ead8;
+        --card: #ffffff;
+        --border: #e4d9c8;
+        --muted: #8a7560;
+        --green: #15803d;
+        --green-soft: #dcfce7;
+        --red: #dc2626;
+        --red-soft: #fef2f2;
+        --yellow: #92600a;
+        --yellow-soft: #fef9ec;
     }
 
-    .page-wrapper {
-        background: var(--court-bg);
-        min-height: 100vh;
-        padding: 2rem;
+    body, .container-fluid {
+        font-family: 'Outfit', sans-serif;
+        background: var(--cream);
     }
+
+    .page-hd {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 1.8rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .page-label {
+        font-size: .68rem;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: var(--gold);
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        margin-bottom: .35rem;
+    }
+
+        .page-label::before {
+            content: '';
+            width: 16px;
+            height: 1px;
+            background: var(--gold);
+        }
 
     .page-title {
-        font-size: 2rem;
-        font-weight: 800;
-        color: var(--court-dark);
-        letter-spacing: -.5px;
+        font-family: 'Playfair Display',serif;
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: var(--deep);
+        margin: 0;
+        line-height: 1.15;
     }
 
-        .page-title span {
-            color: var(--court-gold);
+        .page-title em {
             font-style: italic;
+            color: var(--gold);
         }
 
-    /* Header buttons */
-    .btn-gold {
-        background: var(--court-gold);
-        color: var(--court-dark);
+    .page-sub {
+        font-size: .83rem;
+        color: var(--muted);
+        margin-top: .3rem;
+    }
+
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .6rem 1.3rem;
         border: none;
-        font-weight: 700;
-        padding: .6rem 1.3rem;
         border-radius: 10px;
-        font-size: .875rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .86rem;
+        font-weight: 700;
         cursor: pointer;
-        transition: .2s;
-        white-space: nowrap;
         text-decoration: none;
-    }
-
-        .btn-gold:hover {
-            background: var(--court-gold-h);
-            color: var(--court-dark);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(232,200,64,.4);
-        }
-
-    .btn-dark-outline {
-        background: var(--court-card);
-        color: var(--court-dark);
-        border: 1.5px solid var(--court-dark);
-        font-weight: 700;
-        padding: .6rem 1.3rem;
-        border-radius: 10px;
-        font-size: .875rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        cursor: pointer;
         transition: .2s;
         white-space: nowrap;
     }
 
-        .btn-dark-outline:hover {
-            background: var(--court-dark);
+    .btn-in {
+        background: var(--gold2);
+        color: var(--deep);
+        box-shadow: 0 2px 8px rgba(212,160,23,.3);
+    }
+
+        .btn-in:hover {
+            background: var(--gold);
             color: #fff;
         }
 
-    .btn-alert {
+    .btn-out {
         background: #fef2f2;
-        color: #dc2626;
-        border: 1.5px solid #fca5a5;
-        font-weight: 700;
-        padding: .6rem 1.3rem;
-        border-radius: 10px;
-        font-size: .875rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        text-decoration: none;
-        transition: .2s;
-        white-space: nowrap;
+        color: var(--red);
+        border: 1px solid #fecaca;
     }
 
-        .btn-alert:hover {
-            background: #dc2626;
+        .btn-out:hover {
+            background: var(--red);
             color: #fff;
         }
 
-    /* Stats */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(4,1fr);
+    .btn-warn {
+        background: var(--yellow-soft);
+        color: var(--yellow);
+        border: 1px solid #f0dea0;
+    }
+
+        .btn-warn:hover {
+            background: #92600a;
+            color: #fff;
+        }
+
+    /* Stats row */
+    .stats-row {
+        display: flex;
         gap: 1rem;
         margin-bottom: 1.5rem;
+        flex-wrap: wrap;
     }
 
     .stat-card {
-        background: var(--court-card);
-        border: 1px solid var(--court-border);
-        border-radius: 12px;
-        padding: 1.25rem 1.5rem;
-    }
-
-    .stat-value {
-        font-size: 2rem;
-        font-weight: 800;
-        color: var(--court-dark);
-        line-height: 1;
-    }
-
-    .stat-label {
-        font-size: .7rem;
-        font-weight: 700;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        color: var(--court-muted);
-        margin-top: 4px;
-    }
-
-    .stat-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        display: inline-block;
-        margin-right: 4px;
-    }
-
-    /* Filter bar */
-    .filter-bar {
-        background: var(--court-card);
-        border: 1px solid var(--court-border);
-        border-radius: 12px;
-        padding: 1rem 1.25rem;
-        margin-bottom: 1.5rem;
-        display: flex;
-        gap: .75rem;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-
-    .search-wrap {
-        position: relative;
-        flex: 1;
-        min-width: 220px;
-    }
-
-        .search-wrap i {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--court-muted);
-            font-size: .875rem;
-        }
-
-        .search-wrap input {
-            padding-left: 36px;
-            border: 1.5px solid var(--court-border);
-            border-radius: 8px;
-            background: var(--court-bg);
-            color: var(--court-text);
-            height: 40px;
-            width: 100%;
-            font-size: .875rem;
-        }
-
-            .search-wrap input:focus {
-                outline: none;
-                border-color: var(--court-gold);
-                background: #fff;
-                box-shadow: 0 0 0 3px rgba(232,200,64,.15);
-            }
-
-    .f-select {
-        border: 1.5px solid var(--court-border);
-        border-radius: 8px;
-        background: var(--court-bg);
-        color: var(--court-text);
-        height: 40px;
-        padding: 0 .75rem;
-        font-size: .875rem;
-        cursor: pointer;
-    }
-
-        .f-select:focus {
-            outline: none;
-            border-color: var(--court-gold);
-            box-shadow: 0 0 0 3px rgba(232,200,64,.15);
-        }
-
-    .btn-reset {
-        border: 1.5px solid var(--court-border);
-        border-radius: 8px;
-        background: var(--court-card);
-        color: var(--court-muted);
-        height: 40px;
-        padding: 0 1rem;
-        font-size: .8rem;
-        font-weight: 600;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        transition: .2s;
-    }
-
-        .btn-reset:hover {
-            background: var(--court-dark);
-            color: #fff;
-            border-color: var(--court-dark);
-        }
-
-    /* Inventory cards */
-    .inv-card {
-        background: var(--court-card);
-        border: 1px solid var(--court-border);
+        background: var(--card);
+        border: 1px solid var(--border);
         border-radius: 14px;
-        padding: 1.25rem 1.5rem;
-        margin-bottom: 1rem;
-        transition: all .2s;
-        display: flex;
-        gap: 1.25rem;
-        align-items: center;
+        padding: 1rem 1.4rem;
+        flex: 1;
+        min-width: 160px;
+        box-shadow: 0 1px 6px rgba(26,18,9,.05);
     }
 
-        .inv-card:hover {
-            border-color: var(--court-gold);
-            box-shadow: 0 6px 20px rgba(26,26,46,.1);
-            transform: translateY(-2px);
+        .stat-card .sc-lbl {
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: var(--muted);
+            font-weight: 700;
         }
 
-        .inv-card.low-border {
-            border-left: 4px solid #f59e0b;
+        .stat-card .sc-val {
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: var(--deep);
+            line-height: 1.1;
+            margin-top: .2rem;
         }
 
-        .inv-card.out-border {
-            border-left: 4px solid #dc2626;
+        .stat-card.warn .sc-val {
+            color: var(--yellow);
         }
 
-    /* Thumb */
-    .inv-thumb {
-        width: 56px;
-        height: 56px;
-        border-radius: 10px;
-        overflow: hidden;
-        background: var(--court-bg);
-        border: 1px solid var(--court-border);
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--court-muted);
-    }
-
-        .inv-thumb img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .stat-card.danger .sc-val {
+            color: var(--red);
         }
 
-    /* Product name */
-    .inv-name {
-        font-size: 1rem;
-        font-weight: 800;
-        color: var(--court-dark);
-        margin-bottom: 2px;
-    }
-
-    .inv-meta {
-        font-size: .75rem;
-        color: var(--court-muted);
+    /* Filter row */
+    .filter-row {
         display: flex;
         gap: .75rem;
+        margin-bottom: 1.5rem;
         flex-wrap: wrap;
     }
 
-        .inv-meta span {
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-        }
-
-    /* Tags */
-    .tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 3px;
-        padding: 2px 8px;
-        border-radius: 20px;
-        font-size: .68rem;
-        font-weight: 700;
-    }
-
-    .tag-low {
-        background: #fffbeb;
-        color: #b45309;
-        border: 1px solid #fcd34d;
-    }
-
-    .tag-out {
-        background: #fef2f2;
-        color: #dc2626;
-        border: 1px solid #fca5a5;
-    }
-
-    .tag-ok {
-        background: #f0fdf4;
-        color: #166534;
-        border: 1px solid #86efac;
-    }
-
-    .tag-expiring {
-        background: #fff7ed;
-        color: #c2410c;
-        border: 1px solid #fdba74;
-    }
-
-    .tag-expired {
-        background: #fef2f2;
-        color: #9f1239;
-        border: 1px solid #fda4af;
-    }
-
-    .tag-batch {
-        background: var(--court-bg);
-        color: var(--court-muted);
-        border: 1px solid var(--court-border);
-    }
-
-    /* Stock display */
-    .stock-block {
-        text-align: center;
-        min-width: 80px;
-    }
-
-    .stock-num {
-        font-size: 1.5rem;
-        font-weight: 800;
-        line-height: 1;
-        color: var(--court-dark);
-    }
-
-        .stock-num.low {
-            color: #b45309;
-        }
-
-        .stock-num.out {
-            color: #dc2626;
-        }
-
-    .stock-lbl {
-        font-size: .65rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        color: var(--court-muted);
-        margin-top: 2px;
-    }
-
-    /* Progress bar */
-    .inv-bar {
-        height: 5px;
-        border-radius: 4px;
-        background: #e5e7eb;
-        margin-top: 6px;
-        overflow: hidden;
-    }
-
-    .inv-bar-fill {
-        height: 100%;
-        border-radius: 4px;
-        transition: width .4s;
-    }
-
-    /* Action buttons */
-    .act-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: .35rem .8rem;
-        border-radius: 8px;
-        font-size: .75rem;
-        font-weight: 700;
-        border: 1.5px solid;
+    .filter-select {
+        padding: .5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .84rem;
+        color: var(--deep);
+        background: var(--card);
         cursor: pointer;
+        outline: none;
+        min-width: 180px;
+        box-shadow: 0 1px 6px rgba(26,18,9,.05);
+    }
+
+    .btn-search {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .5rem 1.2rem;
+        background: var(--deep);
+        color: var(--gold2);
+        border: none;
+        border-radius: 10px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .84rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: .18s;
+    }
+
+        .btn-search:hover {
+            background: #2d200a;
+        }
+
+    /* Table */
+    .table-wrap {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(26,18,9,.05);
+    }
+
+    .inv-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .inv-table th {
+            background: var(--warm);
+            padding: .75rem 1rem;
+            text-align: left;
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: var(--muted);
+            font-weight: 700;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .inv-table td {
+            padding: .75rem 1rem;
+            font-size: .86rem;
+            color: var(--deep);
+            border-bottom: 1px solid #f5f0e8;
+            vertical-align: middle;
+        }
+
+        .inv-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .inv-table tr:hover td {
+            background: #fdfcf8;
+        }
+
+    .badge-ok {
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        padding: .22rem .75rem;
+        border-radius: 20px;
+        font-size: .72rem;
+        font-weight: 700;
+        background: var(--green-soft);
+        color: var(--green);
+        border: 1px solid #a7f3d0;
+    }
+
+    .badge-low {
+        background: var(--yellow-soft);
+        color: var(--yellow);
+        border: 1px solid #f0dea0;
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        padding: .22rem .75rem;
+        border-radius: 20px;
+        font-size: .72rem;
+        font-weight: 700;
+    }
+
+    .badge-out {
+        background: var(--red-soft);
+        color: var(--red);
+        border: 1px solid #fecaca;
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        padding: .22rem .75rem;
+        border-radius: 20px;
+        font-size: .72rem;
+        font-weight: 700;
+    }
+
+    .btn-adj {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .35rem .8rem;
+        background: var(--warm);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: .78rem;
+        font-weight: 700;
+        color: var(--deep);
+        cursor: pointer;
+        text-decoration: none;
         transition: .15s;
-        background: transparent;
     }
 
-    .act-in {
-        border-color: #22c55e;
-        color: #166534;
-    }
-
-        .act-in:hover {
-            background: #22c55e;
-            color: #fff;
-            border-color: #22c55e;
-        }
-
-    .act-out {
-        border-color: #f59e0b;
-        color: #b45309;
-    }
-
-        .act-out:hover {
-            background: #f59e0b;
-            color: #fff;
-            border-color: #f59e0b;
-        }
-
-    .act-adj {
-        border-color: var(--court-border);
-        color: var(--court-muted);
-    }
-
-        .act-adj:hover {
-            background: var(--court-dark);
-            color: #fff;
-            border-color: var(--court-dark);
-        }
-
-    .act-hist {
-        border-color: var(--court-border);
-        color: var(--court-muted);
-    }
-
-        .act-hist:hover {
-            background: var(--court-dark);
-            color: #fff;
-            border-color: var(--court-dark);
-        }
-
-    /* Empty state */
-    .empty-state {
-        text-align: center;
-        padding: 5rem 2rem;
-        color: var(--court-muted);
-    }
-
-        .empty-state i {
-            font-size: 4rem;
-            opacity: .2;
-            display: block;
-            margin-bottom: 1rem;
+        .btn-adj:hover {
+            background: var(--deep);
+            color: var(--gold2);
+            border-color: var(--deep);
         }
 
     /* Modal */
-    .modal-content {
-        border: none;
-        border-radius: 16px;
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.45);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+    .modal-box {
+        background: #fff;
+        border-radius: 18px;
+        width: 90%;
+        max-width: 680px;
+        max-height: 90vh;
+        overflow-y: auto;
         box-shadow: 0 20px 60px rgba(0,0,0,.2);
     }
 
-    @@media(max-width:768px) {
-        .stats-grid {
-            grid-template-columns: repeat(2,1fr);
+    .modal-hd {
+        padding: 1.3rem 1.6rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .modal-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--deep);
+        margin: 0;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.3rem;
+        color: var(--muted);
+        cursor: pointer;
+        padding: .2rem .5rem;
+        border-radius: 6px;
+    }
+
+        .modal-close:hover {
+            background: var(--warm);
         }
 
-        .inv-card {
-            flex-wrap: wrap;
+    .modal-body {
+        padding: 1.4rem 1.6rem;
+    }
+
+    /* Toast */
+    .toast-wrap {
+        position: fixed;
+        top: 1.2rem;
+        right: 1.2rem;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+        pointer-events: none;
+    }
+
+    .toast-msg {
+        padding: .75rem 1.2rem;
+        border-radius: 10px;
+        font-size: .84rem;
+        font-weight: 600;
+        box-shadow: 0 8px 24px rgba(0,0,0,.14);
+        pointer-events: all;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        animation: slideIn .22s ease;
+        background: #fff;
+    }
+
+    .toast-success {
+        border-left: 4px solid var(--green);
+        color: var(--green);
+    }
+
+    .toast-error {
+        border-left: 4px solid var(--red);
+        color: var(--red);
+    }
+
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(20px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0)
         }
     }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--muted);
+    }
+
+        .empty-state i {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 1rem;
+            color: var(--gold);
+            opacity: .3;
+        }
 </style>
 
-<div class="page-wrapper">
+<div class="container-fluid px-4 py-4">
 
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-start mb-4" style="flex-wrap:wrap;gap:1rem;">
+    <div class="page-hd">
         <div>
-            <h1 class="page-title mb-1">Quản Lý <span>Kho Hàng</span></h1>
-            <p class="mb-0" style="color:var(--court-muted);font-size:.9rem;">Theo dõi tồn kho, nhập xuất và biến động hàng hoá</p>
+            <div class="page-label">Kho Hàng</div>
+            <div class="page-title">Quản lý <em>Kho Hàng</em></div>
+            <div class="page-sub">@Model.FacilityName — theo dõi tồn kho, nhập xuất và cảnh báo</div>
         </div>
-        <div class="d-flex gap-2 flex-wrap">
-            <a asp-action="LowStock" class="btn-alert">
-                <i class="bi bi-exclamation-triangle-fill"></i> Cảnh báo (@Model.LowStockCount)
-            </a>
-            <button class="btn-dark-outline" onclick="openInventoryModal('@Url.Action("StockOut")')">
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+            @if (ViewBag.LowStockCount > 0)
+            {
+                <button class="btn-action btn-warn" onclick="openModal('lowStockModal')">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Cảnh báo (@ViewBag.LowStockCount)
+                </button>
+            }
+            <button class="btn-action btn-out" onclick="openModal('stockOutModal')">
                 <i class="bi bi-box-arrow-up"></i> Xuất Kho
             </button>
-            <button class="btn-gold" onclick="openInventoryModal('@Url.Action("StockIn")')">
+            <button class="btn-action btn-in" onclick="openModal('stockInModal')">
                 <i class="bi bi-box-arrow-in-down"></i> Nhập Kho
             </button>
         </div>
     </div>
 
     <!-- Stats -->
-    <div class="stats-grid">
+    <div class="stats-row">
         <div class="stat-card">
-            <div class="stat-value">@(Model.Items?.Select(i => i.CategoryName).Distinct().Count() ?? 0)</div>
-            <div class="stat-label"><span class="stat-dot" style="background:#1a1a2e;"></span>Danh Mục</div>
+            <div class="sc-lbl">Tổng sản phẩm</div>
+            <div class="sc-val">@Model.Items.Count</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-value" style="color:#166534;">@(Model.Items?.Count ?? 0)</div>
-            <div class="stat-label"><span class="stat-dot" style="background:#22c55e;"></span>Sản Phẩm</div>
+        <div class="stat-card warn">
+            <div class="sc-lbl">Sắp hết hàng</div>
+            <div class="sc-val">@ViewBag.LowStockCount</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-value" style="color:@(Model.ExpiringCount > 0 ? "#b45309" : "var(--court-dark)");">@Model.ExpiringCount</div>
-            <div class="stat-label"><span class="stat-dot" style="background:#f59e0b;"></span>Sắp Hết HSD</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value" style="color:@(Model.LowStockCount > 0 ? "#dc2626" : "var(--court-dark)");">@Model.LowStockCount</div>
-            <div class="stat-label"><span class="stat-dot" style="background:#ef4444;"></span>Cảnh Báo Kho</div>
+        <div class="stat-card danger">
+            <div class="sc-lbl">Hết hàng</div>
+            <div class="sc-val">@ViewBag.OutOfStockCount</div>
         </div>
     </div>
 
-    <!-- Filter bar -->
-    <div class="filter-bar">
-        <div class="search-wrap">
-            <i class="bi bi-search"></i>
-            <input type="text" id="inventorySearch" placeholder="Tìm tên, SKU, mã vạch, số lô..." />
-        </div>
-        <select id="filterCategory" class="f-select">
-            <option value="">Tất cả danh mục</option>
-            @if (ViewBag.Categories != null)
-            {
-                foreach (var cat in ViewBag.Categories)
+    <!-- Filters -->
+    <form method="get" id="filterForm">
+        <div class="filter-row">
+            <select class="filter-select" name="facilityId" onchange="document.getElementById('filterForm').submit()">
+                <option value="">Tất cả cơ sở</option>
+                @foreach (var f in ViewBag.Facilities)
                 {
-                    <option value="@cat.CategoryName">@cat.CategoryName</option>
+                    <option value="@f.FacilityId" selected="@(Model.FacilityId == f.FacilityId)">@f.FacilityName</option>
                 }
-            }
-        </select>
-        <select id="filterStock" class="f-select">
-            <option value="">Tồn kho</option>
-            <option value="low">⚠️ Tồn thấp</option>
-            <option value="out">❌ Hết hàng</option>
-            <option value="ok">✅ Đủ hàng</option>
-        </select>
-        <select id="filterExpiry" class="f-select">
-            <option value="">Tình trạng HSD</option>
-            <option value="expired">Đã hết hạn</option>
-            <option value="expiring">Sắp hết (30 ngày)</option>
-            <option value="ok">Còn hạn</option>
-            <option value="none">Không có HSD</option>
-        </select>
-        <button id="btnResetFilter" class="btn-reset">
-            <i class="bi bi-arrow-counterclockwise"></i> Đặt lại
-        </button>
-    </div>
+            </select>
+            <select class="filter-select" name="categoryId" onchange="document.getElementById('filterForm').submit()">
+                <option value="">Tất cả danh mục</option>
+                @foreach (var c in ViewBag.Categories)
+                {
+                    <option value="@c.CategoryId">@c.CategoryName</option>
+                }
+            </select>
+            <select class="filter-select" name="stockStatus" onchange="document.getElementById('filterForm').submit()">
+                <option value="">Tất cả trạng thái</option>
+                <option value="low">Sắp hết</option>
+                <option value="out">Hết hàng</option>
+                <option value="normal">Bình thường</option>
+            </select>
+            <button type="submit" class="btn-search">
+                <i class="bi bi-funnel"></i> Lọc
+            </button>
+        </div>
+    </form>
 
-    <!-- Inventory List -->
-    <div id="inventoryContainer">
+    <!-- Table -->
+    <div class="table-wrap">
         @if (Model.Items != null && Model.Items.Any())
         {
-            foreach (var item in Model.Items)
-            {
-                var isLow = item.IsLowStock;
-                var stockClass = item.Quantity == 0 ? "out" : isLow ? "low" : "ok";
-                var expiryStatus = "none";
-                if (item.ExpiryDate.HasValue)
-                {
-                    expiryStatus = item.ExpiryDate.Value < DateTime.Now ? "expired"
-                    : item.ExpiryDate.Value <= DateTime.Now.AddDays(30) ? "expiring"
-                    : "ok";
-                }
-                var cardBorder = item.Quantity == 0 ? "out-border" : isLow ? "low-border" : "";
-                var pct = item.MaxQuantity > 0 ? Math.Min(100, (int)((double)item.Quantity / item.MaxQuantity * 100)) : 0;
-                var barColor = pct < 20 ? "#ef4444" : pct < 50 ? "#f59e0b" : "#22c55e";
-
-                <div class="inv-card @cardBorder"
-                     data-name="@item.ProductName?.ToLower()"
-                     data-sku="@item.SKU?.ToLower()"
-                     data-barcode="@item.Barcode?.ToLower()"
-                     data-batch="@item.BatchNumber?.ToLower()"
-                     data-category="@item.CategoryName"
-                     data-stock="@stockClass"
-                     data-expiry="@expiryStatus">
-
-                    <!-- Thumb -->
-                    <div class="inv-thumb">
-                        @if (!string.IsNullOrEmpty(item.ImageUrl))
-                        {
-                            <img src="@item.ImageUrl" alt="@item.ProductName" onerror="this.src='/images/no-image.png'" />
-                        }
-                        else
-                        {
-
-                            <i class="bi bi-box-seam"></i>
-                        }
-                    </div>
-
-                    <!-- Info -->
-                    <div style="flex:1;min-width:0;">
-                        <div class="inv-name">@item.ProductName</div>
-                        <div class="inv-meta">
-                            @if (!string.IsNullOrEmpty(item.SKU))
-                            {
-                                <span><i class="bi bi-upc"></i>@item.SKU</span>
-                            }
-                            @if (!string.IsNullOrEmpty(item.CategoryName))
-                            {
-                                <span><i class="bi bi-tag"></i>@item.CategoryName</span>
-                            }
-                            @if (!string.IsNullOrEmpty(item.BatchNumber))
-                            {
-                                <span><i class="bi bi-layers"></i>Lô: @item.BatchNumber</span>
-                            }
-                            @if (!string.IsNullOrEmpty(item.SupplierName))
-                            {
-                                <span><i class="bi bi-building"></i>@item.SupplierName</span>
-                            }
-                        </div>
-                        <div class="d-flex flex-wrap gap-1 mt-2">
-                            @if (item.Quantity == 0)
-                            {
-                                <span class="tag tag-out"><i class="bi bi-x-circle"></i>Hết hàng</span>
-                            }
-                            else if (isLow)
-                            {
-
-                                <span class="tag tag-low"><i class="bi bi-exclamation-triangle"></i>Tồn thấp</span>
-                            }
-                            else
-                            {
-
-                                <span class="tag tag-ok"><i class="bi bi-check-circle"></i>Đủ hàng</span>
-                            }
-                            @if (expiryStatus == "expired")
-                            {
-                                <span class="tag tag-expired"><i class="bi bi-calendar-x"></i>Hết hạn</span>
-                            }
-                            else if (expiryStatus == "expiring")
-                            {
-
-                                <span class="tag tag-expiring"><i class="bi bi-clock"></i>Sắp HSD</span>
-                            }
-                            @if (item.ExpiryDate.HasValue)
-                            {
-                                <span class="tag tag-batch">HSD: @item.ExpiryDate.Value.ToString("dd/MM/yyyy")</span>
-                            }
-                        </div>
-                    </div>
-
-                    <!-- Stock number -->
-                    <div class="stock-block">
-                        <div class="stock-num @(item.Quantity == 0 ? "out" : isLow ? "low" : "")">@item.Quantity</div>
-                        <div class="stock-lbl">@item.Unit</div>
-                        @if (item.MinStockLevel > 0)
-                        {
-                            <div style="font-size:.65rem;color:var(--court-muted);margin-top:2px;">min: @item.MinStockLevel</div>
-                        }
-                        @if (item.MaxQuantity > 0)
-                        {
-                            <div class="inv-bar" style="width:80px;margin:4px auto 0;">
-                                <div class="inv-bar-fill" style="width:@pct%;background:@barColor;"></div>
-                            </div>
-                        }
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="d-flex gap-2 flex-wrap" style="justify-content:flex-end;min-width:200px;">
-                        <button class="act-btn act-in"
-                                onclick="openInventoryModal('@Url.Action("StockIn")?productId=@item.ProductId')">
-                            <i class="bi bi-box-arrow-in-down"></i>Nhập
-                        </button>
-                        <button class="act-btn act-out"
-                                onclick="openInventoryModal('@Url.Action("StockOut")?productId=@item.ProductId')">
-                            <i class="bi bi-box-arrow-up"></i>Xuất
-                        </button>
-                        <button class="act-btn act-adj" title="Điều chỉnh"
-                                onclick="openInventoryModal('@Url.Action("Adjustment", new { inventoryId = item.InventoryId })')">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="act-btn act-hist" title="Lịch sử"
-                                onclick="openInventoryModal('@Url.Action("History", new { productId = item.ProductId })')">
-                            <i class="bi bi-clock-history"></i>
-                        </button>
-                    </div>
-                </div>
-            }
+            <table class="inv-table">
+                <thead>
+                    <tr>
+                        <th>Sản Phẩm</th>
+                        <th>Danh Mục</th>
+                        <th>Cơ Sở</th>
+                        <th>Tồn Kho</th>
+                        <th>Min / Max</th>
+                        <th>Trạng Thái</th>
+                        <th>Cập Nhật</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                <div style="font-weight:700;">@item.ProductName</div>
+                                <div style="font-size:.72rem;color:var(--muted);font-family:'Courier New',monospace;">@item.ProductCode</div>
+                            </td>
+                            <td>
+                                <span style="font-size:.78rem;color:var(--gold);font-weight:700;">@item.CategoryName</span>
+                            </td>
+                            <td style="font-size:.82rem;">@item.FacilityName</td>
+                            <td>
+                                <span style="font-weight:800;font-size:1rem;">@item.Quantity</span>
+                                <span style="font-size:.75rem;color:var(--muted);"> @item.Unit</span>
+                            </td>
+                            <td style="font-size:.82rem;color:var(--muted);">@item.MinQuantity / @item.MaxQuantity</td>
+                            <td>
+                                @if (item.Quantity == 0)
+                                {
+                                    <span class="badge-out"><i class="bi bi-x-circle-fill"></i> Hết hàng</span>
+                                }
+                                else if (item.IsLowStock)
+                                {
+                                    <span class="badge-low"><i class="bi bi-exclamation-triangle-fill"></i> Sắp hết</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-ok"><i class="bi bi-check-circle-fill"></i> Bình thường</span>
+                                }
+                            </td>
+                            <td style="font-size:.78rem;color:var(--muted);">@item.LastUpdated.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                <button class="btn-adj" onclick="openAdjModal(@item.InventoryId)">
+                                    <i class="bi bi-sliders"></i> Điều chỉnh
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         }
         else
         {
             <div class="empty-state">
-                <i class="bi bi-inbox"></i>
-                <h5 style="color:var(--court-text);">Kho đang trống</h5>
-                <p>Nhập sản phẩm vào kho để bắt đầu quản lý.</p>
+                <i class="bi bi-box-seam"></i>
+                <p>Không tìm thấy dữ liệu kho</p>
             </div>
         }
     </div>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="inventoryModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content" id="modalContainer">
-            <div class="p-5 text-center"><div class="spinner-border" style="color:var(--court-gold);"></div></div>
+<!-- StockIn Modal -->
+<div class="modal-overlay" id="stockInModal">
+    <div class="modal-box">
+        <div class="modal-hd">
+            <h5 class="modal-title"><i class="bi bi-box-arrow-in-down"></i> Nhập Kho</h5>
+            <button class="modal-close" onclick="closeModal('stockInModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="stockInBody">
+            <div style="text-align:center;padding:2rem;color:var(--muted);">
+                <div class="spinner-border spinner-border-sm" role="status"></div> Đang tải...
+            </div>
         </div>
     </div>
 </div>
 
+<!-- StockOut Modal -->
+<div class="modal-overlay" id="stockOutModal">
+    <div class="modal-box">
+        <div class="modal-hd">
+            <h5 class="modal-title"><i class="bi bi-box-arrow-up"></i> Xuất Kho</h5>
+            <button class="modal-close" onclick="closeModal('stockOutModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="stockOutBody">
+            <div style="text-align:center;padding:2rem;color:var(--muted);">
+                <div class="spinner-border spinner-border-sm" role="status"></div> Đang tải...
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Adjustment Modal -->
+<div class="modal-overlay" id="adjModal">
+    <div class="modal-box">
+        <div class="modal-hd">
+            <h5 class="modal-title"><i class="bi bi-sliders"></i> Điều Chỉnh Kho</h5>
+            <button class="modal-close" onclick="closeModal('adjModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="adjBody">
+            <div style="text-align:center;padding:2rem;color:var(--muted);">
+                <div class="spinner-border spinner-border-sm" role="status"></div> Đang tải...
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
 @section Scripts {
     <script>
-        function openInventoryModal(url) {
-            const el = document.getElementById('inventoryModal');
-            if (!el) return;
-            const modal = new bootstrap.Modal(el);
-            document.getElementById('modalContainer').innerHTML =
-                '<div class="p-5 text-center"><div class="spinner-border" style="color:#e8c840;"></div></div>';
-            modal.show();
-            $.get(url)
-                .done(data => $('#modalContainer').html(data))
-                .fail(() => $('#modalContainer').html('<div class="p-4 text-center text-danger">Lỗi tải dữ liệu.</div>'));
+        function openModal(id) {
+            document.getElementById(id).classList.add('show');
+            if (id === 'stockInModal' && document.getElementById('stockInBody').innerHTML.includes('Đang tải')) {
+                loadPartial('/AdminInventory/StockIn', 'stockInBody');
+            }
+            if (id === 'stockOutModal' && document.getElementById('stockOutBody').innerHTML.includes('Đang tải')) {
+                loadPartial('/AdminInventory/StockOut', 'stockOutBody');
+            }
         }
 
-        function applyFilters() {
-            const q      = document.getElementById('inventorySearch').value.toLowerCase();
-            const cat    = document.getElementById('filterCategory').value;
-            const stock  = document.getElementById('filterStock').value;
-            const expiry = document.getElementById('filterExpiry').value;
-            document.querySelectorAll('.inv-card').forEach(card => {
-                const matchQ     = !q || card.dataset.name?.includes(q) || card.dataset.sku?.includes(q)
-                                     || card.dataset.barcode?.includes(q) || card.dataset.batch?.includes(q);
-                const matchCat   = !cat    || card.dataset.category === cat;
-                const matchStock = !stock  || card.dataset.stock === stock;
-                const matchExp   = !expiry || card.dataset.expiry === expiry;
-                card.style.display = (matchQ && matchCat && matchStock && matchExp) ? '' : 'none';
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+
+        function openAdjModal(inventoryId) {
+            document.getElementById('adjBody').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Đang tải...</div>';
+            document.getElementById('adjModal').classList.add('show');
+            loadPartial('/AdminInventory/Adjustment?inventoryId=' + inventoryId, 'adjBody');
+        }
+
+        function loadPartial(url, targetId) {
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => r.text())
+                .then(html => {
+                    const container = document.getElementById(targetId);
+                    container.innerHTML = html;
+                    // Re-execute any <script> tags injected via innerHTML
+                    container.querySelectorAll('script').forEach(oldScript => {
+                        const newScript = document.createElement('script');
+                        newScript.textContent = oldScript.textContent;
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+                    attachFormSubmit(targetId);
+                })
+                .catch(() => {
+                    document.getElementById(targetId).innerHTML = '<p class="text-danger">Lỗi tải dữ liệu.</p>';
+                });
+        }
+
+        function attachFormSubmit(containerId) {
+            const container = document.getElementById(containerId);
+            const form = container.querySelector('form');
+            if (!form) return;
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const data = new FormData(form);
+                fetch(form.action, { method: 'POST', body: data })
+                    .then(r => r.json())
+                    .then(json => {
+                        showToast(json.success, json.message);
+                        if (json.success) {
+                            // close all modals and reload
+                            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show'));
+                            setTimeout(() => location.reload(), 900);
+                        }
+                    })
+                    .catch(() => showToast(false, 'Đã xảy ra lỗi!'));
             });
         }
 
-        ['inventorySearch','filterCategory','filterStock','filterExpiry'].forEach(id => {
-            document.getElementById(id)?.addEventListener(id === 'inventorySearch' ? 'input' : 'change', applyFilters);
-        });
+        function showToast(success, message) {
+            const wrap = document.getElementById('toastWrap');
+            const el = document.createElement('div');
+            el.className = 'toast-msg ' + (success ? 'toast-success' : 'toast-error');
+            el.innerHTML = (success ? '<i class="bi bi-check-circle-fill"></i> ' : '<i class="bi bi-exclamation-circle-fill"></i> ') + message;
+            wrap.appendChild(el);
+            setTimeout(() => el.remove(), 3500);
+        }
 
-        document.getElementById('btnResetFilter').addEventListener('click', () => {
-            ['inventorySearch','filterCategory','filterStock','filterExpiry'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.value = '';
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) overlay.classList.remove('show');
             });
-            applyFilters();
         });
     </script>
 }

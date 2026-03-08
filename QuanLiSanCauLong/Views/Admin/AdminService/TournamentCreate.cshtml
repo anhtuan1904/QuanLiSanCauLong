@@ -1,6 +1,7 @@
 ﻿@model QuanLiSanCauLong.Models.Tournament
 @{
     Layout = null;
+    var uid = Guid.NewGuid().ToString("N")[..8];
 }
 
 <style>
@@ -349,12 +350,59 @@
         text-align: center;
         cursor: pointer;
         transition: all .2s;
+        position: relative;
+        overflow: hidden;
     }
 
         .img-upload-zone:hover {
             border-color: var(--gold);
             background: rgba(212,160,23,.04);
         }
+
+        .img-upload-zone.has-preview {
+            border-color: var(--gold);
+            padding: 0;
+        }
+
+    .img-preview-st {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 8px;
+        display: none;
+    }
+
+        .img-preview-st.show {
+            display: block;
+        }
+
+    .img-upload-inner-st {
+        padding: 1.5rem;
+    }
+
+    .img-url-row {
+        display: flex;
+        gap: .5rem;
+        margin-top: .75rem;
+    }
+
+        .img-url-row .fg-input {
+            flex: 1;
+            font-size: .8rem;
+        }
+
+    .btn-url-confirm {
+        padding: .5rem .9rem;
+        background: var(--gold);
+        border: none;
+        border-radius: 6px;
+        font-size: .78rem;
+        font-weight: 700;
+        color: var(--deep);
+        cursor: pointer;
+        white-space: nowrap;
+        font-family: 'Outfit',sans-serif;
+    }
 
     .upload-icon {
         font-size: 1.8rem;
@@ -440,7 +488,7 @@
     </div>
 
     <div class="st-body">
-        <form id="frmTournamentCreate" method="post" enctype="multipart/form-data">
+        <form id="frmTournamentCreate-@uid" method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
 
             <!-- 1. THÔNG TIN CƠ BẢN -->
@@ -484,8 +532,8 @@
                     <span class="st-card-title">Hình Thức Thi Đấu</span>
                 </div>
                 <div class="st-card-body">
-                    <input name="TournamentType" type="hidden" id="typeInput" value="" />
-                    <div class="type-cards" id="typeCards">
+                    <input name="TournamentType" type="hidden" id="typeInput-@uid" value="" />
+                    <div class="type-cards" id="typeCards-@uid">
                         <div class="ty-card" data-type="Đơn Nam">
                             <span class="ty-icon">🏃</span>
                             <div class="ty-name">Đơn Nam</div>
@@ -599,39 +647,49 @@
                 <div class="st-card-body">
                     <div class="fg">
                         <label class="fg-label">Ảnh Đại Diện</label>
-                        <div class="img-upload-zone" id="stUploadZone">
-                            <div class="upload-icon"><i class="bi bi-cloud-upload"></i></div>
-                            <div class="upload-text"><strong>Click để tải ảnh lên</strong> hoặc kéo thả</div>
-                            <div id="imgNameST" style="font-size:.75rem;color:var(--gold);margin-top:.3rem;"></div>
+                        <div class="img-upload-zone" id="stUploadZone-@uid">
+                            <img class="img-preview-st" id="imgPreviewST-@uid" src="" alt="Preview" />
+                            <div class="img-upload-inner-st" id="uploadInnerST-@uid">
+                                <div class="upload-icon"><i class="bi bi-cloud-upload"></i></div>
+                                <div class="upload-text"><strong>Click để tải ảnh lên</strong> hoặc kéo thả</div>
+                                <div id="imgNameST-@uid" style="font-size:.75rem;color:var(--gold);margin-top:.3rem;"></div>
+                            </div><!-- /upload-inner -->
                         </div>
-                        <input type="file" id="imgInputST" name="featuredImage" accept="image/*" style="display:none" />
-                    </div>
-                    <div class="fg">
-                        <label class="fg-label">Trạng Thái</label>
-                        <div class="status-opts" id="stStatusOpts">
-                            <div class="status-opt selected" data-status="Upcoming">
-                                <span class="status-dot" style="background:#4f46e5;"></span> Sắp Diễn Ra
-                            </div>
-                            <div class="status-opt" data-status="Ongoing">
-                                <span class="status-dot" style="background:#16a34a;"></span> Đang Diễn Ra
-                            </div>
-                            <div class="status-opt" data-status="Completed">
-                                <span class="status-dot" style="background:var(--muted);"></span> Hoàn Thành
-                            </div>
-                            <div class="status-opt" data-status="Cancelled">
-                                <span class="status-dot" style="background:#c94b2a;"></span> Đã Hủy
-                            </div>
+                        <input type="file" id="imgInputST-@uid" name="featuredImageFile" accept="image/*" style="display:none" />
+                        <div class="img-url-row">
+                            <input type="text" id="imgUrlST-@uid" name="FeaturedImage" class="fg-input"
+                                   placeholder="Hoặc nhập URL ảnh: https://..." />
+                            <button type="button" class="btn-url-confirm" id="btnUrlST-@uid">
+                                <i class="bi bi-check2"></i> Áp dụng
+                            </button>
                         </div>
-                        <input name="Status" type="hidden" id="statusInput" value="Upcoming" />
-                    </div>
-                    <div class="fg" style="margin-bottom:0;">
-                        <label class="toggle-item">
-                            <input name="IsFeatured" type="checkbox" value="true" />
-                            <span class="toggle-label"><i class="bi bi-star text-warning me-1"></i> Giải đấu nổi bật</span>
-                        </label>
+                        <div class="fg-hint">Upload file hoặc nhập URL rồi nhấn Áp dụng</div>
+                        <div class="fg">
+                            <label class="fg-label">Trạng Thái</label>
+                            <div class="status-opts" id="stStatusOpts-@uid">
+                                <div class="status-opt selected" data-status="Upcoming">
+                                    <span class="status-dot" style="background:#4f46e5;"></span> Sắp Diễn Ra
+                                </div>
+                                <div class="status-opt" data-status="Ongoing">
+                                    <span class="status-dot" style="background:#16a34a;"></span> Đang Diễn Ra
+                                </div>
+                                <div class="status-opt" data-status="Completed">
+                                    <span class="status-dot" style="background:var(--muted);"></span> Hoàn Thành
+                                </div>
+                                <div class="status-opt" data-status="Cancelled">
+                                    <span class="status-dot" style="background:#c94b2a;"></span> Đã Hủy
+                                </div>
+                            </div>
+                            <input name="Status" type="hidden" id="statusInputST-@uid" value="Upcoming" />
+                        </div>
+                        <div class="fg" style="margin-bottom:0;">
+                            <label class="toggle-item">
+                                <input name="IsFeatured" type="checkbox" value="true" />
+                                <span class="toggle-label"><i class="bi bi-star text-warning me-1"></i> Giải đấu nổi bật</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
-            </div>
 
         </form>
     </div>
@@ -641,8 +699,8 @@
         <button type="button" class="btn-cancel" data-bs-dismiss="modal">
             <i class="bi bi-x-circle"></i> Hủy
         </button>
-        <button type="button" class="btn-save" id="btnTournamentSubmit"
-                data-form="frmTournamentCreate" data-url="/AdminService/TournamentCreate">
+        <button type="button" class="btn-save" id="btnTournamentSubmit-@uid"
+                data-form="frmTournamentCreate-@uid" data-url="/AdminService/TournamentCreate">
             <i class="bi bi-trophy"></i> Tạo Giải Đấu
         </button>
     </div>
@@ -651,43 +709,86 @@
 
 <script>
     (function() {
-        // Type cards
-        var typeCards = document.getElementById('typeCards');
+        var UID = '@uid';
+        function el(id) { return document.getElementById(id + '-' + UID); }
+
+        // ── TYPE CARDS ────────────────────────────────────────
+        var typeCards = el('typeCards');
         if (typeCards) {
-            typeCards.addEventListener('click', function(e) {
-                var card = e.target.closest('.ty-card');
-                if (!card) return;
-                typeCards.querySelectorAll('.ty-card').forEach(function(c) { c.classList.remove('selected'); });
-                card.classList.add('selected');
-                document.getElementById('typeInput').value = card.dataset.type;
+            typeCards.querySelectorAll('.ty-card').forEach(function(card) {
+                card.addEventListener('click', function() {
+                    typeCards.querySelectorAll('.ty-card').forEach(function(c) { c.classList.remove('selected'); });
+                    this.classList.add('selected');
+                    el('typeInput').value = this.dataset.type;
+                });
             });
         }
 
-        // Status opts
-        var stStatusOpts = document.getElementById('stStatusOpts');
+        // ── STATUS OPTS ──────────────────────────────────────
+        var stStatusOpts = el('stStatusOpts');
         if (stStatusOpts) {
-            stStatusOpts.addEventListener('click', function(e) {
-                var opt = e.target.closest('.status-opt');
-                if (!opt) return;
-                stStatusOpts.querySelectorAll('.status-opt').forEach(function(c) { c.classList.remove('selected'); });
-                opt.classList.add('selected');
-                document.getElementById('statusInput').value = opt.dataset.status;
+            stStatusOpts.querySelectorAll('.status-opt').forEach(function(opt) {
+                opt.addEventListener('click', function() {
+                    stStatusOpts.querySelectorAll('.status-opt').forEach(function(c) { c.classList.remove('selected'); });
+                    this.classList.add('selected');
+                    el('statusInputST').value = this.dataset.status;
+                });
             });
         }
 
-        // Upload zone click
-        var uploadZone = document.getElementById('stUploadZone');
-        var imgInputST = document.getElementById('imgInputST');
-        if (uploadZone && imgInputST) {
-            uploadZone.addEventListener('click', function() { imgInputST.click(); });
-            imgInputST.addEventListener('change', function() {
-                var nameEl = document.getElementById('imgNameST');
-                if (nameEl) nameEl.textContent = this.files[0] ? this.files[0].name : '';
+        // ── IMAGE UPLOAD (file) ───────────────────────────────
+        var uploadZone  = el('stUploadZone');
+        var fileInput   = el('imgInputST');
+        var imgPreview  = el('imgPreviewST');
+        var uploadInner = el('uploadInnerST');
+
+        function showPreview(src) {
+            if (!imgPreview) return;
+            imgPreview.src = src;
+            imgPreview.classList.add('show');
+            if (uploadInner) uploadInner.style.display = 'none';
+            if (uploadZone)  uploadZone.classList.add('has-preview');
+        }
+        function resetPreview() {
+            if (!imgPreview) return;
+            imgPreview.src = '';
+            imgPreview.classList.remove('show');
+            if (uploadInner) uploadInner.style.display = '';
+            if (uploadZone)  uploadZone.classList.remove('has-preview');
+        }
+
+        if (uploadZone && fileInput) {
+            uploadZone.addEventListener('click', function(e) {
+                if (e.target === imgPreview) { resetPreview(); fileInput.value = ''; return; }
+                fileInput.click();
+            });
+            fileInput.addEventListener('change', function() {
+                if (!this.files || !this.files[0]) return;
+                var nameEl = el('imgNameST');
+                if (nameEl) nameEl.textContent = this.files[0].name;
+                var reader = new FileReader();
+                reader.onload = function(ev) { showPreview(ev.target.result); };
+                reader.readAsDataURL(this.files[0]);
             });
         }
 
-        // Submit
-        var btnSubmit = document.getElementById('btnTournamentSubmit');
+        // ── IMAGE URL ─────────────────────────────────────────
+        var btnUrlST    = el('btnUrlST');
+        var imgUrlInput = el('imgUrlST');
+        if (btnUrlST && imgUrlInput) {
+            btnUrlST.addEventListener('click', function() {
+                var url = imgUrlInput.value.trim();
+                if (!url) { resetPreview(); return; }
+                showPreview(url);
+                if (fileInput) fileInput.value = '';
+            });
+            imgUrlInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') { e.preventDefault(); btnUrlST.click(); }
+            });
+        }
+
+        // ── SUBMIT ────────────────────────────────────────────
+        var btnSubmit = el('btnTournamentSubmit');
         if (btnSubmit) {
             btnSubmit.addEventListener('click', function() {
                 var formId = this.dataset.form;
@@ -695,6 +796,8 @@
                 var form   = document.getElementById(formId);
                 if (!form) return;
                 if (!form.checkValidity()) { form.reportValidity(); return; }
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang lưu...';
                 if (typeof submitServiceForm === 'function') {
                     submitServiceForm(formId, url);
                 } else {
@@ -705,9 +808,17 @@
                                 var modal = bootstrap.Modal.getInstance(document.getElementById('modalService'));
                                 if (modal) modal.hide();
                                 location.reload();
-                            } else { alert(res.message || 'Có lỗi xảy ra.'); }
+                            } else {
+                                alert(res.message || 'Có lỗi xảy ra.');
+                                btnSubmit.disabled = false;
+                                btnSubmit.innerHTML = '<i class="bi bi-plus-circle"></i> Thêm Giải Đấu';
+                            }
                         })
-                        .catch(function(err) { alert('Lỗi kết nối: ' + err.message); });
+                        .catch(function(err) {
+                            alert('Lỗi kết nối: ' + err.message);
+                            btnSubmit.disabled = false;
+                            btnSubmit.innerHTML = '<i class="bi bi-plus-circle"></i> Thêm Giải Đấu';
+                        });
                 }
             });
         }

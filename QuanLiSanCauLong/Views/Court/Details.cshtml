@@ -1,0 +1,139 @@
+﻿@{
+    ViewData["Title"] = "Chi tiết sân";
+    int courtId = ViewBag.CourtId ?? 0;
+}
+
+<style>
+    body {
+        background: #f5ede0;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .wrap {
+        max-width: 900px;
+        margin: 3rem auto;
+        padding: 1.5rem;
+    }
+
+    .card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,.07);
+        text-align: center;
+    }
+
+    .icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    h2 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #1a1209;
+        margin-bottom: .5rem;
+    }
+
+    p {
+        color: #6b5744;
+        font-size: .92rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-primary {
+        display: inline-block;
+        padding: .75rem 2rem;
+        background: linear-gradient(135deg, #d4a017, #f5c842);
+        color: #1a1209;
+        font-weight: 700;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: .9rem;
+    }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(212,160,23,.4);
+        }
+
+    .btn-secondary {
+        display: inline-block;
+        padding: .75rem 2rem;
+        margin-left: .5rem;
+        border: 2px solid #d4a017;
+        color: #1a1209;
+        font-weight: 600;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: .9rem;
+    }
+</style>
+
+<div class="wrap">
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div style="background:#fee;border:1px solid #fca;border-radius:8px;padding:1rem;margin-bottom:1rem;color:#c00">
+            <i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @if (ViewBag.Court != null)
+    {
+        var court = ViewBag.Court;
+        <div class="card">
+            @if (!string.IsNullOrEmpty(court.ImageUrl as string))
+            {
+                <img src="@court.ImageUrl" alt="Sân @court.CourtNumber"
+                     style="width:100%;max-height:280px;object-fit:cover;border-radius:12px;margin-bottom:1.2rem" />
+            }
+            <h2><i class="bi bi-grid-3x3-gap"></i> Sân @court.CourtNumber — @court.CourtType</h2>
+            <p>@court.Facility?.FacilityName · @court.Facility?.Address</p>
+
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;text-align:left;margin:1.2rem 0;padding:1.2rem;background:#f5ede0;border-radius:10px;font-size:.85rem">
+                <div>
+                    <div style="color:#8c7a68;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em">Loại sân</div>
+                    <div style="font-weight:600;color:#1a1209">@court.CourtType</div>
+                </div>
+                <div>
+                    <div style="color:#8c7a68;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em">Đèn chiếu sáng</div>
+                    <div style="font-weight:600;color:#1a1209">@(court.HasLighting ? "✅ Có" : "❌ Không")</div>
+                </div>
+                <div>
+                    <div style="color:#8c7a68;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em">Điều hoà</div>
+                    <div style="font-weight:600;color:#1a1209">@(court.HasAC ? "✅ Có" : "❌ Không")</div>
+                </div>
+                <div>
+                    <div style="color:#8c7a68;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em">Trạng thái</div>
+                    <div style="font-weight:600;color:@(court.Status == "Available" ? "#10b981" : "#ef4444")">
+                        @(court.Status == "Available" ? "✅ Còn trống" : "❌ Bận")
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(court.Description as string))
+                {
+                    <div style="grid-column:span 2">
+                        <div style="color:#8c7a68;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em">Mô tả</div>
+                        <div style="color:#1a1209">@court.Description</div>
+                    </div>
+                }
+            </div>
+
+            <a href="/Booking/Search?facilityId=@(court.FacilityId)" class="btn-primary">
+                <i class="bi bi-calendar-check me-1"></i> Đặt sân này
+            </a>
+            <a href="javascript:history.back()" class="btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="icon">🏸</div>
+            <h2>Không tìm thấy thông tin sân</h2>
+            <p>Sân bạn tìm kiếm không tồn tại hoặc đã bị xoá.</p>
+            <a href="/Facility" class="btn-primary">
+                <i class="bi bi-house me-1"></i> Về trang chủ
+            </a>
+        </div>
+    }
+</div>

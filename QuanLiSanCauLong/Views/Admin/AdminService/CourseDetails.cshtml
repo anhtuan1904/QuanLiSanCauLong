@@ -1,0 +1,584 @@
+﻿@model QuanLiSanCauLong.Models.Course
+@{
+    Layout = null;
+    var effectivePrice = Model.DiscountFee ?? Model.TuitionFee;
+    var hasDiscount = Model.DiscountFee.HasValue && Model.TuitionFee.HasValue;
+    var pct = Model.MaxStudents.HasValue && Model.MaxStudents > 0
+              ? Math.Min(100, (int)(Model.CurrentStudents * 100.0 / Model.MaxStudents.Value))
+              : 0;
+    var pctColor = pct >= 90 ? "#c94b2a" : pct >= 70 ? "#d4a017" : "#16a34a";
+}
+
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #fdf8f0;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+    }
+
+    * {
+        font-family: 'Outfit',sans-serif;
+        box-sizing: border-box;
+    }
+
+    .cd-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 1.5rem 1.75rem 0;
+    }
+
+    .cd-header-label {
+        font-size: .65rem;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: var(--gold);
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin-bottom: .4rem;
+    }
+
+        .cd-header-label::before {
+            content: '';
+            width: 14px;
+            height: 1px;
+            background: var(--gold);
+        }
+
+    .cd-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--deep);
+        line-height: 1.25;
+        max-width: 520px;
+    }
+
+    .cd-close {
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        transition: all .2s;
+        flex-shrink: 0;
+    }
+
+        .cd-close:hover {
+            border-color: var(--deep);
+            color: var(--deep);
+        }
+
+    .cd-body {
+        padding: 1.25rem 1.75rem 1.5rem;
+        overflow-y: auto;
+        max-height: calc(90vh - 80px);
+    }
+
+    /* Hero image */
+    .cd-hero-img {
+        width: 100%;
+        height: 200px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        margin-bottom: 1.25rem;
+        background: var(--warm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .cd-hero-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .cd-hero-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: .5rem;
+        color: var(--muted);
+    }
+
+    /* Info strip */
+    .cd-strip {
+        background: var(--warm);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1.1rem 1.25rem;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .cd-badges {
+        display: flex;
+        gap: .4rem;
+        flex-wrap: wrap;
+        margin-top: .5rem;
+    }
+
+    .badge-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        font-size: .67rem;
+        font-weight: 700;
+        padding: .25rem .65rem;
+        border-radius: 4px;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .badge-active {
+        background: rgba(22,163,74,.1);
+        color: #16a34a;
+    }
+
+    .badge-inactive {
+        background: rgba(201,75,42,.1);
+        color: #c94b2a;
+    }
+
+    .badge-full {
+        background: rgba(201,75,42,.1);
+        color: #c94b2a;
+    }
+
+    .badge-featured {
+        background: rgba(212,160,23,.12);
+        color: #92660a;
+    }
+
+    .badge-level {
+        background: rgba(79,70,229,.08);
+        color: #4f46e5;
+    }
+
+    /* Price */
+    .cd-price-block {
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .cd-price-old {
+        font-size: .78rem;
+        color: var(--muted);
+        text-decoration: line-through;
+        margin-bottom: .1rem;
+    }
+
+    .cd-price-now {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--gold);
+        line-height: 1;
+    }
+
+    .cd-price-unit {
+        font-size: .75rem;
+        color: var(--muted);
+    }
+
+    .cd-discount-badge {
+        display: inline-block;
+        background: #c94b2a;
+        color: #fff;
+        font-size: .65rem;
+        font-weight: 700;
+        padding: .15rem .5rem;
+        border-radius: 3px;
+        margin-left: .4rem;
+    }
+
+    /* Grid */
+    .cd-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .cd-grid-item {
+        background: var(--warm);
+        padding: 1rem 1.2rem;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+    }
+
+    .cd-grid-label {
+        font-size: .68rem;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        display: block;
+        margin-bottom: .4rem;
+    }
+
+    .cd-grid-val {
+        font-weight: 700;
+        font-size: .92rem;
+        color: var(--deep);
+    }
+
+    /* Progress */
+    .cd-progress-wrap {
+        margin-bottom: 1.25rem;
+    }
+
+    .cd-progress-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: .72rem;
+        color: var(--muted);
+        margin-bottom: .4rem;
+    }
+
+    .cd-progress-bar-bg {
+        height: 8px;
+        background: var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .cd-progress-bar {
+        height: 8px;
+        border-radius: 4px;
+        transition: width 1s;
+    }
+
+    /* Section */
+    .cd-section {
+        margin-bottom: 1.25rem;
+    }
+
+    .cd-section-label {
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: .6rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+        .cd-section-label i {
+            color: var(--gold);
+        }
+
+    .cd-text {
+        font-size: .86rem;
+        color: var(--deep);
+        line-height: 1.75;
+        white-space: pre-wrap;
+    }
+
+    .cd-features {
+        display: grid;
+        gap: .4rem;
+    }
+
+    .cd-feature-item {
+        display: flex;
+        align-items: flex-start;
+        gap: .6rem;
+        font-size: .85rem;
+        color: var(--deep);
+    }
+
+        .cd-feature-item i {
+            color: #16a34a;
+            margin-top: .15rem;
+            flex-shrink: 0;
+        }
+
+    /* Meta */
+    .cd-meta {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+        margin-top: 1rem;
+    }
+
+    .cd-meta-item {
+        font-size: .75rem;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+    }
+
+        .cd-meta-item strong {
+            color: var(--deep);
+        }
+
+        .cd-meta-item i {
+            color: var(--gold);
+        }
+
+    /* Footer */
+    .cd-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: .65rem;
+        padding: 1rem 1.75rem 1.5rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .btn-cd-close {
+        padding: .65rem 1.4rem;
+        border: 1.5px solid var(--border);
+        border-radius: 7px;
+        background: #fff;
+        color: var(--muted);
+        font-size: .84rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+        font-family: 'Outfit',sans-serif;
+    }
+
+        .btn-cd-close:hover {
+            border-color: var(--deep);
+            color: var(--deep);
+        }
+
+    .btn-cd-edit {
+        padding: .65rem 1.6rem;
+        border: none;
+        border-radius: 7px;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        font-size: .84rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all .2s;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        font-family: 'Outfit',sans-serif;
+    }
+
+        .btn-cd-edit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(212,160,23,.3);
+        }
+</style>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- HEADER -->
+<div class="cd-header">
+    <div>
+        <div class="cd-header-label"><i class="bi bi-mortarboard"></i> Chi tiết khóa học</div>
+        <div class="cd-title">@Model.CourseName</div>
+    </div>
+    <button type="button" class="cd-close" data-bs-dismiss="modal">
+        <i class="bi bi-x" style="font-size:1.1rem;"></i>
+    </button>
+</div>
+
+<!-- BODY -->
+<div class="cd-body">
+
+    <!-- Hero image -->
+    @if (!string.IsNullOrEmpty(Model.FeaturedImage))
+    {
+        <div class="cd-hero-img">
+            <img src="@Model.FeaturedImage" alt="@Model.CourseName" />
+        </div>
+    }
+    else
+    {
+        <div class="cd-hero-img">
+            <div class="cd-hero-placeholder">
+                <i class="bi bi-mortarboard" style="font-size:3rem;opacity:.25;"></i>
+                <span style="font-size:.8rem;">Chưa có ảnh đại diện</span>
+            </div>
+        </div>
+    }
+
+    <!-- Info strip -->
+    <div class="cd-strip">
+        <div>
+            <div style="font-weight:700;font-size:1rem;color:var(--deep);">@Model.CourseName</div>
+            <div class="cd-badges">
+                @{
+                    var isFull = Model.IsFull || Model.Status == "Full";
+                }
+                @if (isFull)
+                {
+                    <span class="badge-pill badge-full">⊗ Đã đầy</span>
+                }
+                else if (Model.Status == "Active")
+                {
+                    <span class="badge-pill badge-active">● Hoạt động</span>
+                }
+                else
+                {
+                    <span class="badge-pill badge-inactive">○ Ngừng hoạt động</span>
+                }
+                @if (!string.IsNullOrEmpty(Model.Level))
+                {
+                    var lvLabel = Model.Level switch
+                    {
+                                "Beginner" => "🌱 Cơ Bản",
+                                "Intermediate" => "⚡ Trung Cấp",
+                                "Advanced" => "🏆 Nâng Cao",
+                        _ => Model.Level
+                    };
+                    <span class="badge-pill badge-level">@lvLabel</span>
+                }
+                @if (Model.IsFeatured)
+                {
+                    <span class="badge-pill badge-featured"><i class="bi bi-star-fill"></i> Nổi bật</span>
+                }
+            </div>
+        </div>
+        @if (effectivePrice.HasValue)
+        {
+            <div class="cd-price-block">
+                @if (hasDiscount)
+                {
+                    <div class="cd-price-old">@Model.TuitionFee!.Value.ToString("N0")đ</div>
+                    <div class="cd-price-now">
+                        @Model.DiscountFee!.Value.ToString("N0")đ
+                        <span class="cd-discount-badge">-@(((Model.TuitionFee - Model.DiscountFee) / Model.TuitionFee * 100)!.Value.ToString("N0"))%</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="cd-price-now">@effectivePrice.Value.ToString("N0")đ</div>
+                }
+                <div class="cd-price-unit">/khóa</div>
+            </div>
+        }
+    </div>
+
+    <!-- Progress học viên -->
+    @if (Model.MaxStudents.HasValue && Model.MaxStudents > 0)
+    {
+        <div class="cd-progress-wrap">
+            <div class="cd-progress-label">
+                <span><i class="bi bi-people me-1" style="color:var(--gold);"></i>Học viên đăng ký</span>
+                <span style="font-weight:700;color:var(--deep);">@Model.CurrentStudents / @Model.MaxStudents người</span>
+            </div>
+            <div class="cd-progress-bar-bg">
+                <div class="cd-progress-bar" style="width:@pct%;background:@pctColor;"></div>
+            </div>
+            @if (isFull)
+            {
+                <div style="font-size:.72rem;color:#c94b2a;margin-top:.3rem;"><i class="bi bi-lock-fill me-1"></i>Khóa học đã đầy — không còn chỗ trống</div>
+            }
+            else
+            {
+                <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem;">Còn <strong style="color:var(--deep);">@Model.AvailableSlots</strong> chỗ trống</div>
+            }
+        </div>
+    }
+
+    <!-- Grid thông tin -->
+    <div class="cd-grid">
+        <div class="cd-grid-item">
+            <span class="cd-grid-label"><i class="bi bi-person me-1"></i>Huấn Luyện Viên</span>
+            <span class="cd-grid-val">@(Model.Instructor ?? "—")</span>
+        </div>
+        <div class="cd-grid-item">
+            <span class="cd-grid-label"><i class="bi bi-calendar3 me-1"></i>Lịch Học</span>
+            <span class="cd-grid-val" style="font-size:.84rem;">@(Model.Schedule ?? "—")</span>
+        </div>
+        <div class="cd-grid-item">
+            <span class="cd-grid-label"><i class="bi bi-clock me-1"></i>Thời Lượng</span>
+            <span class="cd-grid-val">@(Model.DurationWeeks != null ? Model.DurationWeeks + " tuần" : "—")</span>
+        </div>
+        <div class="cd-grid-item">
+            <span class="cd-grid-label"><i class="bi bi-sort-numeric-down me-1"></i>Thứ Tự HT</span>
+            <span class="cd-grid-val">#@Model.DisplayOrder</span>
+        </div>
+    </div>
+
+    <!-- Mô tả ngắn -->
+    @if (!string.IsNullOrEmpty(Model.ShortDesc))
+    {
+        <div class="cd-section">
+            <div class="cd-section-label"><i class="bi bi-chat-quote"></i> Mô tả ngắn</div>
+            <div class="cd-text" style="color:var(--muted);">@Model.ShortDesc</div>
+        </div>
+    }
+
+    <!-- Mô tả chi tiết -->
+    <div class="cd-section">
+        <div class="cd-section-label"><i class="bi bi-file-text"></i> Mô tả chi tiết</div>
+        <div class="cd-text">@Model.Description</div>
+    </div>
+
+    <!-- Tính năng / Nội dung -->
+    @if (!string.IsNullOrEmpty(Model.Features))
+    {
+        <div class="cd-section">
+            <div class="cd-section-label"><i class="bi bi-check2-all"></i> Nội dung khóa học</div>
+            <div class="cd-features">
+                @foreach (var f in Model.Features.Split('\n').Where(f => !string.IsNullOrWhiteSpace(f)))
+                {
+                    <div class="cd-feature-item">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>@f.Trim().TrimStart('-').Trim()</span>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Meta -->
+    <div class="cd-meta">
+        <div class="cd-meta-item"><i class="bi bi-calendar-plus"></i> Tạo: <strong>@Model.CreatedAt.ToString("dd/MM/yyyy")</strong></div>
+        <div class="cd-meta-item"><i class="bi bi-eye"></i> Lượt xem: <strong>@Model.ViewCount.ToString("N0")</strong></div>
+        @if (!string.IsNullOrEmpty(Model.Slug))
+        {
+            <div class="cd-meta-item"><i class="bi bi-link-45deg"></i> Slug: <strong>@Model.Slug</strong></div>
+        }
+    </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="cd-footer">
+    <button type="button" class="btn-cd-close" data-bs-dismiss="modal">
+        <i class="bi bi-x-circle"></i> Đóng
+    </button>
+    <button type="button" class="btn-cd-edit" onclick="openCourseEdit(@Model.CourseId)">
+        <i class="bi bi-pencil"></i> Chỉnh Sửa
+    </button>
+</div>
+
+<script>
+    function openCourseEdit(id) {
+        var modal = bootstrap.Modal.getInstance(document.getElementById('modalService'));
+        if (modal) modal.hide();
+        setTimeout(function() {
+            if (typeof openModal === 'function') openModal('/AdminService/CourseEdit/' + id);
+        }, 300);
+    }
+</script>

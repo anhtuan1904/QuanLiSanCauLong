@@ -280,6 +280,12 @@
             color: #166534;
         }
 
+        .sb.awaiting-ck {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+
     /* Timeline */
     .timeline {
         display: flex;
@@ -655,6 +661,21 @@
 
 <div class="pw">
 
+    <!-- Transfer Pending Notice -->
+    @if (Model.PaymentMethod == "Transfer" && Model.PaymentStatus?.ToLower() != "paid" && Model.Status == "Pending")
+    {
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:1.1rem 1.4rem;margin-bottom:1.4rem;display:flex;align-items:flex-start;gap:.75rem">
+            <i class="bi bi-bank" style="color:#1d4ed8;font-size:1.3rem;flex-shrink:0;margin-top:.1rem"></i>
+            <div>
+                <div style="font-weight:700;color:#1d4ed8;margin-bottom:.3rem;font-size:.88rem">Đang chờ xác nhận chuyển khoản</div>
+                <div style="font-size:.8rem;color:#3b82f6;line-height:1.6">
+                    Đơn của bạn đã được tạo thành công. Admin sẽ xác nhận sau khi nhận được tiền chuyển khoản.<br />
+                    Vui lòng ghi đúng nội dung chuyển khoản: <strong>@Model.BookingCode</strong>
+                </div>
+            </div>
+        </div>
+    }
+
     <!-- Hero -->
     <div class="d-hero">
         <div class="d-hero-left">
@@ -735,7 +756,25 @@
                 </div>
                 <div class="ig-item">
                     <div class="ig-lbl">Thanh toán</div>
-                    <div class="ig-val"><i class="bi bi-credit-card"></i> @Model.PaymentMethod <span class="sb @(Model.PaymentStatus?.ToLower() == "paid" ? "confirmed" : "pending")" style="font-size:.62rem">@Model.PaymentStatus</span></div>
+                    <div class="ig-val">
+                        <i class="bi bi-credit-card"></i> @Model.PaymentMethod
+                        @{
+                            string detPayClass, detPayLabel;
+                            if (Model.PaymentStatus?.ToLower() == "paid")
+                            {
+                                detPayClass = "confirmed"; detPayLabel = "Đã thanh toán";
+                            }
+                            else if (Model.PaymentMethod == "Transfer")
+                            {
+                                detPayClass = "awaiting-ck"; detPayLabel = "Chờ xác nhận CK";
+                            }
+                            else
+                            {
+                                detPayClass = "pending"; detPayLabel = "Chưa thanh toán";
+                            }
+                        }
+                        <span class="sb @detPayClass" style="font-size:.62rem">@detPayLabel</span>
+                    </div>
                 </div>
                 <div class="ig-item">
                     <div class="ig-lbl">Đặt lúc</div>

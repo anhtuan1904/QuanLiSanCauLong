@@ -13,12 +13,37 @@ namespace QuanLiSanCauLong.Controllers
     {
         private readonly ApplicationDbContext _context;
 
+        // ── Cấu hình ngân hàng ──
+        private const string BankCode = "MB";
+        private const string BankAccount = "0123456789";
+        private const string BankAccountName = "CONG TY QUAN LI SAN CAU LONG";
+        private const string BankName = "MB Bank";
+
         public BookingController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // GET: Booking/Search - Trang tìm kiếm sân
+        // ── HELPER: ViewBag thông tin ngân hàng + VietQR ──
+        private void SetBankViewBag(string? bookingCode = null)
+        {
+            ViewBag.BankCode = BankCode;
+            ViewBag.BankAccount = BankAccount;
+            ViewBag.BankAccountName = BankAccountName;
+            ViewBag.BankName = BankName;
+
+            if (!string.IsNullOrEmpty(bookingCode))
+            {
+                string content = Uri.EscapeDataString(bookingCode);
+                string name = Uri.EscapeDataString(BankAccountName);
+                ViewBag.QrUrl = $"https://img.vietqr.io/image/{BankCode}-{BankAccount}-compact2.png" +
+                                 $"?addInfo={content}&accountName={name}";
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────
+        // GET: Booking/Search
+        // ─────────────────────────────────────────────────────────────────────────
         [HttpGet]
         public async Task<IActionResult> Search(int facilityId)
         {
@@ -31,7 +56,6 @@ namespace QuanLiSanCauLong.Controllers
                 return RedirectToAction("Index", "Facility");
             }
 
-            // Truyền thông tin facility vào ViewBag
             ViewBag.FacilityId = facility.FacilityId;
             ViewBag.FacilityName = facility.FacilityName;
             ViewBag.FacilityAddress = facility.Address + ", " + facility.District + ", " + facility.City;
@@ -39,49 +63,36 @@ namespace QuanLiSanCauLong.Controllers
             ViewBag.FacilityImage = facility.ImageUrl ?? "/images/default-facility.jpg";
             ViewBag.OpenTime = facility.OpenTime?.ToString(@"hh\:mm") ?? "06:00";
             ViewBag.CloseTime = facility.CloseTime?.ToString(@"hh\:mm") ?? "23:00";
-
-            // Đếm số sân
             ViewBag.TotalCourts = await _context.Courts
                 .CountAsync(c => c.FacilityId == facilityId && c.Status == "Available");
 
             return View();
         }
 
+        // ─────────────────────────────────────────────────────────────────────────
         // POST: API tìm sân trống (Ajax)
+        // ─────────────────────────────────────────────────────────────────────────
         [HttpPost]
         public async Task<IActionResult> SearchAvailableCourts([FromBody] SearchCourtRequest request)
         {
             try
             {
                 if (request.FacilityId <= 0 || request.BookingDate == default)
-                {
                     return Json(new { success = false, message = "Vui lòng chọn đầy đủ thông tin!" });
-                }
 
-                // Parse time
-                TimeSpan searchTime;
-                if (!TimeSpan.TryParse(request.StartTime, out searchTime))
-                {
+                if (!TimeSpan.TryParse(request.StartTime, out TimeSpan searchTime))
                     return Json(new { success = false, message = "Khung giờ không hợp lệ!" });
-                }
 
-                // Get all courts of facility
                 var courts = await _context.Courts
                     .Where(c => c.FacilityId == request.FacilityId && c.Status == "Available")
                     .ToListAsync();
 
                 var availableCourts = new List<object>();
-
                 foreach (var court in courts)
                 {
-                    // Get available time slots for this court
                     var timeSlots = await GetAvailableTimeSlots(court, request.BookingDate);
-
-                    // Find the slot that matches search time
                     var matchingSlot = timeSlots.FirstOrDefault(t =>
-                        t.IsAvailable &&
-                        t.StartTime <= searchTime &&
-                        t.EndTime > searchTime);
+                        t.IsAvailable && t.StartTime <= searchTime && t.EndTime > searchTime);
 
                     if (matchingSlot != null)
                     {
@@ -113,7 +124,9 @@ namespace QuanLiSanCauLong.Controllers
             }
         }
 
-        // GET: Booking/Create - Form đặt sân
+        // ─────────────────────────────────────────────────────────────────────────
+        // GET: Booking/Create
+        // ─────────────────────────────────────────────────────────────────────────
         [HttpGet]
         public async Task<IActionResult> Create(int courtId, DateTime bookingDate, string startTime, string endTime)
         {
@@ -130,11 +143,9 @@ namespace QuanLiSanCauLong.Controllers
             var start = TimeSpan.Parse(startTime);
             var end = TimeSpan.Parse(endTime);
             var duration = (int)(end - start).TotalMinutes;
-
-            // Tính giá sân
             var courtPrice = await CalculateCourtPrice(court.FacilityId, court.CourtType, start, end);
             var serviceFee = await GetSystemSetting("DefaultServiceFee", 0);
-            var serviceFeeAmount = courtPrice * serviceFee / 100;
+            var serviceFeeAmt = courtPrice * serviceFee / 100;
 
             var model = new CreateBookingViewModel
             {
@@ -147,31 +158,33 @@ namespace QuanLiSanCauLong.Controllers
                 CourtNumber = court.CourtNumber,
                 CourtType = court.CourtType,
                 CourtPrice = courtPrice,
-                ServiceFee = serviceFeeAmount,
+                ServiceFee = serviceFeeAmt,
                 DiscountAmount = 0,
-                TotalPrice = courtPrice + serviceFeeAmount,
+                TotalPrice = courtPrice + serviceFeeAmt,
                 OrderItems = new List<OrderItemViewModel>()
             };
 
             await LoadProductsForBooking(court.FacilityId);
+            SetBankViewBag();
             return View(model);
         }
 
-        // POST: Booking/Create - Xử lý đặt sân
+        // ─────────────────────────────────────────────────────────────────────────
+        // POST: Booking/Create
+        // ─────────────────────────────────────────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateBookingViewModel model)
         {
-            // 1. Kiểm tra tính hợp lệ của Model
             if (!ModelState.IsValid)
             {
                 var courtInfo = await _context.Courts.Include(c => c.Facility)
                     .FirstOrDefaultAsync(c => c.CourtId == model.CourtId);
                 if (courtInfo != null) await LoadProductsForBooking(courtInfo.FacilityId);
+                SetBankViewBag();
                 return View(model);
             }
 
-            // 2. Kiểm tra sân còn trống (Double Check)
             if (!await IsCourtAvailable(model.CourtId, model.BookingDate, model.StartTime, model.EndTime))
             {
                 TempData["ErrorMessage"] = "Rất tiếc, sân vừa mới được người khác đặt trong khung giờ này!";
@@ -179,10 +192,9 @@ namespace QuanLiSanCauLong.Controllers
             }
 
             int userId = GetCurrentUserId();
-
-            // 3. Tính toán lại giá trị thực tế tại Server
             var court = await _context.Courts.FindAsync(model.CourtId);
-            decimal serverCourtPrice = await CalculateCourtPrice(court.FacilityId, court.CourtType, model.StartTime, model.EndTime);
+
+            decimal serverCourtPrice = await CalculateCourtPrice(court!.FacilityId, court.CourtType, model.StartTime, model.EndTime);
             decimal serverServiceFee = serverCourtPrice * (await GetSystemSetting("DefaultServiceFee", 0)) / 100;
             decimal baseTotal = serverCourtPrice + serverServiceFee;
 
@@ -190,7 +202,6 @@ namespace QuanLiSanCauLong.Controllers
             {
                 try
                 {
-                    // 4. Xử lý Voucher
                     decimal voucherDiscount = 0;
                     int? voucherId = null;
                     if (!string.IsNullOrEmpty(model.VoucherCode))
@@ -203,7 +214,11 @@ namespace QuanLiSanCauLong.Controllers
                         }
                     }
 
-                    // 5. Lưu Booking
+                    // FIX: Cả Cash lẫn Transfer đều Unpaid khi mới tạo
+                    string paymentMethod = model.PaymentMethod ?? "Cash";
+                    string paymentStatus = "Unpaid";
+                    string orderStatus = "Pending";
+
                     var booking = new Booking
                     {
                         BookingCode = await GenerateBookingCode(),
@@ -217,9 +232,9 @@ namespace QuanLiSanCauLong.Controllers
                         ServiceFee = serverServiceFee,
                         DiscountAmount = voucherDiscount,
                         TotalPrice = baseTotal - voucherDiscount,
-                        Status = "Confirmed",
-                        PaymentMethod = model.PaymentMethod ?? "Cash",
-                        PaymentStatus = (model.PaymentMethod == "Cash") ? "Unpaid" : "Paid",
+                        Status = orderStatus,
+                        PaymentMethod = paymentMethod,
+                        PaymentStatus = paymentStatus,
                         CreatedAt = DateTime.Now,
                         UpdatedAt = DateTime.Now
                     };
@@ -227,17 +242,21 @@ namespace QuanLiSanCauLong.Controllers
                     _context.Bookings.Add(booking);
                     await _context.SaveChangesAsync();
 
-                    // 6. Xử lý Voucher và Order đi kèm
                     if (voucherId.HasValue)
                         await SaveVoucherUsage(voucherId.Value, userId, booking.BookingId, null, voucherDiscount);
 
                     if (model.OrderItems != null && model.OrderItems.Any(i => i.Quantity > 0))
                         await CreateProductOrder(booking, userId, model.OrderItems);
 
-                    await LogActivity(userId, "Create", "Bookings", booking.BookingId, null, $"Mã: {booking.BookingCode}");
+                    await LogActivity(userId, "Create", "Bookings", booking.BookingId, null,
+                        $"Mã: {booking.BookingCode} | PT: {paymentMethod}");
 
                     await transaction.CommitAsync();
-                    TempData["SuccessMessage"] = "Đặt sân thành công!";
+
+                    TempData["SuccessMessage"] = paymentMethod == "Transfer"
+                        ? $"Đặt sân thành công! Vui lòng chuyển khoản với nội dung: {booking.BookingCode}"
+                        : "Đặt sân thành công!";
+
                     return RedirectToAction(nameof(Details), new { id = booking.BookingId });
                 }
                 catch (Exception ex)
@@ -249,9 +268,11 @@ namespace QuanLiSanCauLong.Controllers
             }
         }
 
-        // GET: Booking/MyBookings - Lịch sử đặt sân
+        // ─────────────────────────────────────────────────────────────────────────
+        // GET: Booking/MyBookings
+        // ─────────────────────────────────────────────────────────────────────────
         [HttpGet]
-        public async Task<IActionResult> MyBookings(string status, DateTime? fromDate, DateTime? toDate)
+        public async Task<IActionResult> MyBookings(string? status, DateTime? fromDate, DateTime? toDate)
         {
             int userId = GetCurrentUserId();
             var cancelHoursSetting = await GetSystemSetting("BookingCancellationHours", 2);
@@ -265,56 +286,21 @@ namespace QuanLiSanCauLong.Controllers
 
             if (!string.IsNullOrEmpty(status))
                 query = query.Where(b => b.Status == status);
-
             if (fromDate.HasValue)
                 query = query.Where(b => b.BookingDate >= fromDate.Value);
-
             if (toDate.HasValue)
                 query = query.Where(b => b.BookingDate <= toDate.Value);
 
             var bookings = await query.OrderByDescending(b => b.CreatedAt).ToListAsync();
-
-            var model = bookings.Select(b => new BookingHistoryViewModel
-            {
-                BookingId = b.BookingId,
-                BookingCode = b.BookingCode,
-                FacilityName = b.Court?.Facility?.FacilityName ?? "N/A",
-                CourtNumber = b.Court != null ? b.Court.CourtNumber.ToString() : "N/A",
-                CourtType = b.Court?.CourtType ?? "N/A",
-                BookingDate = b.BookingDate,
-                StartTime = b.StartTime,
-                EndTime = b.EndTime,
-                Duration = b.Duration,
-                TotalPrice = b.TotalPrice,
-                Status = b.Status,
-                PaymentStatus = b.PaymentStatus,
-                PaymentMethod = b.PaymentMethod,
-                CreatedAt = b.CreatedAt,
-                Note = b.Note,
-                CanCancel = CanCancelBooking(b, cancelHoursSetting),
-                RelatedOrders = b.Orders.Select(o => new OrderViewModel
-                {
-                    OrderId = o.OrderId,
-                    OrderCode = o.OrderCode,
-                    OrderType = o.OrderType,
-                    TotalAmount = o.TotalAmount,
-                    OrderStatus = o.OrderStatus,
-                    OrderDetails = o.OrderDetails.Select(od => new OrderDetailViewModel
-                    {
-                        ProductName = od.Product?.ProductName ?? "Sản phẩm không xác định",
-                        Quantity = od.Quantity,
-                        Unit = od.Product?.Unit ?? "",
-                        UnitPrice = od.UnitPrice,
-                        TotalPrice = od.TotalPrice
-                    }).ToList()
-                }).ToList()
-            }).ToList();
+            var model = bookings.Select(b => MapToHistoryViewModel(b, cancelHoursSetting)).ToList();
 
             ViewBag.Statuses = new[] { "Pending", "Confirmed", "Playing", "Completed", "Cancelled" };
             return View(model);
         }
 
-        // GET: Booking/Details - Chi tiết booking
+        // ─────────────────────────────────────────────────────────────────────────
+        // GET: Booking/Details
+        // ─────────────────────────────────────────────────────────────────────────
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
@@ -328,8 +314,7 @@ namespace QuanLiSanCauLong.Controllers
                     .ThenInclude(v => v.Voucher)
                 .FirstOrDefaultAsync(b => b.BookingId == id);
 
-            if (booking == null)
-                return NotFound();
+            if (booking == null) return NotFound();
 
             int userId = GetCurrentUserId();
             string userRole = GetCurrentUserRole();
@@ -338,57 +323,45 @@ namespace QuanLiSanCauLong.Controllers
                 return Forbid();
 
             var cancelHours = await GetSystemSetting("BookingCancellationHours", 2);
-
-            var model = new BookingHistoryViewModel
-            {
-                BookingId = booking.BookingId,
-                BookingCode = booking.BookingCode,
-                FacilityName = booking.Court.Facility.FacilityName,
-                CourtNumber = booking.Court.CourtNumber,
-                CourtType = booking.Court.CourtType,
-                BookingDate = booking.BookingDate,
-                StartTime = booking.StartTime,
-                EndTime = booking.EndTime,
-                Duration = booking.Duration,
-                TotalPrice = booking.TotalPrice,
-                Status = booking.Status,
-                PaymentStatus = booking.PaymentStatus,
-                PaymentMethod = booking.PaymentMethod,
-                CreatedAt = booking.CreatedAt,
-                Note = booking.Note,
-                CanCancel = CanCancelBooking(booking, cancelHours),
-                RelatedOrders = booking.Orders.Select(o => new OrderViewModel
-                {
-                    OrderId = o.OrderId,
-                    OrderCode = o.OrderCode,
-                    TotalAmount = o.TotalAmount,
-                    OrderStatus = o.OrderStatus,
-                    OrderDetails = o.OrderDetails.Select(od => new OrderDetailViewModel
-                    {
-                        ProductName = od.Product.ProductName,
-                        Quantity = od.Quantity,
-                        Unit = od.Product.Unit,
-                        UnitPrice = od.UnitPrice,
-                        TotalPrice = od.TotalPrice
-                    }).ToList()
-                }).ToList()
-            };
-
-            return View(model);
+            return View(MapToHistoryViewModel(booking, cancelHours));
         }
 
-        // POST: Booking/Cancel - Hủy booking
+        // ─────────────────────────────────────────────────────────────────────────
+        // GET: Booking/Invoice
+        // ─────────────────────────────────────────────────────────────────────────
+        [HttpGet]
+        public async Task<IActionResult> Invoice(int id)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.Court.Facility)
+                .Include(b => b.Orders)
+                    .ThenInclude(o => o.OrderDetails)
+                        .ThenInclude(od => od.Product)
+                .FirstOrDefaultAsync(b => b.BookingId == id);
+
+            if (booking == null) return NotFound();
+
+            int userId = GetCurrentUserId();
+            string userRole = GetCurrentUserRole();
+
+            if (userRole != "Admin" && userRole != "Staff" && booking.UserId != userId)
+                return Forbid();
+
+            var cancelHours = await GetSystemSetting("BookingCancellationHours", 2);
+            SetBankViewBag(booking.BookingCode);
+            return View(MapToHistoryViewModel(booking, cancelHours));
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────
+        // POST: Booking/Cancel
+        // ─────────────────────────────────────────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id, string cancelReason)
         {
             var booking = await _context.Bookings.FindAsync(id);
-
-            if (booking == null)
-                return NotFound();
-
-            if (booking.UserId != GetCurrentUserId())
-                return Forbid();
+            if (booking == null) return NotFound();
+            if (booking.UserId != GetCurrentUserId()) return Forbid();
 
             var cancelHours = await GetSystemSetting("BookingCancellationHours", 2);
             if (!CanCancelBooking(booking, cancelHours))
@@ -403,7 +376,6 @@ namespace QuanLiSanCauLong.Controllers
             booking.UpdatedAt = DateTime.Now;
 
             await _context.SaveChangesAsync();
-
             await LogActivity(GetCurrentUserId(), "Cancel", "Bookings", booking.BookingId,
                 "Confirmed", $"Hủy đơn {booking.BookingCode}: {cancelReason}");
 
@@ -411,25 +383,71 @@ namespace QuanLiSanCauLong.Controllers
             return RedirectToAction(nameof(MyBookings));
         }
 
-        // HELPER METHODS
+        // ─────────────────────────────────────────────────────────────────────────
+        // HELPER: Map Booking → BookingHistoryViewModel
+        // ─────────────────────────────────────────────────────────────────────────
+        private BookingHistoryViewModel MapToHistoryViewModel(Booking b, decimal cancelHours)
+        {
+            return new BookingHistoryViewModel
+            {
+                BookingId = b.BookingId,
+                BookingCode = b.BookingCode,
+                CustomerName = b.User?.FullName ?? "N/A",
+                Phone = b.User?.Phone ?? "N/A",
+                Email = b.User?.Email ?? "N/A",
+                FacilityName = b.Court?.Facility?.FacilityName ?? "N/A",
+                CourtNumber = b.Court?.CourtNumber?.ToString() ?? "N/A",
+                CourtType = b.Court?.CourtType ?? "N/A",
+                BookingDate = b.BookingDate,
+                StartTime = b.StartTime,
+                EndTime = b.EndTime,
+                Duration = b.Duration,
+                TotalPrice = b.TotalPrice,
+                Status = b.Status,
+                PaymentStatus = b.PaymentStatus,
+                PaymentMethod = b.PaymentMethod,
+                CreatedAt = b.CreatedAt,
+                Note = b.Note,
+                CanCancel = CanCancelBooking(b, cancelHours),
+                RelatedOrders = b.Orders?.Select(o => new OrderViewModel
+                {
+                    OrderId = o.OrderId,
+                    OrderCode = o.OrderCode,
+                    OrderType = o.OrderType,
+                    TotalAmount = o.TotalAmount,
+                    OrderStatus = o.OrderStatus,
+                    OrderDetails = o.OrderDetails?.Select(od => new OrderDetailViewModel
+                    {
+                        ProductName = od.Product?.ProductName ?? "Sản phẩm không xác định",
+                        Quantity = od.Quantity,
+                        Unit = od.Product?.Unit ?? "",
+                        UnitPrice = od.UnitPrice,
+                        TotalPrice = od.TotalPrice
+                    }).ToList() ?? new()
+                }).ToList() ?? new()
+            };
+        }
 
+        // ─────────────────────────────────────────────────────────────────────────
+        // PRIVATE HELPERS
+        // ─────────────────────────────────────────────────────────────────────────
         private async Task<List<TimeSlotViewModel>> GetAvailableTimeSlots(Court court, DateTime bookingDate)
         {
             var timeSlots = new List<TimeSlotViewModel>();
-            DayOfWeek dayOfWeekEnum = bookingDate.DayOfWeek;
+            var dayOfWeekEnum = bookingDate.DayOfWeek;
 
             var priceSlots = await _context.PriceSlots
                 .Where(p => p.FacilityId == court.FacilityId
-                            && p.CourtType == court.CourtType
-                            && p.IsActive
-                            && (p.DayOfWeek == null || p.DayOfWeek == dayOfWeekEnum))
+                         && p.CourtType == court.CourtType
+                         && p.IsActive
+                         && (p.DayOfWeek == null || p.DayOfWeek == dayOfWeekEnum))
                 .OrderBy(p => p.StartTime)
                 .ToListAsync();
 
             var bookedSlots = await _context.Bookings
                 .Where(b => b.CourtId == court.CourtId
-                            && b.BookingDate.Date == bookingDate.Date
-                            && b.Status != "Cancelled")
+                         && b.BookingDate.Date == bookingDate.Date
+                         && b.Status != "Cancelled")
                 .ToListAsync();
 
             foreach (var slot in priceSlots)
@@ -464,25 +482,24 @@ namespace QuanLiSanCauLong.Controllers
         {
             var priceSlots = await _context.PriceSlots
                 .Where(p => p.FacilityId == facilityId
-                       && p.CourtType == courtType
-                       && p.IsActive
-                       && p.StartTime < end
-                       && p.EndTime > start)
+                         && p.CourtType == courtType
+                         && p.IsActive
+                         && p.StartTime < end
+                         && p.EndTime > start)
                 .ToListAsync();
 
             decimal totalPrice = 0;
             foreach (var slot in priceSlots)
             {
-                // Tính overlap thực tế giữa khung giờ đặt và slot giá
                 var overlapStart = start > slot.StartTime ? start : slot.StartTime;
                 var overlapEnd = end < slot.EndTime ? end : slot.EndTime;
-                double overlapMinutes = (overlapEnd - overlapStart).TotalMinutes;
-                if (overlapMinutes <= 0) continue;
+                double overlapMins = (overlapEnd - overlapStart).TotalMinutes;
+                if (overlapMins <= 0) continue;
 
-                // Giá tỉ lệ theo số phút overlap / tổng số phút của slot
-                double slotMinutes = (slot.EndTime - slot.StartTime).TotalMinutes;
-                totalPrice += slot.Price * (decimal)(overlapMinutes / slotMinutes);
+                double slotMins = (slot.EndTime - slot.StartTime).TotalMinutes;
+                totalPrice += slot.Price * (decimal)(overlapMins / slotMins);
             }
+
             return Math.Round(totalPrice, 0);
         }
 
@@ -505,7 +522,7 @@ namespace QuanLiSanCauLong.Controllers
                 OrderCode = orderCode,
                 BookingId = booking.BookingId,
                 UserId = userId,
-                FacilityId = court.FacilityId,
+                FacilityId = court!.FacilityId,
                 OrderType = "Product",
                 SubTotal = items.Sum(i => i.TotalPrice),
                 DiscountAmount = 0,
@@ -521,7 +538,7 @@ namespace QuanLiSanCauLong.Controllers
 
             foreach (var item in items.Where(i => i.Quantity > 0))
             {
-                var orderDetail = new OrderDetail
+                _context.OrderDetails.Add(new OrderDetail
                 {
                     OrderId = order.OrderId,
                     ProductId = item.ProductId,
@@ -529,9 +546,7 @@ namespace QuanLiSanCauLong.Controllers
                     UnitPrice = item.Price,
                     DiscountAmount = 0,
                     TotalPrice = item.TotalPrice
-                };
-
-                _context.OrderDetails.Add(orderDetail);
+                });
             }
 
             await _context.SaveChangesAsync();
@@ -608,7 +623,7 @@ namespace QuanLiSanCauLong.Controllers
 
         private async Task SaveVoucherUsage(int voucherId, int userId, int? bookingId, int? orderId, decimal discountAmount)
         {
-            var usage = new VoucherUsage
+            _context.VoucherUsages.Add(new VoucherUsage
             {
                 VoucherId = voucherId,
                 UserId = userId,
@@ -616,23 +631,18 @@ namespace QuanLiSanCauLong.Controllers
                 OrderId = orderId,
                 DiscountAmount = discountAmount,
                 UsedAt = DateTime.Now
-            };
-
-            _context.VoucherUsages.Add(usage);
+            });
 
             var voucher = await _context.Vouchers.FindAsync(voucherId);
-            if (voucher != null)
-            {
-                voucher.UsedCount++;
-            }
+            if (voucher != null) voucher.UsedCount++;
 
             await _context.SaveChangesAsync();
         }
 
         private async Task LogActivity(int userId, string action, string tableName, int? recordId,
-            string oldValue, string newValue)
+            string? oldValue, string newValue)
         {
-            var log = new ActivityLog
+            _context.ActivityLogs.Add(new ActivityLog
             {
                 UserId = userId,
                 Action = action,
@@ -643,34 +653,30 @@ namespace QuanLiSanCauLong.Controllers
                 IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
                 UserAgent = HttpContext.Request.Headers["User-Agent"].ToString(),
                 CreatedAt = DateTime.Now
-            };
+            });
 
-            _context.ActivityLogs.Add(log);
             await _context.SaveChangesAsync();
         }
 
         private int GetCurrentUserId()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
-            {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (claim != null && int.TryParse(claim.Value, out int userId))
                 return userId;
-            }
             return HttpContext.Session.GetInt32("UserId") ?? 0;
         }
 
         private string GetCurrentUserRole()
         {
-            var roleClaim = User.FindFirst(ClaimTypes.Role);
-            return roleClaim?.Value ?? "Customer";
+            return User.FindFirst(ClaimTypes.Role)?.Value ?? "Customer";
         }
     }
 
-    // Request model for search
+    // ── Request model dùng chung ──
     public class SearchCourtRequest
     {
         public int FacilityId { get; set; }
         public DateTime BookingDate { get; set; }
-        public string StartTime { get; set; }
+        public string StartTime { get; set; } = "";
     }
 }

@@ -4,190 +4,556 @@
     ViewData["Title"] = "Tin tức & Kinh nghiệm";
 }
 
-<div class="blog-container">
-    <!-- Hero Banner -->
-    <div class="blog-hero position-relative overflow-hidden" style="background: linear-gradient(135deg, #6c33f2 0%, #8b5cf6 100%); padding: 5rem 0;">
-        <div class="container position-relative">
-            <div class="row align-items-center">
-                <div class="col-lg-6 text-white">
-                    <h1 class="display-4 fw-bold mb-3">Tin Tức Cầu Lông</h1>
-                    <p class="lead opacity-90 mb-4">Cập nhật thông tin mới nhất về cầu lông, kỹ thuật chơi và các giải đấu hấp dẫn</p>
-                    <div class="d-flex gap-2">
-                        <span class="badge bg-white text-purple px-3 py-2">📰 @Model.FeaturedPosts.Count() bài nổi bật</span>
-                        <span class="badge bg-white bg-opacity-25 text-white px-3 py-2">✍️ Cập nhật hàng ngày</span>
-                    </div>
-                </div>
-                <div class="col-lg-6 d-none d-lg-block">
-                    <div class="position-relative">
-                        <i class="bi bi-newspaper display-1 text-white opacity-25"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="wave-bottom"></div>
-    </div>
-
-    <div class="container py-5">
-        <!-- Featured Posts -->
-        @if (Model.FeaturedPosts.Any())
-        {
-            <section class="mb-5">
-                <div class="d-flex align-items-center justify-content-between mb-4">
-                    <div>
-                        <h3 class="fw-bold mb-1">🔥 Tin Nổi Bật</h3>
-                        <p class="text-muted small mb-0">Những bài viết được quan tâm nhiều nhất</p>
-                    </div>
-                </div>
-
-                <div class="row g-4">
-                    @foreach (var item in Model.FeaturedPosts)
-                    {
-                        <div class="col-md-6">
-                            <a asp-controller="Blog" asp-action="Details" asp-route-id="@item.PostId" class="text-decoration-none">
-                                <div class="card border-0 shadow-hover rounded-4 overflow-hidden h-100 featured-card">
-                                    <div class="position-relative overflow-hidden" style="height: 320px;">
-                                        <img src="@item.ImageUrl" class="card-img-top h-100 w-100" style="object-fit: cover; transition: transform 0.5s;" alt="@item.Title">
-                                        <div class="position-absolute top-0 end-0 m-3">
-                                            <span class="badge bg-danger shadow-sm px-3 py-2">
-                                                <i class="bi bi-star-fill me-1"></i>Nổi bật
-                                            </span>
-                                        </div>
-                                        <div class="position-absolute bottom-0 start-0 m-3">
-                                            <span class="badge bg-white text-dark shadow px-3 py-2">
-                                                <i class="bi bi-folder me-1"></i>@item.Category
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="card-body p-4">
-                                        <h4 class="card-title fw-bold mb-3 text-dark">@item.Title</h4>
-                                        <p class="card-text text-muted mb-4 line-clamp-2">@item.Summary</p>
-                                        <div class="d-flex align-items-center justify-content-between text-muted small">
-                                            <span><i class="bi bi-person-circle me-1"></i>@item.Author</span>
-                                            <span><i class="bi bi-calendar3 me-1"></i>@item.PublishDate</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                    }
-                </div>
-            </section>
-        }
-
-        <!-- Other Posts -->
-        @if (Model.OtherPosts.Any())
-        {
-            <section>
-                <div class="d-flex align-items-center justify-content-between mb-4">
-                    <div>
-                        <h3 class="fw-bold mb-1">📚 Bài Viết Khác</h3>
-                        <p class="text-muted small mb-0">Khám phá thêm nhiều bài viết hữu ích</p>
-                    </div>
-                </div>
-
-                <div class="row g-4">
-                    @foreach (var item in Model.OtherPosts)
-                    {
-                        <div class="col-lg-4 col-md-6">
-                            <a asp-controller="Blog" asp-action="Details" asp-route-id="@item.PostId" class="text-decoration-none">
-                                <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 blog-card">
-                                    <div class="position-relative overflow-hidden" style="height: 220px;">
-                                        <img src="@item.ImageUrl" class="w-100 h-100" style="object-fit: cover; transition: transform 0.5s;" alt="@item.Title">
-                                        <div class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);">
-                                            <span class="badge bg-white text-dark px-3 py-1">
-                                                <i class="bi bi-tag me-1"></i>@item.Category
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="card-body p-4">
-                                        <h5 class="card-title fw-bold mb-2 text-dark line-clamp-2">@item.Title</h5>
-                                        <p class="card-text text-muted small mb-3 line-clamp-3">@item.Summary</p>
-                                        <div class="d-flex justify-content-between align-items-center text-muted" style="font-size: 0.85rem;">
-                                            <span><i class="bi bi-person me-1"></i>@item.Author</span>
-                                            <span><i class="bi bi-clock me-1"></i>@item.PublishDate</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                    }
-                </div>
-            </section>
-        }
-
-        @if (!Model.FeaturedPosts.Any() && !Model.OtherPosts.Any())
-        {
-            <div class="text-center py-5">
-                <i class="bi bi-inbox display-1 text-muted"></i>
-                <h4 class="mt-3 text-muted">Chưa có bài viết nào</h4>
-                <p class="text-muted">Hãy quay lại sau để xem nội dung mới nhất</p>
-            </div>
-        }
-    </div>
-</div>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
-    .text-purple {
-        color: #6c33f2;
+    :root {
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --deep: #1a1209;
+        --cream: #fdf8f0;
+        --warm: #f5efe0;
+        --muted: #8a7560;
+        --border: #e8ddc8;
     }
 
-    .bg-purple {
-        background-color: #6c33f2;
+    body, * {
+        font-family: 'Outfit', sans-serif;
+        box-sizing: border-box;
     }
 
-    .rounded-4 {
-        border-radius: 1.25rem !important;
+    /* HERO */
+    .blog-hero {
+        background: var(--deep);
+        position: relative;
+        overflow: hidden;
+        padding: 6rem 0 5rem;
     }
 
-    .shadow-hover {
-        transition: all 0.3s ease;
-    }
-
-        .shadow-hover:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 1.5rem 3rem rgba(108, 51, 242, 0.15) !important;
+        .blog-hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 60% 80% at 80% 50%, rgba(212,160,23,.07), transparent 65%);
+            pointer-events: none;
         }
 
-    .featured-card:hover img,
-    .blog-card:hover img {
-        transform: scale(1.1);
+    .bh-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 4rem;
+        position: relative;
+        z-index: 1;
     }
 
-    .line-clamp-2 {
+    .bh-overline {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .bh-overline-line {
+        width: 40px;
+        height: 1px;
+        background: var(--gold);
+    }
+
+    .bh-overline span {
+        font-size: .72rem;
+        letter-spacing: .22em;
+        text-transform: uppercase;
+        color: var(--gold);
+        font-weight: 600;
+    }
+
+    .bh-title {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(2.4rem, 5vw, 4.5rem);
+        font-weight: 900;
+        color: #fff;
+        line-height: .98;
+        margin-bottom: 1.5rem;
+    }
+
+        .bh-title em {
+            font-style: italic;
+            color: var(--gold2);
+        }
+
+    .bh-sub {
+        font-size: .95rem;
+        color: rgba(255,255,255,.45);
+        font-weight: 300;
+        max-width: 480px;
+        line-height: 1.8;
+    }
+
+    .bh-pills {
+        display: flex;
+        gap: .6rem;
+        flex-wrap: wrap;
+        margin-top: 2rem;
+    }
+
+    .bh-pill {
+        background: rgba(255,255,255,.07);
+        border: 1px solid rgba(255,255,255,.15);
+        color: rgba(255,255,255,.65);
+        font-size: .72rem;
+        font-weight: 600;
+        letter-spacing: .08em;
+        padding: .4rem 1rem;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: all .2s;
+        text-decoration: none;
+    }
+
+        .bh-pill:hover, .bh-pill.active {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: var(--deep);
+        }
+
+    /* MAIN */
+    .blog-main {
+        background: var(--cream);
+        padding: 5rem 0;
+    }
+
+    .blog-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 4rem;
+    }
+
+    .sec-label {
+        display: flex;
+        align-items: center;
+        gap: .8rem;
+        margin-bottom: 2rem;
+    }
+
+    .sec-label-line {
+        width: 32px;
+        height: 1px;
+        background: var(--gold);
+    }
+
+    .sec-label span {
+        font-size: .68rem;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: var(--gold);
+        font-weight: 700;
+    }
+
+    .sec-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: var(--deep);
+        line-height: 1.15;
+        margin-bottom: 2.5rem;
+    }
+
+        .sec-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    /* FEATURED GRID */
+    .feat-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 5rem;
+    }
+
+    /* Card featured */
+    .bcard-feat {
+        display: block;
+        text-decoration: none;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+        transition: all .35s;
+    }
+
+        .bcard-feat:hover {
+            border-color: rgba(212,160,23,.4);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 40px rgba(26,18,9,.1);
+        }
+
+    .bcard-feat-img {
+        position: relative;
+        aspect-ratio: 16/9;
+        overflow: hidden;
+        background: var(--warm);
+    }
+
+        .bcard-feat-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform .5s, filter .4s;
+            filter: brightness(.9);
+        }
+
+    .bcard-feat:hover .bcard-feat-img img {
+        transform: scale(1.05);
+        filter: brightness(1);
+    }
+
+    .bcard-feat-img-empty {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: rgba(26,18,9,.1);
+    }
+
+    .bcard-cat {
+        position: absolute;
+        bottom: .9rem;
+        left: .9rem;
+        background: var(--deep);
+        color: var(--gold2);
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        padding: .22rem .75rem;
+        border-radius: 2px;
+    }
+
+    .bcard-feat-badge {
+        position: absolute;
+        top: .9rem;
+        right: .9rem;
+        background: var(--gold);
+        color: var(--deep);
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        padding: .22rem .7rem;
+        border-radius: 2px;
+    }
+
+    .bcard-feat-body {
+        padding: 1.75rem 2rem 2rem;
+    }
+
+    .bcard-meta {
+        display: flex;
+        gap: 1.2rem;
+        margin-bottom: .9rem;
+    }
+
+    .bcard-meta-item {
+        font-size: .73rem;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+        .bcard-meta-item i {
+            color: var(--gold);
+            font-size: .68rem;
+        }
+
+    .bcard-feat-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--deep);
+        line-height: 1.3;
+        margin-bottom: .65rem;
+    }
+
+    .bcard-feat-excerpt {
+        font-size: .86rem;
+        color: var(--muted);
+        font-weight: 300;
+        line-height: 1.75;
+        margin-bottom: 1.2rem;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
 
-    .line-clamp-3 {
+    .bcard-read {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        font-size: .74rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--gold);
+        border-bottom: 1px solid rgba(212,160,23,.35);
+        padding-bottom: .12rem;
+        transition: all .2s;
+    }
+
+    .bcard-feat:hover .bcard-read {
+        color: var(--deep);
+        border-color: var(--deep);
+    }
+
+    /* POSTS GRID */
+    .posts-grid {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: 1.25rem;
+    }
+
+    /* Card small */
+    .bcard-sm {
+        display: block;
+        text-decoration: none;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+        transition: all .3s;
+    }
+
+        .bcard-sm:hover {
+            border-color: rgba(212,160,23,.35);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 28px rgba(26,18,9,.09);
+        }
+
+    .bcard-sm-img {
+        position: relative;
+        aspect-ratio: 16/10;
+        overflow: hidden;
+        background: var(--warm);
+    }
+
+        .bcard-sm-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform .45s, filter .4s;
+            filter: brightness(.88);
+        }
+
+    .bcard-sm:hover .bcard-sm-img img {
+        transform: scale(1.06);
+        filter: brightness(.98);
+    }
+
+    .bcard-sm-img-empty {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: rgba(26,18,9,.1);
+    }
+
+    .bcard-sm-body {
+        padding: 1.25rem 1.4rem 1.5rem;
+    }
+
+    .bcard-sm-cat {
+        font-size: .62rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: .45rem;
+    }
+
+    .bcard-sm-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--deep);
+        line-height: 1.35;
+        margin-bottom: .6rem;
         display: -webkit-box;
-        -webkit-line-clamp: 3;
+        -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
 
-    .wave-bottom {
-        position: absolute;
-        bottom: -1px;
-        left: 0;
-        width: 100%;
-        height: 60px;
-        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='%23f8f9fc'/%3E%3C/svg%3E") no-repeat;
-        background-size: cover;
+    .bcard-sm-date {
+        font-size: .7rem;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+        .bcard-sm-date i {
+            color: var(--gold);
+            font-size: .65rem;
+        }
+
+    .blog-empty {
+        text-align: center;
+        padding: 5rem 2rem;
+        color: var(--muted);
+    }
+
+        .blog-empty i {
+            font-size: 3rem;
+            color: var(--border);
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+    @@media (max-width: 900px) {
+        .bh-inner, .blog-inner {
+            padding: 0 1.5rem;
+        }
+
+        .feat-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .posts-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+
+        .blog-hero {
+            padding: 4rem 0 3rem;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .posts-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .bh-title {
+            font-size: 2.4rem;
+        }
     }
 </style>
 
-@section Scripts {
-    <script>
-        // Add smooth scroll
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
-            });
-        });
-    </script>
-}
+<!-- HERO -->
+<section class="blog-hero">
+    <div class="bh-inner">
+        <div class="bh-overline">
+            <div class="bh-overline-line"></div>
+            <span>Tin tức &amp; bài viết</span>
+        </div>
+        <h1 class="bh-title">Cập nhật<br /><em>mới nhất.</em></h1>
+        <p class="bh-sub">Kiến thức, kỹ thuật và tin tức mới nhất về cầu lông từ cộng đồng.</p>
+        @* Categories là List<string> — dùng trực tiếp làm filter *@
+        @if (Model.Categories != null && Model.Categories.Any())
+        {
+            <div class="bh-pills">
+                <a href="@Url.Action("Index", "Blog")" class="bh-pill active">Tất cả</a>
+                @foreach (var cat in Model.Categories)
+                {
+                    <a href="@Url.Action("Index", "Blog", new { category = cat })" class="bh-pill">
+                        @cat
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<!-- MAIN -->
+<section class="blog-main">
+    <div class="blog-inner">
+        @if (!Model.FeaturedPosts.Any() && !Model.OtherPosts.Any())
+        {
+            <div class="blog-empty">
+                <i class="bi bi-newspaper"></i>
+                <p class="fw-semibold" style="font-size:1.1rem;color:var(--deep)">Chưa có bài viết nào</p>
+                <p style="font-size:.9rem">Hãy quay lại sau để xem nội dung mới nhất.</p>
+            </div>
+        }
+
+        @if (Model.FeaturedPosts != null && Model.FeaturedPosts.Any())
+        {
+            <div class="sec-label">
+                <div class="sec-label-line"></div>
+                <span>Tin nổi bật</span>
+            </div>
+            <div class="sec-title">Bài viết<br /><em>được quan tâm.</em></div>
+            <div class="feat-grid">
+                @foreach (var item in Model.FeaturedPosts)
+                {
+                    <a asp-controller="Blog" asp-action="Details" asp-route-id="@item.PostId" class="bcard-feat">
+                        <div class="bcard-feat-img">
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" alt="@item.Title" loading="lazy" />
+                            }
+                            else
+                            {
+                                <div class="bcard-feat-img-empty"><i class="bi bi-newspaper"></i></div>
+                            }
+                            @if (!string.IsNullOrEmpty(item.Category))
+                            {
+                                <div class="bcard-cat">@item.Category</div>
+                            }
+                            <div class="bcard-feat-badge"><i class="bi bi-star-fill me-1" style="font-size:.55rem"></i>Nổi bật</div>
+                        </div>
+                        <div class="bcard-feat-body">
+                            <div class="bcard-meta">
+                                <div class="bcard-meta-item"><i class="bi bi-person-circle"></i>@item.Author</div>
+                                <div class="bcard-meta-item"><i class="bi bi-calendar3"></i>@item.PublishDate</div>
+                            </div>
+                            <div class="bcard-feat-title">@item.Title</div>
+                            <div class="bcard-feat-excerpt">@item.Summary</div>
+                            <span class="bcard-read">Đọc bài viết <i class="bi bi-arrow-right"></i></span>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+
+        @if (Model.OtherPosts != null && Model.OtherPosts.Any())
+        {
+            <div class="sec-label">
+                <div class="sec-label-line"></div>
+                <span>Bài viết khác</span>
+            </div>
+            <div class="sec-title">Khám phá<br /><em>thêm nội dung.</em></div>
+            <div class="posts-grid">
+                @foreach (var item in Model.OtherPosts)
+                {
+                    <a asp-controller="Blog" asp-action="Details" asp-route-id="@item.PostId" class="bcard-sm">
+                        <div class="bcard-sm-img">
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" alt="@item.Title" loading="lazy" />
+                            }
+                            else
+                            {
+                                <div class="bcard-sm-img-empty"><i class="bi bi-newspaper"></i></div>
+                            }
+                            @if (!string.IsNullOrEmpty(item.Category))
+                            {
+                                <div class="bcard-cat">@item.Category</div>
+                            }
+                        </div>
+                        <div class="bcard-sm-body">
+                            <div class="bcard-sm-cat">@item.Category</div>
+                            <div class="bcard-sm-title">@item.Title</div>
+                            <div class="bcard-sm-date"><i class="bi bi-calendar3"></i>@item.PublishDate</div>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</section>

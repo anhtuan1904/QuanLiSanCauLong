@@ -259,7 +259,7 @@
             <p>Cập nhật hàng hoá và tồn kho thực tế</p>
         </div>
     </div>
-    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+    <button type="button" class="btn-close shadow-none" onclick="this.closest('.modal-overlay').classList.remove('show')"></button>
 </div>
 
 <form asp-action="StockIn" method="post" id="stockInForm">
@@ -327,7 +327,7 @@
         <!-- Product table -->
         <div class="d-flex justify-content-between align-items-center mb-2">
             <span class="section-div" style="margin-bottom:0;"><i class="bi bi-list-ul me-1"></i>Chi Tiết Hàng Nhập</span>
-            <button type="button" class="btn-add-row" onclick="addRow()">
+            <button type="button" class="btn-add-row" id="stockInAddRowBtn">
                 <i class="bi bi-plus-circle"></i> Thêm dòng
             </button>
         </div>
@@ -336,7 +336,8 @@
             <table class="prod-tbl" id="productTable">
                 <thead>
                     <tr>
-                        <th style="min-width:200px;">Sản phẩm</th>
+                        <th style="min-width:180px;">Sản phẩm</th>
+                        <th style="min-width:130px;">Phân loại (Size)</th>
                         <th style="width:90px;">Số lượng</th>
                         <th style="width:80px;">ĐVT</th>
                         <th style="width:120px;">Giá nhập (đ)</th>
@@ -346,7 +347,7 @@
                 <tbody id="productTableBody">
                     <tr class="product-row">
                         <td>
-                            <select name="Items[0].ProductId" class="fc" onchange="fillUnit(this, 0)">
+                            <select name="Items[0].ProductId" class="fc stockin-product-sel">
                                 <option value="">-- Chọn sản phẩm --</option>
                                 @if (ViewBag.Products != null)
                                 {
@@ -360,10 +361,15 @@
                             </select>
                             <small class="row-meta"></small>
                         </td>
+                        <td>
+                            <select name="Items[0].VariantId" class="fc variant-select" disabled>
+                                <option value="">— Chọn SP trước —</option>
+                            </select>
+                        </td>
                         <td><input name="Items[0].Quantity" type="number" class="fc" placeholder="0" min="1" /></td>
                         <td><input name="Items[0].Unit" type="text" class="fc fw-mono" placeholder="—" readonly /></td>
                         <td><input name="Items[0].CostPrice" type="number" class="fc" placeholder="0" min="0" step="1000" /></td>
-                        <td style="text-align:center;"><button type="button" class="btn-remove" onclick="removeRow(this)"><i class="bi bi-trash3"></i></button></td>
+                        <td style="text-align:center;"><button type="button" class="btn-remove stockin-remove-btn"><i class="bi bi-trash3"></i></button></td>
                     </tr>
                 </tbody>
             </table>
@@ -381,7 +387,7 @@
     </div>
 
     <div class="modal-foot-court">
-        <button type="button" class="btn-cancel-modal" data-bs-dismiss="modal">Hủy bỏ</button>
+        <button type="button" class="btn-cancel-modal" onclick="this.closest('.modal-overlay').classList.remove('show')">Hủy bỏ</button>
         <button type="submit" class="btn-submit-modal">
             <i class="bi bi-check-circle-fill"></i> Xác nhận nhập kho
         </button>
@@ -389,52 +395,121 @@
 </form>
 
 <script>
+(function () {
+    // Product data được serialize an toàn từ server — tránh mọi lỗi escape ký tự đặc biệt
+    const productData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        ViewBag.Products == null
+            ? new object[] {}
+            : ((IEnumerable<QuanLiSanCauLong.Models.Product>)ViewBag.Products)
+                .Select(p => new {
+                    id    = p.ProductId,
+                    unit  = p.Unit  ?? "",
+                    sku   = p.SKU   ?? "",
+                    name  = p.ProductName ?? "",
+                    stock = p.StockQuantity
+                })
+                .ToArray()
+    ));
+    // Chuyển array → object map { [id]: {...} }
+    const pdMap = {};
+    productData.forEach(p => { pdMap[p.id] = { unit: p.unit, sku: p.sku, name: p.name, stock: p.stock }; });
+
     let rowIndex = 1;
-    const productData = {};
-    @if (ViewBag.Products != null)
-    {
-            foreach (var p in ViewBag.Products)
-            {
-                    @:productData[@p.ProductId] = { unit: '@(p.Unit ?? "")', sku: '@(p.SKU ?? "")', stock: @p.StockQuantity };
-            }
+
+    // ---- Build product <options> HTML ----
+    function buildProductOpts() {
+        return '<option value="">-- Chọn sản phẩm --</option>' +
+            Object.entries(pdMap).map(([id, d]) =>
+                `<option value="${id}" data-unit="${d.unit}" data-sku="${d.sku}" data-stock="${d.stock}">${d.name || d.sku || 'SP-' + id}</option>`
+            ).join('');
     }
 
-    function fillUnit(select, idx) {
-        const id = select.value;
+    // ---- Fill unit + load variants ----
+    async function fillUnit(select) {
+        const id  = select.value;
         const row = select.closest('tr');
-        const unitInput = row.querySelector('input[name*=".Unit"]');
-        const meta = row.querySelector('.row-meta');
-        if (id && productData[id]) {
-            if (unitInput) unitInput.value = productData[id].unit;
-            if (meta) meta.textContent = `SKU: ${productData[id].sku || '—'} | Tồn: ${productData[id].stock}`;
+        const unitInput  = row.querySelector('input[name*=".Unit"]');
+        const meta       = row.querySelector('.row-meta');
+        const variantSel = row.querySelector('.variant-select');
+
+        if (id && pdMap[id]) {
+            if (unitInput) unitInput.value = pdMap[id].unit;
+            if (meta) meta.textContent = `SKU: ${pdMap[id].sku || '—'} | Tồn: ${pdMap[id].stock}`;
+
+            if (variantSel) {
+                variantSel.innerHTML = '<option value="">Đang tải...</option>';
+                variantSel.disabled = true;
+                try {
+                    const res  = await fetch(`/Admin/AdminProduct/GetVariants?productId=${id}`);
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        variantSel.innerHTML = '<option value="">-- Chọn size/màu --</option>' +
+                            data.map(v => `<option value="${v.variantId}" data-stock="${v.availableQuantity}">${v.displayName} (Tồn KD: ${v.availableQuantity})</option>`).join('');
+                        variantSel.disabled = false;
+                    } else {
+                        variantSel.innerHTML = '<option value="">Không có phân loại</option>';
+                        variantSel.disabled = true;
+                    }
+                } catch {
+                    variantSel.innerHTML = '<option value="">Không tải được</option>';
+                    variantSel.disabled = false;
+                }
+            }
         } else {
             if (unitInput) unitInput.value = '';
             if (meta) meta.textContent = '';
+            if (variantSel) { variantSel.innerHTML = '<option value="">— Chọn SP trước —</option>'; variantSel.disabled = true; }
         }
     }
 
+    // ---- Add row ----
     function addRow() {
-        const opts = Object.entries(productData).map(([id, d]) =>
-            `<option value="${id}" data-unit="${d.unit}">${d.sku || 'SP-' + id}</option>`
-        ).join('');
+        const idx = rowIndex;
         const row = `
         <tr class="product-row">
             <td>
-                <select name="Items[${rowIndex}].ProductId" class="fc" onchange="fillUnit(this,${rowIndex})">
-                    <option value="">-- Chọn sản phẩm --</option>${opts}
+                <select name="Items[${idx}].ProductId" class="fc stockin-product-sel">
+                    ${buildProductOpts()}
                 </select>
                 <small class="row-meta"></small>
             </td>
-            <td><input name="Items[${rowIndex}].Quantity" type="number" class="fc" placeholder="0" min="1" /></td>
-            <td><input name="Items[${rowIndex}].Unit" type="text" class="fc fw-mono" placeholder="—" readonly /></td>
-            <td><input name="Items[${rowIndex}].CostPrice" type="number" class="fc" placeholder="0" min="0" step="1000" /></td>
-            <td style="text-align:center;"><button type="button" class="btn-remove" onclick="removeRow(this)"><i class="bi bi-trash3"></i></button></td>
+            <td>
+                <select name="Items[${idx}].VariantId" class="fc variant-select" disabled>
+                    <option value="">— Chọn SP trước —</option>
+                </select>
+            </td>
+            <td><input name="Items[${idx}].Quantity" type="number" class="fc" placeholder="0" min="1" /></td>
+            <td><input name="Items[${idx}].Unit" type="text" class="fc fw-mono" placeholder="—" readonly /></td>
+            <td><input name="Items[${idx}].CostPrice" type="number" class="fc" placeholder="0" min="0" step="1000" /></td>
+            <td style="text-align:center;"><button type="button" class="btn-remove stockin-remove-btn"><i class="bi bi-trash3"></i></button></td>
         </tr>`;
-        document.getElementById('productTableBody').insertAdjacentHTML('beforeend', row);
+        const tbody = document.getElementById('productTableBody');
+        tbody.insertAdjacentHTML('beforeend', row);
+        // Attach events to new row
+        const newRow = tbody.lastElementChild;
+        attachRowEvents(newRow);
         rowIndex++;
     }
 
+    // ---- Remove row ----
     function removeRow(btn) {
-        if (document.querySelectorAll('.product-row').length > 1) btn.closest('tr').remove();
+        if (document.querySelectorAll('#productTableBody .product-row').length > 1)
+            btn.closest('tr').remove();
     }
+
+    // ---- Attach events to a row ----
+    function attachRowEvents(row) {
+        const sel = row.querySelector('.stockin-product-sel');
+        if (sel) sel.addEventListener('change', () => fillUnit(sel));
+        const removeBtn = row.querySelector('.stockin-remove-btn');
+        if (removeBtn) removeBtn.addEventListener('click', () => removeRow(removeBtn));
+    }
+
+    // ---- Init: attach events to the first (pre-rendered) row ----
+    document.querySelectorAll('#productTableBody .product-row').forEach(attachRowEvents);
+
+    // ---- Expose addRow to the "Thêm dòng" button ----
+    const addBtn = document.getElementById('stockInAddRowBtn');
+    if (addBtn) addBtn.addEventListener('click', addRow);
+})();
 </script>

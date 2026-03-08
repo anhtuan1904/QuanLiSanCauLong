@@ -1,945 +1,592 @@
 ﻿@model QuanLiSanCauLong.Models.Court
 @{
-    ViewData["Title"] = Model.CourtNumber + " – " + Model.Facility?.FacilityName;
+    ViewData["Title"] = "Chi tiết sân " + Model.CourtNumber;
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 
-    // Tập hợp tất cả ảnh: ảnh sân trước, rồi ảnh cơ sở
-    var courtImgs = (Model.CourtImages?.OrderBy(i => i.IsPrimary ? 0 : 1).ThenBy(i => i.DisplayOrder).ToList())
-                     ?? new List<CourtImage>();
-    var facImgs = (Model.Facility?.FacilityImages?.ToList()) ?? new List<FacilityImage>();
-    // Dùng ảnh sân nếu có, ngược lại dùng ảnh cơ sở
-    var allImgs = courtImgs.Any()
-                        ? courtImgs.Select(i => i.ImagePath).ToList()
-                        : facImgs.Select(i => i.ImagePath).ToList();
-    if (!allImgs.Any() && !string.IsNullOrEmpty(Model.ImagePath))
-        allImgs.Add(Model.ImagePath);
+    var primaryImg  = Model.CourtImages?.FirstOrDefault(i => i.IsPrimary)
+                   ?? Model.CourtImages?.OrderBy(i => i.DisplayOrder).FirstOrDefault();
+    var allImages   = Model.CourtImages?.OrderBy(i => i.DisplayOrder).ToList()
+                   ?? new List<QuanLiSanCauLong.Models.CourtImage>();
 
-    var bookDate = ViewBag.BookingDate as string ?? DateTime.Today.ToString("yyyy-MM-dd");
-    var startTime = ViewBag.StartTime as string ?? "";
-    var endTime = ViewBag.EndTime as string ?? "";
+    var recentBooks = Model.Bookings?
+                        .Where(b => b.BookingDate >= DateTime.Today.AddDays(-30))
+                        .OrderByDescending(b => b.BookingDate)
+                        .Take(10)
+                        .ToList() ?? new List<QuanLiSanCauLong.Models.Booking>();
+
+    var statusColor = Model.Status switch {
+        "Available"   => "#16a34a",
+        "Active"      => "#d4a017",
+        "Maintenance" => "#c94b2a",
+        _ => "#8a7560"
+    };
+
+    // Group PriceSlots by DayOfWeek
+    var slotsByDay = Model.PriceSlots?
+        .Where(ps => ps.IsActive)
+        .GroupBy(ps => ps.DayOfWeek)
+        .OrderBy(g => g.Key)
+        .ToList();
+
+    string DayName(DayOfWeek? d) => d switch {
+        DayOfWeek.Sunday    => "Chủ nhật",
+        DayOfWeek.Monday    => "Thứ Hai",
+        DayOfWeek.Tuesday   => "Thứ Ba",
+        DayOfWeek.Wednesday => "Thứ Tư",
+        DayOfWeek.Thursday  => "Thứ Năm",
+        DayOfWeek.Friday    => "Thứ Sáu",
+        DayOfWeek.Saturday  => "Thứ Bảy",
+        _ => "Tất cả ngày"
+    };
 }
 
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
-    :root {
-        --D: #1a1209;
-        --D2: #231a0e;
-        --D3: #2e2010;
-        --G: #d4a017;
-        --G2: #f5c842;
-        --G3: rgba(212,160,23,.10);
-        --G4: rgba(212,160,23,.18);
-        --W: #f5ede0;
-        --S: #ede5d8;
-        --R: #c94b2a;
-        --GN: #10b981;
-        --M: rgba(255,255,255,.38);
-        --M2: rgba(255,255,255,.08);
-    }
-
-    *, *::before, *::after {
-        box-sizing: border-box;
-    }
-
-    body {
-        background: var(--W);
-        margin: 0;
-        font-family: 'Outfit', sans-serif;
-    }
-
-    /* ── BREADCRUMB ─────────────────────────────────────────── */
-    .bc {
-        background: var(--D);
-        padding: .75rem 2rem;
-        display: flex;
-        align-items: center;
-        gap: .6rem;
-        border-bottom: 1px solid var(--G4);
-    }
-
-        .bc a {
-            color: var(--G2);
-            text-decoration: none;
-            font-size: .78rem;
-            font-weight: 600;
-            opacity: .8;
-            display: flex;
-            align-items: center;
-            gap: .35rem;
-        }
-
-            .bc a:hover {
-                opacity: 1;
-            }
-
-    .bc-sep {
-        color: var(--M);
-        font-size: .65rem;
-    }
-
-    .bc-cur {
-        color: var(--M);
-        font-size: .78rem;
-        font-style: italic;
-    }
-
-    /* ── HERO ───────────────────────────────────────────────── */
-    .hero {
-        background: var(--D);
-        position: relative;
-        overflow: hidden;
-    }
-
-        .hero::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(ellipse 55% 90% at 72% 50%,rgba(212,160,23,.07),transparent 65%);
-            pointer-events: none;
-        }
-
-    .hero-wrap {
-        max-width: 1300px;
-        margin: 0 auto;
-        padding: 2.4rem 2rem;
-        display: grid;
-        grid-template-columns: 1fr 380px;
-        gap: 2.5rem;
-        align-items: start;
-        position: relative;
-        z-index: 1;
-    }
-
-    /* Carousel */
-    .gallery {
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid var(--G4);
-    }
-
-        .gallery .carousel-item img {
-            height: 420px;
-            object-fit: cover;
-            filter: brightness(.88);
-        }
-
-        .gallery .carousel-control-prev, .gallery .carousel-control-next {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(26,18,9,.72);
-            border: 1px solid var(--G4);
-            top: 50%;
-            transform: translateY(-50%);
-            opacity: 0;
-            transition: opacity .25s;
-        }
-
-        .gallery:hover .carousel-control-prev,
-        .gallery:hover .carousel-control-next {
-            opacity: 1;
-        }
-
-        .gallery .carousel-control-prev {
-            left: 10px;
-        }
-
-        .gallery .carousel-control-next {
-            right: 10px;
-        }
-
-    .carousel-indicators [data-bs-target] {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: var(--G);
-        border: 0;
-        opacity: .45;
-    }
-
-    .carousel-indicators .active {
-        opacity: 1;
-    }
-
-    /* Thumb strip */
-    .thumbs {
-        display: flex;
-        gap: .5rem;
-        margin-top: .75rem;
-        overflow-x: auto;
-        padding-bottom: .3rem;
-    }
-
-        .thumbs img {
-            width: 64px;
-            height: 48px;
-            object-fit: cover;
-            border-radius: 6px;
-            border: 2px solid transparent;
-            cursor: pointer;
-            flex-shrink: 0;
-            transition: border-color .2s;
-        }
-
-            .thumbs img.act {
-                border-color: var(--G2);
-            }
-
-    /* Info panel */
-    .iblock {
-        display: flex;
-        flex-direction: column;
-        gap: 1.2rem;
-    }
-
-    .i-pills {
-        display: flex;
-        gap: .5rem;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-
-    .pill {
-        padding: .24rem .72rem;
-        border-radius: 3px;
-        font-size: .58rem;
-        font-weight: 700;
-        letter-spacing: .15em;
-        text-transform: uppercase;
-    }
-
-    .pill-type {
-        background: var(--R);
-        color: #fff;
-    }
-
-    .pill-open {
-        background: rgba(16,185,129,.12);
-        color: #34d399;
-        border: 1px solid rgba(16,185,129,.2);
-        display: flex;
-        align-items: center;
-        gap: .3rem;
-    }
-
-    .pill-maint {
-        background: rgba(201,75,42,.12);
-        color: #ef8c72;
-        border: 1px solid rgba(201,75,42,.2);
-    }
-
-    .i-title {
-        font-family: 'Playfair Display', serif;
-        font-size: clamp(1.5rem,2.5vw,2.2rem);
-        font-weight: 700;
-        color: #fff;
-        margin: 0;
-        line-height: 1.15;
-    }
-
-    .i-sub {
-        font-size: .84rem;
-        color: var(--M);
-        display: flex;
-        align-items: center;
-        gap: .4rem;
-    }
-
-        .i-sub i {
-            color: var(--G);
-        }
-
-    /* Stats grid */
-    .stats {
-        display: grid;
-        grid-template-columns: repeat(3,1fr);
-        gap: 1px;
-        background: var(--G4);
-        border: 1px solid var(--G4);
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .stat {
-        background: var(--D2);
-        padding: .9rem .6rem;
-        text-align: center;
-        transition: background .18s;
-    }
-
-        .stat:hover {
-            background: var(--G3);
-        }
-
-    .sv {
-        font-weight: 700;
-        font-size: 1.1rem;
-        color: var(--G2);
-        line-height: 1;
-        margin-bottom: .28rem;
-    }
-
-    .sl {
-        font-size: .56rem;
-        letter-spacing: .12em;
-        text-transform: uppercase;
-        color: var(--M);
-    }
-
-    /* Tags */
-    .tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: .45rem;
-    }
-
-    .tag {
-        display: inline-flex;
-        align-items: center;
-        gap: .3rem;
-        padding: .27rem .78rem;
-        background: var(--M2);
-        border: 1px solid var(--G4);
-        border-radius: 4px;
-        color: rgba(255,255,255,.65);
-        font-size: .72rem;
-        font-weight: 500;
-        transition: all .2s;
-    }
-
-        .tag i {
-            color: var(--G);
-        }
-
-        .tag:hover {
-            background: var(--G3);
-            border-color: var(--G);
-            color: var(--G2);
-        }
-
-    /* CTA box */
-    .cta-box {
-        background: var(--D2);
-        border: 1px solid var(--G4);
-        border-radius: 10px;
-        padding: 1.4rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        margin-top: .4rem;
-    }
-
-    .cta-price {
-        font-family: 'Outfit',sans-serif;
-        font-size: 1.7rem;
-        font-weight: 800;
-        color: var(--G2);
-        line-height: 1;
-    }
-
-        .cta-price span {
-            font-size: .8rem;
-            color: var(--M);
-            font-weight: 400;
-        }
-
-    .btn-book-main {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: .5rem;
-        background: linear-gradient(135deg,var(--G),var(--G2));
-        color: var(--D);
-        font-family: 'Outfit',sans-serif;
-        font-size: .95rem;
-        font-weight: 800;
-        letter-spacing: .03em;
-        padding: .9rem 1.6rem;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all .22s;
-        text-decoration: none;
-        width: 100%;
-        text-align: center;
-    }
-
-        .btn-book-main:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(212,160,23,.4);
-            filter: brightness(1.05);
-            color: var(--D);
-        }
-
-    .btn-back {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: .4rem;
-        background: var(--M2);
-        color: rgba(255,255,255,.65);
-        border: 1px solid var(--G4);
-        border-radius: 8px;
-        padding: .6rem 1rem;
-        font-size: .78rem;
-        font-weight: 600;
-        cursor: pointer;
-        text-decoration: none;
-        transition: all .2s;
-    }
-
-        .btn-back:hover {
-            background: var(--G3);
-            border-color: var(--G);
-            color: var(--G2);
-        }
-
-    /* ── CONTENT SECTION ────────────────────────────────────── */
-    .content-wrap {
-        max-width: 1300px;
-        margin: 0 auto;
-        padding: 2.5rem 2rem 4rem;
-    }
-
-    /* Article-style rich content area */
-    .rich-section {
-        background: #fff;
-        border: 1px solid var(--S);
-        border-radius: 12px;
-        padding: 2.2rem 2.5rem;
-        margin-bottom: 1.8rem;
-    }
-
-    .sec-title {
-        font-family: 'Playfair Display',serif;
-        font-size: 1.35rem;
-        font-weight: 700;
-        color: var(--D);
-        margin: 0 0 1.4rem;
-        display: flex;
-        align-items: center;
-        gap: .6rem;
-    }
-
-        .sec-title i {
-            color: var(--G);
-        }
-
-        .sec-title::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(90deg,var(--S),transparent);
-            margin-left: .8rem;
-        }
-
-    /* Mô tả dạng bài viết (HTML-safe) */
-    .article-body {
-        font-size: .93rem;
-        line-height: 1.9;
-        color: #4a3828;
-    }
-
-        .article-body h2 {
-            font-family: 'Playfair Display',serif;
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: var(--D);
-            margin: 1.6rem 0 .6rem;
-        }
-
-        .article-body h3 {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--D);
-            margin: 1.3rem 0 .5rem;
-        }
-
-        .article-body p {
-            margin: 0 0 1rem;
-        }
-
-        .article-body img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            margin: 1.2rem 0;
-            border: 1px solid var(--S);
-            display: block;
-        }
-
-        .article-body figure {
-            margin: 1.5rem 0;
-            text-align: center;
-        }
-
-            .article-body figure img {
-                margin: 0 auto .5rem;
-            }
-
-        .article-body figcaption {
-            font-size: .78rem;
-            color: #8c7a68;
-            font-style: italic;
-        }
-
-        .article-body blockquote {
-            border-left: 3px solid var(--G);
-            padding: .8rem 1.2rem;
-            background: #fdf8f0;
-            border-radius: 0 6px 6px 0;
-            margin: 1.2rem 0;
-            color: #6b5040;
-            font-style: italic;
-        }
-
-        .article-body ul, .article-body ol {
-            padding-left: 1.4rem;
-            margin: 0 0 1rem;
-        }
-
-        .article-body li {
-            margin-bottom: .4rem;
-        }
-
-    /* Info grid */
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
-        gap: 1.2rem;
-    }
-
-    .info-item {
-        display: flex;
-        align-items: flex-start;
-        gap: .75rem;
-        padding: 1rem 1.2rem;
-        background: #fdf8f0;
-        border: 1px solid var(--S);
-        border-radius: 8px;
-    }
-
-    .info-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-        background: linear-gradient(135deg,var(--G),var(--G2));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-        .info-icon i {
-            color: var(--D);
-            font-size: .9rem;
-        }
-
-    .info-lbl {
-        font-size: .68rem;
-        color: #8c7a68;
-        font-weight: 600;
-        letter-spacing: .05em;
-        text-transform: uppercase;
-        margin-bottom: .2rem;
-    }
-
-    .info-val {
-        font-size: .92rem;
-        font-weight: 700;
-        color: var(--D);
-    }
-
-    /* Facility chips */
-    .fac-info {
-        display: flex;
-        align-items: center;
-        gap: 1.2rem;
-        flex-wrap: wrap;
-        margin-bottom: 1.2rem;
-    }
-
-    .fac-img {
-        width: 72px;
-        height: 72px;
-        border-radius: 8px;
-        object-fit: cover;
-        border: 2px solid var(--G4);
-        flex-shrink: 0;
-    }
-
-    .fac-name {
-        font-family: 'Playfair Display',serif;
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: var(--D);
-        margin-bottom: .25rem;
-    }
-
-    .fac-addr {
-        font-size: .8rem;
-        color: #6b5040;
-        display: flex;
-        align-items: center;
-        gap: .3rem;
-    }
-
-        .fac-addr i {
-            color: var(--R);
-        }
-
-    /* Responsive */
-    @@media(max-width:1100px) {
-        .hero-wrap {
-            grid-template-columns: 1fr;
-        }
-
-        .gallery .carousel-item img {
-            height: 300px;
-        }
-
-        .stats {
-            grid-template-columns: repeat(3,1fr);
-        }
-    }
-
-    @@media(max-width:768px) {
-        .hero-wrap, .content-wrap, .bc {
-            padding-left: 1.2rem;
-            padding-right: 1.2rem;
-        }
-
-        .rich-section {
-            padding: 1.4rem 1.2rem;
-        }
-
-        .info-grid {
-            grid-template-columns: 1fr 1fr;
-        }
-    }
+:root {
+    --deep:#1a1209; --gold:#d4a017; --gold2:#f5c842;
+    --cream:#fdf8f0; --warm:#f5ede0; --border:#e8ddd0; --muted:#8a7560;
+}
+*, *::before, *::after { box-sizing: border-box; font-family:'Outfit',sans-serif; }
+
+/* ─ LAYOUT WRAP ─ */
+.cf-wrap { max-width:860px; margin:0 auto; padding-bottom:3rem; }
+
+/* ─ PAGE HEADER ─ */
+.cf-head { margin-bottom:2rem; display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.cf-head-left {}
+.cf-head-label { font-size:.68rem; letter-spacing:.2em; text-transform:uppercase; color:var(--gold);
+    display:flex; align-items:center; gap:.6rem; margin-bottom:.5rem; font-weight:700; }
+.cf-head-label::before { content:''; width:16px; height:1px; background:var(--gold); }
+.cf-title { font-family:'Playfair Display',serif; font-size:2rem; font-weight:700; color:var(--deep); line-height:1.1; }
+.cf-title em { font-style:italic; color:var(--gold); }
+.cf-sub { font-size:.84rem; color:var(--muted); margin-top:.3rem; }
+.cf-head-acts { display:flex; gap:.6rem; flex-wrap:wrap; align-items:flex-start; padding-top:.25rem; }
+.btn-edit { display:inline-flex; align-items:center; gap:.45rem; padding:.65rem 1.3rem;
+    background:linear-gradient(135deg,var(--gold),var(--gold2)); color:var(--deep);
+    border:none; border-radius:8px; font-weight:700; font-size:.84rem; cursor:pointer;
+    text-decoration:none; transition:all .2s; }
+.btn-edit:hover { box-shadow:0 4px 14px rgba(212,160,23,.35); transform:translateY(-1px); color:var(--deep); }
+.btn-back { display:inline-flex; align-items:center; gap:.45rem; padding:.65rem 1.1rem;
+    border:1px solid var(--border); background:#fff; color:var(--muted); border-radius:8px;
+    font-size:.84rem; cursor:pointer; text-decoration:none; transition:all .15s; }
+.btn-back:hover { border-color:var(--deep); color:var(--deep); }
+
+/* ─ STATUS BADGE ─ */
+.status-badge { display:inline-flex; align-items:center; gap:.45rem; padding:.35rem .9rem;
+    border-radius:5px; font-size:.72rem; font-weight:700; letter-spacing:.06em; }
+.status-dot { width:7px; height:7px; border-radius:50%; }
+
+/* ─ CARDS ─ */
+.cf-card { background:#fff; border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:1.25rem; }
+.cf-card-head { padding:1.1rem 1.75rem; border-bottom:1px solid var(--border); background:var(--warm);
+    display:flex; align-items:center; gap:.6rem; }
+.cf-card-icon { color:var(--gold); font-size:.95rem; }
+.cf-card-title { font-size:.72rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.cf-card-badge { margin-left:auto; }
+.cf-card-body { padding:1.75rem; }
+
+/* ─ IMAGE GALLERY ─ */
+.gallery-hero { width:100%; aspect-ratio:16/7; border-radius:10px; overflow:hidden; margin-bottom:.75rem;
+    background:var(--warm); position:relative; cursor:pointer; }
+.gallery-hero img { width:100%; height:100%; object-fit:cover; transition:transform .3s; }
+.gallery-hero:hover img { transform:scale(1.02); }
+.gallery-hero-empty { width:100%; height:100%; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; color:var(--muted); gap:.5rem; opacity:.35; }
+.gallery-thumbs { display:flex; gap:.5rem; flex-wrap:wrap; }
+.gallery-thumb { width:72px; height:72px; border-radius:7px; overflow:hidden;
+    border:2px solid var(--border); cursor:pointer; transition:all .18s; flex-shrink:0; }
+.gallery-thumb:hover, .gallery-thumb.active { border-color:var(--gold); }
+.gallery-thumb img { width:100%; height:100%; object-fit:cover; }
+.gallery-count { display:flex; align-items:center; justify-content:center;
+    width:72px; height:72px; border-radius:7px; border:1.5px dashed var(--border);
+    font-size:.75rem; color:var(--muted); font-weight:600; cursor:pointer; }
+.gallery-count:hover { border-color:var(--gold); color:var(--gold); }
+
+/* ─ INFO GRID ─ */
+.info-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem 2rem; }
+.info-item {}
+.ii-label { font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:.35rem; }
+.ii-value { font-size:.92rem; font-weight:600; color:var(--deep); display:flex; align-items:center; gap:.45rem; }
+.ii-value .icon { color:var(--gold); font-size:.85rem; }
+.ii-value.large { font-size:1.1rem; }
+
+/* ─ AMENITY CHIPS ─ */
+.amenity-chips { display:flex; flex-wrap:wrap; gap:.5rem; }
+.amenity-chip { display:inline-flex; align-items:center; gap:.4rem; padding:.45rem .9rem;
+    border:1.5px solid var(--border); border-radius:7px; font-size:.8rem; color:var(--muted); }
+.amenity-chip.on { border-color:var(--gold); background:rgba(212,160,23,.07); color:var(--deep); font-weight:600; }
+.amenity-chip .chip-icon { font-size:.95rem; }
+
+/* ─ PRICE SLOTS ─ */
+.day-tabs { display:flex; gap:.35rem; flex-wrap:wrap; margin-bottom:1rem; }
+.day-tab { padding:.4rem .85rem; border:1.5px solid var(--border); border-radius:6px;
+    font-size:.76rem; font-weight:600; cursor:pointer; color:var(--muted);
+    background:#fff; transition:all .15s; }
+.day-tab:hover { border-color:rgba(212,160,23,.5); }
+.day-tab.active { border-color:var(--gold); background:rgba(212,160,23,.08); color:var(--deep); }
+.slot-list { display:flex; flex-direction:column; gap:.4rem; }
+.slot-row { display:flex; align-items:center; gap:.75rem; padding:.65rem 1rem;
+    border:1px solid var(--border); border-radius:8px; background:var(--cream); }
+.slot-time { font-size:.86rem; font-weight:700; color:var(--deep); min-width:110px; }
+.slot-price { font-size:.86rem; font-weight:700; color:#16a34a; margin-left:auto; }
+.slot-badge { font-size:.65rem; padding:.2rem .55rem; border-radius:4px; font-weight:700;
+    background:rgba(212,160,23,.1); color:#92660a; }
+.slot-empty { font-size:.8rem; color:var(--muted); text-align:center; padding:1.25rem;
+    border:1.5px dashed var(--border); border-radius:8px; }
+
+/* ─ BOOKING TABLE ─ */
+.bk-table { width:100%; border-collapse:collapse; font-size:.83rem; }
+.bk-table th { padding:.6rem .85rem; text-align:left; font-size:.68rem; font-weight:700;
+    letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+    border-bottom:1px solid var(--border); background:var(--warm); }
+.bk-table td { padding:.7rem .85rem; border-bottom:1px solid var(--border); color:var(--deep); vertical-align:middle; }
+.bk-table tr:last-child td { border-bottom:none; }
+.bk-table tr:hover td { background:var(--cream); }
+.bk-status { display:inline-block; padding:.22rem .6rem; border-radius:4px; font-size:.7rem; font-weight:700; }
+.bk-confirmed  { background:rgba(22,163,74,.1);  color:#16a34a; }
+.bk-pending    { background:rgba(212,160,23,.1); color:#92660a; }
+.bk-cancelled  { background:rgba(201,75,42,.08); color:#c94b2a; }
+.bk-completed  { background:rgba(99,102,241,.1); color:#4f46e5; }
+.bk-empty { text-align:center; padding:2rem; color:var(--muted); font-size:.84rem; }
+.bk-empty i { display:block; font-size:1.8rem; margin-bottom:.5rem; opacity:.3; }
+
+/* ─ STAT MINI ─ */
+.stat-mini-row { display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
+    background:var(--border); border-radius:10px; overflow:hidden; margin-bottom:1.25rem; }
+.stat-mini { background:#fff; padding:1rem 1.25rem; text-align:center; }
+.stat-mini-n { font-family:'Playfair Display',serif; font-size:1.6rem; font-weight:700; color:var(--deep); line-height:1; }
+.stat-mini-l { font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-top:.3rem; }
+
+/* ─ DESC BLOCK ─ */
+.desc-block { font-size:.88rem; color:var(--deep); line-height:1.7;
+    background:var(--cream); border-radius:8px; padding:1rem 1.25rem;
+    border-left:3px solid var(--gold); }
+.desc-empty { font-size:.84rem; color:var(--muted); font-style:italic; }
+
+/* ─ LIGHTBOX ─ */
+.lbox { position:fixed; inset:0; background:rgba(26,18,9,.92); z-index:9999;
+    display:none; align-items:center; justify-content:center; }
+.lbox.on { display:flex; }
+.lbox-img { max-width:90vw; max-height:85vh; border-radius:8px; object-fit:contain; }
+.lbox-close { position:fixed; top:1.2rem; right:1.5rem; width:40px; height:40px;
+    border-radius:50%; background:rgba(255,255,255,.12); border:none; color:#fff;
+    cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center; }
+.lbox-close:hover { background:rgba(255,255,255,.22); }
+
+@@media(max-width:640px) {
+    .cf-title { font-size:1.5rem; }
+    .info-grid { grid-template-columns:1fr; }
+    .stat-mini-row { grid-template-columns:1fr; }
+    .cf-head { flex-direction:column; }
+    .cf-head-acts { width:100%; }
+    .btn-edit, .btn-back { flex:1; justify-content:center; }
+}
 </style>
 
-<!-- BREADCRUMB -->
-<div class="bc">
-    <a href="@Url.Action("Index", "Facility")"><i class="bi bi-house"></i> Trang chủ</a>
-    <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
-    <a href="@Url.Action("Details", "Facility", new { id = Model.FacilityId })">@Model.Facility?.FacilityName</a>
-    <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
-    <span class="bc-cur">@Model.CourtNumber</span>
-</div>
+<div class="cf-wrap">
 
-<!-- HERO -->
-<div class="hero">
-    <div class="hero-wrap">
-        <!-- Gallery -->
-        <div>
-            <div id="courtCarousel" class="carousel slide gallery" data-bs-ride="carousel">
-                <div class="carousel-indicators">
-                    @for (int i = 0; i < allImgs.Count; i++)
-                    {
-                        <button type="button" data-bs-target="#courtCarousel" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")"></button>
-                    }
-                </div>
-                <div class="carousel-inner">
-                    @if (allImgs.Any())
-                    {
-                        for (int i = 0; i < allImgs.Count; i++)
-                        {
-                            <div class="carousel-item @(i == 0 ? "active" : "")">
-                                <img src="@allImgs[i]" class="d-block w-100" alt="@Model.CourtNumber" />
-                            </div>
-                        }
-                    }
-                    else
-                    {
-                        <div class="carousel-item active">
-                            <img src="/images/placeholder-court.jpg" class="d-block w-100" alt="Chưa có ảnh" />
-                        </div>
-                    }
-                </div>
-                @if (allImgs.Count > 1)
-                {
-                    <button class="carousel-control-prev" type="button" data-bs-target="#courtCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#courtCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
-                }
-            </div>
-            <!-- Thumbnail strip -->
-            @if (allImgs.Count > 1)
-            {
-                <div class="thumbs" id="thumbStrip">
-                    @for (int i = 0; i < allImgs.Count; i++)
-                    {
-                        <img src="@allImgs[i]" class="@(i == 0 ? "act" : "")" data-idx="@i" onclick="goSlide(@i)" alt="thumb @i" />
-                    }
-                </div>
-            }
-        </div>
-
-        <!-- Info + CTA -->
-        <div class="iblock">
-            <div class="i-pills">
-                <div class="pill pill-type">
-                    @(Model.CourtType == "Indoor" ? "Trong nhà" : "Ngoài trời")
-                </div>
-                @if (Model.Status == "Maintenance")
-                {
-                    <div class="pill pill-maint"><i class="bi bi-tools"></i> Đang bảo trì</div>
-                }
-                else
-                {
-                    <div class="pill pill-open"><i class="bi bi-circle-fill" style="font-size:.38rem"></i> Sẵn sàng</div>
-                }
-            </div>
-
-            <h1 class="i-title">@Model.CourtNumber</h1>
-            <div class="i-sub"><i class="bi bi-building"></i> @Model.Facility?.FacilityName</div>
-            @if (!string.IsNullOrEmpty(Model.Facility?.Address))
-            {
-                <div class="i-sub"><i class="bi bi-geo-alt-fill" style="color:var(--R)"></i> @Model.Facility!.Address@(!string.IsNullOrEmpty(Model.Facility.District) ? ", " + Model.Facility.District : "")@(!string.IsNullOrEmpty(Model.Facility.City) ? ", " + Model.Facility.City : "")</div>
-            }
-
-            <div class="stats">
-                <div class="stat">
-                    <div class="sv">@Model.SurfaceTypeLabel</div>
-                    <div class="sl">Mặt sân</div>
-                </div>
-                <div class="stat">
-                    <div class="sv">@(Model.HasLighting ? "Có" : "Không")</div>
-                    <div class="sl">Đèn chiếu sáng</div>
-                </div>
-                <div class="stat">
-                    <div class="sv">@(Model.HasAC ? "Có" : "Không")</div>
-                    <div class="sl">Điều hoà</div>
-                </div>
-            </div>
-
-            <div class="tags">
-                <div class="tag"><i class="bi bi-layers"></i> @Model.CourtTypeLabel</div>
-                <div class="tag"><i class="bi bi-grid-3x3"></i> @Model.SurfaceTypeLabel</div>
+    <!-- ════ HEADER ════ -->
+    <div class="cf-head">
+        <div class="cf-head-left">
+            <div class="cf-head-label">Chi Tiết Sân</div>
+            <h1 class="cf-title">Sân <em>@Model.CourtNumber</em></h1>
+            <div class="cf-sub">
+                @(Model.Facility?.FacilityName ?? "—")
                 @if (!string.IsNullOrEmpty(Model.FloorNumber))
                 {
-                    <div class="tag"><i class="bi bi-building-up"></i> @Model.FloorNumber</div>
-                }
-                @if (Model.HasLighting)
-                {
-                    <div class="tag"><i class="bi bi-lightbulb-fill"></i> Đèn chiếu sáng</div>
-                }
-                @if (Model.HasAC)
-                {
-                    <div class="tag"><i class="bi bi-wind"></i> Điều hoà</div>
+                    <span style="margin:0 .4rem;color:var(--border);">·</span>
+                    <span>@Model.FloorNumber</span>
                 }
             </div>
+        </div>
+        <div class="cf-head-acts">
+            <a asp-action="Edit" asp-route-id="@Model.CourtId" class="btn-edit">
+                <i class="bi bi-pencil-square"></i> Chỉnh Sửa
+            </a>
+            <a asp-action="Index" class="btn-back">
+                <i class="bi bi-arrow-left"></i> Quay Lại
+            </a>
+        </div>
+    </div>
 
-            <!-- CTA Box -->
-            <div class="cta-box">
-                @if (Model.HourlyRate.HasValue && Model.HourlyRate > 0)
+    <!-- ════ STAT MINI ════ -->
+    <div class="stat-mini-row">
+        <div class="stat-mini">
+            <div class="stat-mini-n">@(Model.Bookings?.Count ?? 0)</div>
+            <div class="stat-mini-l">Tổng Đặt Sân</div>
+        </div>
+        <div class="stat-mini">
+            <div class="stat-mini-n">@(Model.PriceSlots?.Count(ps => ps.IsActive) ?? 0)</div>
+            <div class="stat-mini-l">Khung Giờ Hoạt Động</div>
+        </div>
+        <div class="stat-mini">
+            <div class="stat-mini-n">@(Model.CourtImages?.Count ?? 0)</div>
+            <div class="stat-mini-l">Hình Ảnh</div>
+        </div>
+    </div>
+
+    <!-- ════ 1. HÌNH ẢNH ════ -->
+    <div class="cf-card">
+        <div class="cf-card-head">
+            <i class="bi bi-images cf-card-icon"></i>
+            <span class="cf-card-title">Hình Ảnh Sân</span>
+            @if (allImages.Any())
+            {
+                <span class="cf-card-badge" style="font-size:.72rem;color:var(--muted);">@allImages.Count ảnh</span>
+            }
+        </div>
+        <div class="cf-card-body">
+            @if (allImages.Any())
+            {
+                <!-- Hero image -->
+                <div class="gallery-hero" id="galleryHero" onclick="openLightbox(document.getElementById('heroImg').src)">
+                    <img id="heroImg" src="@(primaryImg?.ImagePath ?? allImages.First().ImagePath)" alt="@Model.CourtNumber" />
+                </div>
+                <!-- Thumbs -->
+                @if (allImages.Count > 1)
                 {
-                    <div>
-                        <div class="cta-price">
-                            @Model.HourlyRate.Value.ToString("N0")đ <span>/ giờ</span>
-                        </div>
-                        <div style="font-size:.72rem;color:var(--M);margin-top:.3rem">Giá có thể thay đổi theo khung giờ</div>
+                    <div class="gallery-thumbs">
+                        @for (int i = 0; i < Math.Min(allImages.Count, 6); i++)
+                        {
+                            var img = allImages[i];
+                            <div class="gallery-thumb @(img.IsPrimary ? "active" : "")"
+                                 onclick="switchHero('@img.ImagePath', this)">
+                                <img src="@img.ImagePath" alt="" />
+                            </div>
+                        }
+                        @if (allImages.Count > 6)
+                        {
+                            <div class="gallery-count" onclick="openLightbox('@allImages[6].ImagePath')">
+                                +@(allImages.Count - 6)
+                            </div>
+                        }
                     </div>
                 }
+            }
+            else
+            {
+                <div class="gallery-hero" style="cursor:default;">
+                    <div class="gallery-hero-empty">
+                        <i class="bi bi-image" style="font-size:2.5rem;"></i>
+                        <span style="font-size:.82rem;">Chưa có hình ảnh</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
 
-                @if (Model.Status == "Maintenance")
-                {
-                    <button class="btn-book-main" disabled style="opacity:.5;cursor:not-allowed">
-                        <i class="bi bi-tools"></i> Sân đang bảo trì
-                    </button>
+    <!-- ════ 2. THÔNG TIN SÂN ════ -->
+    <div class="cf-card">
+        <div class="cf-card-head">
+            <i class="bi bi-card-text cf-card-icon"></i>
+            <span class="cf-card-title">Thông Tin Sân</span>
+            <span class="cf-card-badge">
+                @{
+                    var bg = Model.Status switch {
+                        "Available"   => "rgba(22,163,74,.08)",
+                        "Active"      => "rgba(212,160,23,.1)",
+                        "Maintenance" => "rgba(201,75,42,.08)",
+                        _ => "rgba(138,117,96,.1)"
+                    };
                 }
-                else
+                <span class="status-badge" style="background:@bg; color:@statusColor;">
+                    <span class="status-dot" style="background:@statusColor;"></span>
+                    @Model.StatusLabel
+                </span>
+            </span>
+        </div>
+        <div class="cf-card-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="ii-label">Tên / Số Sân</div>
+                    <div class="ii-value large"><i class="bi bi-grid-3x3-gap icon"></i>@Model.CourtNumber</div>
+                </div>
+                <div class="info-item">
+                    <div class="ii-label">Cơ Sở</div>
+                    <div class="ii-value"><i class="bi bi-building icon"></i>@(Model.Facility?.FacilityName ?? "—")</div>
+                </div>
+                <div class="info-item">
+                    <div class="ii-label">Vị Trí Sân</div>
+                    <div class="ii-value">
+                        @if (Model.CourtType == "Indoor")
+                        {
+                            <span>🏠</span>
+                        }
+                        else
+                        {
+                            <span>☀️</span>
+                        }
+                        @Model.CourtTypeLabel
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="ii-label">Loại Mặt Sân</div>
+                    <div class="ii-value">
+                        @if (Model.SurfaceType == "PVC")       { <span>🟨</span> }
+                        else if (Model.SurfaceType == "Wood")   { <span>🪵</span> }
+                        else                                    { <span>🎨</span> }
+                        @Model.SurfaceTypeLabel
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.FloorNumber))
                 {
-                    // Nếu đã chọn slot ở facility page, truyền thẳng vào Booking/Create
-                    string bookUrl;
-                    if (!string.IsNullOrEmpty(startTime))
-                    {
-                        bookUrl = Url.Action("Create", "Booking", new { courtId = Model.CourtId, bookingDate = bookDate, startTime, endTime })!;
-                    }
-                    else
-                    {
-                        // Quay lại facility để chọn slot
-                        bookUrl = Url.Action("Details", "Facility", new { id = Model.FacilityId })!;
-                    }
-                    <a href="@bookUrl" class="btn-book-main">
-                        <i class="bi bi-calendar-check-fill"></i>
-                        @(string.IsNullOrEmpty(startTime) ? "Chọn khung giờ & Đặt sân" : "Xác nhận đặt sân")
-                    </a>
+                    <div class="info-item">
+                        <div class="ii-label">Vị Trí Tầng</div>
+                        <div class="ii-value"><i class="bi bi-layers icon"></i>@Model.FloorNumber</div>
+                    </div>
                 }
-                <a href="@Url.Action("Details", "Facility", new { id = Model.FacilityId })" class="btn-back">
-                    <i class="bi bi-arrow-left"></i> Quay lại cơ sở
-                </a>
+                <div class="info-item">
+                    <div class="ii-label">Ngày Tạo</div>
+                    <div class="ii-value"><i class="bi bi-calendar3 icon"></i>@Model.CreatedAt.ToString("dd/MM/yyyy")</div>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- ════ 3. TIỆN ÍCH ════ -->
+    <div class="cf-card">
+        <div class="cf-card-head">
+            <i class="bi bi-lightning-charge cf-card-icon"></i>
+            <span class="cf-card-title">Tiện Ích Sân</span>
+        </div>
+        <div class="cf-card-body">
+            <div class="amenity-chips">
+                <div class="amenity-chip @(Model.HasLighting ? "on" : "")">
+                    <span class="chip-icon">💡</span>
+                    Đèn chiếu sáng
+                    @if (Model.HasLighting)
+                    {
+                        <i class="bi bi-check-circle-fill" style="color:var(--gold);font-size:.8rem;"></i>
+                    }
+                </div>
+                <div class="amenity-chip @(Model.HasAC ? "on" : "")">
+                    <span class="chip-icon">❄️</span>
+                    Điều hoà không khí
+                    @if (Model.HasAC)
+                    {
+                        <i class="bi bi-check-circle-fill" style="color:var(--gold);font-size:.8rem;"></i>
+                    }
+                </div>
+            </div>
+            @if (!Model.HasLighting && !Model.HasAC)
+            {
+                <div class="desc-empty" style="margin-top:.75rem;">Sân chưa được đăng ký tiện ích nào.</div>
+            }
+        </div>
+    </div>
+
+    <!-- ════ 4. MÔ TẢ ════ -->
+    <div class="cf-card">
+        <div class="cf-card-head">
+            <i class="bi bi-chat-left-text cf-card-icon"></i>
+            <span class="cf-card-title">Mô Tả Thêm</span>
+        </div>
+        <div class="cf-card-body">
+            @if (!string.IsNullOrWhiteSpace(Model.Description))
+            {
+                <div class="desc-block">@Model.Description</div>
+            }
+            else
+            {
+                <div class="desc-empty">Chưa có mô tả cho sân này.</div>
+            }
+        </div>
+    </div>
+
+    <!-- ════ 5. KHUNG GIỜ & GIÁ ════ -->
+    <div class="cf-card">
+        <div class="cf-card-head">
+            <i class="bi bi-clock cf-card-icon"></i>
+            <span class="cf-card-title">Khung Giờ &amp; Giá Sân</span>
+            <span class="cf-card-badge" style="font-size:.72rem;color:var(--muted);">
+                @(Model.PriceSlots?.Count(ps => ps.IsActive) ?? 0) khung giờ hoạt động
+            </span>
+        </div>
+        <div class="cf-card-body">
+            @if (Model.PriceSlots?.Any() == true)
+            {
+                <!-- Day tabs -->
+                <div class="day-tabs" id="dayTabs">
+                    @{
+                        var days = Model.PriceSlots
+                            .Select(ps => ps.DayOfWeek)
+                            .Distinct()
+                            .OrderBy(d => d)
+                            .ToList();
+                        bool firstDay = true;
+                    }
+                    @foreach (var day in days)
+                    {
+                        <div class="day-tab @(firstDay ? "active" : "")"
+                             data-day="@((int?)day ?? -1)"
+                             onclick="switchDay(this)">
+                            @DayName(day)
+                        </div>
+                        firstDay = false;
+                    }
+                </div>
+
+                <!-- Slot panels -->
+                {
+                    bool firstPanel = true;
+                    foreach (var day in days)
+                    {
+                        var slots = Model.PriceSlots
+                            .Where(ps => ps.DayOfWeek == day)
+                            .OrderBy(ps => ps.StartTime)
+                            .ToList();
+
+                        <div class="slot-panel @(firstPanel ? "" : "d-none")"
+                             data-day="@((int?)day ?? -1)" id="panel-day-@((int?)day ?? -1)">
+                            <div class="slot-list">
+                                @foreach (var slot in slots)
+                                {
+                                    <div class="slot-row" style="@(!slot.IsActive ? "opacity:.45;" : "")">
+                                        <i class="bi bi-clock" style="color:var(--gold);font-size:.85rem;"></i>
+                                        <span class="slot-time">
+                                            @slot.StartTime.ToString(@"hh\:mm") – @slot.EndTime.ToString(@"hh\:mm")
+                                        </span>
+                                        @if (slot.IsPeakHour)
+                                        {
+                                            <span class="slot-badge">Cao điểm</span>
+                                        }
+                                        <span class="slot-price">@slot.Price.ToString("N0")đ/giờ</span>
+                                        @if (!slot.IsActive)
+                                        {
+                                            <span style="font-size:.68rem;color:var(--muted);background:var(--warm);
+                                                padding:.2rem .55rem;border-radius:4px;">Tắt</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        firstPanel = false;
+                    }
+                }
+            }
+            else
+            {
+                <div class="slot-empty">
+                    <i class="bi bi-clock" style="font-size:1.8rem;display:block;margin-bottom:.5rem;opacity:.3;"></i>
+                    Chưa cấu hình khung giờ. <a asp-action="Edit" asp-route-id="@Model.CourtId"
+                       style="color:var(--gold);text-decoration:none;">Thêm ngay →</a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- ════ 6. LỊCH ĐẶT SÂN GẦN ĐÂY ════ -->
+    <div class="cf-card">
+        <div class="cf-card-head">
+            <i class="bi bi-calendar3 cf-card-icon"></i>
+            <span class="cf-card-title">Lịch Đặt Sân Gần Đây</span>
+            <span class="cf-card-badge" style="font-size:.72rem;color:var(--muted);">30 ngày qua</span>
+        </div>
+        <div class="cf-card-body" style="padding:0;">
+            @if (recentBooks.Any())
+            {
+                <table class="bk-table">
+                    <thead>
+                        <tr>
+                            <th>Khách hàng</th>
+                            <th>Ngày đặt</th>
+                            <th>Khung giờ</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var b in recentBooks)
+                        {
+                            var stCls = b.Status?.ToLower() switch {
+                                "confirmed" => "bk-confirmed",
+                                "pending"   => "bk-pending",
+                                "cancelled" => "bk-cancelled",
+                                "completed" => "bk-completed",
+                                _ => ""
+                            };
+                            var stLabel = b.Status switch {
+                                "Confirmed" => "Xác nhận",
+                                "Pending"   => "Chờ duyệt",
+                                "Cancelled" => "Đã hủy",
+                                "Completed" => "Hoàn thành",
+                                _ => b.Status
+                            };
+                            <tr>
+@*                                 <td>
+                                    <div style="font-weight:600;">@(b.User?.FullName ?? b.User?.UserName ?? "—")</div>
+                                    <div style="font-size:.74rem;color:var(--muted);">@(b.User?.PhoneNumber ?? "")</div>
+                                </td>
+ *@                                <td>@b.BookingDate.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @b.StartTime.ToString(@"hh\:mm") – @b.EndTime.ToString(@"hh\:mm")
+                                </td>
+                                <td style="font-weight:700;color:#16a34a;">
+                                    @b.TotalPrice.ToString("N0")đ
+                                </td>
+                                <td><span class="bk-status @stCls">@stLabel</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="bk-empty">
+                    <i class="bi bi-calendar-x"></i>
+                    Chưa có lịch đặt nào trong 30 ngày qua
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- ════ BOTTOM ACTIONS ════ -->
+    <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
+        <a asp-action="Edit" asp-route-id="@Model.CourtId" class="btn-edit">
+            <i class="bi bi-pencil-square"></i> Chỉnh Sửa Sân
+        </a>
+        <a asp-action="Index" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Quay Lại Danh Sách
+        </a>
+    </div>
+
 </div>
 
-<!-- CONTENT SECTION -->
-<div class="content-wrap">
-
-    <!-- ── Thông tin chi tiết ── -->
-    <div class="rich-section">
-        <h2 class="sec-title"><i class="bi bi-info-circle-fill"></i> Thông tin sân</h2>
-        <div class="info-grid">
-            <div class="info-item">
-                <div class="info-icon"><i class="bi bi-grid-3x3-gap-fill"></i></div>
-                <div>
-                    <div class="info-lbl">Tên sân</div>
-                    <div class="info-val">@Model.CourtNumber</div>
-                </div>
-            </div>
-            <div class="info-item">
-                <div class="info-icon"><i class="bi bi-house-door-fill"></i></div>
-                <div>
-                    <div class="info-lbl">Vị trí</div>
-                    <div class="info-val">@Model.CourtTypeLabel</div>
-                </div>
-            </div>
-            <div class="info-item">
-                <div class="info-icon"><i class="bi bi-layers-fill"></i></div>
-                <div>
-                    <div class="info-lbl">Loại mặt sân</div>
-                    <div class="info-val">@Model.SurfaceTypeLabel</div>
-                </div>
-            </div>
-            @if (!string.IsNullOrEmpty(Model.FloorNumber))
-            {
-                <div class="info-item">
-                    <div class="info-icon"><i class="bi bi-building"></i></div>
-                    <div>
-                        <div class="info-lbl">Vị trí tầng</div>
-                        <div class="info-val">@Model.FloorNumber</div>
-                    </div>
-                </div>
-            }
-            <div class="info-item">
-                <div class="info-icon"><i class="bi bi-lightbulb-fill"></i></div>
-                <div>
-                    <div class="info-lbl">Đèn chiếu sáng</div>
-                    <div class="info-val">@(Model.HasLighting ? "✔ Có đèn chiếu sáng" : "Không có")</div>
-                </div>
-            </div>
-            <div class="info-item">
-                <div class="info-icon"><i class="bi bi-wind"></i></div>
-                <div>
-                    <div class="info-lbl">Điều hoà</div>
-                    <div class="info-val">@(Model.HasAC ? "✔ Có điều hoà" : "Không có")</div>
-                </div>
-            </div>
-            @if (Model.HourlyRate.HasValue && Model.HourlyRate > 0)
-            {
-                <div class="info-item">
-                    <div class="info-icon"><i class="bi bi-tag-fill"></i></div>
-                    <div>
-                        <div class="info-lbl">Giá thuê</div>
-                        <div class="info-val">@Model.HourlyRate.Value.ToString("N0") đ/giờ</div>
-                    </div>
-                </div>
-            }
-            <div class="info-item">
-                <div class="info-icon"><i class="bi bi-check2-circle"></i></div>
-                <div>
-                    <div class="info-lbl">Tình trạng</div>
-                    <div class="info-val">@Model.StatusLabel</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── Mô tả chi tiết dạng bài viết (hỗ trợ HTML / văn bản + ảnh) ── -->
-    @if (!string.IsNullOrWhiteSpace(Model.Description))
-    {
-        <div class="rich-section">
-            <h2 class="sec-title"><i class="bi bi-file-text-fill"></i> Mô tả sân</h2>
-            <div class="article-body">
-                @* Nếu Description chứa HTML (thẻ <p>, <img>, <h2>...) sẽ render đúng *@
-                @Html.Raw(Model.Description)
-            </div>
-        </div>
-    }
-
-    <!-- ── Thông tin cơ sở ── -->
-    @if (Model.Facility != null)
-    {
-        <div class="rich-section">
-            <h2 class="sec-title"><i class="bi bi-building-fill"></i> Thông tin cơ sở</h2>
-
-            <div class="fac-info">
-                @{
-                    var facPrimary = Model.Facility.FacilityImages?.FirstOrDefault(i => i.IsPrimary)?.ImagePath
-                    ?? Model.Facility.FacilityImages?.FirstOrDefault()?.ImagePath
-                    ?? Model.Facility.ImageUrl;
-                }
-                @if (!string.IsNullOrEmpty(facPrimary))
-                {
-                    <img src="@facPrimary" class="fac-img" alt="@Model.Facility.FacilityName" />
-                }
-                <div>
-                    <div class="fac-name">@Model.Facility.FacilityName</div>
-                    @if (!string.IsNullOrEmpty(Model.Facility.Address))
-                    {
-                        <div class="fac-addr">
-                            <i class="bi bi-geo-alt-fill"></i>
-                            @Model.Facility.Address@(!string.IsNullOrEmpty(Model.Facility.District) ? ", " + Model.Facility.District : "")@(!string.IsNullOrEmpty(Model.Facility.City) ? ", " + Model.Facility.City : "")
-                        </div>
-                    }
-                    @if (!string.IsNullOrEmpty(Model.Facility.Phone))
-                    {
-                        <div class="fac-addr" style="margin-top:.3rem">
-                            <i class="bi bi-telephone-fill"></i> @Model.Facility.Phone
-                        </div>
-                    }
-                    @if (Model.Facility.OpenTime.HasValue)
-                    {
-                        <div class="fac-addr" style="margin-top:.3rem">
-                            <i class="bi bi-clock-fill" style="color:var(--G)"></i>
-                            @Model.Facility.OpenTime.Value.ToString(@"hh\:mm") – @Model.Facility.CloseTime?.ToString(@"hh\:mm")
-                        </div>
-                    }
-                </div>
-            </div>
-
-            @if (!string.IsNullOrEmpty(Model.Facility.Description))
-            {
-                <div class="article-body" style="margin-top:.5rem">
-                    @Html.Raw(Model.Facility.Description)
-                </div>
-            }
-        </div>
-    }
-
-    <!-- ── Nút hành động cuối trang ── -->
-    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:1rem">
-        <a href="@Url.Action("Details", "Facility", new { id = Model.FacilityId })" class="btn-back" style="padding:.75rem 1.8rem;font-size:.86rem">
-            <i class="bi bi-arrow-left"></i> Quay lại chọn sân
-        </a>
-        @if (Model.Status != "Maintenance")
-        {
-            string bookUrlBottom = string.IsNullOrEmpty(startTime)
-            ? Url.Action("Details", "Facility", new { id = Model.FacilityId })!
-            : Url.Action("Create", "Booking", new { courtId = Model.CourtId, bookingDate = bookDate, startTime, endTime })!;
-            <a href="@bookUrlBottom" class="btn-book-main" style="max-width:320px">
-                <i class="bi bi-calendar-check-fill"></i>
-                @(string.IsNullOrEmpty(startTime) ? "Chọn khung giờ & Đặt sân" : "Xác nhận đặt sân")
-            </a>
-        }
-    </div>
+<!-- ════ LIGHTBOX ════ -->
+<div class="lbox" id="lightbox" onclick="closeLightbox()">
+    <button class="lbox-close" onclick="closeLightbox()"><i class="bi bi-x-lg"></i></button>
+    <img class="lbox-img" id="lboxImg" src="" alt="" onclick="event.stopPropagation()" />
 </div>
 
 @section Scripts {
-    <script>
-        // Carousel + thumb sync
-        var carousel = document.getElementById('courtCarousel');
-        if (carousel) {
-            carousel.addEventListener('slid.bs.carousel', function(e) {
-                document.querySelectorAll('#thumbStrip img').forEach(function(t, idx) {
-                    t.classList.toggle('act', idx === e.to);
-                });
-            });
-            new bootstrap.Carousel(carousel, { interval: 4000, wrap: true });
-        }
+<script>
+// Gallery thumb switch
+function switchHero(src, thumbEl) {
+    document.getElementById('heroImg').src = src;
+    document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+    if (thumbEl) thumbEl.classList.add('active');
+}
 
-        function goSlide(idx) {
-            var c = bootstrap.Carousel.getOrCreateInstance(document.getElementById('courtCarousel'));
-            c.to(idx);
-        }
-    </script>
+// Lightbox
+function openLightbox(src) {
+    document.getElementById('lboxImg').src = src;
+    document.getElementById('lightbox').classList.add('on');
+}
+function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('on');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+// Day tab switching
+function switchDay(tabEl) {
+    document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+    tabEl.classList.add('active');
+    const day = tabEl.dataset.day;
+    document.querySelectorAll('.slot-panel').forEach(p => {
+        p.classList.toggle('d-none', p.dataset.day !== day);
+    });
+}
+</script>
 }

@@ -398,7 +398,7 @@
                 Tổng cộng @(Model?.Count() ?? 0) đơn hàng trong hệ thống
             </div>
         </div>
-        <button class="export-btn" onclick="exportOrders()">
+        <button class="export-btn" onclick="Swal.fire({icon:'info',title:'Tính năng đang phát triển',text:'Xuất Excel sẽ có trong phiên bản tới.',timer:2000,showConfirmButton:false})">
             <i class="bi bi-download"></i> Xuất Excel
         </button>
     </div>
@@ -432,18 +432,62 @@
         </div>
     </div>
 
-    <!-- TOOLBAR -->
+    <!-- DATE FILTER FORM -->
+    <form method="get" id="filterForm" style="margin-bottom:1.25rem;">
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end;">
+            <div>
+                <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:.3rem;">Từ ngày</label>
+                <input type="date" name="fromDate" class="tb-sel"
+                       value="@(Context.Request.Query["fromDate"].ToString())" />
+            </div>
+            <div>
+                <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:.3rem;">Đến ngày</label>
+                <input type="date" name="toDate" class="tb-sel"
+                       value="@(Context.Request.Query["toDate"].ToString())" />
+            </div>
+            <div>
+                <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:.3rem;">Loại đơn</label>
+                @{
+                    var curOrderType = Context.Request.Query["orderType"].ToString();
+                    var curStatus = Context.Request.Query["status"].ToString();
+                }
+                <select name="orderType" class="tb-sel" onchange="this.form.submit()">
+                    <option value="">Tất cả loại</option>
+                    <option value="booking" selected="@(curOrderType == "booking" ? "selected" : null)">Đặt Sân</option>
+                    <option value="product" selected="@(curOrderType == "product" ? "selected" : null)">Sản Phẩm</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:.3rem;">Trạng thái</label>
+                <select name="status" class="tb-sel" onchange="this.form.submit()">
+                    <option value="">Tất cả</option>
+                    <option value="Pending" selected="@(curStatus == "Pending" ? "selected" : null)">Chờ xử lý</option>
+                    <option value="Confirmed" selected="@(curStatus == "Confirmed" ? "selected" : null)">Đã xác nhận</option>
+                    <option value="Shipping" selected="@(curStatus == "Shipping" ? "selected" : null)">Đang giao</option>
+                    <option value="Completed" selected="@(curStatus == "Completed" ? "selected" : null)">Hoàn thành</option>
+                    <option value="Cancelled" selected="@(curStatus == "Cancelled" ? "selected" : null)">Đã hủy</option>
+                </select>
+            </div>
+            <button type="submit" class="export-btn" style="padding:.65rem 1.2rem;">
+                <i class="bi bi-funnel"></i> Lọc
+            </button>
+            <a href="@Url.Action("Index")" class="export-btn" style="padding:.65rem 1.2rem;background:#fff;color:var(--muted);border:1px solid var(--border);">
+                <i class="bi bi-x-circle"></i> Xóa lọc
+            </a>
+        </div>
+    </form>
+
+    <!-- TOOLBAR (client-side search) -->
     <div class="toolbar">
         <div class="tab-group">
             <button class="tab-btn active" data-filter="all">Tất Cả</button>
             <button class="tab-btn" data-filter="product">Sản Phẩm</button>
             <button class="tab-btn" data-filter="booking">Đặt Sân</button>
-            <button class="tab-btn" data-filter="package">Gói Tập</button>
         </div>
 
         <div class="tb-search" style="margin-left:auto;">
             <i class="bi bi-search"></i>
-            <input type="text" id="orderSearch" placeholder="Tìm mã đơn, khách hàng..." oninput="filterOrders()" />
+            <input type="text" id="orderSearch" placeholder="Tìm mã đơn..." oninput="filterOrders()" />
         </div>
 
         <select id="statusFilter" class="tb-sel" onchange="filterOrders()">
@@ -476,20 +520,17 @@
                 {
                     foreach (var order in Model)
                     {
-                        var typeKey = order.OrderType?.ToLower() ?? "product";
-                        <tr data-filter="@typeKey" data-status="@order.OrderStatus"
+                        var typeKey = order.OrderType ?? "product";
+                        <tr data-filter="@typeKey"
+                            data-status="@order.OrderStatus"
                             data-search="@(order.OrderCode + " " + order.OrderStatus)">
 
                             <!-- Mã đơn -->
                             <td>
                                 <div style="display:flex;align-items:center;gap:.7rem;">
-                                    @if (order.OrderType == "Booking")
+                                    @if (order.OrderType == "booking")
                                     {
                                         <span class="ot-icon ot-booking"><i class="bi bi-calendar-check"></i></span>
-                                    }
-                                    else if (order.OrderType == "Package")
-                                    {
-                                        <span class="ot-icon ot-package"><i class="bi bi-box2"></i></span>
                                     }
                                     else
                                     {
@@ -498,7 +539,7 @@
                                     <div>
                                         <div style="font-weight:700;font-size:.88rem;color:var(--deep);">@order.OrderCode</div>
                                         <div style="font-size:.69rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">
-                                            @(order.OrderType == "Booking" ? "Đặt Sân" : order.OrderType == "Package" ? "Gói Tập" : "Sản Phẩm")
+                                            @(order.OrderType == "booking" ? "Đặt Sân" : "Sản Phẩm")
                                         </div>
                                     </div>
                                 </div>
@@ -606,6 +647,7 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', function () {
@@ -616,21 +658,25 @@
         });
 
         function filterOrders() {
-            const tabFilter   = document.querySelector('.tab-btn.active')?.dataset.filter ?? 'all';
+            const tabFilter    = document.querySelector('.tab-btn.active')?.dataset.filter ?? 'all';
             const statusFilter = document.getElementById('statusFilter').value;
-            const searchVal   = document.getElementById('orderSearch').value.toLowerCase();
+            const searchVal    = document.getElementById('orderSearch').value.toLowerCase();
 
+            let visible = 0;
             document.querySelectorAll('#orderTableBody tr[data-filter]').forEach(row => {
                 const matchTab    = tabFilter === 'all' || row.dataset.filter === tabFilter;
                 const matchStatus = !statusFilter || row.dataset.status === statusFilter;
-                const matchSearch = !searchVal || row.dataset.search.toLowerCase().includes(searchVal)
-                                    || row.textContent.toLowerCase().includes(searchVal);
-                row.style.display = (matchTab && matchStatus && matchSearch) ? '' : 'none';
+                const matchSearch = !searchVal
+                    || row.dataset.search.toLowerCase().includes(searchVal)
+                    || row.textContent.toLowerCase().includes(searchVal);
+                const show = matchTab && matchStatus && matchSearch;
+                row.style.display = show ? '' : 'none';
+                if (show) visible++;
             });
-        }
 
-        function exportOrders() {
-            window.location.href = '/AdminOrder/Export';
+            // Cập nhật footer count
+            const footer = document.querySelector('.tbl-footer strong');
+            if (footer) footer.textContent = visible;
         }
     </script>
 }

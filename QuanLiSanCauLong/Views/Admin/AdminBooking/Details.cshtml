@@ -1,982 +1,1230 @@
 ﻿@model QuanLiSanCauLong.ViewModels.BookingHistoryViewModel
 @{
-    ViewData["Title"] = "Chi tiết đặt sân #" + Model.BookingCode;
-    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["Title"] = "Admin · Chi tiết đơn #" + Model.BookingCode;
+    bool isTransferUnpaid = Model.PaymentMethod == "Transfer"
+        && (Model.PaymentStatus?.ToLower() == "unpaid" || Model.PaymentStatus?.ToLower() == "pending");
 }
 
 <style>
-    @@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
-
     :root {
-        --deep: #1a1209;
-        --gold: #d4a017;
-        --gold2: #f5c842;
-        --cream: #f5f4ec;
-        --warm: #f0ead8;
-        --card: #ffffff;
-        --border: #e4d9c8;
-        --muted: #8a7560;
-        --text: #1a1209;
-        --green: #15803d;
-        --green-soft: #dcfce7;
-        --red: #dc2626;
-        --red-soft: #fef2f2;
-        --blue: #0284c7;
-        --blue-soft: #e0f2fe;
-        --purple: #7c3aed;
-        --purple-soft: #f5f3ff;
+        --D: #1a1209;
+        --D2: #231a0e;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --W: #f5ede0;
+        --S: #ede5d8;
+        --R: #c94b2a;
+        --GN: #10b981;
+        --BL: #1d4ed8;
+        --M: rgba(255,255,255,.38);
     }
 
-    body, .container-fluid {
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        background: var(--W);
         font-family: 'Outfit', sans-serif;
-        background: var(--cream);
     }
 
-    /* ── Breadcrumb ── */
-    .bc {
+    .pghd {
+        background: var(--D);
+        border-bottom: 1px solid rgba(212,160,23,.18);
+        padding: .78rem 2rem;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        position: relative;
+    }
+
+        .pghd::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,var(--G),var(--G2),transparent);
+        }
+
+        .pghd a {
+            color: var(--G2);
+            text-decoration: none;
+            font-size: .78rem;
+            font-weight: 600;
+            opacity: .8;
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+        }
+
+            .pghd a:hover {
+                opacity: 1;
+            }
+
+        .pghd .sep {
+            color: var(--M);
+            font-size: .65rem;
+        }
+
+        .pghd .cur {
+            color: var(--M);
+            font-size: .78rem;
+            font-style: italic;
+        }
+
+    .admin-chip {
+        margin-left: auto;
+        background: rgba(220,38,38,.15);
+        border: 1px solid rgba(220,38,38,.3);
+        color: #dc2626;
+        font-size: .65rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        padding: .2rem .65rem;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+    .pw {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    /* Hero */
+    .d-hero {
+        background: var(--D);
+        border: 1px solid rgba(212,160,23,.18);
+        border-radius: 10px;
+        padding: 1.8rem 2rem;
+        margin-bottom: 1.4rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1.2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .d-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 55% 100% at 80% 50%,rgba(212,160,23,.06),transparent);
+        }
+
+    .d-hero-left {
+        position: relative;
+        z-index: 1;
+    }
+
+    .d-code {
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: var(--G);
+        margin-bottom: .3rem;
+    }
+
+    .d-name {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: .4rem;
+    }
+
+    .d-addr {
+        font-size: .78rem;
+        color: var(--M);
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+    }
+
+    .d-hero-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .d-stat {
+        text-align: center;
+        padding: 1rem 1.2rem;
+        background: rgba(255,255,255,.04);
+        border: 1px solid rgba(212,160,23,.18);
+        border-radius: 8px;
+    }
+
+    .d-sv {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--G2);
+        margin-bottom: .22rem;
+    }
+
+    .d-sl {
+        font-size: .58rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--M);
+    }
+
+    /* Alert Transfer */
+    .alert-transfer {
+        background: #eff6ff;
+        border: 1.5px solid #93c5fd;
+        border-radius: 10px;
+        padding: 1.1rem 1.4rem;
+        margin-bottom: 1.4rem;
+        display: flex;
+        align-items: flex-start;
+        gap: .85rem;
+    }
+
+        .alert-transfer > i {
+            color: var(--BL);
+            font-size: 1.4rem;
+            flex-shrink: 0;
+            margin-top: .05rem;
+        }
+
+    .alert-transfer-body {
+        flex: 1;
+    }
+
+    .alert-transfer-title {
+        font-weight: 700;
+        color: var(--BL);
+        margin-bottom: .25rem;
+        font-size: .9rem;
+    }
+
+    .alert-transfer-sub {
+        font-size: .8rem;
+        color: #3b82f6;
+        line-height: 1.6;
+    }
+
+    .btn-confirm-pay {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        padding: .65rem 1.35rem;
+        background: linear-gradient(135deg,#1d4ed8,#3b82f6);
+        color: #fff;
+        border: none;
+        border-radius: 7px;
+        font-size: .82rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all .22s;
+        flex-shrink: 0;
+        align-self: center;
+    }
+
+        .btn-confirm-pay:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(29,78,216,.35);
+        }
+
+    /* Cards */
+    .c {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1.2rem;
+    }
+
+    .c-hd {
+        background: var(--D);
+        padding: .85rem 1.4rem;
         display: flex;
         align-items: center;
         gap: .5rem;
-        font-size: .82rem;
-        color: var(--muted);
-        margin-bottom: 1.4rem;
     }
 
-        .bc a {
-            color: var(--muted);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: .3rem;
-            transition: .15s;
+        .c-hd i {
+            color: var(--G);
         }
 
-            .bc a:hover {
-                color: var(--deep);
-            }
-
-    .bc-sep {
-        opacity: .5;
-    }
-
-    .bc-cur {
-        color: var(--deep);
+    .c-title {
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        font-size: .9rem;
         font-weight: 700;
-        font-family: 'Courier New', monospace;
-    }
-
-    /* ── Page top row ── */
-    .pgtop {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        margin-bottom: 1.5rem;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .page-label {
-        font-size: .68rem;
-        letter-spacing: .2em;
-        text-transform: uppercase;
-        color: var(--gold);
-        display: flex;
-        align-items: center;
-        gap: .55rem;
-        margin-bottom: .35rem;
-    }
-
-        .page-label::before {
-            content: '';
-            width: 14px;
-            height: 1px;
-            background: var(--gold);
-        }
-
-    .pg-title {
-        font-family: 'Playfair Display', serif;
-        font-size: 1.65rem;
-        font-weight: 700;
-        color: var(--deep);
-        margin: 0;
-    }
-
-        .pg-title em {
-            font-style: italic;
-            color: var(--gold);
-        }
-
-    .pg-meta {
-        font-size: .78rem;
-        color: var(--muted);
-        margin-top: .25rem;
-        font-family: 'Courier New', monospace;
-    }
-
-    /* ── Action Buttons ── */
-    .action-btns {
-        display: flex;
-        gap: .55rem;
-        flex-wrap: wrap;
-    }
-
-    .btn-act {
-        display: inline-flex;
-        align-items: center;
-        gap: .42rem;
-        padding: .55rem 1.15rem;
-        border-radius: 9px;
-        border: none;
-        font-family: 'Outfit', sans-serif;
-        font-size: .84rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: .18s;
-        text-decoration: none;
-        white-space: nowrap;
-    }
-
-    .btn-print {
-        background: var(--warm);
-        color: var(--muted);
-        border: 1px solid var(--border);
-    }
-
-        .btn-print:hover {
-            background: var(--cream);
-            color: var(--deep);
-        }
-
-    .btn-confirm {
-        background: var(--gold2);
-        color: var(--deep);
-        box-shadow: 0 2px 8px rgba(212,160,23,.3);
-    }
-
-        .btn-confirm:hover {
-            background: var(--gold);
-            color: #fff;
-        }
-
-    .btn-checkin {
-        background: var(--blue);
         color: #fff;
     }
 
-        .btn-checkin:hover {
-            background: #0369a1;
-        }
-
-    .btn-complete {
-        background: var(--green-soft);
-        color: var(--green);
-        border: 1px solid #a7f3d0;
+    .c-hd-badge {
+        margin-left: auto;
+        font-size: .65rem;
+        font-weight: 700;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        padding: .2rem .6rem;
+        border-radius: 4px;
     }
 
-        .btn-complete:hover {
-            background: var(--green);
-            color: #fff;
-            border-color: var(--green);
-        }
-
-    .btn-cancel {
-        background: var(--red-soft);
-        color: var(--red);
-        border: 1px solid #fecaca;
+    .c-bd {
+        padding: 1.3rem 1.4rem;
     }
 
-        .btn-cancel:hover {
-            background: var(--red);
-            color: #fff;
-            border-color: var(--red);
-        }
-
-    /* ── Timeline ── */
-    .timeline-wrap {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 1.5rem 2rem;
-        margin-bottom: 1.3rem;
-        box-shadow: 0 2px 10px rgba(26,18,9,.05);
+    /* Info grid */
+    .ig {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: 1rem;
     }
 
+    .ig-lbl {
+        font-size: .62rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: #8c7a68;
+        margin-bottom: .28rem;
+    }
+
+    .ig-val {
+        font-size: .9rem;
+        font-weight: 600;
+        color: var(--D);
+        display: flex;
+        align-items: center;
+        gap: .38rem;
+    }
+
+        .ig-val i {
+            color: var(--G);
+        }
+
+    .vtag {
+        background: var(--S);
+        color: #4a3728;
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        padding: .14rem .5rem;
+        border-radius: 3px;
+    }
+
+    /* Status badges */
+    .sb {
+        padding: .24rem .75rem;
+        border-radius: 4px;
+        font-size: .66rem;
+        font-weight: 700;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+        .sb.confirmed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .sb.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .sb.cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .sb.playing {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .sb.completed {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .sb.awaiting-ck {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+
+        .sb.paid {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .sb.unpaid {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+    /* Timeline */
     .timeline {
         display: flex;
         align-items: center;
+        gap: .6rem;
+        padding: 1rem 0;
+        overflow-x: auto;
     }
 
-    .tl-step {
+    .tstep {
         display: flex;
         flex-direction: column;
         align-items: center;
-        position: relative;
-        min-width: 64px;
+        gap: .3rem;
+        flex-shrink: 0;
     }
 
-    .tl-icon {
-        width: 46px;
-        height: 46px;
+    .tstep-dot {
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
-        border: 2px solid var(--border);
-        background: var(--warm);
+        border: 2px solid var(--S);
+        background: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1rem;
-        color: var(--muted);
-        transition: .3s;
+        font-size: .78rem;
+        color: #8c7a68;
+        transition: all .2s;
     }
 
-    .tl-step.done .tl-icon {
-        background: var(--green);
-        border-color: var(--green);
-        color: #fff;
-    }
-
-    .tl-step.active .tl-icon {
-        background: var(--gold2);
-        border-color: var(--gold);
-        color: var(--deep);
-        box-shadow: 0 0 0 4px rgba(245,200,66,.2);
-    }
-
-    .tl-step.cancelled .tl-icon {
-        background: var(--red);
-        border-color: var(--red);
-        color: #fff;
-    }
-
-    .tl-label {
-        margin-top: .6rem;
-        font-size: .72rem;
-        font-weight: 700;
-        color: var(--muted);
-        text-align: center;
-        white-space: nowrap;
-        letter-spacing: .04em;
-        text-transform: uppercase;
-    }
-
-    .tl-step.done .tl-label {
-        color: var(--green);
-    }
-
-    .tl-step.active .tl-label {
-        color: var(--gold);
-    }
-
-    .tl-step.cancelled .tl-label {
-        color: var(--red);
-    }
-
-    .tl-line {
-        flex: 1;
-        height: 2px;
-        background: var(--border);
-        margin: 0 .5rem;
-        position: relative;
-        top: -14px;
-    }
-
-        .tl-line.done {
-            background: var(--green);
+        .tstep-dot.done {
+            background: var(--G);
+            border-color: var(--G);
+            color: var(--D);
         }
 
-    /* ── Layout ── */
-    .detail-grid {
-        display: grid;
-        grid-template-columns: 1fr 340px;
-        gap: 1.3rem;
-        align-items: start;
-    }
-
-    @@media (max-width: 992px) {
-        .detail-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    /* ── Section Cards ── */
-    .dc {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        overflow: hidden;
-        margin-bottom: 1.2rem;
-        box-shadow: 0 2px 10px rgba(26,18,9,.05);
-    }
-
-    .dc-hd {
-        padding: 1rem 1.5rem;
-        border-bottom: 1px solid var(--border);
-        background: var(--warm);
-        display: flex;
-        align-items: center;
-        gap: .6rem;
-    }
-
-        .dc-hd i {
-            color: var(--gold);
-            font-size: .95rem;
+        .tstep-dot.cur {
+            background: var(--D);
+            border-color: var(--G);
+            color: var(--G2);
         }
 
-    .dc-hd-title {
-        font-weight: 700;
-        font-size: .92rem;
-        color: var(--deep);
-        letter-spacing: .02em;
-    }
-
-    .dc-bd {
-        padding: 1.4rem 1.5rem;
-    }
-
-    /* Court block */
-    .court-block {
-        display: flex;
-        align-items: flex-start;
-        gap: 1.1rem;
-    }
-
-    .court-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 13px;
-        background: #fef9ec;
-        border: 1px solid #f0dea0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.4rem;
-        color: var(--gold);
-        flex-shrink: 0;
-    }
-
-    .court-name {
-        font-size: 1rem;
-        font-weight: 800;
-        color: var(--deep);
-    }
-
-    .court-sub {
-        font-size: .8rem;
-        color: var(--muted);
-        margin-top: .2rem;
-    }
-
-    .court-price {
-        font-family: 'Playfair Display', serif;
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: var(--green);
-        margin-left: auto;
-    }
-
-    .time-chips {
-        display: flex;
-        gap: .6rem;
-        flex-wrap: wrap;
-        margin-top: 1rem;
-    }
-
-    .time-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: .38rem;
-        padding: .4rem .9rem;
-        border-radius: 8px;
-        font-size: .8rem;
+    .tstep-lbl {
+        font-size: .62rem;
         font-weight: 600;
-        background: var(--warm);
-        border: 1px solid var(--border);
-        color: var(--deep);
+        color: #8c7a68;
+        text-align: center;
     }
 
-        .time-chip i {
-            color: var(--gold);
-            font-size: .82rem;
+        .tstep-lbl.done {
+            color: var(--D);
         }
 
-    /* Products */
-    .prod-row {
-        display: flex;
-        align-items: center;
-        gap: .85rem;
-        padding: .75rem 0;
-        border-bottom: 1px solid var(--warm);
-    }
-
-        .prod-row:last-child {
-            border-bottom: none;
+        .tstep-lbl.cur {
+            color: var(--G);
         }
 
-    .prod-icon {
-        width: 38px;
-        height: 38px;
-        border-radius: 9px;
-        background: #fef9ec;
-        border: 1px solid #f0dea0;
+    .tline {
+        height: 2px;
+        flex: 1;
+        background: var(--S);
+        min-width: 32px;
+    }
+
+        .tline.done {
+            background: linear-gradient(90deg,var(--G),var(--G2));
+        }
+
+    /* Product table */
+    .ptbl {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .ptbl th {
+            background: var(--D2);
+            padding: .7rem .9rem;
+            font-size: .64rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--G);
+            text-align: left;
+        }
+
+        .ptbl td {
+            padding: .75rem .9rem;
+            font-size: .84rem;
+            border-bottom: 1px solid var(--S);
+            vertical-align: middle;
+        }
+
+        .ptbl tbody tr:hover {
+            background: #fdfcfa;
+        }
+
+        .ptbl tfoot td {
+            padding: .8rem .9rem;
+            font-size: .88rem;
+            font-weight: 700;
+            border-top: 2px solid var(--S);
+        }
+
+    /* Payment summary */
+    .ps-rows {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: .92rem;
-        color: var(--gold);
-        flex-shrink: 0;
+        flex-direction: column;
+        gap: .4rem;
     }
 
-    .prod-name {
-        font-weight: 700;
-        font-size: .86rem;
-        color: var(--deep);
-    }
-
-    .prod-meta {
-        font-size: .76rem;
-        color: var(--muted);
-    }
-
-    .prod-price {
-        margin-left: auto;
-        font-weight: 800;
-        font-size: .88rem;
-        color: var(--deep);
-    }
-
-    /* Summary */
-    .sum-row {
+    .psr {
         display: flex;
         justify-content: space-between;
-        padding: .45rem 0;
-        font-size: .85rem;
+        font-size: .88rem;
+        padding: .38rem 0;
     }
 
-        .sum-row .lbl {
-            color: var(--muted);
+        .psr + .psr {
+            border-top: 1px solid var(--S);
         }
 
-        .sum-row .val {
-            font-weight: 700;
-            color: var(--deep);
+    .psr-lbl {
+        color: #8c7a68;
+    }
+
+    .psr-val {
+        font-weight: 600;
+        color: var(--D);
+    }
+
+        .psr-val.gn {
+            color: var(--GN);
         }
 
-    .sum-total {
+    .psr-div {
+        border: none;
+        border-top: 2px solid var(--S);
+        margin: .5rem 0;
+    }
+
+    .psr-tot {
         display: flex;
         justify-content: space-between;
         align-items: baseline;
-        padding-top: .9rem;
-        margin-top: .7rem;
-        border-top: 2px solid var(--border);
     }
 
-        .sum-total .lbl {
-            font-size: .95rem;
-            font-weight: 800;
-            color: var(--deep);
-        }
-
-        .sum-total .val {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.45rem;
-            font-weight: 700;
-            color: var(--green);
-        }
-
-    /* Customer avatar */
-    .cust-avatar {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background: #fef9ec;
-        border: 2px solid #f0dea0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.1rem;
-        color: var(--gold);
-        flex-shrink: 0;
-    }
-
-    .cust-name-lg {
-        font-weight: 800;
-        font-size: .95rem;
-        color: var(--deep);
-    }
-
-    .cust-role {
-        font-size: .74rem;
-        color: var(--muted);
-    }
-
-    .contact-row {
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-        padding: .4rem 0;
-        font-size: .85rem;
-        color: var(--deep);
-        border-bottom: 1px solid var(--warm);
-    }
-
-        .contact-row:last-child {
-            border-bottom: none;
-        }
-
-        .contact-row i {
-            color: var(--gold);
-            width: 16px;
-            text-align: center;
-        }
-
-    /* Info rows */
-    .info-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        padding: .55rem 0;
-        font-size: .84rem;
-    }
-
-        .info-row + .info-row {
-            border-top: 1px solid var(--warm);
-        }
-
-    .info-lbl {
-        color: var(--muted);
-        flex-shrink: 0;
-    }
-
-    .info-val {
+    .psr-tot-lbl {
+        font-size: .9rem;
         font-weight: 700;
-        color: var(--deep);
-        text-align: right;
+        color: var(--D);
     }
 
-    /* Badges */
-    .badge-pill {
+    .psr-tot-val {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--D);
+    }
+
+    /* Actions */
+    .act-row {
+        display: flex;
+        gap: .65rem;
+        flex-wrap: wrap;
+        margin-top: 1.4rem;
+    }
+
+    .btn-a {
         display: inline-flex;
         align-items: center;
-        gap: .3rem;
-        padding: .3rem .8rem;
-        border-radius: 20px;
-        font-size: .75rem;
+        gap: .4rem;
+        padding: .62rem 1.2rem;
+        border-radius: 6px;
+        font-size: .8rem;
         font-weight: 700;
+        cursor: pointer;
+        border: none;
+        text-decoration: none;
+        transition: all .2s;
     }
 
-    .bp-paid {
-        background: var(--green-soft);
-        color: var(--green);
-    }
+        .btn-a.prim {
+            background: linear-gradient(135deg,var(--G),var(--G2));
+            color: var(--D);
+        }
 
-    .bp-unpaid {
-        background: #fef9ec;
-        color: #92600a;
-        border: 1px solid #f0dea0;
-    }
+            .btn-a.prim:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 18px rgba(212,160,23,.35);
+                color: var(--D);
+            }
 
-    .bp-pending {
-        background: #fef9ec;
-        color: #92600a;
-        border: 1px solid #f0dea0;
-    }
+        .btn-a.blue {
+            background: linear-gradient(135deg,#1d4ed8,#3b82f6);
+            color: #fff;
+        }
 
-    .bp-confirmed {
-        background: var(--blue-soft);
-        color: var(--blue);
-    }
+            .btn-a.blue:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 18px rgba(29,78,216,.3);
+            }
 
-    .bp-playing {
-        background: var(--purple-soft);
-        color: var(--purple);
-    }
+        .btn-a.grn {
+            background: linear-gradient(135deg,#059669,#10b981);
+            color: #fff;
+        }
 
-    .bp-completed {
-        background: var(--green-soft);
-        color: var(--green);
-    }
+            .btn-a.grn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 18px rgba(5,150,105,.3);
+            }
 
-    .bp-cancelled {
-        background: var(--red-soft);
-        color: var(--red);
-    }
+        .btn-a.sec {
+            background: none;
+            border: 1.5px solid var(--S);
+            color: #4a3728;
+        }
 
-    /* Act grid */
-    .act-grid {
-        display: grid;
-        gap: .55rem;
-    }
+            .btn-a.sec:hover {
+                border-color: var(--D);
+                color: var(--D);
+            }
 
-    /* Toast */
-    .toast-wrap {
-        position: fixed;
-        top: 1.2rem;
-        right: 1.2rem;
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        gap: .5rem;
-        pointer-events: none;
-    }
+        .btn-a.dan {
+            background: rgba(220,38,38,.08);
+            border: 1.5px solid rgba(220,38,38,.2);
+            color: #dc2626;
+        }
 
-    .toast-msg {
-        padding: .75rem 1.2rem;
-        border-radius: 10px;
+            .btn-a.dan:hover {
+                background: #dc2626;
+                color: #fff;
+            }
+
+    /* Note & modals */
+    .note-box {
+        background: #fdf8f0;
+        border: 1px solid rgba(212,160,23,.2);
+        border-left: 3px solid var(--G);
+        border-radius: 6px;
+        padding: .75rem 1rem;
         font-size: .84rem;
-        font-weight: 600;
-        box-shadow: 0 8px 24px rgba(0,0,0,.14);
-        pointer-events: all;
+        color: #4a3728;
+    }
+
+    .modal-dark .modal-content {
+        border: 1px solid rgba(212,160,23,.18);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .modal-dark .modal-header {
+        background: var(--D);
+        border-bottom: 1px solid rgba(212,160,23,.18);
+    }
+
+    .modal-dark .modal-title {
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        color: #fff;
+        font-size: 1rem;
+    }
+
+    .modal-dark .btn-close {
+        filter: invert(1) opacity(.5);
+    }
+
+    .modal-dark .modal-body {
+        background: #fff;
+        padding: 1.4rem;
+    }
+
+    .modal-dark .modal-footer {
+        background: #fdf8f0;
+        border-top: 1px solid var(--S);
+    }
+
+    .modal-dark textarea {
+        width: 100%;
+        padding: .7rem .95rem;
+        border: 1.5px solid var(--S);
+        border-radius: 7px;
+        font-size: .84rem;
+        color: var(--D);
+        outline: none;
+        resize: vertical;
+    }
+
+        .modal-dark textarea:focus {
+            border-color: var(--G);
+        }
+
+    .warn-note {
+        background: rgba(212,160,23,.08);
+        border: 1px solid rgba(212,160,23,.22);
+        border-radius: 6px;
+        padding: .65rem .9rem;
+        margin-top: .9rem;
+        font-size: .76rem;
+        color: #7a5c0a;
         display: flex;
-        align-items: center;
-        gap: .5rem;
-        animation: slideIn .22s ease;
+        align-items: flex-start;
+        gap: .4rem;
     }
 
-    .toast-success {
-        background: #fff;
-        border-left: 4px solid var(--green);
-        color: var(--green);
-    }
-
-    .toast-error {
-        background: #fff;
-        border-left: 4px solid var(--red);
-        color: var(--red);
-    }
-
-    @@keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateX(20px);
+        .warn-note i {
+            color: var(--G);
+            flex-shrink: 0;
+            margin-top: 1px;
         }
 
-        to {
-            opacity: 1;
-            transform: translateX(0);
+    .info-note {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 6px;
+        padding: .65rem .9rem;
+        margin-top: .9rem;
+        font-size: .76rem;
+        color: #1d4ed8;
+        display: flex;
+        align-items: flex-start;
+        gap: .4rem;
+    }
+
+        .info-note i {
+            color: var(--BL);
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+    .btn-modal-confirm-pay {
+        padding: .6rem 1.3rem;
+        background: linear-gradient(135deg,#1d4ed8,#3b82f6);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: .8rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .btn-confirm-cancel {
+        padding: .6rem 1.3rem;
+        background: linear-gradient(135deg,#dc2626,#ef4444);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: .8rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .btn-confirm-action {
+        padding: .6rem 1.3rem;
+        background: linear-gradient(135deg,var(--G),var(--G2));
+        color: var(--D);
+        border: none;
+        border-radius: 6px;
+        font-size: .8rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .btn-modal-close {
+        padding: .6rem 1.1rem;
+        background: none;
+        border: 1.5px solid var(--S);
+        border-radius: 6px;
+        font-size: .8rem;
+        font-weight: 600;
+        color: #8c7a68;
+        cursor: pointer;
+    }
+
+        .btn-modal-close:hover {
+            border-color: var(--D);
+            color: var(--D);
+        }
+
+    @@media(max-width:900px) {
+        .ig {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .d-hero {
+            flex-direction: column;
+        }
+
+        .d-hero-right {
+            flex-direction: row;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .pw, .pghd {
+            padding-left: 1.2rem;
+            padding-right: 1.2rem;
+        }
+
+        .alert-transfer {
+            flex-direction: column;
+        }
+
+        .btn-confirm-pay {
+            align-self: flex-start;
         }
     }
 
-    @@media print {
-        .action-btns, .act-grid, .bc, .pgtop .btn-print {
-            display: none !important;
-        }
-
-        .detail-grid {
+    @@media(max-width:600px) {
+        .ig {
             grid-template-columns: 1fr;
+        }
+
+        .act-row {
+            flex-direction: column;
         }
     }
 </style>
 
-<div class="container-fluid px-4 py-4">
+<!-- Breadcrumb -->
+<div class="pghd">
+    <a asp-controller="AdminBooking" asp-action="Index"><i class="bi bi-arrow-left"></i> Quản lý đặt sân</a>
+    <span class="sep"><i class="bi bi-chevron-right"></i></span>
+    <span class="cur">@Model.BookingCode</span>
+    <span class="admin-chip"><i class="bi bi-shield-fill"></i> Admin</span>
+</div>
 
-    <!-- Breadcrumb -->
-    <div class="bc">
-        <a asp-action="Index"><i class="bi bi-house"></i> Quản lý đặt sân</a>
-        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
-        <span class="bc-cur">@Model.BookingCode</span>
-    </div>
+<div class="pw">
 
-    <!-- Page top -->
-    <div class="pgtop">
-        <div>
-            <div class="page-label">Chi tiết đơn đặt</div>
-            <div class="pg-title">Đơn sân <em>#@Model.BookingCode</em></div>
-            <div class="pg-meta">Tạo lúc @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
-        </div>
-        <div class="action-btns">
-            <button class="btn-act btn-print" onclick="window.print()">
-                <i class="bi bi-printer"></i> In hoá đơn
+    @* ── Banner nổi bật: Chờ xác nhận CK ── *@
+    @if (isTransferUnpaid)
+    {
+        <div class="alert-transfer">
+            <i class="bi bi-bank2"></i>
+            <div class="alert-transfer-body">
+                <div class="alert-transfer-title">⚡ Đơn chuyển khoản đang chờ xác nhận thanh toán</div>
+                <div class="alert-transfer-sub">
+                    Khách hàng đã chọn phương thức <strong>Chuyển khoản</strong>.
+                    Sau khi kiểm tra tài khoản và xác nhận đã nhận tiền, hãy nhấn nút bên phải để kích hoạt đơn.<br>
+                    Nội dung CK cần khớp: <strong>@Model.BookingCode</strong>
+                </div>
+            </div>
+            <button type="button" class="btn-confirm-pay" onclick="showConfirmPayModal()">
+                <i class="bi bi-check-circle-fill"></i> Xác nhận đã nhận tiền CK
             </button>
-            @if (Model.Status == "Pending")
-            {
-                <button class="btn-act btn-confirm" onclick="doAction('confirm', @Model.BookingId, 'Xác nhận đơn này?')">
-                    <i class="bi bi-check-circle"></i> Xác nhận đơn
-                </button>
-            }
-            @if (Model.Status == "Confirmed")
-            {
-                <button class="btn-act btn-checkin" onclick="doAction('checkin', @Model.BookingId, 'Check-in cho khách hàng?')">
-                    <i class="bi bi-box-arrow-in-right"></i> Check-in
-                </button>
-            }
-            @if (Model.Status == "Playing")
-            {
-                <button class="btn-act btn-complete" onclick="doAction('complete', @Model.BookingId, 'Đánh dấu hoàn thành?')">
-                    <i class="bi bi-flag-fill"></i> Hoàn thành
-                </button>
-            }
+        </div>
+    }
+
+    <!-- Hero -->
+    <div class="d-hero">
+        <div class="d-hero-left">
+            <div class="d-code"><i class="bi bi-hash"></i> Mã đơn: @Model.BookingCode</div>
+            <div class="d-name">@Model.FacilityName</div>
+            <div class="d-addr"><i class="bi bi-geo-alt-fill"></i> Chi tiết đặt sân · Quản trị viên</div>
+        </div>
+        <div class="d-hero-right">
+            <div class="d-stat">
+                @{
+                    string heroStatusClass = Model.Status.ToLower();
+                    string heroStatusLabel = Model.Status switch
+                    {
+                                "Pending" => "Chờ xác nhận",
+                                "Confirmed" => "Đã xác nhận",
+                                "Playing" => "Đang chơi",
+                                "Completed" => "Hoàn thành",
+                                "Cancelled" => "Đã hủy",
+                        _ => Model.Status
+                    };
+                }
+                <div class="d-sv"><span class="sb @heroStatusClass">@heroStatusLabel</span></div>
+                <div class="d-sl">Trạng thái đơn</div>
+            </div>
+            <div class="d-stat">
+                @{
+                    string payClass2, payLabel2;
+                    if (Model.PaymentStatus?.ToLower() == "paid")
+                    { payClass2 = "paid"; payLabel2 = "Đã TT"; }
+                    else if (Model.PaymentMethod == "Transfer")
+                    { payClass2 = "awaiting-ck"; payLabel2 = "Chờ CK"; }
+                    else
+                    { payClass2 = "unpaid"; payLabel2 = "Chưa TT"; }
+                }
+                <div class="d-sv"><span class="sb @payClass2">@payLabel2</span></div>
+                <div class="d-sl">Thanh toán</div>
+            </div>
+            <div class="d-stat">
+                <div class="d-sv">@Model.GrandTotal.ToString("N0")đ</div>
+                <div class="d-sl">Tổng tiền</div>
+            </div>
+            <div class="d-stat">
+                <div class="d-sv">@Model.BookingDate.ToString("dd/MM")</div>
+                <div class="d-sl">Ngày chơi</div>
+            </div>
         </div>
     </div>
 
     <!-- Timeline -->
-    <div class="timeline-wrap">
-        @{
-            bool isCancelled = Model.Status == "Cancelled";
-            bool step1 = true;
-            bool step2 = new[] { "Confirmed", "Playing", "Completed" }.Contains(Model.Status);
-            bool step3 = new[] { "Playing", "Completed" }.Contains(Model.Status);
-            bool step4 = Model.Status == "Completed";
-        }
-        <div class="timeline">
-            <div class="tl-step @(isCancelled ? "cancelled" : "done")">
-                <div class="tl-icon"><i class="bi bi-@(isCancelled ? "x-lg" : "file-earmark-check")"></i></div>
-                <div class="tl-label">Đã đặt</div>
-            </div>
-            <div class="tl-line @(step2 && !isCancelled ? "done" : "")"></div>
-            <div class="tl-step @(!isCancelled && step2 ? (step3 ? "done" : "active") : "")">
-                <div class="tl-icon"><i class="bi bi-check2"></i></div>
-                <div class="tl-label">Xác nhận</div>
-            </div>
-            <div class="tl-line @(step3 && !isCancelled ? "done" : "")"></div>
-            <div class="tl-step @(!isCancelled && step3 ? (step4 ? "done" : "active") : "")">
-                <div class="tl-icon"><i class="bi bi-box-arrow-in-right"></i></div>
-                <div class="tl-label">Check-in</div>
-            </div>
-            <div class="tl-line @(step4 ? "done" : "")"></div>
-            <div class="tl-step @(!isCancelled && step4 ? "done" : "")">
-                <div class="tl-icon"><i class="bi bi-flag-fill"></i></div>
-                <div class="tl-label">Hoàn thành</div>
+    <div class="c">
+        <div class="c-hd"><i class="bi bi-arrow-right-circle"></i><span class="c-title">Tiến trình đơn đặt</span></div>
+        <div class="c-bd">
+            @{
+                var steps = new[] {
+                        ("Pending",   "Chờ xác nhận", "bi-hourglass"),
+                        ("Confirmed", "Đã xác nhận",  "bi-check-circle"),
+                        ("Playing",   "Đang chơi",    "bi-controller"),
+                        ("Completed", "Hoàn thành",   "bi-trophy")
+                        };
+                var statusOrder = new[] { "Pending", "Confirmed", "Playing", "Completed" };
+                int curIdx = Array.IndexOf(statusOrder, Model.Status);
+            }
+            <div class="timeline">
+                @for (int si = 0; si < steps.Length; si++)
+                {
+                    var (sv, sl, icon) = steps[si];
+                    bool done = curIdx > si || Model.Status == sv;
+                    bool cur = Model.Status == sv;
+                    <div class="tstep">
+                        <div class="tstep-dot @(done ? "done" : "") @(cur ? "cur" : "")"><i class="bi @icon"></i></div>
+                        <div class="tstep-lbl @(done ? "done" : "") @(cur ? "cur" : "")">@sl</div>
+                    </div>
+                    if (si < steps.Length - 1)
+                    {
+                        <div class="tline @(curIdx > si ? "done" : "")"></div>
+                    }
+                }
+                @if (Model.Status == "Cancelled")
+                {
+                    <div style="margin-left:.8rem;display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:#dc2626;font-weight:600">
+                        <i class="bi bi-x-circle"></i> Đã hủy
+                    </div>
+                }
             </div>
         </div>
     </div>
 
-    <div class="detail-grid">
-        <!-- LEFT -->
-        <div>
-            <!-- Court info -->
-            <div class="dc">
-                <div class="dc-hd"><i class="bi bi-calendar-event-fill"></i><span class="dc-hd-title">Thông tin đặt sân</span></div>
-                <div class="dc-bd">
-                    <div class="court-block">
-                        <div class="court-icon"><i class="bi bi-grid-3x3-gap-fill"></i></div>
-                        <div style="flex:1">
-                            <div class="court-name">@Model.FacilityName</div>
-                            <div class="court-sub">Sân @Model.CourtNumber · @Model.CourtType</div>
-                        </div>
-                        <div class="court-price">₫@Model.GrandTotal.ToString("N0")</div>
+    <!-- Booking Info -->
+    <div class="c">
+        <div class="c-hd"><i class="bi bi-calendar-check"></i><span class="c-title">Thông tin đặt sân</span></div>
+        <div class="c-bd">
+            <div class="ig">
+                <div class="ig-item">
+                    <div class="ig-lbl">Cơ sở</div>
+                    <div class="ig-val"><i class="bi bi-building"></i> @Model.FacilityName</div>
+                </div>
+                <div class="ig-item">
+                    <div class="ig-lbl">Sân</div>
+                    <div class="ig-val"><i class="bi bi-grid-3x3-gap"></i> @Model.CourtNumber <span class="vtag">@Model.CourtType</span></div>
+                </div>
+                <div class="ig-item">
+                    <div class="ig-lbl">Ngày chơi</div>
+                    <div class="ig-val">
+                        <i class="bi bi-calendar3"></i>
+                        @Model.BookingDate.ToString("dd/MM/yyyy")
+                        <span style="color:#8c7a68;font-size:.74rem">(@Model.BookingDate.ToString("dddd", new System.Globalization.CultureInfo("vi-VN")))</span>
                     </div>
-                    <div class="time-chips">
-                        <span class="time-chip"><i class="bi bi-calendar3"></i> @Model.BookingDate.ToString("dd/MM/yyyy") (@Model.BookingDate.ToString("ddd"))</span>
-                        <span class="time-chip"><i class="bi bi-clock"></i> @Model.StartTime.ToString(@"hh\:mm") – @Model.EndTime.ToString(@"hh\:mm")</span>
-                        <span class="time-chip"><i class="bi bi-hourglass"></i> @Model.Duration phút</span>
+                </div>
+                <div class="ig-item">
+                    <div class="ig-lbl">Giờ chơi</div>
+                    <div class="ig-val">
+                        <i class="bi bi-clock"></i>
+                        @Model.StartTime.ToString(@"hh\:mm") – @Model.EndTime.ToString(@"hh\:mm")
+                        <span style="color:#8c7a68;font-size:.74rem">(@Model.Duration phút)</span>
                     </div>
+                </div>
+                <div class="ig-item">
+                    <div class="ig-lbl">Phương thức TT</div>
+                    @{
+                        /* FIX: Lấy từ Model.PaymentMethod thay vì hardcode */
+                        string pmDisplay = Model.PaymentMethod switch
+                        {
+                                    "Transfer" => "Chuyển khoản",
+                                    "Cash" => "Tiền mặt",
+                            _ => Model.PaymentMethod ?? "—"
+                        };
+                        string pmPayClass, pmPayLabel;
+                        if (Model.PaymentStatus?.ToLower() == "paid")
+                        { pmPayClass = "paid"; pmPayLabel = "Đã TT"; }
+                        else if (Model.PaymentMethod == "Transfer")
+                        { pmPayClass = "awaiting-ck"; pmPayLabel = "Chờ xác nhận CK"; }
+                        else
+                        { pmPayClass = "unpaid"; pmPayLabel = "Chưa TT"; }
+                    }
+                    <div class="ig-val">
+                        <i class="bi bi-credit-card"></i> @pmDisplay
+                        <span class="sb @pmPayClass" style="font-size:.62rem">@pmPayLabel</span>
+                    </div>
+                </div>
+                <div class="ig-item">
+                    <div class="ig-lbl">Đặt lúc</div>
+                    <div class="ig-val" style="font-size:.82rem"><i class="bi bi-clock-history"></i> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
                 </div>
             </div>
-
-            <!-- Products -->
-            @if (Model.RelatedOrders != null && Model.RelatedOrders.Any())
+            @if (!string.IsNullOrEmpty(Model.Note))
             {
-                <div class="dc">
-                    <div class="dc-hd"><i class="bi bi-box-seam-fill"></i><span class="dc-hd-title">Sản phẩm & Dịch vụ đi kèm</span></div>
-                    <div class="dc-bd">
-                        @foreach (var order in Model.RelatedOrders)
-                        {
-                            @foreach (var od in order.OrderDetails)
-                            {
-                                <div class="prod-row">
-                                    <div class="prod-icon"><i class="bi bi-bag-fill"></i></div>
-                                    <div>
-                                        <div class="prod-name">@od.ProductName</div>
-                                        <div class="prod-meta">@od.Quantity @od.Unit × ₫@od.UnitPrice.ToString("N0")</div>
-                                    </div>
-                                    <div class="prod-price">₫@od.TotalPrice.ToString("N0")</div>
-                                </div>
-                            }
-                        }
-                    </div>
+                <div style="margin-top:1rem">
+                    <div class="ig-lbl">Ghi chú</div>
+                    <div class="note-box">@Model.Note</div>
                 </div>
             }
+        </div>
+    </div>
 
-            <!-- Summary -->
-            <div class="dc">
-                <div class="dc-hd"><i class="bi bi-receipt-cutoff"></i><span class="dc-hd-title">Chi tiết thanh toán</span></div>
-                <div class="dc-bd">
-                    <div class="sum-row"><span class="lbl">Tiền sân</span><span class="val">₫@Model.TotalPrice.ToString("N0")</span></div>
-                    @if (Model.RelatedOrders != null && Model.RelatedOrders.Any())
-                    {
-                        <div class="sum-row">
-                            <span class="lbl">Sản phẩm đi kèm</span>
-                            <span class="val">₫@Model.RelatedOrders.Sum(o => o.TotalAmount).ToString("N0")</span>
-                        </div>
-                    }
-                    <div class="sum-row"><span class="lbl">Giảm giá</span><span class="val" style="color:var(--red)">-₫0</span></div>
-                    <div class="sum-total">
-                        <span class="lbl">Tổng cộng</span>
-                        <span class="val">₫@Model.GrandTotal.ToString("N0")</span>
+    <!-- Products -->
+    @if (Model.RelatedOrders != null && Model.RelatedOrders.Any())
+    {
+        <div class="c">
+            <div class="c-hd">
+                <i class="bi bi-bag-check"></i>
+                <span class="c-title">Sản phẩm đi kèm</span>
+                <span class="c-hd-badge" style="background:rgba(16,185,129,.15);color:#065f46">
+                    @Model.RelatedOrders.Sum(o => o.OrderDetails.Count) dòng
+                </span>
+            </div>
+            <div style="overflow-x:auto">
+                @foreach (var order in Model.RelatedOrders)
+                {
+                    <table class="ptbl">
+                        <thead>
+                            <tr><th>Sản phẩm</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var d in order.OrderDetails)
+                            {
+                                <tr>
+                                    <td><strong>@d.ProductName</strong> <span style="color:#8c7a68;font-size:.76rem">@d.Unit</span></td>
+                                    <td><span style="font-weight:700">×@d.Quantity</span></td>
+                                    <td>@d.UnitPrice.ToString("N0")đ</td>
+                                    <td style="font-weight:700;color:var(--G)">@d.TotalPrice.ToString("N0")đ</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" style="text-align:right;color:#8c7a68">Tổng đơn hàng:</td>
+                                <td style="color:var(--GN)">@order.TotalAmount.ToString("N0")đ</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Payment Summary -->
+    <div class="c">
+        <div class="c-hd"><i class="bi bi-receipt"></i><span class="c-title">Chi tiết thanh toán</span></div>
+        <div class="c-bd" style="max-width:380px">
+            <div class="ps-rows">
+                <div class="psr">
+                    <span class="psr-lbl">Giá sân</span>
+                    <span class="psr-val gn">@Model.TotalPrice.ToString("N0")đ</span>
+                </div>
+                @if (Model.RelatedOrders != null && Model.RelatedOrders.Any())
+                {
+                    <div class="psr">
+                        <span class="psr-lbl">Sản phẩm</span>
+                        <span class="psr-val">@Model.RelatedOrders.Sum(o => o.TotalAmount).ToString("N0")đ</span>
                     </div>
+                }
+                <hr class="psr-div" />
+                <div class="psr-tot">
+                    <span class="psr-tot-lbl">Tổng cộng</span>
+                    <span class="psr-tot-val">@Model.GrandTotal.ToString("N0")đ</span>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- RIGHT -->
-        <div>
-            <!-- Customer -->
-            <div class="dc">
-                <div class="dc-hd"><i class="bi bi-person-fill"></i><span class="dc-hd-title">Thông tin khách hàng</span></div>
-                <div class="dc-bd">
-                    <div style="display:flex;align-items:center;gap:.9rem;margin-bottom:1rem">
-                        <div class="cust-avatar"><i class="bi bi-person-fill"></i></div>
-                        <div>
-                            <div class="cust-name-lg">@Model.CustomerName</div>
-                            <div class="cust-role">Khách hàng</div>
-                        </div>
-                    </div>
-                    <div class="contact-row"><i class="bi bi-telephone"></i> @Model.Phone</div>
-                    <div class="contact-row"><i class="bi bi-envelope"></i> @Model.Email</div>
-                </div>
+    <!-- Admin Actions -->
+    <div class="act-row">
+        <a asp-controller="AdminBooking" asp-action="Index" class="btn-a sec">
+            <i class="bi bi-arrow-left"></i> Quay lại DS
+        </a>
+
+        @* Nút CK: chỉ hiện khi Transfer + chưa được duyệt *@
+        @if (isTransferUnpaid)
+        {
+            <button type="button" class="btn-a blue" onclick="showConfirmPayModal()">
+                <i class="bi bi-bank"></i> Xác nhận đã nhận tiền CK
+            </button>
+        }
+
+        @* Nút Confirm Order: Pending + (Cash HOẶC đã xác nhận CK) *@
+        @if (Model.Status == "Pending"
+                && (Model.PaymentMethod != "Transfer" || Model.PaymentStatus?.ToLower() == "paid"))
+        {
+            <button type="button" class="btn-a prim" onclick="showConfirmOrderModal()">
+                <i class="bi bi-check-circle"></i> Xác nhận đơn hàng
+            </button>
+        }
+
+        @* Đang chơi *@
+        @if (Model.Status == "Confirmed")
+        {
+            <button type="button" class="btn-a grn" onclick="showStatusModal('Playing','Đang chơi')">
+                <i class="bi bi-controller"></i> Đang chơi
+            </button>
+        }
+
+        @* Hoàn thành *@
+        @if (Model.Status == "Playing")
+        {
+            <button type="button" class="btn-a grn" onclick="showStatusModal('Completed','Hoàn thành')">
+                <i class="bi bi-trophy"></i> Hoàn thành
+            </button>
+        }
+
+        @* Hủy *@
+        @if (Model.Status != "Cancelled" && Model.Status != "Completed")
+        {
+            <button type="button" class="btn-a dan" onclick="showCancelModal()">
+                <i class="bi bi-x-circle"></i> Hủy đơn
+            </button>
+        }
+
+        <a asp-controller="Booking" asp-action="Invoice" asp-route-id="@Model.BookingId"
+           class="btn-a sec" target="_blank">
+            <i class="bi bi-receipt"></i> Xem hoá đơn
+        </a>
+    </div>
+</div>
+
+<!-- Modal: Xác nhận nhận tiền CK -->
+<div class="modal fade modal-dark" id="confirmPayModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-bank me-2" style="color:var(--G2)"></i> Xác nhận nhận tiền CK</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
-            <!-- Payment & Status -->
-            <div class="dc">
-                <div class="dc-hd"><i class="bi bi-credit-card-fill"></i><span class="dc-hd-title">Thanh toán & Trạng thái</span></div>
-                <div class="dc-bd">
-                    <div class="info-row">
-                        <span class="info-lbl">Phương thức</span>
-                        <span class="info-val">@Model.PaymentMethod</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-lbl">Thanh toán</span>
-                        <span class="info-val">
-                            @if (Model.PaymentStatus == "Paid")
-                            {
-                                <span class="badge-pill bp-paid"><i class="bi bi-check-circle-fill"></i> Đã thanh toán</span>
-                            }
-                            else
-                            {
-                                <span class="badge-pill bp-unpaid"><i class="bi bi-clock"></i> Chưa thanh toán</span>
-                            }
+            <form asp-controller="AdminBooking" asp-action="ConfirmPayment" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.BookingId" />
+                <div class="modal-body">
+                    <p style="font-size:.88rem;color:var(--D)">
+                        Xác nhận đã nhận tiền chuyển khoản cho đơn <strong>@Model.BookingCode</strong>?
+                    </p>
+                    <div class="info-note">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <span>
+                            Hành động này sẽ đặt <strong>PaymentStatus = Paid</strong>
+                            và tự động chuyển đơn sang <strong>Confirmed</strong>. Không thể hoàn tác.
                         </span>
                     </div>
-                    <div class="info-row">
-                        <span class="info-lbl">Trạng thái</span>
-                        <span class="info-val">
-                            @switch (Model.Status)
-                            {
-                                case "Pending":
-                                    <span class="badge-pill bp-pending"><i class="bi bi-clock-history"></i> Chờ xác nhận</span>
-                                    break;
-                                case "Confirmed":
-                                    <span class="badge-pill bp-confirmed"><i class="bi bi-check-circle"></i> Đã xác nhận</span>
-                                    break;
-                                case "Playing":
-                                    <span class="badge-pill bp-playing"><i class="bi bi-controller"></i> Đang chơi</span>
-                                    break;
-                                case "Completed":
-                                    <span class="badge-pill bp-completed"><i class="bi bi-check2-circle"></i> Hoàn thành</span>
-                                    break;
-                                case "Cancelled":
-                                    <span class="badge-pill bp-cancelled"><i class="bi bi-x-circle"></i> Đã hủy</span>
-                                    break;
-                            }
-                        </span>
-                    </div>
-                    @if (!string.IsNullOrEmpty(Model.Note))
-                    {
-                        <div class="info-row" style="display:block;margin-top:.5rem">
-                            <span class="info-lbl" style="display:block;margin-bottom:.3rem">Ghi chú</span>
-                            <p style="font-size:.82rem;color:var(--muted);font-style:italic;margin:0;background:var(--warm);padding:.6rem .8rem;border-radius:7px;border-left:3px solid var(--gold)">@Model.Note</p>
-                        </div>
-                    }
-                </div>
-            </div>
-
-            <!-- Admin Actions -->
-            @if (Model.Status != "Cancelled" && Model.Status != "Completed")
-            {
-                <div class="dc">
-                    <div class="dc-hd"><i class="bi bi-sliders2"></i><span class="dc-hd-title">Thao tác Admin</span></div>
-                    <div class="dc-bd">
-                        <div class="act-grid">
-                            @if (Model.Status == "Pending")
-                            {
-                                <button class="btn-act btn-confirm" onclick="doAction('confirm', @Model.BookingId, 'Xác nhận đơn này?')" style="justify-content:center">
-                                    <i class="bi bi-check-circle"></i> Xác nhận đơn
-                                </button>
-                            }
-                            @if (Model.Status == "Confirmed")
-                            {
-                                <button class="btn-act btn-checkin" onclick="doAction('checkin', @Model.BookingId, 'Check-in cho khách hàng?')" style="justify-content:center">
-                                    <i class="bi bi-box-arrow-in-right"></i> Check-in
-                                </button>
-                            }
-                            @if (Model.Status == "Playing")
-                            {
-                                <button class="btn-act btn-complete" onclick="doAction('complete', @Model.BookingId, 'Đánh dấu hoàn thành?')" style="justify-content:center">
-                                    <i class="bi bi-flag-fill"></i> Hoàn thành
-                                </button>
-                            }
-                            @if (Model.PaymentStatus == "Unpaid")
-                            {
-                                <button class="btn-act btn-complete" onclick="updatePayment(@Model.BookingId,'Paid')" style="justify-content:center">
-                                    <i class="bi bi-cash-coin"></i> Đánh dấu đã TT
-                                </button>
-                            }
-                            <button class="btn-act btn-cancel" onclick="cancelBooking(@Model.BookingId)" style="justify-content:center">
-                                <i class="bi bi-x-circle"></i> Hủy đơn
-                            </button>
-                        </div>
+                    <div style="margin-top:1rem">
+                        <div class="ig-lbl" style="margin-bottom:.35rem">Ghi chú xác nhận (tuỳ chọn)</div>
+                        <textarea name="confirmNote" rows="2" placeholder="VD: Đã nhận 450.000đ lúc 14:32 ngày 04/03..."></textarea>
                     </div>
                 </div>
-            }
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn-modal-confirm-pay">
+                        <i class="bi bi-check-circle me-1"></i> Xác nhận đã nhận tiền
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<!-- Toast -->
-<div class="toast-wrap" id="toastWrap"></div>
+<!-- Modal: Xác nhận đơn -->
+<div class="modal fade modal-dark" id="confirmOrderModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-check-circle me-2" style="color:var(--G2)"></i> Xác nhận đơn đặt sân</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="AdminBooking" asp-action="ConfirmOrder" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.BookingId" />
+                <div class="modal-body">
+                    <p style="font-size:.88rem;color:var(--D)">
+                        Xác nhận đơn <strong>@Model.BookingCode</strong> — sân <strong>@Model.CourtNumber</strong>
+                        ngày <strong>@Model.BookingDate.ToString("dd/MM/yyyy")</strong>?
+                    </p>
+                    <div class="warn-note">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Sau khi xác nhận, sân sẽ được giữ chỗ cho khách hàng.</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn-confirm-action"><i class="bi bi-check-circle me-1"></i> Xác nhận đơn</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Cập nhật trạng thái -->
+<div class="modal fade modal-dark" id="statusModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="statusModalTitle"><i class="bi bi-arrow-repeat me-2" style="color:var(--G2)"></i> Cập nhật trạng thái</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="AdminBooking" asp-action="UpdateStatus" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.BookingId" />
+                <input type="hidden" name="newStatus" id="statusModalValue" />
+                <div class="modal-body">
+                    <p style="font-size:.88rem;color:var(--D)" id="statusModalDesc">Bạn có chắc muốn cập nhật trạng thái?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn-confirm-action"><i class="bi bi-check me-1"></i> Xác nhận</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Hủy đơn -->
+<div class="modal fade modal-dark" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2" style="color:var(--G)"></i> Hủy đặt sân</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="AdminBooking" asp-action="Cancel" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" name="id" value="@Model.BookingId" />
+                    <p style="font-size:.88rem;color:var(--D)">Hủy đơn <strong>@Model.BookingCode</strong>?</p>
+                    <div>
+                        <div class="ig-lbl" style="margin-bottom:.35rem">Lý do hủy *</div>
+                        <textarea name="cancelReason" rows="3" required placeholder="Nhập lý do hủy..."></textarea>
+                    </div>
+                    <div class="warn-note"><i class="bi bi-info-circle"></i><span>Thao tác hủy bởi Admin không thể hoàn tác.</span></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn-confirm-cancel"><i class="bi bi-x-circle me-1"></i> Xác nhận hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script>
-        const URLS = {
-            confirm:  '@Url.Action("Confirm", "AdminBooking")',
-            checkin:  '@Url.Action("CheckIn", "AdminBooking")',
-            complete: '@Url.Action("Complete", "AdminBooking")',
-            cancel:   '@Url.Action("Cancel", "AdminBooking")',
-            payment:  '@Url.Action("UpdatePayment", "AdminBooking")'
-        };
-
-        function doAction(action, bookingId, msg) {
-            if (!confirm(msg)) return;
-            postAjax(URLS[action], { bookingId });
+        function showConfirmPayModal()   { new bootstrap.Modal(document.getElementById('confirmPayModal')).show(); }
+        function showConfirmOrderModal() { new bootstrap.Modal(document.getElementById('confirmOrderModal')).show(); }
+        function showStatusModal(status, label) {
+            document.getElementById('statusModalValue').value = status;
+            document.getElementById('statusModalTitle').innerHTML =
+                `<i class="bi bi-arrow-repeat me-2" style="color:var(--G2)"></i> Đặt trạng thái: ${label}`;
+            document.getElementById('statusModalDesc').textContent =
+                `Xác nhận chuyển đơn #@Model.BookingCode sang trạng thái "${label}"?`;
+            new bootstrap.Modal(document.getElementById('statusModal')).show();
         }
-
-        function cancelBooking(bookingId) {
-            const reason = prompt('Lý do hủy đơn:');
-            if (!reason) return;
-            postAjax(URLS.cancel, { bookingId, reason });
-        }
-
-        function updatePayment(bookingId, paymentStatus) {
-            postAjax(URLS.payment, { bookingId, paymentStatus });
-        }
-
-        function postAjax(url, data) {
-            const body = Object.entries(data)
-                .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
-                .join('&');
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? ''
-                },
-                body
-            })
-            .then(r => r.json())
-            .then(result => {
-                showToast(result.message, result.success ? 'success' : 'error');
-                if (result.success) setTimeout(() => location.reload(), 1000);
-            })
-            .catch(() => showToast('Lỗi kết nối máy chủ', 'error'));
-        }
-
-        function showToast(msg, type = 'success') {
-            const wrap = document.getElementById('toastWrap');
-            const el   = document.createElement('div');
-            el.className = `toast-msg toast-${type}`;
-            el.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-circle-fill'}"></i> ${msg}`;
-            wrap.appendChild(el);
-            setTimeout(() => el.remove(), 3200);
-        }
+        function showCancelModal() { new bootstrap.Modal(document.getElementById('cancelModal')).show(); }
     </script>
 }
