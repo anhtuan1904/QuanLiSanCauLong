@@ -22,12 +22,13 @@ namespace QuanLiSanCauLong.Models
         [StringLength(20)]
         public string Phone { get; set; }
 
-        // --- DÒNG THÊM MỚI ĐỂ SỬA LỖI ---
-        // Giúp code gọi .PhoneNumber vẫn chạy được mà không cần đổi tên cột trong DB
         [NotMapped]
         public string PhoneNumber { get => Phone; set => Phone = value; }
 
-        // CẦN THIẾT: Thuộc tính Password để khớp với View Create/Register
+        // ✅ MỚI: Đường dẫn ảnh đại diện (lưu relative path, VD: /uploads/avatars/user_5.webp)
+        [StringLength(500)]
+        public string? AvatarUrl { get; set; }
+
         [Required(ErrorMessage = "Mật khẩu không được để trống")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
@@ -38,8 +39,7 @@ namespace QuanLiSanCauLong.Models
         [Required]
         public string Role { get; set; } // Customer, Staff, Admin
 
-        // CẦN THIẾT: Thuộc tính Status để khớp với View Index/Create
-        public string Status { get; set; } = "Active"; // Active, Locked
+        public string Status { get; set; } = "Active"; // Active, Locked, Deleted
 
         public int? FacilityId { get; set; }
         public bool IsActive { get; set; } = true;
@@ -50,5 +50,12 @@ namespace QuanLiSanCauLong.Models
         public virtual Facility? Facility { get; set; }
         public virtual ICollection<Booking>? Bookings { get; set; }
         public virtual ICollection<Order>? Orders { get; set; }
+
+        // ─── Helper: lấy initials nếu chưa có avatar ─────────────────────────
+        [NotMapped]
+        public string Initials => string.Join("",
+            FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                    .TakeLast(2)
+                    .Select(x => char.ToUpper(x[0])));
     }
 }

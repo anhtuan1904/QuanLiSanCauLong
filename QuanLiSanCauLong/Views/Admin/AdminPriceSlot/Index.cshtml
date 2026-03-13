@@ -467,6 +467,9 @@
             margin-bottom: 1rem;
             opacity: .3;
         }
+
+    /* Modal */
+    .fm-content { border-radius:12px !important; border:0 !important; overflow:hidden; }
 </style>
 
 <div>
@@ -479,12 +482,12 @@
             </div>
         </div>
         <div class="head-btns">
-            <a asp-action="BulkCreate" class="btn-outline-g">
+            <button class="btn-outline-g" onclick="openBulkCreateModal()">
                 <i class="bi bi-lightning-charge-fill"></i> Tạo hàng loạt
-            </a>
-            <a asp-action="Create" class="btn-primary-g">
+            </button>
+            <button class="btn-primary-g" onclick="openCreateModal()">
                 <i class="bi bi-plus-circle"></i> Thêm Khung Giờ
-            </a>
+            </button>
         </div>
     </div>
 
@@ -659,9 +662,9 @@
                             </td>
                             <td>
                                 <div class="act-g">
-                                    <a asp-action="Edit" asp-route-id="@slot.PriceSlotId" class="act-b edit" title="Chỉnh sửa">
+                                    <button class="act-b edit" onclick="openEditModal(@slot.PriceSlotId)" title="Chỉnh sửa">
                                         <i class="bi bi-pencil"></i>
-                                    </a>
+                                    </button>
                                     <button class="act-b del" onclick="confirmDelete(@slot.PriceSlotId)" title="Xóa">
                                         <i class="bi bi-trash3"></i>
                                     </button>
@@ -677,7 +680,7 @@
                             <div class="empty-state">
                                 <i class="bi bi-currency-exchange"></i>
                                 <div>Chưa có cấu hình giá nào</div>
-                                <a asp-action="Create" style="color:var(--gold);margin-top:.75rem;display:inline-block;">+ Thêm ngay</a>
+                                <a href="javascript:void(0)" onclick="openCreateModal()" style="color:var(--gold);margin-top:.75rem;display:inline-block;">+ Thêm ngay</a>
                             </div>
                         </td>
                     </tr>
@@ -687,21 +690,67 @@
     </div>
 </div>
 
+<!-- ═══ MODAL ═══ -->
+<div class="modal fade" id="modalPriceSlot" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+        <div class="modal-content fm-content" id="modalPriceSlotContent">
+            <div class="p-5 text-center">
+                <div class="spinner-border" style="color:var(--gold);"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @Html.AntiForgeryToken()
     <script>
-        // ── Load sân theo cơ sở (dùng endpoint AdminCourt/GetByFacility đã có sẵn) ──
+        // ── Modal ────────────────────────────────────────
+        let psModal;
+        document.addEventListener('DOMContentLoaded', () => {
+            const el = document.getElementById('modalPriceSlot');
+            if (el) psModal = new bootstrap.Modal(el);
+        });
+
+        function executeScripts(container) {
+            container.querySelectorAll('script').forEach(old => {
+                const s = document.createElement('script');
+                Array.from(old.attributes).forEach(a => s.setAttribute(a.name, a.value));
+                s.appendChild(document.createTextNode(old.innerHTML));
+                old.parentNode.replaceChild(s, old);
+            });
+        }
+
+        async function fetchModalContent(url, hasScripts = false) {
+            const content = document.getElementById('modalPriceSlotContent');
+            content.innerHTML = `<div class="p-5 text-center">
+                <div class="spinner-border" style="color:var(--gold);"></div>
+                <p style="margin-top:.75rem;font-size:.82rem;color:var(--muted);">Đang tải...</p>
+            </div>`;
+            psModal.show();
+            try {
+                const r = await fetch(url);
+                content.innerHTML = await r.text();
+                if (hasScripts) setTimeout(() => executeScripts(content), 50);
+            } catch {
+                content.innerHTML = `<div class="p-5 text-center" style="color:#c94b2a;">Lỗi kết nối máy chủ!</div>`;
+            }
+        }
+
+        function openCreateModal()      { fetchModalContent('/Admin/PriceSlot/Create', true); }
+        function openEditModal(id)      { fetchModalContent('/Admin/PriceSlot/Edit/' + id, true); }
+        function openBulkCreateModal()  { fetchModalContent('/Admin/PriceSlot/BulkCreate', true); }
+
+        // ── Load sân theo cơ sở ──
         document.getElementById('FacilityFilter').addEventListener('change', function () {
             const fId = this.value;
             const sel = document.getElementById('CourtFilter');
             if (!fId) { sel.innerHTML = '<option value="">Tất cả sân</option>'; return; }
             sel.innerHTML = '<option value="">Đang tải...</option>';
-
             fetch(`/AdminCourt/GetByFacility?facilityId=${fId}`)
                 .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
                 .then(data => {
-                    const courts = data.courts ?? data; // hỗ trợ cả 2 format trả về
+                    const courts = data.courts ?? data;
                     sel.innerHTML = '<option value="">Tất cả sân</option>';
                     if (!courts.length) { sel.innerHTML += '<option disabled>Cơ sở này chưa có sân</option>'; return; }
                     courts.forEach(c => {
@@ -728,7 +777,7 @@
             }).then(r => {
                 if (!r.isConfirmed) return;
                 const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
-                fetch(`/AdminPriceSlot/Delete/${id}`, {
+                fetch(`/Admin/PriceSlot/Delete/${id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: '__RequestVerificationToken=' + encodeURIComponent(token)
@@ -747,3 +796,4 @@
         }
     </script>
 }
+

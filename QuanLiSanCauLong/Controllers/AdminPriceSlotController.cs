@@ -57,9 +57,11 @@ namespace QuanLiSanCauLong.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(PriceSlot model)
         {
-            // Loại bỏ các trường liên quan đến navigation để tránh lỗi IsValid giả
+            // ✅ FIX: Remove tất cả navigation props + required fields không gửi từ form
             ModelState.Remove("Court");
+            ModelState.Remove("Facility");
             ModelState.Remove("FacilityId");
+            ModelState.Remove("CourtType");
 
             if (ModelState.IsValid)
             {
@@ -117,8 +119,10 @@ namespace QuanLiSanCauLong.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(PriceSlot model)
         {
-            // Loại bỏ validation object Court để tránh lỗi ModelState false vô lý
+            // ✅ FIX: Remove tất cả navigation props + required fields form không gửi
             ModelState.Remove("Court");
+            ModelState.Remove("Facility");
+            ModelState.Remove("CourtType");
 
             if (ModelState.IsValid)
             {
@@ -144,6 +148,16 @@ namespace QuanLiSanCauLong.Controllers
                         priceSlot.Price = model.Price;
                         priceSlot.IsPeakHour = model.IsPeakHour;
                         priceSlot.IsActive = model.IsActive;
+                        priceSlot.SlotName = model.SlotName;
+                        priceSlot.CustomerType = model.CustomerType;
+                        priceSlot.Surcharge = model.Surcharge;
+                        priceSlot.SurchargeNote = model.SurchargeNote;
+                        priceSlot.RoundingMinutes = model.RoundingMinutes;
+                        priceSlot.AppliedDays = model.AppliedDays;
+                        priceSlot.MemberDiscount = model.MemberDiscount;
+                        priceSlot.MinDurationMinutes = model.MinDurationMinutes;
+                        priceSlot.BufferMinutes = model.BufferMinutes;
+                        priceSlot.Priority = model.Priority;
 
                         await _context.SaveChangesAsync();
                         TempData["SuccessMessage"] = "Cập nhật khung giờ thành công!";
@@ -187,6 +201,7 @@ namespace QuanLiSanCauLong.Controllers
         [HttpPost]
         public async Task<IActionResult> BulkCreate([FromBody] BulkPriceSlotRequest request)
         {
+            // FIX: Kiểm tra cả CourtIds, TimeSlots. Days là tuỳ chọn (có thể null khi không lọc theo ngày)
             if (request?.CourtIds == null || !request.CourtIds.Any() || request.TimeSlots == null || !request.TimeSlots.Any())
             {
                 return Json(new { success = false, message = "Vui lòng chọn ít nhất một sân và một khung giờ!" });
@@ -197,25 +212,46 @@ namespace QuanLiSanCauLong.Controllers
                 int createdCount = 0;
                 int skippedCount = 0;
 
+                // Tính chuỗi ngày áp dụng từ request.Days (nếu có)
+                string appliedDays = (request.Days != null && request.Days.Any())
+                    ? string.Join(",", request.Days)
+                    : null;
+
                 foreach (var courtId in request.CourtIds)
                 {
+                    // Lấy FacilityId từ Court
+                    var court = await _context.Courts.FindAsync(int.Parse(courtId.ToString()));
+                    if (court == null) { skippedCount++; continue; }
+                    int facilityId = court.FacilityId;
+
                     foreach (var slot in request.TimeSlots)
                     {
+                        // FIX: Dùng StartTime / EndTime (computed property parse từ string "HH:mm")
+                        var startTime = slot.StartTime;
+                        var endTime = slot.EndTime;
+
                         // Kiểm tra trùng lặp trước khi thêm
                         bool exists = await _context.PriceSlots.AnyAsync(p =>
                             p.CourtId == courtId &&
-                            p.StartTime == slot.StartTime &&
-                            p.EndTime == slot.EndTime);
+                            p.StartTime == startTime &&
+                            p.EndTime == endTime);
 
                         if (!exists)
                         {
                             _context.PriceSlots.Add(new PriceSlot
                             {
                                 CourtId = courtId,
-                                StartTime = slot.StartTime,
-                                EndTime = slot.EndTime,
+                                FacilityId = facilityId,
+                                CourtType = court.CourtType,
+                                StartTime = startTime,
+                                EndTime = endTime,
                                 Price = slot.Price,
+                                Surcharge = slot.Surcharge,
+                                SlotName = slot.SlotName,
+                                CustomerType = slot.CustType,
+                                SurchargeNote = slot.SurNote,
                                 IsPeakHour = slot.IsPeakHour,
+                                AppliedDays = appliedDays,
                                 IsActive = true
                             });
                             createdCount++;
@@ -240,7 +276,10 @@ namespace QuanLiSanCauLong.Controllers
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
+                var detail = ex.InnerException?.InnerException?.Message
+                          ?? ex.InnerException?.Message
+                          ?? ex.Message;
+                return Json(new { success = false, message = "Lỗi hệ thống: " + detail });
             }
         }
         [HttpGet]

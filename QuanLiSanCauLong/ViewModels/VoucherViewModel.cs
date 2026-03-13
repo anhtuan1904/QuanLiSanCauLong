@@ -40,11 +40,11 @@ namespace QuanLiSanCauLong.ViewModels
 
         [Required]
         [Display(Name = "Ngày bắt đầu")]
-        public DateTime StartDate { get; set; }
+        public DateTime? StartDate { get; set; } // Thêm dấu ? để dùng được .HasValue
 
         [Required]
         [Display(Name = "Ngày kết thúc")]
-        public DateTime EndDate { get; set; }
+        public DateTime? EndDate { get; set; } // Thêm dấu ?
 
         [Display(Name = "Giới hạn số lượt")]
         public int? UsageLimit { get; set; }

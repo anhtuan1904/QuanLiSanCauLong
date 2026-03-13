@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿// ===================================================================
+// FILE: Controllers/AdminProductController.cs  (CẬP NHẬT v2)
+// Hỗ trợ 3 nhóm BehaviorType: Retail | Rental | Service
+// ===================================================================
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLiSanCauLong.Data;
@@ -7,19 +11,33 @@ using QuanLiSanCauLong.Models;
 namespace QuanLiSanCauLong.Controllers
 {
     [Authorize(Roles = "Admin")]
+    [Route("Admin/[controller]")]
     public class AdminProductController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<AdminProductController> _logger;
+        private readonly IWebHostEnvironment _env;
 
-        public AdminProductController(ApplicationDbContext context)
+        private const string ImageFolder = "images/products";
+
+        public AdminProductController(
+            ApplicationDbContext context,
+            ILogger<AdminProductController> logger,
+            IWebHostEnvironment env)
         {
             _context = context;
+            _logger = logger;
+            _env = env;
         }
 
         // ───────────────────────────────────────────────
         // 1. DANH SÁCH SẢN PHẨM
         // ───────────────────────────────────────────────
-        public async Task<IActionResult> Index(int? categoryId, string search, string status)
+        [HttpGet("")]
+        [HttpGet("Index")]
+        public async Task<IActionResult> Index(
+            int? categoryId, string? search,
+            string? status, string? behaviorType)
         {
             var query = _context.Products
                 .Include(p => p.Category)
@@ -29,50 +47,86 @@ namespace QuanLiSanCauLong.Controllers
             if (categoryId.HasValue)
                 query = query.Where(p => p.CategoryId == categoryId.Value);
 
-            if (!string.IsNullOrEmpty(search))
-                query = query.Where(p => p.ProductName.Contains(search) || p.ProductCode.Contains(search));
+            if (!string.IsNullOrWhiteSpace(search))
+                query = query.Where(p =>
+                    p.ProductName.Contains(search) ||
+                    (p.ProductCode != null && p.ProductCode.Contains(search)) ||
+                    (p.SKU != null && p.SKU.Contains(search)));
 
-            if (!string.IsNullOrEmpty(status))
+            if (!string.IsNullOrWhiteSpace(status))
                 query = query.Where(p => p.Status == status);
+
+            // Lọc theo nhóm hành vi
+            if (!string.IsNullOrWhiteSpace(behaviorType))
+                query = query.Where(p => p.Category != null && p.Category.BehaviorType == behaviorType);
 
             var products = await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
 
-            ViewBag.Categories = await _context.ProductCategories.ToListAsync();
-            return View(products);
+            await LoadCategoriesToViewBag();
+            ViewBag.Search = search;
+            ViewBag.CurrentCategory = categoryId;
+            ViewBag.CurrentStatus = status;
+            ViewBag.CurrentBehavior = behaviorType;
+
+            // Đếm theo nhóm để hiển thị tabs
+            var allProds = await _context.Products
+                .Include(p => p.Category)
+                .ToListAsync();
+            ViewBag.CountRetail = allProds.Count(p => p.Category?.BehaviorType == "Retail");
+            ViewBag.CountRental = allProds.Count(p => p.Category?.BehaviorType == "Rental");
+            ViewBag.CountService = allProds.Count(p => p.Category?.BehaviorType == "Service");
+
+            return View("~/Views/Admin/AdminProduct/Index.cshtml", products);
         }
 
         // ───────────────────────────────────────────────
         // 2. CHI TIẾT SẢN PHẨM
         // ───────────────────────────────────────────────
-        public async Task<IActionResult> Details(int? id)
+        [HttpGet("Details/{id}")]
+        public async Task<IActionResult> Details(int id)
         {
-            if (id == null) return NotFound();
-
             var product = await _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.Variants.Where(v => v.IsActive))
                 .FirstOrDefaultAsync(m => m.ProductId == id);
 
-            if (product == null) return NotFound();
+            if (product == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy sản phẩm!";
+                return RedirectToAction(nameof(Index));
+            }
 
-            return View(product);
+            return View("~/Views/Admin/AdminProduct/Details.cshtml", product);
         }
 
         // ───────────────────────────────────────────────
         // 3. THÊM MỚI SẢN PHẨM
         // ───────────────────────────────────────────────
-        [HttpGet]
-        public async Task<IActionResult> Create()
+        [HttpGet("Create")]
+        public async Task<IActionResult> Create(string? behaviorType)
         {
             await LoadCategoriesToViewBag();
-            return View();
+            ViewBag.DefaultBehavior = behaviorType ?? "Retail";
+            return View("~/Views/Admin/AdminProduct/Create.cshtml");
         }
 
-        [HttpPost]
+        [HttpPost("Create")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Product model, IFormFile? ImageFile,
-            List<string>? variantSize, List<string>? variantColor,
-            List<int>? variantStock, List<int>? variantMinStock)
+        public async Task<IActionResult> Create(
+            Product model,
+            IFormFile? ImageFile,
+            List<string>? variantSize,
+            List<string>? variantColor,
+            List<int>? variantStock,
+            List<int>? variantMinStock,
+            // Trường mở rộng cho Rental
+            decimal? depositAmount,
+            decimal? cleaningFee,
+            int? maxRentalHours,
+            // Trường mở rộng cho Service
+            string? laborUnit,
+            decimal? laborPrice,
+            decimal? materialPrice)
         {
             ModelState.Remove("Category");
             ModelState.Remove("Inventories");
@@ -80,62 +134,100 @@ namespace QuanLiSanCauLong.Controllers
             ModelState.Remove("ImageUrl");
             ModelState.Remove("Variants");
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                if (await _context.Products.AnyAsync(p => p.ProductCode == model.ProductCode))
-                {
-                    ModelState.AddModelError("ProductCode", "Mã sản phẩm đã tồn tại!");
-                }
-                else
-                {
-                    model.ImageUrl = ImageFile != null ? await SaveImage(ImageFile) : "/images/no-image.png";
-                    model.CreatedAt = DateTime.Now;
-                    model.UpdatedAt = DateTime.Now;
-                    model.IsActive = true;
-
-                    // ── Tạo variants từ form ──
-                    var variants = BuildVariants(variantSize, variantColor, variantStock, variantMinStock, model.ProductCode);
-                    model.Variants = variants;
-
-                    // ── Tổng hợp tồn kho lên Product ──
-                    if (variants.Any())
-                    {
-                        model.StockQuantity = variants.Sum(v => v.StockQuantity);
-                    }
-
-                    _context.Products.Add(model);
-                    await _context.SaveChangesAsync();
-
-                    TempData["SuccessMessage"] = "Thêm sản phẩm thành công!";
-                    return RedirectToAction(nameof(Index));
-                }
+                await LoadCategoriesToViewBag();
+                return View("~/Views/Admin/AdminProduct/Create.cshtml", model);
             }
 
-            await LoadCategoriesToViewBag();
-            return View(model);
+            if (await _context.Products.AnyAsync(p => p.ProductCode == model.ProductCode))
+            {
+                ModelState.AddModelError("ProductCode", "Mã sản phẩm đã tồn tại!");
+                await LoadCategoriesToViewBag();
+                return View("~/Views/Admin/AdminProduct/Create.cshtml", model);
+            }
+
+            try
+            {
+                // Đọc BehaviorType từ danh mục được chọn
+                var category = await _context.ProductCategories.FindAsync(model.CategoryId);
+                var behavior = category?.BehaviorType ?? "Retail";
+
+                model.ImageUrl = ImageFile != null ? await SaveImageAsync(ImageFile) : "/images/no-image.png";
+                model.CreatedAt = DateTime.Now;
+                model.UpdatedAt = DateTime.Now;
+                model.IsActive = true;
+                model.Status = "Active";
+
+                // ── Áp dụng logic theo nhóm ──
+                ApplyBehaviorDefaults(model, behavior, category,
+                    depositAmount, cleaningFee, maxRentalHours,
+                    laborUnit, laborPrice, materialPrice);
+
+                // ── Variants (Retail + Rental có size/màu) ──
+                if (behavior != "Service")
+                {
+                    var variants = BuildVariants(variantSize, variantColor, variantStock, variantMinStock, model.ProductCode);
+                    model.Variants = variants;
+                    if (variants.Any())
+                        model.StockQuantity = variants.Sum(v => v.StockQuantity);
+                }
+
+                _context.Products.Add(model);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Tạo sản phẩm: ID={Id}, Name={Name}, Behavior={B}",
+                    model.ProductId, model.ProductName, behavior);
+                TempData["SuccessMessage"] = $"Thêm sản phẩm \"{model.ProductName}\" thành công!";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi tạo sản phẩm");
+                TempData["ErrorMessage"] = $"Có lỗi xảy ra: {ex.Message}";
+                await LoadCategoriesToViewBag();
+                return View("~/Views/Admin/AdminProduct/Create.cshtml", model);
+            }
         }
 
         // ───────────────────────────────────────────────
         // 4. CHỈNH SỬA SẢN PHẨM
         // ───────────────────────────────────────────────
-        [HttpGet]
+        [HttpGet("Edit/{id}")]
         public async Task<IActionResult> Edit(int id)
         {
             var product = await _context.Products
+                .Include(p => p.Category)
                 .Include(p => p.Variants.Where(v => v.IsActive))
                 .FirstOrDefaultAsync(p => p.ProductId == id);
 
-            if (product == null) return NotFound();
+            if (product == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy sản phẩm!";
+                return RedirectToAction(nameof(Index));
+            }
 
             await LoadCategoriesToViewBag();
-            return View(product);
+            return View("~/Views/Admin/AdminProduct/Edit.cshtml", product);
         }
 
-        [HttpPost]
+        [HttpPost("Edit/{id}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Product model, IFormFile? ImageFile,
-            List<int?>? variantId, List<string>? variantSize, List<string>? variantColor,
-            List<int>? variantStock, List<int>? variantMinStock)
+        public async Task<IActionResult> Edit(
+            int id,
+            Product model,
+            IFormFile? ImageFile,
+            List<int?>? variantId,
+            List<string>? variantSize,
+            List<string>? variantColor,
+            List<int>? variantStock,
+            List<int>? variantMinStock,
+            decimal? depositAmount,
+            decimal? cleaningFee,
+            int? maxRentalHours,
+            string? laborUnit,
+            decimal? laborPrice,
+            decimal? materialPrice)
         {
             if (id != model.ProductId) return NotFound();
 
@@ -144,27 +236,39 @@ namespace QuanLiSanCauLong.Controllers
             ModelState.Remove("OrderDetails");
             ModelState.Remove("Variants");
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
+                await LoadCategoriesToViewBag();
+                return View("~/Views/Admin/AdminProduct/Edit.cshtml", model);
+            }
+
+            try
+            {
+                if (await _context.Products.AnyAsync(p => p.ProductCode == model.ProductCode && p.ProductId != id))
                 {
-                    if (await _context.Products.AnyAsync(p => p.ProductCode == model.ProductCode && p.ProductId != id))
-                    {
-                        ModelState.AddModelError("ProductCode", "Mã sản phẩm đã tồn tại!");
-                        await LoadCategoriesToViewBag();
-                        return View(model);
-                    }
+                    ModelState.AddModelError("ProductCode", "Mã sản phẩm đã tồn tại!");
+                    await LoadCategoriesToViewBag();
+                    return View("~/Views/Admin/AdminProduct/Edit.cshtml", model);
+                }
 
-                    if (ImageFile != null)
-                        model.ImageUrl = await SaveImage(ImageFile);
+                var category = await _context.ProductCategories.FindAsync(model.CategoryId);
+                var behavior = category?.BehaviorType ?? "Retail";
 
-                    model.UpdatedAt = DateTime.Now;
+                if (ImageFile != null)
+                    model.ImageUrl = await SaveImageAsync(ImageFile);
 
-                    // ── Xử lý variants ──
+                model.UpdatedAt = DateTime.Now;
+
+                ApplyBehaviorDefaults(model, behavior, category,
+                    depositAmount, cleaningFee, maxRentalHours,
+                    laborUnit, laborPrice, materialPrice);
+
+                // Variants chỉ áp dụng cho Retail & Rental
+                if (behavior != "Service")
+                {
                     await UpdateVariants(id, variantId, variantSize, variantColor,
                                         variantStock, variantMinStock, model.ProductCode);
 
-                    // ── Sync tổng tồn kho từ variants ──
                     var allVariants = await _context.ProductVariants
                         .Where(v => v.ProductId == id && v.IsActive)
                         .ToListAsync();
@@ -174,28 +278,34 @@ namespace QuanLiSanCauLong.Controllers
                         model.StockQuantity = allVariants.Sum(v => v.StockQuantity);
                         model.ReservedQuantity = allVariants.Sum(v => v.ReservedQuantity);
                     }
-
-                    _context.Update(model);
-                    await _context.SaveChangesAsync();
-
-                    TempData["SuccessMessage"] = "Cập nhật sản phẩm thành công!";
-                    return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ProductExists(model.ProductId)) return NotFound();
-                    throw;
-                }
+
+                _context.Update(model);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Cập nhật sản phẩm ID={Id}", id);
+                TempData["SuccessMessage"] = $"Cập nhật \"{model.ProductName}\" thành công!";
+                return RedirectToAction(nameof(Index));
             }
-
-            await LoadCategoriesToViewBag();
-            return View(model);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ProductExists(model.ProductId)) return NotFound();
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi cập nhật sản phẩm ID={Id}", id);
+                TempData["ErrorMessage"] = $"Có lỗi xảy ra: {ex.Message}";
+                await LoadCategoriesToViewBag();
+                return View("~/Views/Admin/AdminProduct/Edit.cshtml", model);
+            }
         }
 
         // ───────────────────────────────────────────────
         // 5. XÓA SẢN PHẨM
         // ───────────────────────────────────────────────
-        [HttpPost]
+        [HttpPost("Delete/{id}")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var product = await _context.Products
@@ -203,20 +313,21 @@ namespace QuanLiSanCauLong.Controllers
                 .FirstOrDefaultAsync(p => p.ProductId == id);
 
             if (product == null)
-                return Json(new { success = false, message = "Không tìm thấy!" });
+                return Json(new { success = false, message = "Không tìm thấy sản phẩm!" });
 
             if (product.OrderDetails != null && product.OrderDetails.Any())
                 return Json(new { success = false, message = "Sản phẩm đã có đơn hàng, không thể xóa!" });
 
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
-            return Json(new { success = true, message = "Xóa thành công!" });
+            return Json(new { success = true, message = "Xóa sản phẩm thành công!" });
         }
 
         // ───────────────────────────────────────────────
         // 6. XÓA VARIANT (AJAX)
         // ───────────────────────────────────────────────
-        [HttpPost]
+        [HttpPost("DeleteVariant/{variantId}")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteVariant(int variantId)
         {
             var variant = await _context.ProductVariants
@@ -226,9 +337,9 @@ namespace QuanLiSanCauLong.Controllers
             if (variant == null)
                 return Json(new { success = false, message = "Không tìm thấy phân loại!" });
 
-            // Nếu có đơn hàng liên quan → soft-delete
             if (variant.OrderDetails != null && variant.OrderDetails.Any())
             {
+                // Soft-delete nếu có đơn hàng liên quan
                 variant.IsActive = false;
                 variant.UpdatedAt = DateTime.Now;
             }
@@ -242,10 +353,9 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         // ───────────────────────────────────────────────
-        // 7. API: Lấy variants của product (dùng cho StockIn/StockOut)
-        // GET /AdminProduct/GetVariants?productId=5
+        // 7. API: Lấy variants (dùng cho StockIn/StockOut)
         // ───────────────────────────────────────────────
-        [HttpGet]
+        [HttpGet("GetVariants")]
         public async Task<IActionResult> GetVariants(int productId)
         {
             var variants = await _context.ProductVariants
@@ -267,8 +377,109 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         // ───────────────────────────────────────────────
+        // 8. API: Lấy thông tin sản phẩm kèm BehaviorType
+        // ───────────────────────────────────────────────
+        [HttpGet("GetProductInfo")]
+        public async Task<IActionResult> GetProductInfo(int productId)
+        {
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Variants.Where(v => v.IsActive))
+                .FirstOrDefaultAsync(p => p.ProductId == productId);
+
+            if (product == null)
+                return Json(new { success = false, message = "Không tìm thấy sản phẩm!" });
+
+            var behavior = product.Category?.BehaviorType ?? "Retail";
+
+            return Json(new
+            {
+                success = true,
+                productId = product.ProductId,
+                productName = product.ProductName,
+                behavior = behavior,
+                unit = product.Unit,
+                price = product.Price,
+                // Rental fields
+                depositRequired = product.Category?.DepositRequired ?? false,
+                depositAmount = product.DepositAmount,
+                cleaningFee = product.CleaningFee,
+                maxRentalHours = product.MaxRentalHours,
+                // Service fields
+                laborUnit = product.LaborUnit,
+                laborPrice = product.LaborPrice,
+                materialPrice = product.MaterialPrice,
+                // Variants
+                hasVariants = product.Variants?.Any() ?? false,
+                variants = product.Variants?.Select(v => new
+                {
+                    v.VariantId,
+                    v.SizeName,
+                    v.ColorName,
+                    displayName = v.DisplayName,
+                    availableQuantity = v.AvailableQuantity,
+                    rentedQuantity = v.RentedQuantity
+                })
+            });
+        }
+
+        // ───────────────────────────────────────────────
         // HELPERS
         // ───────────────────────────────────────────────
+
+        /// <summary>
+        /// Áp dụng giá trị mặc định / override theo BehaviorType của danh mục.
+        /// Retail  → trừ kho thẳng, không cần deposit, không cần labor.
+        /// Rental  → hoàn kho khi trả, có deposit + cleaningFee.
+        /// Service → không có kho vật lý, chỉ tính công + vật liệu.
+        /// </summary>
+        private static void ApplyBehaviorDefaults(
+            Product model,
+            string behavior,
+            ProductCategory? cat,
+            decimal? depositAmount, decimal? cleaningFee, int? maxRentalHours,
+            string? laborUnit, decimal? laborPrice, decimal? materialPrice)
+        {
+            switch (behavior)
+            {
+                case "Rental":
+                    // Kế thừa default từ danh mục nếu form không truyền
+                    model.DepositAmount = depositAmount ?? cat?.DefaultDepositAmount ?? 0;
+                    model.CleaningFee = cleaningFee ?? cat?.DefaultCleaningFee ?? 0;
+                    model.MaxRentalHours = maxRentalHours ?? cat?.MaxRentalHours;
+                    model.RequiresDeposit = cat?.DepositRequired ?? false;
+                    // Service fields không dùng
+                    model.LaborUnit = null;
+                    model.LaborPrice = 0;
+                    model.MaterialPrice = 0;
+                    break;
+
+                case "Service":
+                    // Không quản lý kho vật lý
+                    model.StockQuantity = 0;
+                    model.ReservedQuantity = 0;
+                    model.LaborUnit = laborUnit ?? cat?.MaterialUnit ?? "bộ";
+                    model.LaborPrice = laborPrice ?? 0;
+                    model.MaterialPrice = materialPrice ?? 0;
+                    // Rental fields không dùng
+                    model.DepositAmount = 0;
+                    model.CleaningFee = 0;
+                    model.MaxRentalHours = null;
+                    model.RequiresDeposit = false;
+                    break;
+
+                default: // Retail
+                    model.DepositAmount = 0;
+                    model.CleaningFee = 0;
+                    model.MaxRentalHours = null;
+                    model.RequiresDeposit = false;
+                    model.LaborUnit = null;
+                    model.LaborPrice = 0;
+                    model.MaterialPrice = 0;
+                    break;
+            }
+        }
+
         private List<ProductVariant> BuildVariants(
             List<string>? sizes, List<string>? colors,
             List<int>? stocks, List<int>? minStocks, string? productCode)
@@ -297,7 +508,6 @@ namespace QuanLiSanCauLong.Controllers
                     UpdatedAt = DateTime.Now
                 });
             }
-
             return result;
         }
 
@@ -326,7 +536,6 @@ namespace QuanLiSanCauLong.Controllers
 
                 if (vid.HasValue && vid.Value > 0)
                 {
-                    // Cập nhật variant hiện có
                     var existing = existingVariants.FirstOrDefault(v => v.VariantId == vid.Value);
                     if (existing != null)
                     {
@@ -341,8 +550,7 @@ namespace QuanLiSanCauLong.Controllers
                 }
                 else
                 {
-                    // Thêm mới
-                    var newVariant = new ProductVariant
+                    _context.ProductVariants.Add(new ProductVariant
                     {
                         ProductId = productId,
                         SizeName = size,
@@ -353,8 +561,7 @@ namespace QuanLiSanCauLong.Controllers
                         IsActive = true,
                         CreatedAt = DateTime.Now,
                         UpdatedAt = DateTime.Now
-                    };
-                    _context.ProductVariants.Add(newVariant);
+                    });
                 }
             }
 
@@ -368,23 +575,52 @@ namespace QuanLiSanCauLong.Controllers
 
         private async Task LoadCategoriesToViewBag()
         {
-            ViewBag.Categories = await _context.ProductCategories.ToListAsync();
+            var cats = await _context.ProductCategories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.DisplayOrder)
+                .ThenBy(c => c.CategoryName)
+                .ToListAsync();
+            ViewBag.Categories = cats;
+            // Trả về dạng JSON để JS dùng khi switch danh mục
+            ViewBag.CategoriesJson = System.Text.Json.JsonSerializer.Serialize(
+                cats.Select(c => new
+                {
+                    c.CategoryId,
+                    c.CategoryName,
+                    c.BehaviorType,
+                    c.CategoryType,
+                    c.DefaultUnit,
+                    c.DepositRequired,
+                    c.DefaultDepositAmount,
+                    c.DefaultCleaningFee,
+                    c.MaxRentalHours,
+                    c.MaterialUnit,
+                    c.HasVariants,
+                    c.RequiresSize
+                }));
         }
 
-        private async Task<string> SaveImage(IFormFile file)
+        private async Task<string> SaveImageAsync(IFormFile file)
         {
-            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "products");
+            var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp", "image/gif" };
+            if (!allowedTypes.Contains(file.ContentType.ToLower()))
+                throw new InvalidOperationException("Chỉ chấp nhận ảnh JPG, PNG, WEBP hoặc GIF.");
+            if (file.Length > 5 * 1024 * 1024)
+                throw new InvalidOperationException("Ảnh không được vượt quá 5MB.");
 
-            if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+            var uploadDir = Path.Combine(_env.WebRootPath, ImageFolder);
+            Directory.CreateDirectory(uploadDir);
 
-            var filePath = Path.Combine(folderPath, fileName);
-            using var stream = new FileStream(filePath, FileMode.Create);
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var fileName = $"prod_{Guid.NewGuid():N}{ext}";
+            var fullPath = Path.Combine(uploadDir, fileName);
+
+            await using var stream = new FileStream(fullPath, FileMode.Create);
             await file.CopyToAsync(stream);
-
-            return "/images/products/" + fileName;
+            return $"/{ImageFolder}/{fileName}";
         }
 
-        private bool ProductExists(int id) => _context.Products.Any(e => e.ProductId == id);
+        private bool ProductExists(int id) =>
+            _context.Products.Any(e => e.ProductId == id);
     }
 }

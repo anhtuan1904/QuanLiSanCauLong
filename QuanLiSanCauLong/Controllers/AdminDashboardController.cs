@@ -127,8 +127,10 @@ namespace QuanLiSanCauLong.Controllers
             model.TopProducts = productStats;
 
             // Khách hàng thân thiết
+
+            // Khách hàng thân thiết
             model.TopCustomers = bookings
-                .Where(b => b.Status != "Cancelled")
+                .Where(b => b.Status != "Cancelled" && b.User != null)
                 .GroupBy(b => new { b.User.FullName, b.User.Email, b.User.Phone })
                 .Select(g => new TopCustomerViewModel
                 {
@@ -142,14 +144,160 @@ namespace QuanLiSanCauLong.Controllers
                 .Take(10)
                 .ToList();
 
+            // ── Đặt sân gần đây ──
+            model.RecentBookings = bookings
+                .Where(b => b.User != null && b.Court != null)
+                .OrderByDescending(b => b.CreatedAt)
+                .Take(7)
+                .Select(b => new RecentBookingViewModel
+                {
+                    BookingId = b.BookingId,
+                    BookingCode = b.BookingCode,
+                    CustomerName = b.User.FullName,
+                    // Sửa CourtName thành CourtNumber ở dòng dưới đây
+                    CourtNumber = b.Court.CourtNumber,
+                    StartTime = b.StartTime,
+                    TotalAmount = b.TotalPrice,
+                    Status = b.Status
+                })
+                .ToList(); // Đừng quên thêm .ToList() nếu model.RecentBookings là một List
+
+            // ── Thống kê theo cơ sở ──
+            model.FacilityStats = bookings
+                .Where(b => b.Court?.Facility != null)
+                .GroupBy(b => b.Court.Facility)
+                .Select(g =>
+                {
+                    var total = g.Count();
+                    var completed = g.Count(b => b.Status == "Completed");
+                    return new FacilityStatsViewModel
+                    {
+                        FacilityId = g.Key.FacilityId,
+                        FacilityName = g.Key.FacilityName,
+                        Address = g.Key.Address,
+                        TotalBookings = total,
+                        TotalRevenue = g.Where(b => b.Status != "Cancelled").Sum(b => b.TotalPrice),
+                        OccupancyRate = total > 0 ? Math.Round((double)completed / total * 100, 1) : 0,
+                        AverageRating = 0
+                    };
+                })
+                .OrderByDescending(f => f.TotalRevenue)
+                .ToList();
+
             return View(model);
         }
 
         [HttpGet]
         public async Task<IActionResult> Analytics(DateTime? fromDate, DateTime? toDate)
         {
-            // Có thể tái sử dụng logic từ Index hoặc tạo view riêng
-            return await Index(fromDate, toDate);
+            // Analytics render View("Analytics") riêng với cùng logic Index
+            DateTime from = fromDate ?? DateTime.Today.AddDays(-30);
+            DateTime to = toDate ?? DateTime.Today;
+
+            var model = new AdminDashboardViewModel { FromDate = from, ToDate = to };
+
+            var bookings = await _context.Bookings
+                .Include(b => b.Court.Facility)
+                .Include(b => b.User)
+                .Where(b => b.BookingDate >= from && b.BookingDate <= to)
+                .ToListAsync();
+
+            var orders = await _context.Orders
+                .Include(o => o.OrderDetails)
+                .Include(o => o.Facility)
+                .Where(o => o.CreatedAt >= from && o.CreatedAt <= to.AddDays(1))
+                .ToListAsync();
+
+            model.TotalBookings = bookings.Count;
+            model.CompletedBookings = bookings.Count(b => b.Status == "Completed");
+            model.CancelledBookings = bookings.Count(b => b.Status == "Cancelled");
+            model.BookingRevenue = bookings.Where(b => b.Status != "Cancelled").Sum(b => b.TotalPrice);
+            model.ProductRevenue = orders.Where(o => o.OrderStatus == "Completed").Sum(o => o.TotalAmount);
+            model.TotalRevenue = model.BookingRevenue + model.ProductRevenue;
+            model.TotalCustomers = await _context.Users.CountAsync(u => u.Role == "Customer");
+            model.TotalOrders = orders.Count;
+
+            model.RevenueByDate = bookings
+                .GroupBy(b => b.BookingDate)
+                .Select(g => new RevenueByDateViewModel
+                {
+                    Date = g.Key,
+                    BookingRevenue = g.Where(b => b.Status != "Cancelled").Sum(b => b.TotalPrice),
+                    ProductRevenue = orders.Where(o => o.CreatedAt.Date == g.Key && o.OrderStatus == "Completed").Sum(o => o.TotalAmount)
+                })
+                .OrderBy(r => r.Date)
+                .ToList();
+            model.RevenueByDate.ForEach(r => r.TotalRevenue = r.BookingRevenue + r.ProductRevenue);
+
+            model.TopProducts = await _context.OrderDetails
+                .Include(od => od.Product).ThenInclude(p => p.Category)
+                .Include(od => od.Order)
+                .Where(od => od.Order.CreatedAt >= from && od.Order.CreatedAt <= to.AddDays(1)
+                          && od.Order.OrderStatus == "Completed")
+                .GroupBy(od => new { od.Product.ProductName, od.Product.Category.CategoryType })
+                .Select(g => new TopProductViewModel
+                {
+                    ProductName = g.Key.ProductName,
+                    CategoryType = g.Key.CategoryType,
+                    QuantitySold = g.Sum(od => od.Quantity),
+                    Revenue = g.Sum(od => od.TotalPrice)
+                })
+                .OrderByDescending(p => p.Revenue)
+                .Take(10)
+                .ToListAsync();
+
+            model.PopularTimeSlots = bookings
+                .Where(b => b.Status != "Cancelled")
+                .GroupBy(b => b.StartTime.Hours)
+                .Select(g => new PopularTimeSlotViewModel
+                {
+                    TimeSlot = g.Key + ":00 - " + (g.Key + 1) + ":00",
+                    BookingCount = g.Count(),
+                    Revenue = g.Sum(b => b.TotalPrice)
+                })
+                .OrderByDescending(t => t.BookingCount)
+                .Take(10)
+                .ToList();
+
+            model.TopCustomers = bookings
+                .Where(b => b.Status != "Cancelled" && b.User != null)
+                .GroupBy(b => new { b.User.FullName, b.User.Email, b.User.Phone })
+                .Select(g => new TopCustomerViewModel
+                {
+                    CustomerName = g.Key.FullName,
+                    Email = g.Key.Email,
+                    Phone = g.Key.Phone,
+                    BookingCount = g.Count(),
+                    TotalSpent = g.Sum(b => b.TotalPrice)
+                })
+                .OrderByDescending(c => c.TotalSpent)
+                .Take(15)
+                .ToList();
+
+            model.FacilityStats = bookings
+                .Where(b => b.Court?.Facility != null)
+                .GroupBy(b => b.Court.Facility)
+                .Select(g =>
+                {
+                    var total = g.Count();
+                    var completed = g.Count(b => b.Status == "Completed");
+                    return new FacilityStatsViewModel
+                    {
+                        FacilityId = g.Key.FacilityId,
+                        FacilityName = g.Key.FacilityName,
+                        Address = g.Key.Address,
+                        TotalBookings = total,
+                        TotalRevenue = g.Where(b => b.Status != "Cancelled").Sum(b => b.TotalPrice),
+                        OccupancyRate = total > 0 ? Math.Round((double)completed / total * 100, 1) : 0,
+                        AverageRating = 0
+                    };
+                })
+                .OrderByDescending(f => f.TotalRevenue)
+                .ToList();
+
+            model.RecentBookings = new List<RecentBookingViewModel>();
+
+            return View(model);
         }
     }
 }

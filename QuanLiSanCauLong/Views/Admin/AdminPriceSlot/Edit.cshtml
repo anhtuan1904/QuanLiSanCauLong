@@ -1,10 +1,9 @@
 ﻿@model QuanLiSanCauLong.Models.PriceSlot
 @{
-    ViewData["Title"] = "Chỉnh Sửa Khung Giờ & Giá";
-    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    Layout = null;
+    var currentDays = Model.AppliedDays ?? (Model.DayOfWeek.HasValue ? ((int)Model.DayOfWeek.Value).ToString() : "");
+    var selectedDaySet = currentDays.Split(',').Select(d => d.Trim()).ToHashSet();
 }
-
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
     :root {
@@ -19,164 +18,178 @@
         --red: #c94b2a;
     }
 
-    body, * {
-        font-family: 'Outfit',sans-serif;
+    .mh {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 1.4rem 1.5rem 0;
+        gap: 1rem;
     }
 
-    .pg-head {
+    .mh-label {
+        font-size: .65rem;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        color: var(--gold);
+        font-weight: 700;
+        margin-bottom: .3rem;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        margin-bottom: 2rem;
+        gap: .5rem;
     }
 
-    .pg-title {
+        .mh-label::before {
+            content: '';
+            width: 12px;
+            height: 1px;
+            background: var(--gold);
+        }
+
+    .mh-title {
         font-family: 'Playfair Display',serif;
-        font-size: 1.7rem;
+        font-size: 1.35rem;
         font-weight: 700;
         color: var(--deep);
     }
 
-        .pg-title em {
-            font-style: italic;
-            color: var(--gold);
-        }
-
-    .pg-sub {
-        font-size: .82rem;
+    .mh-sub {
+        font-size: .78rem;
         color: var(--muted);
-        margin-top: .2rem;
+        margin-top: .15rem;
     }
 
-    .btn-back {
-        display: flex;
-        align-items: center;
-        gap: .4rem;
-        background: #fff;
-        color: var(--deep);
-        border: 1.5px solid var(--border);
-        padding: .65rem 1.2rem;
-        border-radius: 8px;
-        font-size: .84rem;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all .2s;
-    }
-
-        .btn-back:hover {
-            border-color: var(--gold);
-            color: var(--gold);
-            background: var(--cream);
-        }
-
-    .form-layout {
-        display: grid;
-        grid-template-columns: 1fr 320px;
-        gap: 1.5rem;
-        align-items: start;
-    }
-
-    .sec-card {
-        background: #fff;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        overflow: hidden;
-        margin-bottom: 1.25rem;
-    }
-
-    .sec-hd {
-        background: var(--warm);
-        padding: 1rem 1.4rem;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        gap: .75rem;
-    }
-
-    .sec-icon {
+    .mh-close {
         width: 32px;
         height: 32px;
-        border-radius: 8px;
-        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #fff;
+        cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
+        color: var(--muted);
+        font-size: .85rem;
+        transition: all .15s;
         flex-shrink: 0;
     }
 
-        .sec-icon i {
-            color: var(--deep);
-            font-size: .9rem;
+        .mh-close:hover {
+            background: var(--deep);
+            color: var(--gold2);
+            border-color: var(--deep);
         }
 
-    .sec-hdtxt {
-        font-family: 'Playfair Display',serif;
-        font-size: 1rem;
+    .mbody {
+        padding: 1.25rem 1.5rem;
+        max-height: calc(85vh - 130px);
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+        .mbody::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .mbody::-webkit-scrollbar-track {
+            background: var(--warm);
+            border-radius: 3px;
+        }
+
+        .mbody::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 3px;
+        }
+
+    .sf-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        margin-bottom: .9rem;
+        overflow: hidden;
+    }
+
+    .sf-card-head {
+        padding: .7rem 1rem;
+        background: var(--warm);
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .sf-card-icon {
+        color: var(--gold);
+        font-size: .9rem;
+    }
+
+    .sf-card-title {
+        font-size: .72rem;
         font-weight: 700;
-        color: var(--deep);
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--muted);
     }
 
-    .sec-bd {
-        padding: 1.4rem;
+    .sf-card-body {
+        padding: 1rem;
+        display: grid;
+        gap: .75rem;
     }
 
-    .f-group {
+    .fg {
         display: flex;
         flex-direction: column;
-        gap: .4rem;
+        gap: .3rem;
     }
 
-    .f-label {
-        font-size: .78rem;
+    .fg-label {
+        font-size: .72rem;
         font-weight: 700;
-        color: var(--deep);
-        letter-spacing: .03em;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        color: var(--muted);
     }
 
-        .f-label .req {
-            color: var(--red);
-            margin-left: .15rem;
-        }
+    .fg-req {
+        color: #c94b2a;
+        margin-left: .15rem;
+    }
 
-    .f-ctrl {
-        padding: .68rem 1rem;
-        border: 1.5px solid var(--border);
-        border-radius: 8px;
+    .fg-input, .fg-select {
+        padding: .6rem .85rem;
+        border: 1px solid var(--border);
+        border-radius: 7px;
         font-family: 'Outfit',sans-serif;
-        font-size: .9rem;
+        font-size: .86rem;
         color: var(--deep);
         background: #fff;
         outline: none;
-        transition: border-color .2s, box-shadow .2s;
+        transition: border-color .2s;
+        width: 100%;
+        box-sizing: border-box;
     }
 
-        .f-ctrl:focus {
+        .fg-input:focus, .fg-select:focus {
             border-color: var(--gold);
-            box-shadow: 0 0 0 3px rgba(212,160,23,.1);
+            box-shadow: 0 0 0 3px rgba(212,160,23,.08);
         }
 
-    .f-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-    }
-
-    .f-row-3 {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 1rem;
+    .fg-hint {
+        font-size: .7rem;
+        color: var(--muted);
+        margin-top: .2rem;
     }
 
     .info-chip {
         display: inline-flex;
         align-items: center;
-        gap: .5rem;
-        padding: .45rem 1rem;
+        gap: .4rem;
+        padding: .35rem .8rem;
         background: var(--cream);
         border: 1px solid rgba(212,160,23,.2);
         border-radius: 20px;
-        font-size: .8rem;
+        font-size: .78rem;
         font-weight: 600;
         color: var(--deep);
     }
@@ -185,76 +198,19 @@
             color: var(--gold);
         }
 
-    .price-wrap {
-        position: relative;
-    }
-
-        .price-wrap .f-ctrl {
-            padding-left: 2rem;
-        }
-
-    .price-sym {
-        position: absolute;
-        left: .85rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--muted);
-        font-weight: 700;
-        font-size: .9rem;
-    }
-
-    .price-preview {
-        background: linear-gradient(135deg,rgba(26,18,9,.04),rgba(212,160,23,.08));
-        border: 1px solid rgba(212,160,23,.25);
-        border-radius: 10px;
-        padding: 1rem 1.2rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .pp-label {
-        font-size: .7rem;
-        font-weight: 700;
-        letter-spacing: .08em;
-        text-transform: uppercase;
-        color: var(--muted);
-    }
-
-    .pp-value {
-        font-family: 'Playfair Display',serif;
-        font-size: 1.6rem;
-        font-weight: 700;
-        color: var(--green);
-    }
-
-    .pp-break {
-        font-size: .74rem;
-        color: var(--muted);
-        margin-top: .15rem;
-    }
-
-    .day-grid {
-        display: grid;
-        grid-template-columns: repeat(4,1fr);
-        gap: .6rem;
-    }
-
     .day-btn-row {
         display: flex;
-        gap: .5rem;
+        gap: .4rem;
         flex-wrap: wrap;
-        margin-bottom: .9rem;
+        margin-bottom: .6rem;
     }
 
     .day-quick {
-        padding: .4rem .9rem;
+        padding: .3rem .7rem;
         background: #fff;
         border: 1.5px solid var(--border);
         border-radius: 20px;
-        font-size: .76rem;
+        font-size: .72rem;
         font-weight: 600;
         color: var(--deep);
         cursor: pointer;
@@ -267,6 +223,12 @@
             background: var(--cream);
         }
 
+    .day-grid {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: .5rem;
+    }
+
     .day-item input {
         display: none;
     }
@@ -275,14 +237,13 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: .6rem .4rem;
+        padding: .5rem .3rem;
         border: 1.5px solid var(--border);
-        border-radius: 8px;
-        font-size: .82rem;
+        border-radius: 7px;
+        font-size: .78rem;
         font-weight: 600;
         cursor: pointer;
         transition: all .2s;
-        text-align: center;
         background: #fff;
     }
 
@@ -305,14 +266,47 @@
         color: var(--gold2);
     }
 
+    .price-preview {
+        background: linear-gradient(135deg,rgba(26,18,9,.04),rgba(212,160,23,.08));
+        border: 1px solid rgba(212,160,23,.25);
+        border-radius: 8px;
+        padding: .8rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+    }
+
+    .pp-label {
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--muted);
+    }
+
+    .pp-value {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--green);
+        line-height: 1;
+    }
+
+    .pp-break {
+        font-size: .7rem;
+        color: var(--muted);
+        margin-top: .1rem;
+    }
+
     .peak-toggle {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 1rem 1.2rem;
+        padding: .8rem 1rem;
         background: var(--cream);
         border: 1.5px solid var(--border);
-        border-radius: 10px;
+        border-radius: 8px;
         cursor: pointer;
         transition: all .2s;
     }
@@ -326,25 +320,25 @@
             border-color: rgba(201,75,42,.3);
         }
 
-    .peak-info .peak-title {
+    .peak-title {
         font-weight: 700;
-        font-size: .9rem;
+        font-size: .84rem;
         color: var(--deep);
         display: flex;
         align-items: center;
         gap: .4rem;
     }
 
-    .peak-info .peak-sub {
-        font-size: .74rem;
+    .peak-sub {
+        font-size: .7rem;
         color: var(--muted);
-        margin-top: .15rem;
+        margin-top: .1rem;
     }
 
     .toggle-sw {
-        width: 42px;
-        height: 24px;
-        border-radius: 12px;
+        width: 40px;
+        height: 22px;
+        border-radius: 11px;
         background: var(--border);
         position: relative;
         transition: background .2s;
@@ -354,8 +348,8 @@
         .toggle-sw::after {
             content: '';
             position: absolute;
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
             background: #fff;
             top: 3px;
@@ -371,408 +365,232 @@
                 transform: translateX(18px);
             }
 
-    .sidebar-card {
-        background: #fff;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        overflow: hidden;
-        position: sticky;
-        top: 20px;
+    .price-wrap {
+        position: relative;
     }
 
-    .sidebar-hd {
-        background: var(--deep);
-        padding: 1rem 1.3rem;
-    }
-
-        .sidebar-hd h3 {
-            font-family: 'Playfair Display',serif;
-            font-size: 1rem;
-            font-weight: 700;
-            color: #fff;
-            margin: 0;
+        .price-wrap .fg-input {
+            padding-left: 1.8rem;
         }
 
-        .sidebar-hd p {
-            font-size: .74rem;
-            color: rgba(255,255,255,.45);
-            margin: .2rem 0 0;
-        }
-
-    .sidebar-bd {
-        padding: 1.2rem;
-    }
-
-    .meta-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: .6rem 0;
-        border-bottom: 1px solid var(--border);
-        font-size: .84rem;
-    }
-
-        .meta-row:last-child {
-            border: none;
-        }
-
-    .meta-label {
+    .price-sym {
+        position: absolute;
+        left: .7rem;
+        top: 50%;
+        transform: translateY(-50%);
         color: var(--muted);
-        font-size: .78rem;
-    }
-
-    .meta-value {
         font-weight: 700;
-        color: var(--deep);
-        font-size: .84rem;
+        font-size: .86rem;
     }
 
-    .status-toggle {
+    .mfooter {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: var(--cream);
-        border: 1.5px solid rgba(212,160,23,.2);
-        border-radius: 10px;
-        padding: 1rem 1.2rem;
-        margin-bottom: 1rem;
+        justify-content: flex-end;
+        gap: .6rem;
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border);
+        background: var(--warm);
     }
-
-    .status-label {
-        font-weight: 700;
-        font-size: .88rem;
-        color: var(--deep);
-    }
-
-    .status-sub {
-        font-size: .74rem;
-        color: var(--muted);
-        margin-top: .15rem;
-    }
-
-    .submit-area {
-        display: flex;
-        gap: .75rem;
-        margin-top: 1.5rem;
-    }
-
-    .btn-submit {
-        background: linear-gradient(135deg,var(--gold),var(--gold2));
-        color: var(--deep);
-        border: none;
-        padding: .85rem 2rem;
-        font-family: 'Outfit',sans-serif;
-        font-size: .95rem;
-        font-weight: 800;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all .25s;
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-        flex: 1;
-        justify-content: center;
-    }
-
-        .btn-submit:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 20px rgba(212,160,23,.35);
-        }
 
     .btn-cancel {
+        padding: .6rem 1.4rem;
+        border: 1px solid var(--border);
+        border-radius: 7px;
         background: #fff;
-        color: var(--deep);
-        border: 1.5px solid var(--border);
-        padding: .85rem 1.4rem;
         font-family: 'Outfit',sans-serif;
-        font-size: .88rem;
-        font-weight: 600;
-        border-radius: 8px;
+        font-size: .84rem;
         cursor: pointer;
-        text-decoration: none;
-        transition: all .2s;
-        display: flex;
-        align-items: center;
-        gap: .4rem;
+        color: var(--muted);
+        transition: all .15s;
     }
 
         .btn-cancel:hover {
-            border-color: var(--muted);
+            border-color: var(--deep);
+            color: var(--deep);
         }
 
-    .val-error {
-        font-size: .74rem;
-        color: var(--red);
-        margin-top: .25rem;
+    .btn-save {
+        padding: .6rem 1.8rem;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        border: none;
+        border-radius: 7px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .84rem;
+        font-weight: 700;
+        color: var(--deep);
+        cursor: pointer;
         display: flex;
         align-items: center;
-        gap: .3rem;
+        gap: .4rem;
+        transition: all .2s;
     }
 
-    .f-hint {
-        font-size: .72rem;
-        color: var(--muted);
-        margin-top: .3rem;
-        display: flex;
-        align-items: center;
-        gap: .3rem;
-    }
+        .btn-save:hover {
+            box-shadow: 0 4px 14px rgba(212,160,23,.35);
+            transform: translateY(-1px);
+        }
 
-        .f-hint i {
-            color: var(--gold);
+        .btn-save:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
         }
 </style>
 
-<div>
-    <div class="pg-head">
-        <div>
-            <h1 class="pg-title">Chỉnh Sửa <em>Khung Giờ & Giá</em></h1>
-            <div class="pg-sub">Cập nhật cấu hình giá cho sân</div>
-        </div>
-        <a asp-action="Index" class="btn-back"><i class="bi bi-arrow-left"></i> Quay lại</a>
+<!-- HEADER -->
+<div class="mh">
+    <div>
+        <div class="mh-label">Chỉnh Sửa</div>
+        <div class="mh-title">Cập Nhật Khung Giờ</div>
+        <div class="mh-sub">ID: #@Model.PriceSlotId</div>
     </div>
+    <button class="mh-close" data-bs-dismiss="modal" title="Đóng"><i class="bi bi-x-lg"></i></button>
+</div>
 
-    <form asp-action="Edit" method="post" id="editForm">
+<div class="mbody">
+    <form id="editPSForm" asp-action="Edit" asp-controller="AdminPriceSlot" method="post">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="PriceSlotId" />
         <input type="hidden" asp-for="CourtId" />
         <input type="hidden" asp-for="FacilityId" />
 
-        <div asp-validation-summary="ModelOnly" class="sys-alert error" style="border-radius:8px;padding:.9rem 1.2rem;background:rgba(201,75,42,.06);border:1px solid rgba(201,75,42,.25);color:var(--red);margin-bottom:1.2rem"></div>
-
-        <div class="form-layout">
-            <div>
-                <!-- Sân hiện tại (readonly) -->
-                <div class="sec-card">
-                    <div class="sec-hd">
-                        <div class="sec-icon"><i class="bi bi-geo-alt-fill"></i></div>
-                        <span class="sec-hdtxt">Sân áp dụng</span>
-                    </div>
-                    <div class="sec-bd">
-                        <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
-                            <div class="info-chip"><i class="bi bi-grid-3x3-gap-fill"></i>@(Model.Court?.CourtNumber ?? "Sân " + Model.CourtId)</div>
-                            <div class="info-chip"><i class="bi bi-building"></i>@(Model.Court?.Facility?.FacilityName ?? "—")</div>
-                            <div class="info-chip"><i class="bi bi-tag"></i>@(Model.SlotName ?? "Chưa đặt tên")</div>
-                        </div>
-                        <div class="f-hint" style="margin-top:.8rem"><i class="bi bi-lock"></i>Không thể đổi sân sau khi tạo. Nếu cần, hãy xóa và tạo mới.</div>
-                        <div style="margin-top:1rem" class="f-group">
-                            <label class="f-label">Tên bảng giá <span style="font-weight:400;color:var(--muted)">(tuỳ chọn)</span></label>
-                            <input asp-for="SlotName" class="f-ctrl" placeholder="Giá ngày thường, Giá cuối tuần..." />
-                        </div>
-                        <div style="margin-top:1rem" class="f-row">
-                            <div class="f-group">
-                                <label class="f-label">Loại sân</label>
-                                <select asp-for="CourtType" class="f-ctrl">
-                                    <option value="Standard">Tiêu chuẩn</option>
-                                    <option value="Professional">Chuyên nghiệp</option>
-                                    <option value="Practice">Tập luyện</option>
-                                </select>
-                            </div>
-                            <div class="f-group">
-                                <label class="f-label">Loại khách hàng</label>
-                                <select asp-for="CustomerType" class="f-ctrl">
-                                    <option value="All">Tất cả</option>
-                                    <option value="Retail">Vãng lai</option>
-                                    <option value="Member">Cố định / Tháng</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+        <!-- 1. Sân (readonly) -->
+        <div class="sf-card">
+            <div class="sf-card-head"><i class="bi bi-geo-alt sf-card-icon"></i><span class="sf-card-title">Sân Áp Dụng</span></div>
+            <div class="sf-card-body" style="grid-template-columns:1fr;">
+                <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+                    <div class="info-chip"><i class="bi bi-grid-3x3-gap-fill"></i>@(Model.Court?.CourtNumber ?? "Sân " + Model.CourtId)</div>
+                    <div class="info-chip"><i class="bi bi-building"></i>@(Model.Court?.Facility?.FacilityName ?? "—")</div>
                 </div>
-
-                <!-- Ngày áp dụng -->
-                <div class="sec-card">
-                    <div class="sec-hd">
-                        <div class="sec-icon"><i class="bi bi-calendar3"></i></div>
-                        <span class="sec-hdtxt">Ngày áp dụng</span>
-                    </div>
-                    <div class="sec-bd">
-                        <div class="day-btn-row">
-                            <button type="button" class="day-quick" onclick="selectDays([1,2,3,4,5])">T2 – T6</button>
-                            <button type="button" class="day-quick" onclick="selectDays([6,0])">T7 & CN</button>
-                            <button type="button" class="day-quick" onclick="selectDays([0,1,2,3,4,5,6])">Tất cả</button>
-                            <button type="button" class="day-quick" onclick="selectDays([])">Bỏ chọn</button>
-                        </div>
-                        <div class="day-grid">
-                            @{
-                                var currentDays = Model.AppliedDays ?? (Model.DayOfWeek.HasValue ? ((int)Model.DayOfWeek.Value).ToString() : "");
-                                var selectedDaySet = currentDays.Split(',').Select(d => d.Trim()).ToHashSet();
-                                var dayItems = new[]{(1,"Thứ Hai",false),(2,"Thứ Ba",false),(3,"Thứ Tư",false),(4,"Thứ Năm",false),
-                                                        (5,"Thứ Sáu",false),(6,"Thứ Bảy",true),(0,"Chủ Nhật",true)};
-                            }
-                            @foreach (var (val, label, isWe) in dayItems)
-                            {
-                                bool isChecked = selectedDaySet.Contains(val.ToString());
-                                <div class="day-item @(isWe ? "day-weekend" : "")">
-                                    <input type="checkbox" class="day-check" id="ed@val" value="@val"
-                                           @(isChecked ? "checked" : "") onchange="syncDays()">
-                                    <label class="day-lbl" for="ed@val">@label</label>
-                                </div>
-                            }
-                        </div>
-                        <input type="hidden" name="AppliedDays" id="appliedDaysInput" value="@currentDays" />
-                    </div>
+                <div class="fg-hint"><i class="bi bi-lock" style="color:var(--gold);margin-right:.2rem;"></i>Không thể đổi sân. Nếu cần, hãy xóa và tạo mới.</div>
+                <div class="fg" style="margin-top:.5rem;">
+                    <label class="fg-label">Tên bảng giá <span style="font-weight:400;color:var(--muted)">(tuỳ chọn)</span></label>
+                    <input asp-for="SlotName" class="fg-input" placeholder="Giá ngày thường..." />
                 </div>
-
-                <!-- Khung giờ & Giá -->
-                <div class="sec-card">
-                    <div class="sec-hd">
-                        <div class="sec-icon"><i class="bi bi-clock-fill"></i></div>
-                        <span class="sec-hdtxt">Khung giờ & Đơn giá</span>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+                    <div class="fg">
+                        <label class="fg-label">Loại sân</label>
+                        <select asp-for="CourtType" class="fg-select"><option value="Standard">Tiêu chuẩn</option><option value="Professional">Chuyên nghiệp</option><option value="Practice">Tập luyện</option></select>
                     </div>
-                    <div class="sec-bd">
-                        <div class="f-row-3" style="margin-bottom:1rem">
-                            <div class="f-group">
-                                <label class="f-label">Giờ bắt đầu <span class="req">*</span></label>
-                                <input asp-for="StartTime" class="f-ctrl" type="time" />
-                                <span asp-validation-for="StartTime" class="val-error"><i class="bi bi-exclamation-circle"></i></span>
-                            </div>
-                            <div class="f-group">
-                                <label class="f-label">Giờ kết thúc <span class="req">*</span></label>
-                                <input asp-for="EndTime" class="f-ctrl" type="time" />
-                                <span asp-validation-for="EndTime" class="val-error"><i class="bi bi-exclamation-circle"></i></span>
-                            </div>
-                            <div class="f-group">
-                                <label class="f-label">Làm tròn giờ</label>
-                                <select asp-for="RoundingMinutes" class="f-ctrl">
-                                    <option value="15">15 phút</option>
-                                    <option value="30">30 phút</option>
-                                    <option value="60">60 phút</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="f-row" style="margin-bottom:1rem">
-                            <div class="f-group">
-                                <label class="f-label">Đơn giá (₫/giờ) <span class="req">*</span></label>
-                                <div class="price-wrap">
-                                    <span class="price-sym">₫</span>
-                                    <input asp-for="Price" class="f-ctrl" type="number" step="1000" id="priceInput" oninput="calcTotal()" />
-                                </div>
-                                <span asp-validation-for="Price" class="val-error"><i class="bi bi-exclamation-circle"></i></span>
-                            </div>
-                            <div class="f-group">
-                                <label class="f-label">Phụ phí (₫/giờ)</label>
-                                <div class="price-wrap">
-                                    <span class="price-sym">₫</span>
-                                    <input asp-for="Surcharge" class="f-ctrl" type="number" step="1000" id="surInput" oninput="calcTotal()" />
-                                </div>
-                            </div>
-                        </div>
-                        <div class="f-group" style="margin-bottom:1rem">
-                            <label class="f-label">Mô tả phụ phí</label>
-                            <input asp-for="SurchargeNote" class="f-ctrl" placeholder="Phí bật đèn..." />
-                        </div>
-                        <div class="price-preview">
-                            <div>
-                                <div class="pp-label">Khách trả / giờ</div>
-                                <div class="pp-value" id="totalPreview">
-                                    @((Model.Price + Model.Surcharge).ToString("N0")) ₫
-                                </div>
-                                <div class="pp-break" id="priceBreak">
-                                    @(Model.Surcharge > 0 ? $"{Model.Price:N0}₫ + {Model.Surcharge:N0}₫ phụ phí" : "")
-                                </div>
-                            </div>
-                            <i class="bi bi-calculator" style="font-size:2rem;color:rgba(212,160,23,.3)"></i>
-                        </div>
-                        <div class="peak-toggle @(Model.IsPeakHour ? "active" : "")" id="peakToggle" style="margin-top:1rem" onclick="togglePeak()">
-                            <div class="peak-info">
-                                <div class="peak-title"><i class="bi bi-fire" style="color:var(--red)"></i> Giờ cao điểm (Peak Hour)</div>
-                                <div class="peak-sub">Thường 17:00 – 22:00 các ngày trong tuần</div>
-                            </div>
-                            <div class="toggle-sw @(Model.IsPeakHour ? "on" : "")" id="peakSw"></div>
-                        </div>
-                        <input asp-for="IsPeakHour" id="isPeakInput" type="hidden" value="@Model.IsPeakHour.ToString().ToLower()" />
+                    <div class="fg">
+                        <label class="fg-label">Loại khách</label>
+                        <select asp-for="CustomerType" class="fg-select"><option value="All">Tất cả</option><option value="Retail">Vãng lai</option><option value="Member">Cố định</option></select>
                     </div>
-                </div>
-
-                <div class="submit-area">
-                    <a asp-action="Index" class="btn-cancel"><i class="bi bi-x"></i> Hủy</a>
-                    <button type="submit" class="btn-submit" onclick="return prepareSubmit()">
-                        <i class="bi bi-check-circle-fill"></i> Lưu Thay Đổi
-                    </button>
                 </div>
             </div>
+        </div>
 
-            <!-- SIDEBAR -->
-            <div>
-                <div class="sidebar-card">
-                    <div class="sidebar-hd">
-                        <h3>Thông tin bản ghi</h3>
-                        <p>ID: #@Model.PriceSlotId</p>
+        <!-- 2. Ngày áp dụng -->
+        <div class="sf-card">
+            <div class="sf-card-head"><i class="bi bi-calendar3 sf-card-icon"></i><span class="sf-card-title">Ngày Áp Dụng</span></div>
+            <div class="sf-card-body" style="grid-template-columns:1fr;">
+                <div class="day-btn-row">
+                    <button type="button" class="day-quick" onclick="selectDaysE([1,2,3,4,5])">T2–T6</button>
+                    <button type="button" class="day-quick" onclick="selectDaysE([6,0])">T7 & CN</button>
+                    <button type="button" class="day-quick" onclick="selectDaysE([0,1,2,3,4,5,6])">Tất cả</button>
+                    <button type="button" class="day-quick" onclick="selectDaysE([])">Bỏ chọn</button>
+                </div>
+                <div class="day-grid">
+                    @foreach (var (val, label, isWe) in new[] { (1, "Thứ Hai", false), (2, "Thứ Ba", false), (3, "Thứ Tư", false), (4, "Thứ Năm", false), (5, "Thứ Sáu", false), (6, "Thứ Bảy", true), (0, "Chủ Nhật", true) })
+                    {
+                        bool isChecked = selectedDaySet.Contains(val.ToString());
+                        <div class="day-item @(isWe ? "day-weekend" : "")">
+                            <input type="checkbox" class="day-check-e" id="de@val" value="@val" @(isChecked ? "checked" : "")>
+                            <label class="day-lbl" for="de@val">@label</label>
+                        </div>
+                    }
+                </div>
+                <input type="hidden" name="AppliedDays" id="appliedDaysE" value="@currentDays" />
+            </div>
+        </div>
+
+        <!-- 3. Khung giờ & Giá -->
+        <div class="sf-card">
+            <div class="sf-card-head"><i class="bi bi-clock sf-card-icon"></i><span class="sf-card-title">Khung Giờ & Đơn Giá</span></div>
+            <div class="sf-card-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;">
+                    <div class="fg"><label class="fg-label">Giờ bắt đầu <span class="fg-req">*</span></label><input asp-for="StartTime" class="fg-input" type="time" /></div>
+                    <div class="fg"><label class="fg-label">Giờ kết thúc <span class="fg-req">*</span></label><input asp-for="EndTime" class="fg-input" type="time" /></div>
+                    <div class="fg">
+                        <label class="fg-label">Làm tròn</label>
+                        <select asp-for="RoundingMinutes" class="fg-select"><option value="15">15p</option><option value="30">30p</option><option value="60">60p</option></select>
                     </div>
-                    <div class="sidebar-bd">
-                        <div class="status-toggle">
-                            <div>
-                                <div class="status-label">Kích hoạt</div>
-                                <div class="status-sub">Cấu hình có hiệu lực ngay</div>
-                            </div>
-                            <input asp-for="IsActive" type="checkbox"
-                                   style="width:20px;height:20px;accent-color:var(--gold);cursor:pointer" />
-                        </div>
-                        <div class="meta-row">
-                            <span class="meta-label">Sân</span>
-                            <span class="meta-value">@(Model.Court?.CourtNumber ?? "—")</span>
-                        </div>
-                        <div class="meta-row">
-                            <span class="meta-label">Cơ sở</span>
-                            <span class="meta-value">@(Model.Court?.Facility?.FacilityName ?? "—")</span>
-                        </div>
-                        @if (!string.IsNullOrEmpty(Model.SlotName))
-                        {
-                            <div class="meta-row">
-                                <span class="meta-label">Tên bảng giá</span>
-                                <span class="meta-value">@Model.SlotName</span>
-                            </div>
-                        }
-                        <div class="meta-row">
-                            <span class="meta-label">Tạo lúc</span>
-                            <span class="meta-value">@(Model.CreatedAt.ToString("dd/MM/yyyy"))</span>
-                        </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+                    <div class="fg">
+                        <label class="fg-label">Đơn giá (₫/giờ) <span class="fg-req">*</span></label>
+                        <div class="price-wrap"><span class="price-sym">₫</span><input asp-for="Price" class="fg-input" type="number" step="1000" id="priceInputE" oninput="calcTotalE()" /></div>
                     </div>
+                    <div class="fg">
+                        <label class="fg-label">Phụ phí (₫/giờ)</label>
+                        <div class="price-wrap"><span class="price-sym">₫</span><input asp-for="Surcharge" class="fg-input" type="number" step="1000" id="surInputE" oninput="calcTotalE()" /></div>
+                    </div>
+                </div>
+                <div class="fg"><label class="fg-label">Mô tả phụ phí</label><input asp-for="SurchargeNote" class="fg-input" placeholder="Phí bật đèn..." /></div>
+                <div class="price-preview">
+                    <div>
+                        <div class="pp-label">Khách trả / giờ</div><div class="pp-value" id="totalPreviewE">@((Model.Price + Model.Surcharge).ToString("N0")) ₫</div>
+                        <div class="pp-break" id="priceBreakE">@(Model.Surcharge > 0 ? $"{Model.Price:N0}₫ + {Model.Surcharge:N0}₫ phụ phí" : "")</div>
+                    </div>
+                    <i class="bi bi-calculator" style="font-size:1.5rem;color:rgba(212,160,23,.3)"></i>
+                </div>
+                <div class="peak-toggle @(Model.IsPeakHour ? "active" : "")" id="peakToggleE" onclick="togglePeakE()">
+                    <div><div class="peak-title"><i class="bi bi-fire" style="color:var(--red)"></i> Giờ cao điểm</div><div class="peak-sub">Thường 17:00–22:00</div></div>
+                    <div class="toggle-sw @(Model.IsPeakHour ? "on" : "")" id="peakSwE"></div>
+                </div>
+                <input asp-for="IsPeakHour" id="isPeakE" type="hidden" value="@Model.IsPeakHour.ToString().ToLower()" />
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:.7rem .9rem;background:var(--cream);border:1px solid var(--border);border-radius:7px;">
+                    <div><span style="font-weight:700;font-size:.84rem;color:var(--deep);">Kích hoạt</span><br><span style="font-size:.7rem;color:var(--muted);">Có hiệu lực ngay</span></div>
+                    <input asp-for="IsActive" type="checkbox" style="width:17px;height:17px;accent-color:var(--gold);cursor:pointer" />
                 </div>
             </div>
         </div>
     </form>
 </div>
 
-@section Scripts {
-    <script>
-        function selectDays(vals) {
-            document.querySelectorAll('.day-check').forEach(cb => {
-                cb.checked = vals.includes(parseInt(cb.value));
-            });
-            syncDays();
-        }
-        function syncDays() {
-            document.getElementById('appliedDaysInput').value =
-                Array.from(document.querySelectorAll('.day-check:checked')).map(c => c.value).join(',');
-        }
-        document.querySelectorAll('.day-check').forEach(cb => cb.addEventListener('change', syncDays));
+<!-- FOOTER -->
+<div class="mfooter">
+    <button type="button" class="btn-cancel" data-bs-dismiss="modal">Hủy</button>
+    <button type="submit" form="editPSForm" class="btn-save" id="btnEditPS" onclick="return prepareSubmitE()">
+        <i class="bi bi-check-circle"></i> Lưu Thay Đổi
+    </button>
+</div>
 
-        function calcTotal() {
-            const p = parseFloat(document.getElementById('priceInput').value) || 0;
-            const s = parseFloat(document.getElementById('surInput').value)   || 0;
-            document.getElementById('totalPreview').textContent = (p+s).toLocaleString('vi-VN') + ' ₫';
-            document.getElementById('priceBreak').textContent = s > 0
-                ? `${p.toLocaleString('vi-VN')}₫ + ${s.toLocaleString('vi-VN')}₫ phụ phí` : '';
+<script>
+    (function(){
+        // Day selector
+        window.selectDaysE = function(vals) {
+            document.querySelectorAll('.day-check-e').forEach(cb=>{ cb.checked = vals.includes(parseInt(cb.value)); });
+            syncDaysE();
+        };
+        function syncDaysE() {
+            document.getElementById('appliedDaysE').value = Array.from(document.querySelectorAll('.day-check-e:checked')).map(c=>c.value).join(',');
         }
+        document.querySelectorAll('.day-check-e').forEach(cb=>cb.addEventListener('change', syncDaysE));
 
-        let peakOn = @Model.IsPeakHour.ToString().ToLower();
-        function togglePeak() {
-            peakOn = !peakOn;
-            document.getElementById('peakSw').classList.toggle('on', peakOn);
-            document.getElementById('peakToggle').classList.toggle('active', peakOn);
-            document.getElementById('isPeakInput').value = peakOn ? 'true' : 'false';
-        }
+        // Price calc
+        window.calcTotalE = function() {
+            const p = parseFloat(document.getElementById('priceInputE').value)||0;
+            const s = parseFloat(document.getElementById('surInputE').value)||0;
+            document.getElementById('totalPreviewE').textContent = (p+s).toLocaleString('vi-VN')+' ₫';
+            document.getElementById('priceBreakE').textContent = s>0 ? `${p.toLocaleString('vi-VN')}₫ + ${s.toLocaleString('vi-VN')}₫ phụ phí` : '';
+        };
 
-        function prepareSubmit() {
-            const checked = document.querySelectorAll('.day-check:checked');
-            if (!checked.length) { alert('Vui lòng chọn ít nhất một ngày áp dụng!'); return false; }
-            syncDays();
+        // Peak toggle
+        let peakOnE = @Model.IsPeakHour.ToString().ToLower();
+        window.togglePeakE = function() {
+            peakOnE = !peakOnE;
+            document.getElementById('peakSwE').classList.toggle('on', peakOnE);
+            document.getElementById('peakToggleE').classList.toggle('active', peakOnE);
+            document.getElementById('isPeakE').value = peakOnE ? 'true' : 'false';
+        };
+
+        // Submit
+        window.prepareSubmitE = function() {
+            const checked = document.querySelectorAll('.day-check-e:checked');
+            if (!checked.length) { alert('Vui lòng chọn ít nhất một ngày!'); return false; }
+            syncDaysE();
             return true;
-        }
-    </script>
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}
+        };
+    })();
+</script>

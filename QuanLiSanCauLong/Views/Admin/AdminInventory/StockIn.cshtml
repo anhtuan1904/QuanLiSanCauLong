@@ -1,4 +1,7 @@
 ﻿@model QuanLiSanCauLong.ViewModels.StockTransactionViewModel
+@{
+    Layout = null;
+}
 
 <style>
     :root {
@@ -10,506 +13,428 @@
         --court-border: #e8e0d0;
         --court-text: #2d2d2d;
         --court-muted: #7a7060;
+        --court-green: #166534;
+        --court-green-bg: #f0fdf4;
     }
 
-    .modal-hd-court {
+    .si-wrap { font-family: 'Outfit', sans-serif; }
+
+    /* Header */
+    .si-hd {
         background: var(--court-dark);
         color: #fff;
-        border-radius: 16px 16px 0 0;
-        padding: 1.25rem 1.5rem;
+        padding: 1.1rem 1.5rem;
         display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
+        align-items: center;
+        gap: .85rem;
     }
-
-        .modal-hd-court h5 {
-            font-weight: 800;
-            font-size: 1.05rem;
-            margin: 0 0 2px;
-            color: #fff;
-        }
-
-        .modal-hd-court p {
-            font-size: .78rem;
-            color: rgba(255,255,255,.6);
-            margin: 0;
-        }
-
-        .modal-hd-court .icon-wrap {
-            width: 38px;
-            height: 38px;
-            border-radius: 9px;
-            background: rgba(34,197,94,.25);
-            color: #4ade80;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            margin-right: 1rem;
-            flex-shrink: 0;
-        }
-
-        .modal-hd-court .btn-close {
-            filter: invert(1);
-            opacity: .7;
-        }
-
-    .fl label {
-        display: block;
-        font-size: .73rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .5px;
-        color: var(--court-muted);
-        margin-bottom: 5px;
+    .si-hd-icon {
+        width: 40px; height: 40px; border-radius: 10px;
+        background: rgba(34,197,94,.25); color: #4ade80;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.15rem; flex-shrink: 0;
     }
+    .si-hd h5  { font-weight: 800; font-size: 1rem; margin: 0; }
+    .si-hd p   { font-size: .75rem; color: rgba(255,255,255,.6); margin: 0; }
+    .si-close  { margin-left: auto; background: none; border: none; color: rgba(255,255,255,.65); font-size: 1.35rem; cursor: pointer; line-height: 1; }
 
-    .fc {
-        border: 1.5px solid var(--court-border);
-        border-radius: 8px;
-        background: var(--court-bg);
-        color: var(--court-text);
-        font-size: .875rem;
-        padding: .48rem .75rem;
-        width: 100%;
-        transition: .2s;
-    }
+    /* Body */
+    .si-body { padding: 1.25rem 1.5rem; background: #fff; }
 
-        .fc:focus {
-            outline: none;
-            border-color: var(--court-gold);
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(232,200,64,.2);
-        }
-
-    textarea.fc {
-        resize: vertical;
-        min-height: 70px;
-    }
-
-    .section-div {
-        font-size: .68rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: var(--court-dark);
-        display: inline-block;
-        padding-bottom: .35rem;
+    /* Section label */
+    .si-section {
+        font-size: .67rem; font-weight: 800; text-transform: uppercase;
+        letter-spacing: 1px; color: var(--court-dark);
+        display: inline-block; padding-bottom: .3rem;
         border-bottom: 2px solid var(--court-gold);
-        margin-bottom: .85rem;
+        margin-bottom: .9rem;
     }
 
-    .two-col {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: .85rem;
+    /* Fields */
+    .si-field { display: flex; flex-direction: column; gap: .28rem; margin-bottom: .8rem; }
+    .si-field label {
+        font-size: .71rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .5px; color: var(--court-muted);
+    }
+    .si-fc {
+        border: 1.5px solid var(--court-border); border-radius: 8px;
+        background: var(--court-bg); color: var(--court-text);
+        font-size: .875rem; padding: .48rem .75rem; width: 100%;
+        outline: none; transition: .18s; font-family: 'Outfit', sans-serif;
+    }
+    .si-fc:focus {
+        border-color: var(--court-gold); background: #fff;
+        box-shadow: 0 0 0 3px rgba(232,200,64,.2);
+    }
+    .si-two   { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+    .si-three { display: grid; grid-template-columns: 7fr 5fr; gap: .75rem; }
+
+    /* FIFO info */
+    .si-fifo-info {
+        background: #eff6ff; border: 1px solid #93c5fd; border-radius: 8px;
+        padding: .55rem .9rem; font-size: .78rem; color: #1d4ed8;
+        display: flex; align-items: flex-start; gap: .5rem; margin-bottom: .85rem;
     }
 
-    .three-col {
-        display: grid;
-        grid-template-columns: 7fr 5fr;
-        gap: .85rem;
+    /* Product table */
+    .si-tbl-wrap {
+        border: 1px solid var(--court-border); border-radius: 10px;
+        overflow: hidden; margin-bottom: .85rem;
     }
-
-    .info-note {
-        background: #eff6ff;
-        border: 1px solid #93c5fd;
-        border-radius: 8px;
-        padding: .6rem .9rem;
-        font-size: .78rem;
-        color: #1d4ed8;
-        display: flex;
-        align-items: flex-start;
-        gap: .5rem;
+    .si-tbl { width: 100%; border-collapse: collapse; }
+    .si-tbl thead tr { background: var(--court-dark); }
+    .si-tbl th {
+        color: rgba(255,255,255,.7); font-size: .67rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .7px; padding: .6rem .7rem;
+        border: none; white-space: nowrap;
     }
-    /* Table */
-    .prod-tbl {
-        width: 100%;
-        border-collapse: collapse;
+    .si-tbl td { padding: .5rem .6rem; border-bottom: 1px solid var(--court-border); vertical-align: middle; }
+    .si-tbl tr:last-child td { border-bottom: none; }
+    .si-tbl tr:hover td { background: #fdf9f0; }
+
+    .si-fc-sm {
+        border: 1.5px solid var(--court-border); border-radius: 7px;
+        background: var(--court-bg); font-size: .82rem; padding: .38rem .55rem;
+        width: 100%; outline: none; font-family: 'Outfit', sans-serif;
     }
+    .si-fc-sm:focus { border-color: var(--court-gold); background: #fff; }
 
-        .prod-tbl thead tr {
-            background: var(--court-dark);
-        }
-
-        .prod-tbl thead th {
-            color: rgba(255,255,255,.7);
-            font-size: .67rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .8px;
-            padding: .6rem .75rem;
-            border: none;
-        }
-
-        .prod-tbl tbody tr {
-            border-bottom: 1px solid var(--court-border);
-        }
-
-            .prod-tbl tbody tr:last-child {
-                border-bottom: none;
-            }
-
-        .prod-tbl td {
-            padding: .55rem .6rem;
-            vertical-align: middle;
-        }
+    .row-meta { font-size: .7rem; color: var(--court-muted); margin-top: 2px; display: block; }
 
     .btn-add-row {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: .35rem .9rem;
-        background: #f0fdf4;
-        color: #166534;
-        border: 1.5px solid #86efac;
-        border-radius: 8px;
-        font-size: .75rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: .18s;
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: .35rem .9rem; background: var(--court-green-bg);
+        color: var(--court-green); border: 1.5px solid #86efac;
+        border-radius: 8px; font-size: .75rem; font-weight: 700;
+        cursor: pointer; transition: .18s; font-family: 'Outfit', sans-serif;
     }
-
-        .btn-add-row:hover {
-            background: #22c55e;
-            color: #fff;
-            border-color: #22c55e;
-        }
+    .btn-add-row:hover { background: #22c55e; color: #fff; border-color: #22c55e; }
 
     .btn-remove {
-        background: none;
-        border: none;
-        color: #dc2626;
-        cursor: pointer;
-        padding: .2rem .4rem;
-        font-size: .9rem;
-        transition: .15s;
+        background: none; border: none; color: #dc2626;
+        cursor: pointer; padding: .2rem .4rem; font-size: .9rem;
+        border-radius: 5px; transition: .15s;
     }
+    .btn-remove:hover { background: #fef2f2; }
 
-        .btn-remove:hover {
-            background: #fef2f2;
-            border-radius: 5px;
-        }
-
-    .row-meta {
-        font-size: .72rem;
-        color: var(--court-muted);
-        margin-top: 3px;
-        display: block;
-    }
-
-    .fw-mono {
-        font-family: monospace;
-        letter-spacing: .3px;
-    }
     /* Footer */
-    .modal-foot-court {
-        background: var(--court-bg);
-        border-top: 1px solid var(--court-border);
-        border-radius: 0 0 16px 16px;
-        padding: 1rem 1.5rem;
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: .6rem;
+    .si-foot {
+        background: var(--court-bg); border-top: 1px solid var(--court-border);
+        padding: .9rem 1.5rem; display: flex; justify-content: flex-end;
+        align-items: center; gap: .6rem;
     }
-
-    .btn-cancel-modal {
-        background: var(--court-card);
-        color: var(--court-text);
-        border: 1.5px solid var(--court-border);
-        border-radius: 9px;
-        padding: .55rem 1.3rem;
-        font-weight: 600;
-        font-size: .875rem;
-        cursor: pointer;
-        transition: .18s;
+    .btn-si-cancel {
+        background: var(--court-card); color: var(--court-text);
+        border: 1.5px solid var(--court-border); border-radius: 9px;
+        padding: .5rem 1.3rem; font-weight: 600; font-size: .875rem;
+        cursor: pointer; transition: .18s; font-family: 'Outfit', sans-serif;
     }
-
-        .btn-cancel-modal:hover {
-            background: #ede8de;
-        }
-
-    .btn-submit-modal {
-        background: var(--court-gold);
-        color: var(--court-dark);
-        border: none;
-        border-radius: 9px;
-        padding: .55rem 1.75rem;
-        font-weight: 800;
-        font-size: .875rem;
-        cursor: pointer;
-        transition: .18s;
-        display: flex;
-        align-items: center;
-        gap: 6px;
+    .btn-si-cancel:hover { background: #ede8de; }
+    .btn-si-submit {
+        background: var(--court-gold); color: var(--court-dark);
+        border: none; border-radius: 9px; padding: .5rem 1.75rem;
+        font-weight: 800; font-size: .875rem; cursor: pointer; transition: .18s;
+        display: flex; align-items: center; gap: 6px;
+        font-family: 'Outfit', sans-serif;
     }
-
-        .btn-submit-modal:hover {
-            background: var(--court-gold-h);
-            box-shadow: 0 4px 12px rgba(232,200,64,.4);
-        }
+    .btn-si-submit:hover { background: var(--court-gold-h); box-shadow: 0 4px 12px rgba(232,200,64,.4); }
+    .btn-si-submit:disabled { opacity: .5; cursor: not-allowed; }
+    .spinner-sm {
+        width: 14px; height: 14px; border: 2px solid rgba(26,26,46,.2);
+        border-top-color: var(--court-dark); border-radius: 50%;
+        animation: spin .7s linear infinite;
+    }
+    @@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 
-<div class="modal-hd-court">
-    <div class="d-flex align-items-center">
-        <div class="icon-wrap"><i class="bi bi-box-arrow-in-down"></i></div>
+<div class="si-wrap">
+    <div class="si-hd">
+        <div class="si-hd-icon"><i class="bi bi-box-arrow-in-down"></i></div>
         <div>
             <h5>Tạo Phiếu Nhập Kho</h5>
             <p>Cập nhật hàng hoá và tồn kho thực tế</p>
         </div>
+        <button class="si-close" onclick="$('#inventoryModal').modal('hide')">&times;</button>
     </div>
-    <button type="button" class="btn-close shadow-none" onclick="this.closest('.modal-overlay').classList.remove('show')"></button>
-</div>
 
-<form asp-action="StockIn" method="post" id="stockInForm">
-    <div class="modal-body p-4" style="background:#fff;">
+    <div class="si-body">
+        <!-- Thông tin chứng từ -->
+        <div class="si-section"><i class="bi bi-info-circle me-1"></i>Thông Tin Chứng Từ</div>
 
-        <div class="section-div"><i class="bi bi-info-circle me-1"></i>Thông Tin Chứng Từ</div>
-        <div class="row g-3 mb-3">
-            <div class="col-md-7 fl">
-                <label>Cơ sở nhập hàng</label>
-                <select asp-for="FacilityId" class="fc">
+        <div class="si-two">
+            <div class="si-field">
+                <label>Cơ sở nhập hàng <span style="color:#dc2626">*</span></label>
+                <select id="si_facilityId" class="si-fc">
                     <option value="">-- Chọn cơ sở --</option>
-                    @if (ViewBag.Facilities != null)
+                    @foreach (var f in ViewBag.Facilities as List<QuanLiSanCauLong.Models.Facility> ?? new())
                     {
-                        foreach (var f in ViewBag.Facilities)
-                        {
-                            <option value="@f.FacilityId">@f.FacilityName</option>
-                        }
+                        <!option value="@f.FacilityId" @(f.FacilityId == Model.FacilityId ? "selected" : "")>
+                        @f.FacilityName
+                        </!option>
                     }
                 </select>
             </div>
-            <div class="col-md-5 fl">
+            <div class="si-field">
                 <label>Ngày nhập kho</label>
-                <input asp-for="TransactionDate" type="date" class="fc" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                <input type="date" id="si_txDate" class="si-fc" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
             </div>
         </div>
 
-        <div class="row g-3 mb-3">
-            <div class="col-md-6 fl">
+        <div class="si-two">
+            <div class="si-field">
                 <label>Nhà cung cấp</label>
-                <select asp-for="SupplierId" class="fc">
+                <select id="si_supplierId" class="si-fc">
                     <option value="">-- Chọn nhà cung cấp --</option>
-                    @if (ViewBag.Suppliers != null)
+                    @foreach (var s in ViewBag.Suppliers as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>())
                     {
-                        foreach (var s in ViewBag.Suppliers)
-                        {
-                            <option value="@s.SupplierId">@s.SupplierName</option>
-                        }
+                        <option value="@s.SupplierId">@s.SupplierName</option>
                     }
                 </select>
             </div>
-            <div class="col-md-6 fl">
+            <div class="si-field">
                 <label>Số phiếu / Chứng từ</label>
-                <input asp-for="DocumentReference" class="fc fw-mono" placeholder="VD: PN-2025-001" />
+                <input type="text" id="si_docRef" class="si-fc" placeholder="VD: PN-2025-001" style="font-family:monospace;" />
             </div>
         </div>
 
-        <div class="row g-3 mb-4">
-            <div class="col-md-6 fl">
+        <div class="si-two">
+            <div class="si-field">
                 <label>
                     Số lô (Batch/Lot)
-                    <span style="font-size:.65rem;background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;padding:1px 6px;border-radius:10px;margin-left:4px;font-weight:700;">FIFO</span>
+                    <span style="font-size:.63rem;background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;padding:1px 6px;border-radius:10px;margin-left:4px;font-weight:700;">FIFO</span>
                 </label>
-                <input asp-for="BatchNumber" class="fc fw-mono" placeholder="LOT-2025-001 (nếu có)" />
+                <input type="text" id="si_batchNumber" class="si-fc" placeholder="LOT-2025-001 (nếu có)" style="font-family:monospace;" />
             </div>
-            <div class="col-md-6 fl">
+            <div class="si-field">
                 <label>
                     Hạn sử dụng (HSD)
-                    <span style="font-size:.65rem;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;padding:1px 6px;border-radius:10px;margin-left:4px;font-weight:700;">Đồ ăn/uống</span>
+                    <span style="font-size:.63rem;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;padding:1px 6px;border-radius:10px;margin-left:4px;font-weight:700;">Đồ ăn/uống</span>
                 </label>
-                <input asp-for="ExpiryDate" type="date" class="fc" />
-                <span style="font-size:.72rem;color:var(--court-muted);">Để trống nếu không có HSD</span>
+                <input type="date" id="si_expiryDate" class="si-fc" />
+                <span style="font-size:.7rem;color:var(--court-muted);">Để trống nếu không có HSD</span>
             </div>
         </div>
 
-        <!-- Product table -->
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="section-div" style="margin-bottom:0;"><i class="bi bi-list-ul me-1"></i>Chi Tiết Hàng Nhập</span>
-            <button type="button" class="btn-add-row" id="stockInAddRowBtn">
+        <!-- Chi tiết hàng nhập -->
+        <div class="d-flex justify-content-between align-items-center mb-2" style="margin-top:.25rem;">
+            <span class="si-section" style="margin-bottom:0;"><i class="bi bi-list-ul me-1"></i>Chi Tiết Hàng Nhập</span>
+            <button type="button" class="btn-add-row" id="si_addRowBtn">
                 <i class="bi bi-plus-circle"></i> Thêm dòng
             </button>
         </div>
 
-        <div class="table-responsive mb-3">
-            <table class="prod-tbl" id="productTable">
+        <div class="si-tbl-wrap">
+            <table class="si-tbl">
                 <thead>
                     <tr>
                         <th style="min-width:180px;">Sản phẩm</th>
-                        <th style="min-width:130px;">Phân loại (Size)</th>
-                        <th style="width:90px;">Số lượng</th>
-                        <th style="width:80px;">ĐVT</th>
-                        <th style="width:120px;">Giá nhập (đ)</th>
-                        <th style="width:40px;text-align:center;">×</th>
+                        <th style="min-width:130px;">Phân loại (Size/Màu)</th>
+                        <th style="width:90px;text-align:center;">Số lượng</th>
+                        <th style="width:70px;text-align:center;">ĐVT</th>
+                        <th style="width:120px;text-align:right;">Giá nhập (₫)</th>
+                        <th style="width:36px;"></th>
                     </tr>
                 </thead>
-                <tbody id="productTableBody">
-                    <tr class="product-row">
+                <tbody id="si_tableBody">
+                    <tr class="si-product-row">
                         <td>
-                            <select name="Items[0].ProductId" class="fc stockin-product-sel">
+                            <select class="si-fc-sm si-product-sel" onchange="siFillUnit(this)">
                                 <option value="">-- Chọn sản phẩm --</option>
-                                @if (ViewBag.Products != null)
+                                @foreach (var p in ViewBag.Products as List<QuanLiSanCauLong.Models.Product> ?? new())
                                 {
-                                    foreach (var p in ViewBag.Products)
-                                    {
-                                        <option value="@p.ProductId" data-unit="@p.Unit" data-sku="@p.SKU" data-stock="@p.StockQuantity">
-                                            @p.ProductName @(!string.IsNullOrEmpty(p.SKU) ? $"({p.SKU})" : "")
-                                        </option>
-                                    }
+                                    <option value="@p.ProductId" data-unit="@(p.Unit ?? "")" data-sku="@(p.SKU ?? "")" data-stock="@p.StockQuantity">
+                                        @p.ProductName @(!string.IsNullOrEmpty(p.SKU) ? $"({p.SKU})" : "")
+                                    </option>
                                 }
                             </select>
                             <small class="row-meta"></small>
                         </td>
                         <td>
-                            <select name="Items[0].VariantId" class="fc variant-select" disabled>
+                            <select class="si-fc-sm si-variant-sel" disabled>
                                 <option value="">— Chọn SP trước —</option>
                             </select>
                         </td>
-                        <td><input name="Items[0].Quantity" type="number" class="fc" placeholder="0" min="1" /></td>
-                        <td><input name="Items[0].Unit" type="text" class="fc fw-mono" placeholder="—" readonly /></td>
-                        <td><input name="Items[0].CostPrice" type="number" class="fc" placeholder="0" min="0" step="1000" /></td>
-                        <td style="text-align:center;"><button type="button" class="btn-remove stockin-remove-btn"><i class="bi bi-trash3"></i></button></td>
+                        <td><input type="number" class="si-fc-sm si-qty" min="1" placeholder="0" style="text-align:center;" /></td>
+                        <td><input type="text" class="si-fc-sm si-unit" readonly placeholder="—" style="text-align:center;" /></td>
+                        <td><input type="number" class="si-fc-sm si-cost" min="0" step="1000" placeholder="0" style="text-align:right;" /></td>
+                        <td><button type="button" class="btn-remove si-remove-btn"><i class="bi bi-trash3"></i></button></td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <div class="fl mb-3">
+        <div class="si-field">
             <label>Ghi chú</label>
-            <textarea asp-for="Note" class="fc" rows="2" placeholder="Ghi chú về lần nhập hàng này..."></textarea>
+            <textarea id="si_note" class="si-fc" rows="2" placeholder="Ghi chú về lần nhập hàng này..."></textarea>
         </div>
 
-        <div class="info-note">
+        <div class="si-fifo-info">
             <i class="bi bi-info-circle-fill" style="flex-shrink:0;margin-top:1px;"></i>
             <span><strong>FIFO:</strong> Hàng nhập trước sẽ được xuất trước. Nhập đúng số lô và HSD để hệ thống kiểm soát chính xác.</span>
         </div>
     </div>
 
-    <div class="modal-foot-court">
-        <button type="button" class="btn-cancel-modal" onclick="this.closest('.modal-overlay').classList.remove('show')">Hủy bỏ</button>
-        <button type="submit" class="btn-submit-modal">
+    <div class="si-foot">
+        <button type="button" class="btn-si-cancel" onclick="$('#inventoryModal').modal('hide')">Hủy bỏ</button>
+        <button type="button" class="btn-si-submit" id="si_submitBtn" onclick="submitStockIn()">
             <i class="bi bi-check-circle-fill"></i> Xác nhận nhập kho
         </button>
     </div>
-</form>
+</div>
 
 <script>
-(function () {
-    // Product data được serialize an toàn từ server — tránh mọi lỗi escape ký tự đặc biệt
-    const productData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-        ViewBag.Products == null
-            ? new object[] {}
-            : ((IEnumerable<QuanLiSanCauLong.Models.Product>)ViewBag.Products)
-                .Select(p => new {
-                    id    = p.ProductId,
-                    unit  = p.Unit  ?? "",
-                    sku   = p.SKU   ?? "",
-                    name  = p.ProductName ?? "",
-                    stock = p.StockQuantity
-                })
-                .ToArray()
-    ));
-    // Chuyển array → object map { [id]: {...} }
-    const pdMap = {};
-    productData.forEach(p => { pdMap[p.id] = { unit: p.unit, sku: p.sku, name: p.name, stock: p.stock }; });
+// ── Serialize product data từ server ──
+const _siProducts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+    (ViewBag.Products as List<QuanLiSanCauLong.Models.Product> ?? new()).Select(p => new {
+        id    = p.ProductId,
+        name  = p.ProductName ?? "",
+        unit  = p.Unit  ?? "",
+        sku   = p.SKU   ?? "",
+        stock = p.StockQuantity
+    })
+));
 
-    let rowIndex = 1;
+// ── Fill unit + load variants khi chọn sản phẩm ──
+async function siFillUnit(sel) {
+    const row        = sel.closest('tr');
+    const unitInput  = row.querySelector('.si-unit');
+    const meta       = row.querySelector('.row-meta');
+    const variantSel = row.querySelector('.si-variant-sel');
+    const pid        = sel.value;
+    const pData      = _siProducts.find(p => p.id == pid);
 
-    // ---- Build product <options> HTML ----
-    function buildProductOpts() {
-        return '<option value="">-- Chọn sản phẩm --</option>' +
-            Object.entries(pdMap).map(([id, d]) =>
-                `<option value="${id}" data-unit="${d.unit}" data-sku="${d.sku}" data-stock="${d.stock}">${d.name || d.sku || 'SP-' + id}</option>`
-            ).join('');
+    if (!pid || !pData) {
+        if (unitInput) unitInput.value = '';
+        if (meta) meta.textContent = '';
+        if (variantSel) { variantSel.innerHTML = '<option value="">— Chọn SP trước —</option>'; variantSel.disabled = true; }
+        return;
     }
 
-    // ---- Fill unit + load variants ----
-    async function fillUnit(select) {
-        const id  = select.value;
-        const row = select.closest('tr');
-        const unitInput  = row.querySelector('input[name*=".Unit"]');
-        const meta       = row.querySelector('.row-meta');
-        const variantSel = row.querySelector('.variant-select');
+    if (unitInput) unitInput.value = pData.unit;
+    if (meta) meta.textContent = `SKU: ${pData.sku || '—'} · Tồn: ${pData.stock}`;
 
-        if (id && pdMap[id]) {
-            if (unitInput) unitInput.value = pdMap[id].unit;
-            if (meta) meta.textContent = `SKU: ${pdMap[id].sku || '—'} | Tồn: ${pdMap[id].stock}`;
-
-            if (variantSel) {
-                variantSel.innerHTML = '<option value="">Đang tải...</option>';
+    if (variantSel) {
+        variantSel.innerHTML = '<option value="">Đang tải...</option>';
+        variantSel.disabled = true;
+        try {
+            const res  = await fetch(`/Admin/AdminProduct/GetVariants?productId=${pid}`);
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+                variantSel.innerHTML = '<option value="">-- Không chọn size --</option>' +
+                    data.map(v => `<option value="${v.variantId}">${v.displayName} (Tồn: ${v.availableQuantity ?? 0})</option>`).join('');
+                variantSel.disabled = false;
+            } else {
+                variantSel.innerHTML = '<option value="">Không có phân loại</option>';
                 variantSel.disabled = true;
-                try {
-                    const res  = await fetch(`/Admin/AdminProduct/GetVariants?productId=${id}`);
-                    const data = await res.json();
-                    if (Array.isArray(data) && data.length > 0) {
-                        variantSel.innerHTML = '<option value="">-- Chọn size/màu --</option>' +
-                            data.map(v => `<option value="${v.variantId}" data-stock="${v.availableQuantity}">${v.displayName} (Tồn KD: ${v.availableQuantity})</option>`).join('');
-                        variantSel.disabled = false;
-                    } else {
-                        variantSel.innerHTML = '<option value="">Không có phân loại</option>';
-                        variantSel.disabled = true;
-                    }
-                } catch {
-                    variantSel.innerHTML = '<option value="">Không tải được</option>';
-                    variantSel.disabled = false;
-                }
             }
-        } else {
-            if (unitInput) unitInput.value = '';
-            if (meta) meta.textContent = '';
-            if (variantSel) { variantSel.innerHTML = '<option value="">— Chọn SP trước —</option>'; variantSel.disabled = true; }
+        } catch {
+            variantSel.innerHTML = '<option value="">Lỗi tải phân loại</option>';
+            variantSel.disabled  = false;
         }
     }
+}
 
-    // ---- Add row ----
-    function addRow() {
-        const idx = rowIndex;
-        const row = `
-        <tr class="product-row">
-            <td>
-                <select name="Items[${idx}].ProductId" class="fc stockin-product-sel">
-                    ${buildProductOpts()}
-                </select>
-                <small class="row-meta"></small>
-            </td>
-            <td>
-                <select name="Items[${idx}].VariantId" class="fc variant-select" disabled>
-                    <option value="">— Chọn SP trước —</option>
-                </select>
-            </td>
-            <td><input name="Items[${idx}].Quantity" type="number" class="fc" placeholder="0" min="1" /></td>
-            <td><input name="Items[${idx}].Unit" type="text" class="fc fw-mono" placeholder="—" readonly /></td>
-            <td><input name="Items[${idx}].CostPrice" type="number" class="fc" placeholder="0" min="0" step="1000" /></td>
-            <td style="text-align:center;"><button type="button" class="btn-remove stockin-remove-btn"><i class="bi bi-trash3"></i></button></td>
-        </tr>`;
-        const tbody = document.getElementById('productTableBody');
-        tbody.insertAdjacentHTML('beforeend', row);
-        // Attach events to new row
-        const newRow = tbody.lastElementChild;
-        attachRowEvents(newRow);
-        rowIndex++;
+// ── Thêm dòng sản phẩm ──
+let _siRowIdx = 1;
+function siAddRow() {
+    const opts = '<option value="">-- Chọn sản phẩm --</option>' +
+        _siProducts.map(p => `<option value="${p.id}" data-unit="${p.unit}" data-sku="${p.sku}" data-stock="${p.stock}">${p.name}${p.sku ? ' (' + p.sku + ')' : ''}</option>`).join('');
+
+    const tr = document.createElement('tr');
+    tr.className = 'si-product-row';
+    tr.innerHTML = `
+        <td>
+            <select class="si-fc-sm si-product-sel" onchange="siFillUnit(this)">${opts}</select>
+            <small class="row-meta"></small>
+        </td>
+        <td><select class="si-fc-sm si-variant-sel" disabled><option value="">— Chọn SP trước —</option></select></td>
+        <td><input type="number" class="si-fc-sm si-qty" min="1" placeholder="0" style="text-align:center;" /></td>
+        <td><input type="text" class="si-fc-sm si-unit" readonly placeholder="—" style="text-align:center;" /></td>
+        <td><input type="number" class="si-fc-sm si-cost" min="0" step="1000" placeholder="0" style="text-align:right;" /></td>
+        <td><button type="button" class="btn-remove si-remove-btn" onclick="siRemoveRow(this)"><i class="bi bi-trash3"></i></button></td>
+    `;
+    document.getElementById('si_tableBody').appendChild(tr);
+    _siRowIdx++;
+}
+
+function siRemoveRow(btn) {
+    const rows = document.querySelectorAll('#si_tableBody .si-product-row');
+    if (rows.length > 1) btn.closest('tr').remove();
+}
+
+document.getElementById('si_addRowBtn').addEventListener('click', siAddRow);
+
+// ── Gắn sự kiện cho dòng đầu tiên ──
+document.querySelectorAll('#si_tableBody .si-remove-btn').forEach(btn => {
+    btn.addEventListener('click', () => siRemoveRow(btn));
+});
+
+// ── Submit AJAX ──
+async function submitStockIn() {
+    const btn = document.getElementById('si_submitBtn');
+    const fid = document.getElementById('si_facilityId').value;
+    if (!fid) { alert('Vui lòng chọn cơ sở!'); return; }
+
+    // Collect items
+    const items = [];
+    document.querySelectorAll('#si_tableBody .si-product-row').forEach(row => {
+        const pid  = row.querySelector('.si-product-sel').value;
+        const vid  = row.querySelector('.si-variant-sel').value;
+        const qty  = parseInt(row.querySelector('.si-qty').value);
+        const unit = row.querySelector('.si-unit').value;
+        const cost = parseFloat(row.querySelector('.si-cost').value) || 0;
+        if (pid && qty > 0) items.push({ productId: parseInt(pid), variantId: vid ? parseInt(vid) : null, quantity: qty, unit, costPrice: cost });
+    });
+
+    if (!items.length) { alert('Vui lòng chọn ít nhất 1 sản phẩm với số lượng > 0!'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner-sm"></div> Đang xử lý...';
+
+    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+    const form  = new FormData();
+    form.append('FacilityId',        fid);
+    form.append('TransactionType',   'StockIn');
+    form.append('TransactionDate',   document.getElementById('si_txDate').value);
+    form.append('SupplierId',        document.getElementById('si_supplierId').value);
+    form.append('DocumentReference', document.getElementById('si_docRef').value);
+    form.append('BatchNumber',       document.getElementById('si_batchNumber').value);
+    form.append('ExpiryDate',        document.getElementById('si_expiryDate').value);
+    form.append('Note',              document.getElementById('si_note').value);
+    items.forEach((it, i) => {
+        form.append(`Items[${i}].ProductId`,  it.productId);
+        form.append(`Items[${i}].VariantId`,  it.variantId ?? '');
+        form.append(`Items[${i}].Quantity`,   it.quantity);
+        form.append(`Items[${i}].Unit`,       it.unit);
+        form.append(`Items[${i}].CostPrice`,  it.costPrice);
+    });
+    form.append('__RequestVerificationToken', token);
+
+    try {
+        const res  = await fetch('/AdminInventory/StockIn', { method: 'POST', body: form });
+        const data = await res.json();
+        if (data.success) {
+            siShowToast(true, data.message || 'Nhập kho thành công!');
+            setTimeout(() => { $('#inventoryModal').modal('hide'); location.reload(); }, 900);
+        } else {
+            siShowToast(false, data.message || 'Có lỗi xảy ra!');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Xác nhận nhập kho';
+        }
+    } catch {
+        siShowToast(false, 'Lỗi kết nối. Vui lòng thử lại.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Xác nhận nhập kho';
     }
+}
 
-    // ---- Remove row ----
-    function removeRow(btn) {
-        if (document.querySelectorAll('#productTableBody .product-row').length > 1)
-            btn.closest('tr').remove();
-    }
-
-    // ---- Attach events to a row ----
-    function attachRowEvents(row) {
-        const sel = row.querySelector('.stockin-product-sel');
-        if (sel) sel.addEventListener('change', () => fillUnit(sel));
-        const removeBtn = row.querySelector('.stockin-remove-btn');
-        if (removeBtn) removeBtn.addEventListener('click', () => removeRow(removeBtn));
-    }
-
-    // ---- Init: attach events to the first (pre-rendered) row ----
-    document.querySelectorAll('#productTableBody .product-row').forEach(attachRowEvents);
-
-    // ---- Expose addRow to the "Thêm dòng" button ----
-    const addBtn = document.getElementById('stockInAddRowBtn');
-    if (addBtn) addBtn.addEventListener('click', addRow);
-})();
+function siShowToast(ok, msg) {
+    const wrap = document.getElementById('invToastWrap');
+    if (!wrap) return;
+    const d = document.createElement('div');
+    d.className = 'inv-toast ' + (ok ? 'inv-toast-ok' : 'inv-toast-err');
+    d.textContent = msg;
+    wrap.appendChild(d);
+    setTimeout(() => d.remove(), 3500);
+}
 </script>

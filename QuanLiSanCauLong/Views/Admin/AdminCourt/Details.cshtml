@@ -1,18 +1,11 @@
 ﻿@model QuanLiSanCauLong.Models.Court
 @{
-    ViewData["Title"] = "Chi tiết sân " + Model.CourtNumber;
-    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    Layout = null;
 
-    var primaryImg  = Model.CourtImages?.FirstOrDefault(i => i.IsPrimary)
+    var primaryImg = Model.CourtImages?.FirstOrDefault(i => i.IsPrimary)
                    ?? Model.CourtImages?.OrderBy(i => i.DisplayOrder).FirstOrDefault();
-    var allImages   = Model.CourtImages?.OrderBy(i => i.DisplayOrder).ToList()
+    var allImages = Model.CourtImages?.OrderBy(i => i.DisplayOrder).ToList()
                    ?? new List<QuanLiSanCauLong.Models.CourtImage>();
-
-    var recentBooks = Model.Bookings?
-                        .Where(b => b.BookingDate >= DateTime.Today.AddDays(-30))
-                        .OrderByDescending(b => b.BookingDate)
-                        .Take(10)
-                        .ToList() ?? new List<QuanLiSanCauLong.Models.Booking>();
 
     var statusColor = Model.Status switch {
         "Available"   => "#16a34a",
@@ -20,8 +13,13 @@
         "Maintenance" => "#c94b2a",
         _ => "#8a7560"
     };
+    var statusBg = Model.Status switch {
+        "Available"   => "rgba(22,163,74,.08)",
+        "Active"      => "rgba(212,160,23,.1)",
+        "Maintenance" => "rgba(201,75,42,.08)",
+        _ => "rgba(138,117,96,.1)"
+    };
 
-    // Group PriceSlots by DayOfWeek
     var slotsByDay = Model.PriceSlots?
         .Where(ps => ps.IsActive)
         .GroupBy(ps => ps.DayOfWeek)
@@ -29,438 +27,297 @@
         .ToList();
 
     string DayName(DayOfWeek? d) => d switch {
-        DayOfWeek.Sunday    => "Chủ nhật",
-        DayOfWeek.Monday    => "Thứ Hai",
-        DayOfWeek.Tuesday   => "Thứ Ba",
-        DayOfWeek.Wednesday => "Thứ Tư",
-        DayOfWeek.Thursday  => "Thứ Năm",
-        DayOfWeek.Friday    => "Thứ Sáu",
-        DayOfWeek.Saturday  => "Thứ Bảy",
-        _ => "Tất cả ngày"
+        DayOfWeek.Sunday    => "CN",
+        DayOfWeek.Monday    => "T2",
+        DayOfWeek.Tuesday   => "T3",
+        DayOfWeek.Wednesday => "T4",
+        DayOfWeek.Thursday  => "T5",
+        DayOfWeek.Friday    => "T6",
+        DayOfWeek.Saturday  => "T7",
+        _ => "Tất cả"
     };
 }
-
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 :root {
     --deep:#1a1209; --gold:#d4a017; --gold2:#f5c842;
     --cream:#fdf8f0; --warm:#f5ede0; --border:#e8ddd0; --muted:#8a7560;
 }
-*, *::before, *::after { box-sizing: border-box; font-family:'Outfit',sans-serif; }
 
-/* ─ LAYOUT WRAP ─ */
-.cf-wrap { max-width:860px; margin:0 auto; padding-bottom:3rem; }
+.mh { display:flex; align-items:flex-start; justify-content:space-between;
+    padding:1.4rem 1.5rem 0; gap:1rem; }
+.mh-label { font-size:.65rem; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--gold); font-weight:700; margin-bottom:.3rem;
+    display:flex; align-items:center; gap:.5rem; }
+.mh-label::before { content:''; width:12px; height:1px; background:var(--gold); }
+.mh-title { font-family:'Playfair Display',serif; font-size:1.35rem; font-weight:700; color:var(--deep); }
+.mh-sub { font-size:.78rem; color:var(--muted); margin-top:.15rem; }
+.mh-close { width:32px; height:32px; border:1px solid var(--border); border-radius:6px;
+    background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    color:var(--muted); font-size:.85rem; transition:all .15s; flex-shrink:0; }
+.mh-close:hover { background:var(--deep); color:var(--gold2); border-color:var(--deep); }
 
-/* ─ PAGE HEADER ─ */
-.cf-head { margin-bottom:2rem; display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
-.cf-head-left {}
-.cf-head-label { font-size:.68rem; letter-spacing:.2em; text-transform:uppercase; color:var(--gold);
-    display:flex; align-items:center; gap:.6rem; margin-bottom:.5rem; font-weight:700; }
-.cf-head-label::before { content:''; width:16px; height:1px; background:var(--gold); }
-.cf-title { font-family:'Playfair Display',serif; font-size:2rem; font-weight:700; color:var(--deep); line-height:1.1; }
-.cf-title em { font-style:italic; color:var(--gold); }
-.cf-sub { font-size:.84rem; color:var(--muted); margin-top:.3rem; }
-.cf-head-acts { display:flex; gap:.6rem; flex-wrap:wrap; align-items:flex-start; padding-top:.25rem; }
-.btn-edit { display:inline-flex; align-items:center; gap:.45rem; padding:.65rem 1.3rem;
-    background:linear-gradient(135deg,var(--gold),var(--gold2)); color:var(--deep);
-    border:none; border-radius:8px; font-weight:700; font-size:.84rem; cursor:pointer;
-    text-decoration:none; transition:all .2s; }
-.btn-edit:hover { box-shadow:0 4px 14px rgba(212,160,23,.35); transform:translateY(-1px); color:var(--deep); }
-.btn-back { display:inline-flex; align-items:center; gap:.45rem; padding:.65rem 1.1rem;
-    border:1px solid var(--border); background:#fff; color:var(--muted); border-radius:8px;
-    font-size:.84rem; cursor:pointer; text-decoration:none; transition:all .15s; }
-.btn-back:hover { border-color:var(--deep); color:var(--deep); }
+.mbody { padding:1.25rem 1.5rem; max-height:calc(85vh - 130px);
+    overflow-y:auto; overflow-x:hidden; }
+.mbody::-webkit-scrollbar { width:5px; }
+.mbody::-webkit-scrollbar-track { background:var(--warm); border-radius:3px; }
+.mbody::-webkit-scrollbar-thumb { background:var(--gold); border-radius:3px; }
+.mbody::-webkit-scrollbar-thumb:hover { background:var(--gold2); }
 
-/* ─ STATUS BADGE ─ */
-.status-badge { display:inline-flex; align-items:center; gap:.45rem; padding:.35rem .9rem;
-    border-radius:5px; font-size:.72rem; font-weight:700; letter-spacing:.06em; }
+.sf-card { background:#fff; border:1px solid var(--border); border-radius:10px;
+    margin-bottom:.9rem; overflow:hidden; }
+.sf-card-head { padding:.7rem 1rem; background:var(--warm); display:flex;
+    align-items:center; gap:.5rem; border-bottom:1px solid var(--border); }
+.sf-card-icon { color:var(--gold); font-size:.9rem; }
+.sf-card-title { font-size:.72rem; font-weight:700; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--muted); }
+.sf-card-badge { margin-left:auto; font-size:.72rem; color:var(--muted); }
+.sf-card-body { padding:1rem; display:grid; gap:.75rem; }
+.sfg2 { grid-template-columns:1fr 1fr; }
+
+.fg { display:flex; flex-direction:column; gap:.3rem; }
+.fg-label { font-size:.72rem; font-weight:700; letter-spacing:.05em;
+    text-transform:uppercase; color:var(--muted); }
+.fg-val { padding:.6rem .85rem; border:1px solid var(--border); border-radius:7px;
+    font-family:'Outfit',sans-serif; font-size:.86rem; color:var(--deep);
+    background:var(--cream); min-height:38px; display:flex; align-items:center; gap:.4rem; }
+
+.status-badge { display:inline-flex; align-items:center; gap:.35rem; padding:.25rem .75rem;
+    border-radius:20px; font-size:.68rem; font-weight:700; letter-spacing:.05em; }
 .status-dot { width:7px; height:7px; border-radius:50%; }
 
-/* ─ CARDS ─ */
-.cf-card { background:#fff; border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:1.25rem; }
-.cf-card-head { padding:1.1rem 1.75rem; border-bottom:1px solid var(--border); background:var(--warm);
-    display:flex; align-items:center; gap:.6rem; }
-.cf-card-icon { color:var(--gold); font-size:.95rem; }
-.cf-card-title { font-size:.72rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
-.cf-card-badge { margin-left:auto; }
-.cf-card-body { padding:1.75rem; }
-
-/* ─ IMAGE GALLERY ─ */
-.gallery-hero { width:100%; aspect-ratio:16/7; border-radius:10px; overflow:hidden; margin-bottom:.75rem;
-    background:var(--warm); position:relative; cursor:pointer; }
-.gallery-hero img { width:100%; height:100%; object-fit:cover; transition:transform .3s; }
-.gallery-hero:hover img { transform:scale(1.02); }
-.gallery-hero-empty { width:100%; height:100%; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; color:var(--muted); gap:.5rem; opacity:.35; }
-.gallery-thumbs { display:flex; gap:.5rem; flex-wrap:wrap; }
-.gallery-thumb { width:72px; height:72px; border-radius:7px; overflow:hidden;
-    border:2px solid var(--border); cursor:pointer; transition:all .18s; flex-shrink:0; }
-.gallery-thumb:hover, .gallery-thumb.active { border-color:var(--gold); }
-.gallery-thumb img { width:100%; height:100%; object-fit:cover; }
-.gallery-count { display:flex; align-items:center; justify-content:center;
-    width:72px; height:72px; border-radius:7px; border:1.5px dashed var(--border);
-    font-size:.75rem; color:var(--muted); font-weight:600; cursor:pointer; }
-.gallery-count:hover { border-color:var(--gold); color:var(--gold); }
-
-/* ─ INFO GRID ─ */
-.info-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem 2rem; }
-.info-item {}
-.ii-label { font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
-    color:var(--muted); margin-bottom:.35rem; }
-.ii-value { font-size:.92rem; font-weight:600; color:var(--deep); display:flex; align-items:center; gap:.45rem; }
-.ii-value .icon { color:var(--gold); font-size:.85rem; }
-.ii-value.large { font-size:1.1rem; }
-
-/* ─ AMENITY CHIPS ─ */
 .amenity-chips { display:flex; flex-wrap:wrap; gap:.5rem; }
-.amenity-chip { display:inline-flex; align-items:center; gap:.4rem; padding:.45rem .9rem;
-    border:1.5px solid var(--border); border-radius:7px; font-size:.8rem; color:var(--muted); }
-.amenity-chip.on { border-color:var(--gold); background:rgba(212,160,23,.07); color:var(--deep); font-weight:600; }
-.amenity-chip .chip-icon { font-size:.95rem; }
+.amenity-chip { display:inline-flex; align-items:center; gap:.4rem; padding:.35rem .8rem;
+    border:1.5px solid var(--border); border-radius:7px; font-size:.82rem; color:var(--muted); }
+.amenity-chip.on { border-color:var(--gold); background:rgba(212,160,23,.07);
+    color:var(--deep); font-weight:600; }
 
-/* ─ PRICE SLOTS ─ */
-.day-tabs { display:flex; gap:.35rem; flex-wrap:wrap; margin-bottom:1rem; }
-.day-tab { padding:.4rem .85rem; border:1.5px solid var(--border); border-radius:6px;
-    font-size:.76rem; font-weight:600; cursor:pointer; color:var(--muted);
+.img-gallery { display:flex; flex-wrap:wrap; gap:.5rem; }
+.img-thumb-view { width:78px; height:78px; border-radius:7px; overflow:hidden;
+    border:2px solid var(--border); position:relative; }
+.img-thumb-view.is-main { border-color:var(--gold); border-width:2.5px; }
+.img-thumb-view img { width:100%; height:100%; object-fit:cover; }
+.img-thumb-view .star-badge { position:absolute; top:3px; left:3px; width:18px; height:18px;
+    background:rgba(212,160,23,.9); border-radius:50%; display:flex;
+    align-items:center; justify-content:center; font-size:.6rem; color:var(--deep); }
+
+.day-tabs-d { display:flex; gap:.3rem; flex-wrap:wrap; margin-bottom:.75rem; }
+.day-tab-d { padding:.3rem .7rem; border:1px solid var(--border); border-radius:5px;
+    font-size:.72rem; font-weight:600; cursor:pointer; color:var(--muted);
     background:#fff; transition:all .15s; }
-.day-tab:hover { border-color:rgba(212,160,23,.5); }
-.day-tab.active { border-color:var(--gold); background:rgba(212,160,23,.08); color:var(--deep); }
-.slot-list { display:flex; flex-direction:column; gap:.4rem; }
-.slot-row { display:flex; align-items:center; gap:.75rem; padding:.65rem 1rem;
-    border:1px solid var(--border); border-radius:8px; background:var(--cream); }
-.slot-time { font-size:.86rem; font-weight:700; color:var(--deep); min-width:110px; }
-.slot-price { font-size:.86rem; font-weight:700; color:#16a34a; margin-left:auto; }
-.slot-badge { font-size:.65rem; padding:.2rem .55rem; border-radius:4px; font-weight:700;
+.day-tab-d:hover { border-color:rgba(212,160,23,.5); }
+.day-tab-d.active { border-color:var(--gold); background:rgba(212,160,23,.08); color:var(--deep); }
+.slot-row-d { display:flex; align-items:center; gap:.6rem; padding:.5rem .75rem;
+    border:1px solid var(--border); border-radius:7px; background:var(--cream); margin-bottom:.35rem; }
+.slot-time-d { font-weight:700; font-size:.84rem; color:var(--deep); min-width:100px; font-family:monospace; }
+.slot-price-d { font-size:.84rem; font-weight:700; color:#16a34a; margin-left:auto; }
+.slot-badge-d { font-size:.62rem; padding:.15rem .45rem; border-radius:3px; font-weight:700;
     background:rgba(212,160,23,.1); color:#92660a; }
-.slot-empty { font-size:.8rem; color:var(--muted); text-align:center; padding:1.25rem;
-    border:1.5px dashed var(--border); border-radius:8px; }
 
-/* ─ BOOKING TABLE ─ */
-.bk-table { width:100%; border-collapse:collapse; font-size:.83rem; }
-.bk-table th { padding:.6rem .85rem; text-align:left; font-size:.68rem; font-weight:700;
-    letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
-    border-bottom:1px solid var(--border); background:var(--warm); }
-.bk-table td { padding:.7rem .85rem; border-bottom:1px solid var(--border); color:var(--deep); vertical-align:middle; }
-.bk-table tr:last-child td { border-bottom:none; }
-.bk-table tr:hover td { background:var(--cream); }
-.bk-status { display:inline-block; padding:.22rem .6rem; border-radius:4px; font-size:.7rem; font-weight:700; }
-.bk-confirmed  { background:rgba(22,163,74,.1);  color:#16a34a; }
-.bk-pending    { background:rgba(212,160,23,.1); color:#92660a; }
-.bk-cancelled  { background:rgba(201,75,42,.08); color:#c94b2a; }
-.bk-completed  { background:rgba(99,102,241,.1); color:#4f46e5; }
-.bk-empty { text-align:center; padding:2rem; color:var(--muted); font-size:.84rem; }
-.bk-empty i { display:block; font-size:1.8rem; margin-bottom:.5rem; opacity:.3; }
-
-/* ─ STAT MINI ─ */
-.stat-mini-row { display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
-    background:var(--border); border-radius:10px; overflow:hidden; margin-bottom:1.25rem; }
-.stat-mini { background:#fff; padding:1rem 1.25rem; text-align:center; }
-.stat-mini-n { font-family:'Playfair Display',serif; font-size:1.6rem; font-weight:700; color:var(--deep); line-height:1; }
-.stat-mini-l { font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-top:.3rem; }
-
-/* ─ DESC BLOCK ─ */
-.desc-block { font-size:.88rem; color:var(--deep); line-height:1.7;
-    background:var(--cream); border-radius:8px; padding:1rem 1.25rem;
+.desc-block { font-size:.86rem; color:var(--deep); line-height:1.7;
+    background:var(--cream); border-radius:7px; padding:.85rem 1rem;
     border-left:3px solid var(--gold); }
-.desc-empty { font-size:.84rem; color:var(--muted); font-style:italic; }
 
-/* ─ LIGHTBOX ─ */
-.lbox { position:fixed; inset:0; background:rgba(26,18,9,.92); z-index:9999;
-    display:none; align-items:center; justify-content:center; }
-.lbox.on { display:flex; }
-.lbox-img { max-width:90vw; max-height:85vh; border-radius:8px; object-fit:contain; }
-.lbox-close { position:fixed; top:1.2rem; right:1.5rem; width:40px; height:40px;
-    border-radius:50%; background:rgba(255,255,255,.12); border:none; color:#fff;
-    cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center; }
-.lbox-close:hover { background:rgba(255,255,255,.22); }
+.no-data { color:var(--muted); font-style:italic; font-size:.84rem; }
 
-@@media(max-width:640px) {
-    .cf-title { font-size:1.5rem; }
-    .info-grid { grid-template-columns:1fr; }
-    .stat-mini-row { grid-template-columns:1fr; }
-    .cf-head { flex-direction:column; }
-    .cf-head-acts { width:100%; }
-    .btn-edit, .btn-back { flex:1; justify-content:center; }
-}
+.mfooter { display:flex; justify-content:flex-end; gap:.6rem;
+    padding:1rem 1.5rem; border-top:1px solid var(--border); background:var(--warm); }
+.btn-cancel { padding:.6rem 1.4rem; border:1px solid var(--border); border-radius:7px;
+    background:#fff; font-family:'Outfit',sans-serif; font-size:.84rem; cursor:pointer;
+    color:var(--muted); transition:all .15s; text-decoration:none;
+    display:inline-flex; align-items:center; gap:.4rem; }
+.btn-cancel:hover { border-color:var(--deep); color:var(--deep); }
+.btn-edit { padding:.6rem 1.8rem; background:linear-gradient(135deg,var(--gold),var(--gold2));
+    border:none; border-radius:7px; font-family:'Outfit',sans-serif; font-size:.84rem;
+    font-weight:700; color:var(--deep); cursor:pointer; display:inline-flex;
+    align-items:center; gap:.4rem; transition:all .2s; text-decoration:none; }
+.btn-edit:hover { box-shadow:0 4px 14px rgba(212,160,23,.35); transform:translateY(-1px); color:var(--deep); }
 </style>
 
-<div class="cf-wrap">
-
-    <!-- ════ HEADER ════ -->
-    <div class="cf-head">
-        <div class="cf-head-left">
-            <div class="cf-head-label">Chi Tiết Sân</div>
-            <h1 class="cf-title">Sân <em>@Model.CourtNumber</em></h1>
-            <div class="cf-sub">
-                @(Model.Facility?.FacilityName ?? "—")
-                @if (!string.IsNullOrEmpty(Model.FloorNumber))
-                {
-                    <span style="margin:0 .4rem;color:var(--border);">·</span>
-                    <span>@Model.FloorNumber</span>
-                }
-            </div>
-        </div>
-        <div class="cf-head-acts">
-            <a asp-action="Edit" asp-route-id="@Model.CourtId" class="btn-edit">
-                <i class="bi bi-pencil-square"></i> Chỉnh Sửa
-            </a>
-            <a asp-action="Index" class="btn-back">
-                <i class="bi bi-arrow-left"></i> Quay Lại
-            </a>
-        </div>
-    </div>
-
-    <!-- ════ STAT MINI ════ -->
-    <div class="stat-mini-row">
-        <div class="stat-mini">
-            <div class="stat-mini-n">@(Model.Bookings?.Count ?? 0)</div>
-            <div class="stat-mini-l">Tổng Đặt Sân</div>
-        </div>
-        <div class="stat-mini">
-            <div class="stat-mini-n">@(Model.PriceSlots?.Count(ps => ps.IsActive) ?? 0)</div>
-            <div class="stat-mini-l">Khung Giờ Hoạt Động</div>
-        </div>
-        <div class="stat-mini">
-            <div class="stat-mini-n">@(Model.CourtImages?.Count ?? 0)</div>
-            <div class="stat-mini-l">Hình Ảnh</div>
-        </div>
-    </div>
-
-    <!-- ════ 1. HÌNH ẢNH ════ -->
-    <div class="cf-card">
-        <div class="cf-card-head">
-            <i class="bi bi-images cf-card-icon"></i>
-            <span class="cf-card-title">Hình Ảnh Sân</span>
-            @if (allImages.Any())
+<!-- HEADER -->
+<div class="mh">
+    <div>
+        <div class="mh-label">Chi Tiết Sân</div>
+        <div class="mh-title">@Model.CourtNumber</div>
+        <div class="mh-sub">
+            @(Model.Facility?.FacilityName ?? "—")
+            @if (!string.IsNullOrEmpty(Model.FloorNumber))
             {
-                <span class="cf-card-badge" style="font-size:.72rem;color:var(--muted);">@allImages.Count ảnh</span>
-            }
-        </div>
-        <div class="cf-card-body">
-            @if (allImages.Any())
-            {
-                <!-- Hero image -->
-                <div class="gallery-hero" id="galleryHero" onclick="openLightbox(document.getElementById('heroImg').src)">
-                    <img id="heroImg" src="@(primaryImg?.ImagePath ?? allImages.First().ImagePath)" alt="@Model.CourtNumber" />
-                </div>
-                <!-- Thumbs -->
-                @if (allImages.Count > 1)
-                {
-                    <div class="gallery-thumbs">
-                        @for (int i = 0; i < Math.Min(allImages.Count, 6); i++)
-                        {
-                            var img = allImages[i];
-                            <div class="gallery-thumb @(img.IsPrimary ? "active" : "")"
-                                 onclick="switchHero('@img.ImagePath', this)">
-                                <img src="@img.ImagePath" alt="" />
-                            </div>
-                        }
-                        @if (allImages.Count > 6)
-                        {
-                            <div class="gallery-count" onclick="openLightbox('@allImages[6].ImagePath')">
-                                +@(allImages.Count - 6)
-                            </div>
-                        }
-                    </div>
-                }
-            }
-            else
-            {
-                <div class="gallery-hero" style="cursor:default;">
-                    <div class="gallery-hero-empty">
-                        <i class="bi bi-image" style="font-size:2.5rem;"></i>
-                        <span style="font-size:.82rem;">Chưa có hình ảnh</span>
-                    </div>
-                </div>
+                <span style="margin:0 .3rem;color:var(--border);">·</span>
+                <span>@Model.FloorNumber</span>
             }
         </div>
     </div>
+    <button class="mh-close" data-bs-dismiss="modal" title="Đóng">
+        <i class="bi bi-x-lg"></i>
+    </button>
+</div>
 
-    <!-- ════ 2. THÔNG TIN SÂN ════ -->
-    <div class="cf-card">
-        <div class="cf-card-head">
-            <i class="bi bi-card-text cf-card-icon"></i>
-            <span class="cf-card-title">Thông Tin Sân</span>
-            <span class="cf-card-badge">
-                @{
-                    var bg = Model.Status switch {
-                        "Available"   => "rgba(22,163,74,.08)",
-                        "Active"      => "rgba(212,160,23,.1)",
-                        "Maintenance" => "rgba(201,75,42,.08)",
-                        _ => "rgba(138,117,96,.1)"
-                    };
-                }
-                <span class="status-badge" style="background:@bg; color:@statusColor;">
+<div class="mbody">
+
+    <!-- 1. Thông tin sân -->
+    <div class="sf-card">
+        <div class="sf-card-head">
+            <i class="bi bi-card-text sf-card-icon"></i>
+            <span class="sf-card-title">Thông Tin Sân</span>
+            <span class="sf-card-badge">
+                <span class="status-badge" style="background:@statusBg; color:@statusColor;">
                     <span class="status-dot" style="background:@statusColor;"></span>
                     @Model.StatusLabel
                 </span>
             </span>
         </div>
-        <div class="cf-card-body">
-            <div class="info-grid">
-                <div class="info-item">
-                    <div class="ii-label">Tên / Số Sân</div>
-                    <div class="ii-value large"><i class="bi bi-grid-3x3-gap icon"></i>@Model.CourtNumber</div>
+        <div class="sf-card-body sfg2">
+            <div class="fg">
+                <div class="fg-label">Tên / Số Sân</div>
+                <div class="fg-val"><i class="bi bi-grid-3x3-gap" style="color:var(--gold)"></i> @Model.CourtNumber</div>
+            </div>
+            <div class="fg">
+                <div class="fg-label">Cơ Sở</div>
+                <div class="fg-val"><i class="bi bi-building" style="color:var(--gold)"></i> @(Model.Facility?.FacilityName ?? "—")</div>
+            </div>
+            <div class="fg">
+                <div class="fg-label">Vị Trí Sân</div>
+                <div class="fg-val">
+                    @(Model.CourtType == "Indoor" ? "🏠" : "☀️") @Model.CourtTypeLabel
                 </div>
-                <div class="info-item">
-                    <div class="ii-label">Cơ Sở</div>
-                    <div class="ii-value"><i class="bi bi-building icon"></i>@(Model.Facility?.FacilityName ?? "—")</div>
+            </div>
+            <div class="fg">
+                <div class="fg-label">Loại Mặt Sân</div>
+                <div class="fg-val">
+                    @(Model.SurfaceType == "PVC" ? "🟨" : Model.SurfaceType == "Wood" ? "🪵" : "🎨") @Model.SurfaceTypeLabel
                 </div>
-                <div class="info-item">
-                    <div class="ii-label">Vị Trí Sân</div>
-                    <div class="ii-value">
-                        @if (Model.CourtType == "Indoor")
-                        {
-                            <span>🏠</span>
-                        }
-                        else
-                        {
-                            <span>☀️</span>
-                        }
-                        @Model.CourtTypeLabel
-                    </div>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.FloorNumber))
+            {
+                <div class="fg">
+                    <div class="fg-label">Vị Trí Tầng</div>
+                    <div class="fg-val"><i class="bi bi-layers" style="color:var(--gold)"></i> @Model.FloorNumber</div>
                 </div>
-                <div class="info-item">
-                    <div class="ii-label">Loại Mặt Sân</div>
-                    <div class="ii-value">
-                        @if (Model.SurfaceType == "PVC")       { <span>🟨</span> }
-                        else if (Model.SurfaceType == "Wood")   { <span>🪵</span> }
-                        else                                    { <span>🎨</span> }
-                        @Model.SurfaceTypeLabel
-                    </div>
-                </div>
-                @if (!string.IsNullOrEmpty(Model.FloorNumber))
-                {
-                    <div class="info-item">
-                        <div class="ii-label">Vị Trí Tầng</div>
-                        <div class="ii-value"><i class="bi bi-layers icon"></i>@Model.FloorNumber</div>
-                    </div>
-                }
-                <div class="info-item">
-                    <div class="ii-label">Ngày Tạo</div>
-                    <div class="ii-value"><i class="bi bi-calendar3 icon"></i>@Model.CreatedAt.ToString("dd/MM/yyyy")</div>
-                </div>
+            }
+            <div class="fg">
+                <div class="fg-label">Ngày Tạo</div>
+                <div class="fg-val"><i class="bi bi-calendar3" style="color:var(--gold)"></i> @Model.CreatedAt.ToString("dd/MM/yyyy")</div>
             </div>
         </div>
     </div>
 
-    <!-- ════ 3. TIỆN ÍCH ════ -->
-    <div class="cf-card">
-        <div class="cf-card-head">
-            <i class="bi bi-lightning-charge cf-card-icon"></i>
-            <span class="cf-card-title">Tiện Ích Sân</span>
+    <!-- 2. Tiện ích -->
+    <div class="sf-card">
+        <div class="sf-card-head">
+            <i class="bi bi-lightning-charge sf-card-icon"></i>
+            <span class="sf-card-title">Tiện Ích Sân</span>
         </div>
-        <div class="cf-card-body">
+        <div class="sf-card-body" style="grid-template-columns:1fr;">
             <div class="amenity-chips">
                 <div class="amenity-chip @(Model.HasLighting ? "on" : "")">
-                    <span class="chip-icon">💡</span>
-                    Đèn chiếu sáng
-                    @if (Model.HasLighting)
-                    {
-                        <i class="bi bi-check-circle-fill" style="color:var(--gold);font-size:.8rem;"></i>
-                    }
+                    💡 Đèn chiếu sáng
+                    @if (Model.HasLighting) { <i class="bi bi-check-circle-fill" style="color:var(--gold);font-size:.8rem;"></i> }
                 </div>
                 <div class="amenity-chip @(Model.HasAC ? "on" : "")">
-                    <span class="chip-icon">❄️</span>
-                    Điều hoà không khí
-                    @if (Model.HasAC)
-                    {
-                        <i class="bi bi-check-circle-fill" style="color:var(--gold);font-size:.8rem;"></i>
-                    }
+                    ❄️ Điều hoà
+                    @if (Model.HasAC) { <i class="bi bi-check-circle-fill" style="color:var(--gold);font-size:.8rem;"></i> }
                 </div>
             </div>
-            @if (!Model.HasLighting && !Model.HasAC)
-            {
-                <div class="desc-empty" style="margin-top:.75rem;">Sân chưa được đăng ký tiện ích nào.</div>
-            }
         </div>
     </div>
 
-    <!-- ════ 4. MÔ TẢ ════ -->
-    <div class="cf-card">
-        <div class="cf-card-head">
-            <i class="bi bi-chat-left-text cf-card-icon"></i>
-            <span class="cf-card-title">Mô Tả Thêm</span>
+    <!-- 3. Mô tả -->
+    <div class="sf-card">
+        <div class="sf-card-head">
+            <i class="bi bi-chat-left-text sf-card-icon"></i>
+            <span class="sf-card-title">Mô Tả</span>
         </div>
-        <div class="cf-card-body">
+        <div class="sf-card-body" style="grid-template-columns:1fr;">
             @if (!string.IsNullOrWhiteSpace(Model.Description))
             {
                 <div class="desc-block">@Model.Description</div>
             }
             else
             {
-                <div class="desc-empty">Chưa có mô tả cho sân này.</div>
+                <span class="no-data">Chưa có mô tả</span>
             }
         </div>
     </div>
 
-    <!-- ════ 5. KHUNG GIỜ & GIÁ ════ -->
-    <div class="cf-card">
-        <div class="cf-card-head">
-            <i class="bi bi-clock cf-card-icon"></i>
-            <span class="cf-card-title">Khung Giờ &amp; Giá Sân</span>
-            <span class="cf-card-badge" style="font-size:.72rem;color:var(--muted);">
-                @(Model.PriceSlots?.Count(ps => ps.IsActive) ?? 0) khung giờ hoạt động
-            </span>
-        </div>
-        <div class="cf-card-body">
-            @if (Model.PriceSlots?.Any() == true)
+    <!-- 4. Hình ảnh -->
+    <div class="sf-card">
+        <div class="sf-card-head">
+            <i class="bi bi-images sf-card-icon"></i>
+            <span class="sf-card-title">Hình Ảnh Sân</span>
+            @if (allImages.Any())
             {
-                <!-- Day tabs -->
-                <div class="day-tabs" id="dayTabs">
-                    @{
-                        var days = Model.PriceSlots
-                            .Select(ps => ps.DayOfWeek)
-                            .Distinct()
-                            .OrderBy(d => d)
-                            .ToList();
-                        bool firstDay = true;
-                    }
-                    @foreach (var day in days)
+                <span class="sf-card-badge">@allImages.Count ảnh</span>
+            }
+        </div>
+        <div class="sf-card-body" style="grid-template-columns:1fr;">
+            @if (allImages.Any())
+            {
+                <div class="img-gallery">
+                    @for (int i = 0; i < allImages.Count; i++)
                     {
-                        <div class="day-tab @(firstDay ? "active" : "")"
-                             data-day="@((int?)day ?? -1)"
-                             onclick="switchDay(this)">
-                            @DayName(day)
+                        <div class="img-thumb-view @(allImages[i].IsPrimary ? "is-main" : "")">
+                            <img src="@allImages[i].ImagePath" alt="Ảnh @(i + 1)"
+                                 onerror="this.src='/images/no-image.png'" />
+                            @if (allImages[i].IsPrimary)
+                            {
+                                <div class="star-badge"><i class="bi bi-star-fill"></i></div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <span class="no-data">Chưa có hình ảnh</span>
+            }
+        </div>
+    </div>
+
+    <!-- 5. Khung giờ & Giá -->
+    <div class="sf-card">
+        <div class="sf-card-head">
+            <i class="bi bi-clock sf-card-icon"></i>
+            <span class="sf-card-title">Khung Giờ & Giá</span>
+            <span class="sf-card-badge">@(Model.PriceSlots?.Count(ps => ps.IsActive) ?? 0) khung giờ</span>
+        </div>
+        <div class="sf-card-body" style="grid-template-columns:1fr;">
+            @if (slotsByDay?.Any() == true)
+            {
+                <div class="day-tabs-d" id="dayTabsDetail">
+                    @{ bool firstDay = true; }
+                    @foreach (var grp in slotsByDay)
+                    {
+                        <div class="day-tab-d @(firstDay ? "active" : "")"
+                             data-day="@((int?)grp.Key ?? -1)"
+                             onclick="switchDayDetail(this)">
+                            @DayName(grp.Key)
                         </div>
                         firstDay = false;
                     }
                 </div>
 
-                <!-- Slot panels -->
                 {
                     bool firstPanel = true;
-                    foreach (var day in days)
+                    foreach (var grp in slotsByDay)
                     {
-                        var slots = Model.PriceSlots
-                            .Where(ps => ps.DayOfWeek == day)
-                            .OrderBy(ps => ps.StartTime)
-                            .ToList();
-
-                        <div class="slot-panel @(firstPanel ? "" : "d-none")"
-                             data-day="@((int?)day ?? -1)" id="panel-day-@((int?)day ?? -1)">
-                            <div class="slot-list">
-                                @foreach (var slot in slots)
-                                {
-                                    <div class="slot-row" style="@(!slot.IsActive ? "opacity:.45;" : "")">
-                                        <i class="bi bi-clock" style="color:var(--gold);font-size:.85rem;"></i>
-                                        <span class="slot-time">
-                                            @slot.StartTime.ToString(@"hh\:mm") – @slot.EndTime.ToString(@"hh\:mm")
-                                        </span>
-                                        @if (slot.IsPeakHour)
-                                        {
-                                            <span class="slot-badge">Cao điểm</span>
-                                        }
-                                        <span class="slot-price">@slot.Price.ToString("N0")đ/giờ</span>
-                                        @if (!slot.IsActive)
-                                        {
-                                            <span style="font-size:.68rem;color:var(--muted);background:var(--warm);
-                                                padding:.2rem .55rem;border-radius:4px;">Tắt</span>
-                                        }
-                                    </div>
-                                }
-                            </div>
+                        var slots = grp.OrderBy(ps => ps.StartTime).ToList();
+                        <div class="slot-panel-d @(firstPanel ? "" : "d-none")"
+                             data-day="@((int?)grp.Key ?? -1)">
+                            @foreach (var slot in slots)
+                            {
+                                <div class="slot-row-d">
+                                    <i class="bi bi-clock" style="color:var(--gold);font-size:.75rem;"></i>
+                                    <span class="slot-time-d">
+                                        @slot.StartTime.ToString(@"hh\:mm") – @slot.EndTime.ToString(@"hh\:mm")
+                                    </span>
+                                    @if (slot.IsPeakHour)
+                                    {
+                                        <span class="slot-badge-d">Cao điểm</span>
+                                    }
+                                    <span class="slot-price-d">@slot.Price.ToString("N0")đ/h</span>
+                                </div>
+                            }
                         </div>
                         firstPanel = false;
                     }
@@ -468,125 +325,32 @@
             }
             else
             {
-                <div class="slot-empty">
-                    <i class="bi bi-clock" style="font-size:1.8rem;display:block;margin-bottom:.5rem;opacity:.3;"></i>
-                    Chưa cấu hình khung giờ. <a asp-action="Edit" asp-route-id="@Model.CourtId"
-                       style="color:var(--gold);text-decoration:none;">Thêm ngay →</a>
-                </div>
+                <span class="no-data">Chưa cấu hình khung giờ</span>
             }
         </div>
-    </div>
-
-    <!-- ════ 6. LỊCH ĐẶT SÂN GẦN ĐÂY ════ -->
-    <div class="cf-card">
-        <div class="cf-card-head">
-            <i class="bi bi-calendar3 cf-card-icon"></i>
-            <span class="cf-card-title">Lịch Đặt Sân Gần Đây</span>
-            <span class="cf-card-badge" style="font-size:.72rem;color:var(--muted);">30 ngày qua</span>
-        </div>
-        <div class="cf-card-body" style="padding:0;">
-            @if (recentBooks.Any())
-            {
-                <table class="bk-table">
-                    <thead>
-                        <tr>
-                            <th>Khách hàng</th>
-                            <th>Ngày đặt</th>
-                            <th>Khung giờ</th>
-                            <th>Tổng tiền</th>
-                            <th>Trạng thái</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var b in recentBooks)
-                        {
-                            var stCls = b.Status?.ToLower() switch {
-                                "confirmed" => "bk-confirmed",
-                                "pending"   => "bk-pending",
-                                "cancelled" => "bk-cancelled",
-                                "completed" => "bk-completed",
-                                _ => ""
-                            };
-                            var stLabel = b.Status switch {
-                                "Confirmed" => "Xác nhận",
-                                "Pending"   => "Chờ duyệt",
-                                "Cancelled" => "Đã hủy",
-                                "Completed" => "Hoàn thành",
-                                _ => b.Status
-                            };
-                            <tr>
-@*                                 <td>
-                                    <div style="font-weight:600;">@(b.User?.FullName ?? b.User?.UserName ?? "—")</div>
-                                    <div style="font-size:.74rem;color:var(--muted);">@(b.User?.PhoneNumber ?? "")</div>
-                                </td>
- *@                                <td>@b.BookingDate.ToString("dd/MM/yyyy")</td>
-                                <td>
-                                    @b.StartTime.ToString(@"hh\:mm") – @b.EndTime.ToString(@"hh\:mm")
-                                </td>
-                                <td style="font-weight:700;color:#16a34a;">
-                                    @b.TotalPrice.ToString("N0")đ
-                                </td>
-                                <td><span class="bk-status @stCls">@stLabel</span></td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-            else
-            {
-                <div class="bk-empty">
-                    <i class="bi bi-calendar-x"></i>
-                    Chưa có lịch đặt nào trong 30 ngày qua
-                </div>
-            }
-        </div>
-    </div>
-
-    <!-- ════ BOTTOM ACTIONS ════ -->
-    <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
-        <a asp-action="Edit" asp-route-id="@Model.CourtId" class="btn-edit">
-            <i class="bi bi-pencil-square"></i> Chỉnh Sửa Sân
-        </a>
-        <a asp-action="Index" class="btn-back">
-            <i class="bi bi-arrow-left"></i> Quay Lại Danh Sách
-        </a>
     </div>
 
 </div>
 
-<!-- ════ LIGHTBOX ════ -->
-<div class="lbox" id="lightbox" onclick="closeLightbox()">
-    <button class="lbox-close" onclick="closeLightbox()"><i class="bi bi-x-lg"></i></button>
-    <img class="lbox-img" id="lboxImg" src="" alt="" onclick="event.stopPropagation()" />
+<!-- FOOTER -->
+<div class="mfooter">
+    <button type="button" class="btn-cancel" data-bs-dismiss="modal">
+        <i class="bi bi-x-circle"></i> Đóng
+    </button>
+    <a href="javascript:void(0)"
+       onclick="fetchModalContent('@Url.Action("Edit", "AdminCourt", new { id = Model.CourtId })', true)"
+       class="btn-edit">
+        <i class="bi bi-pencil-square"></i> Chỉnh Sửa
+    </a>
 </div>
 
-@section Scripts {
 <script>
-// Gallery thumb switch
-function switchHero(src, thumbEl) {
-    document.getElementById('heroImg').src = src;
-    document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
-    if (thumbEl) thumbEl.classList.add('active');
-}
-
-// Lightbox
-function openLightbox(src) {
-    document.getElementById('lboxImg').src = src;
-    document.getElementById('lightbox').classList.add('on');
-}
-function closeLightbox() {
-    document.getElementById('lightbox').classList.remove('on');
-}
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
-
-// Day tab switching
-function switchDay(tabEl) {
-    document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+function switchDayDetail(tabEl) {
+    document.querySelectorAll('.day-tab-d').forEach(t => t.classList.remove('active'));
     tabEl.classList.add('active');
     const day = tabEl.dataset.day;
-    document.querySelectorAll('.slot-panel').forEach(p => {
+    document.querySelectorAll('.slot-panel-d').forEach(p => {
         p.classList.toggle('d-none', p.dataset.day !== day);
     });
 }
 </script>
-}

@@ -1,515 +1,260 @@
 ﻿@model QuanLiSanCauLong.ViewModels.StockTransactionViewModel
+@{
+    Layout = null;
+}
 
 <style>
     :root {
-        --court-dark: #1a1a2e;
-        --court-gold: #e8c840;
-        --court-gold-h: #d4b320;
-        --court-bg: #f5f0e8;
-        --court-card: #ffffff;
-        --court-border: #e8e0d0;
-        --court-text: #2d2d2d;
-        --court-muted: #7a7060;
+        --deep:#1a1209;--gold:#d4a017;--gold2:#f5c842;
+        --cream:#f5f4ec;--warm:#f0ead8;--card:#fff;--border:#e4d9c8;--muted:#8a7560;
+        --red:#dc2626;--red-soft:#fef2f2;
     }
-
-    .modal-hd-court {
-        background: var(--court-dark);
-        color: #fff;
-        border-radius: 16px 16px 0 0;
-        padding: 1.25rem 1.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
+    .so-wrap { font-family:'Outfit',sans-serif; }
+    .so-hd {
+        background:linear-gradient(135deg,#7f1d1d,#991b1b);
+        color:#fff; padding:1.1rem 1.5rem;
+        display:flex; align-items:center; gap:.85rem;
     }
+    .so-hd-icon { width:38px;height:38px;border-radius:9px;background:rgba(255,255,255,.15);
+        display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0; }
+    .so-hd h5 { font-weight:800;font-size:1rem;margin:0; }
+    .so-hd p  { font-size:.75rem;color:rgba(255,255,255,.65);margin:0; }
+    .so-close { margin-left:auto;background:none;border:none;color:rgba(255,255,255,.7);font-size:1.3rem;cursor:pointer; }
 
-        .modal-hd-court h5 {
-            font-weight: 800;
-            font-size: 1.05rem;
-            margin: 0 0 2px;
-            color: #fff;
-        }
+    .so-body { padding:1.25rem 1.5rem; background:var(--cream); }
+    .so-field { display:flex;flex-direction:column;gap:.3rem;margin-bottom:.85rem; }
+    .so-field label { font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted); }
+    .so-fc { border:1.5px solid var(--border);border-radius:9px;padding:.5rem .8rem;
+        font-size:.875rem;width:100%;background:var(--card);outline:none;font-family:'Outfit',sans-serif; }
+    .so-fc:focus { border-color:var(--red);box-shadow:0 0 0 3px rgba(220,38,38,.12); }
+    .so-two { display:grid;grid-template-columns:1fr 1fr;gap:.75rem; }
 
-        .modal-hd-court p {
-            font-size: .78rem;
-            color: rgba(255,255,255,.6);
-            margin: 0;
-        }
+    /* Items table */
+    .so-items { background:var(--card);border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:.85rem; }
+    .so-items-hd { background:var(--warm);padding:.5rem 1rem;display:grid;
+        grid-template-columns:2fr 1fr 1fr;gap:.5rem;
+        font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted); }
+    .so-item-row { display:grid;grid-template-columns:2fr 1fr 1fr;gap:.5rem;padding:.55rem 1rem;
+        border-top:1px solid var(--border);align-items:center; }
+    .so-item-row:first-of-type { border-top:none; }
+    .so-fc-sm { border:1.5px solid var(--border);border-radius:7px;padding:.35rem .6rem;
+        font-size:.82rem;width:100%;background:var(--cream);outline:none;font-family:'Outfit',sans-serif; }
+    .so-fc-sm:focus { border-color:var(--red);background:#fff; }
+    .so-add-row { display:block;width:100%;padding:.5rem;border:1.5px dashed var(--border);
+        border-radius:8px;background:transparent;font-size:.78rem;font-weight:700;color:var(--muted);
+        cursor:pointer;transition:.15s;margin-top:.5rem;font-family:'Outfit',sans-serif; }
+    .so-add-row:hover { border-color:var(--red);color:var(--red); }
 
-        .modal-hd-court .icon-wrap {
-            width: 38px;
-            height: 38px;
-            border-radius: 9px;
-            background: rgba(245,158,11,.25);
-            color: #fbbf24;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            margin-right: 1rem;
-            flex-shrink: 0;
-        }
+    /* Stock availability chip */
+    .avail-chip { font-size:.68rem;font-weight:700;padding:.12rem .45rem;border-radius:6px;
+        background:var(--red-soft);color:var(--red);margin-left:.35rem;white-space:nowrap; }
+    .avail-chip.ok { background:#dcfce7;color:#15803d; }
 
-        .modal-hd-court .btn-close {
-            filter: invert(1);
-            opacity: .7;
-        }
+    /* Warning banner */
+    .so-warn { background:var(--red-soft);border:1px solid #fca5a5;border-radius:9px;
+        padding:.7rem 1rem;margin-bottom:.85rem;font-size:.82rem;color:var(--red);
+        display:flex;align-items:flex-start;gap:.5rem; }
 
-    .fl label {
-        display: block;
-        font-size: .73rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .5px;
-        color: var(--court-muted);
-        margin-bottom: 5px;
-    }
-
-    .fc {
-        border: 1.5px solid var(--court-border);
-        border-radius: 8px;
-        background: var(--court-bg);
-        color: var(--court-text);
-        font-size: .875rem;
-        padding: .48rem .75rem;
-        width: 100%;
-        transition: .2s;
-    }
-
-        .fc:focus {
-            outline: none;
-            border-color: var(--court-gold);
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(232,200,64,.2);
-        }
-
-    textarea.fc {
-        resize: vertical;
-        min-height: 70px;
-    }
-
-    .section-div {
-        font-size: .68rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: var(--court-dark);
-        display: inline-block;
-        padding-bottom: .35rem;
-        border-bottom: 2px solid var(--court-gold);
-        margin-bottom: .85rem;
-    }
-
-    .fw-mono {
-        font-family: monospace;
-        letter-spacing: .3px;
-    }
-
-    .prod-tbl {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-        .prod-tbl thead tr {
-            background: var(--court-dark);
-        }
-
-        .prod-tbl thead th {
-            color: rgba(255,255,255,.7);
-            font-size: .67rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .8px;
-            padding: .6rem .75rem;
-            border: none;
-        }
-
-        .prod-tbl tbody tr {
-            border-bottom: 1px solid var(--court-border);
-        }
-
-            .prod-tbl tbody tr:last-child {
-                border-bottom: none;
-            }
-
-        .prod-tbl td {
-            padding: .55rem .6rem;
-            vertical-align: middle;
-        }
-
-    .btn-add-row {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: .35rem .9rem;
-        background: #fffbeb;
-        color: #b45309;
-        border: 1.5px solid #fcd34d;
-        border-radius: 8px;
-        font-size: .75rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: .18s;
-    }
-
-        .btn-add-row:hover {
-            background: #f59e0b;
-            color: #fff;
-            border-color: #f59e0b;
-        }
-
-    .btn-remove {
-        background: none;
-        border: none;
-        color: #dc2626;
-        cursor: pointer;
-        padding: .2rem .4rem;
-        font-size: .9rem;
-    }
-
-        .btn-remove:hover {
-            background: #fef2f2;
-            border-radius: 5px;
-        }
-
-    .row-meta {
-        font-size: .72rem;
-        color: var(--court-muted);
-        margin-top: 3px;
-        display: block;
-    }
-
-    .warn-note {
-        background: #fffbeb;
-        border: 1px solid #fcd34d;
-        border-radius: 8px;
-        padding: .65rem .9rem;
-        font-size: .78rem;
-        color: #b45309;
-        display: flex;
-        align-items: flex-start;
-        gap: .5rem;
-    }
-
-    .modal-foot-court {
-        background: var(--court-bg);
-        border-top: 1px solid var(--court-border);
-        border-radius: 0 0 16px 16px;
-        padding: 1rem 1.5rem;
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: .6rem;
-    }
-
-    .btn-cancel-modal {
-        background: var(--court-card);
-        color: var(--court-text);
-        border: 1.5px solid var(--court-border);
-        border-radius: 9px;
-        padding: .55rem 1.3rem;
-        font-weight: 600;
-        font-size: .875rem;
-        cursor: pointer;
-        transition: .18s;
-    }
-
-        .btn-cancel-modal:hover {
-            background: #ede8de;
-        }
-
-    .btn-submit-out {
-        background: #f59e0b;
-        color: #1a1a2e;
-        border: none;
-        border-radius: 9px;
-        padding: .55rem 1.75rem;
-        font-weight: 800;
-        font-size: .875rem;
-        cursor: pointer;
-        transition: .18s;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-        .btn-submit-out:hover {
-            background: #d97706;
-            box-shadow: 0 4px 12px rgba(245,158,11,.4);
-        }
+    .so-foot { padding:.9rem 1.5rem;background:var(--warm);border-top:1px solid var(--border);
+        display:flex;gap:.6rem;justify-content:flex-end; }
+    .btn-cancel { padding:.5rem 1.2rem;border:1.5px solid var(--border);border-radius:9px;
+        background:transparent;font-size:.84rem;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif; }
+    .btn-submit { padding:.5rem 1.5rem;border:none;border-radius:9px;background:var(--red);
+        color:#fff;font-size:.84rem;font-weight:700;cursor:pointer;transition:.18s;font-family:'Outfit',sans-serif;
+        display:flex;align-items:center;gap:.4rem; }
+    .btn-submit:hover { background:#b91c1c; }
+    .btn-submit:disabled { opacity:.5;cursor:not-allowed; }
+    .spinner-sm { width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+        border-radius:50%;animation:spin .7s linear infinite; }
+    @@keyframes spin { to { transform:rotate(360deg); } }
 </style>
 
-<div class="modal-hd-court">
-    <div class="d-flex align-items-center">
-        <div class="icon-wrap"><i class="bi bi-box-arrow-up"></i></div>
+<div class="so-wrap">
+    <div class="so-hd">
+        <div class="so-hd-icon"><i class="bi bi-box-arrow-up"></i></div>
         <div>
-            <h5>Tạo Phiếu Xuất Kho</h5>
-            <p>Xuất hàng bán lẻ, hỏng, điều chuyển hoặc trả nhà cung cấp</p>
+            <h5>Xuất Kho Thủ Công</h5>
+            <p>Hàng hao hụt, thanh lý, nội bộ dùng</p>
         </div>
+        <button class="so-close" onclick="$('#inventoryModal').modal('hide')">&times;</button>
     </div>
-    <button type="button" class="btn-close shadow-none" onclick="this.closest('.modal-overlay').classList.remove('show')"></button>
-</div>
 
-<form asp-action="StockOut" method="post" id="stockOutForm">
-    <div class="modal-body p-4" style="background:#fff;">
+    <div class="so-body">
+        <div class="so-warn">
+            <i class="bi bi-exclamation-triangle-fill" style="margin-top:1px;flex-shrink:0;"></i>
+            <span>Xuất kho thủ công sẽ <strong>trừ kho vĩnh viễn</strong>. Chỉ dùng khi kiểm kê phát hiện hao hụt, thanh lý hàng cũ hoặc xuất nội bộ không qua đơn hàng.</span>
+        </div>
 
-        <div class="section-div"><i class="bi bi-info-circle me-1"></i>Thông Tin Chứng Từ</div>
-        <div class="row g-3 mb-3">
-            <div class="col-md-7 fl">
-                <label>Cơ sở xuất hàng</label>
-                <select asp-for="FacilityId" class="fc">
-                    <option value="">-- Chọn cơ sở --</option>
-                    @if (ViewBag.Facilities != null)
+        <div class="so-two">
+            <div class="so-field">
+                <label>Cơ sở <span style="color:var(--red)">*</span></label>
+                <select id="so_facilityId" class="so-fc" onchange="loadAvailability()">
+                    @foreach (var f in ViewBag.Facilities as List<QuanLiSanCauLong.Models.Facility> ?? new())
                     {
-                        foreach (var f in ViewBag.Facilities)
-                        {
-                            <option value="@f.FacilityId">@f.FacilityName</option>
-                        }
+                        <!option value="@f.FacilityId" @(f.FacilityId == Model.FacilityId ? "selected" : "")>
+                        @f.FacilityName
+                        </!option>
                     }
                 </select>
             </div>
-            <div class="col-md-5 fl">
-                <label>Ngày xuất kho</label>
-                <input asp-for="TransactionDate" type="date" class="fc" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
-            </div>
-        </div>
-
-        <div class="row g-3 mb-3">
-            <div class="col-md-6 fl">
-                <label>Lý do xuất kho</label>
-                <select asp-for="OutReason" class="fc" id="outReasonSelect">
-                    <option value="Sale">🛒 Bán lẻ cho khách</option>
-                    <option value="Defective">❌ Hàng lỗi / hư hỏng</option>
-                    <option value="Transfer">🔄 Điều chuyển nội bộ</option>
-                    <option value="Return">↩️ Trả nhà cung cấp</option>
-                    <option value="Expired">📅 Hết hạn sử dụng</option>
-                    <option value="Other">📝 Lý do khác</option>
+            <div class="so-field">
+                <label>Lý do xuất <span style="color:var(--red)">*</span></label>
+                <select id="so_reason" class="so-fc">
+                    <option value="Hao hụt / thất thoát">Hao hụt / thất thoát</option>
+                    <option value="Thanh lý hàng cũ">Thanh lý hàng cũ</option>
+                    <option value="Xuất nội bộ">Xuất nội bộ</option>
+                    <option value="Hỏng / không dùng được">Hỏng / không dùng được</option>
+                    <option value="Khác">Khác</option>
                 </select>
             </div>
-            <div class="col-md-6 fl">
-                <label>Số phiếu / Chứng từ</label>
-                <input asp-for="DocumentReference" class="fc fw-mono" placeholder="VD: PX-2025-001" />
-            </div>
         </div>
 
-        <!-- Return supplier fields -->
-        <div id="returnFields" class="row g-3 mb-3 d-none">
-            <div class="col-12">
-                <div class="warn-note">
-                    <i class="bi bi-arrow-return-left" style="flex-shrink:0;margin-top:1px;"></i>
-                    <span><strong>Trả nhà cung cấp:</strong> Vui lòng điền nhà cung cấp và số lô hàng cần trả.</span>
+        <div class="so-field">
+            <label>Ghi chú</label>
+            <input type="text" id="so_note" class="so-fc" placeholder="Mô tả thêm lý do xuất kho..." />
+        </div>
+
+        <!-- Items -->
+        <div class="so-field">
+            <label>Danh sách sản phẩm xuất</label>
+        </div>
+        <div class="so-items">
+            <div class="so-items-hd">
+                <span>Sản phẩm</span>
+                <span style="text-align:center;">Số lượng xuất</span>
+                <span style="text-align:center;">Khả dụng</span>
+            </div>
+            <div id="so_itemList">
+                <div class="so-item-row">
+                    <select class="so-fc-sm so-product-sel" onchange="fetchAvail(this)">
+                        <option value="">— Chọn sản phẩm —</option>
+                        @foreach (var p in ViewBag.Products as List<QuanLiSanCauLong.Models.Product> ?? new())
+                        {
+                            <option value="@p.ProductId" data-unit="@p.Unit">@p.ProductName</option>
+                        }
+                    </select>
+                    <input type="number" class="so-fc-sm so-qty" min="1" value="1" placeholder="SL" />
+                    <div class="so-avail-cell" style="text-align:center;font-size:.78rem;color:var(--muted);">—</div>
                 </div>
             </div>
-            <div class="col-md-6 fl">
-                <label>Nhà cung cấp</label>
-                <select asp-for="SupplierId" class="fc">
-                    <option value="">-- Chọn nhà cung cấp --</option>
-                    @if (ViewBag.Suppliers != null)
-                    {
-                        foreach (var s in ViewBag.Suppliers)
-                        {
-                            <option value="@s.SupplierId">@s.SupplierName</option>
-                        }
-                    }
-                </select>
-            </div>
-            <div class="col-md-6 fl">
-                <label>Số lô trả lại</label>
-                <input asp-for="BatchNumber" class="fc fw-mono" placeholder="LOT-2025-001" />
-            </div>
-        </div>
-
-        <!-- Product table -->
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="section-div" style="margin-bottom:0;"><i class="bi bi-list-ul me-1"></i>Chi Tiết Hàng Xuất</span>
-            <button type="button" class="btn-add-row" id="stockOutAddRowBtn">
-                <i class="bi bi-plus-circle"></i> Thêm dòng
+            <button class="so-add-row" type="button" onclick="addSoRow()">
+                <i class="bi bi-plus-circle me-1"></i>Thêm sản phẩm
             </button>
         </div>
-
-        <div class="table-responsive mb-3">
-            <table class="prod-tbl" id="productTableOut">
-                <thead>
-                    <tr>
-                        <th style="min-width:180px;">Sản phẩm</th>
-                        <th style="min-width:130px;">Phân loại (Size)</th>
-                        <th style="width:110px;">Số lượng xuất</th>
-                        <th style="width:80px;">ĐVT</th>
-                        <th style="width:40px;text-align:center;">×</th>
-                    </tr>
-                </thead>
-                <tbody id="productTableOutBody">
-                    <tr class="product-row-out">
-                        <td>
-                            <select name="Items[0].ProductId" class="fc stockout-product-sel">
-                                <option value="">-- Chọn sản phẩm --</option>
-                                @if (ViewBag.Products != null)
-                                {
-                                    foreach (var p in ViewBag.Products)
-                                    {
-                                        <option value="@p.ProductId" data-unit="@p.Unit" data-stock="@p.StockQuantity">
-                                            @p.ProductName @(!string.IsNullOrEmpty(p.SKU) ? $"({p.SKU})" : "")
-                                        </option>
-                                    }
-                                }
-                            </select>
-                            <small class="row-meta"></small>
-                        </td>
-                        <td>
-                            <select name="Items[0].VariantId" class="fc variant-select-out" disabled>
-                                <option value="">— Chọn SP trước —</option>
-                            </select>
-                        </td>
-                        <td><input name="Items[0].Quantity" type="number" class="fc" placeholder="KD: 0" min="1" /></td>
-                        <td><input name="Items[0].Unit" type="text" class="fc fw-mono" placeholder="—" readonly /></td>
-                        <td style="text-align:center;"><button type="button" class="btn-remove stockout-remove-btn"><i class="bi bi-trash3"></i></button></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="fl">
-            <label>Ghi chú bổ sung</label>
-            <textarea asp-for="Note" class="fc" rows="2" placeholder="Thông tin thêm về lần xuất kho này..."></textarea>
-        </div>
     </div>
 
-    <div class="modal-foot-court">
-        <button type="button" class="btn-cancel-modal" onclick="this.closest('.modal-overlay').classList.remove('show')">Hủy bỏ</button>
-        <button type="submit" class="btn-submit-out">
-            <i class="bi bi-box-arrow-up"></i> Xác nhận xuất kho
+    <div class="so-foot">
+        <button class="btn-cancel" onclick="$('#inventoryModal').modal('hide')">Huỷ</button>
+        <button class="btn-submit" id="soSubmitBtn" onclick="submitStockOut()">
+            <i class="bi bi-box-arrow-up"></i> Xuất kho
         </button>
     </div>
-</form>
+</div>
 
 <script>
-(function () {
-    // Product data được serialize an toàn từ server
-    const productDataRaw = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-        ViewBag.Products == null
-            ? new object[] {}
-            : ((IEnumerable<QuanLiSanCauLong.Models.Product>)ViewBag.Products)
-                .Select(p => new {
-                    id    = p.ProductId,
-                    unit  = p.Unit ?? "",
-                    name  = p.ProductName ?? "",
-                    stock = p.StockQuantity
-                })
-                .ToArray()
-    ));
-    const productDataOut = {};
-    productDataRaw.forEach(p => { productDataOut[p.id] = { unit: p.unit, name: p.name, stock: p.stock }; });
+const _soProducts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+    (ViewBag.Products as List<QuanLiSanCauLong.Models.Product> ?? new()).Select(p => new { p.ProductId, p.ProductName, p.Unit })
+));
 
-    let rowIndexOut = 1;
-
-    function buildProductOptsOut() {
-        return '<option value="">-- Chọn sản phẩm --</option>' +
-            Object.entries(productDataOut).map(([id, d]) =>
-                `<option value="${id}" data-unit="${d.unit}" data-stock="${d.stock}">${d.name}</option>`
-            ).join('');
-    }
-
-    async function fillUnitOut(select) {
-        const id  = select.value;
-        const row = select.closest('tr');
-        const unitInput  = row.querySelector('input[name*=".Unit"]');
-        const qtyInput   = row.querySelector('input[name*=".Quantity"]');
-        const meta       = row.querySelector('.row-meta');
-        const variantSel = row.querySelector('.variant-select-out');
-
-        if (id && productDataOut[id]) {
-            if (unitInput) unitInput.value = productDataOut[id].unit;
-
-            if (variantSel) {
-                variantSel.innerHTML = '<option value="">Đang tải...</option>';
-                variantSel.disabled = true;
-                try {
-                    const res  = await fetch(`/Admin/AdminProduct/GetVariants?productId=${id}`);
-                    const data = await res.json();
-                    if (Array.isArray(data) && data.length > 0) {
-                        variantSel.innerHTML = '<option value="">-- Chọn size/màu --</option>' +
-                            data.map(v => {
-                                const avail = v.availableQuantity;
-                                const warn  = avail === 0 ? ' ⚠ Hết' : avail <= 2 ? ' ⚠ Sắp hết' : '';
-                                return `<option value="${v.variantId}" data-avail="${avail}">${v.displayName} — KD: ${avail}${warn}</option>`;
-                            }).join('');
-                        variantSel.disabled = false;
-                        variantSel.onchange = () => {
-                            const opt   = variantSel.selectedOptions[0];
-                            const avail = opt?.dataset?.avail ?? 0;
-                            if (qtyInput) qtyInput.placeholder = `Tối đa: ${avail}`;
-                            if (meta)     meta.textContent = `Khả dụng: ${avail} ${productDataOut[id].unit}`;
-                        };
-                    } else {
-                        variantSel.innerHTML = '<option value="">Không có phân loại</option>';
-                        variantSel.disabled = true;
-                        const avail = productDataOut[id].stock;
-                        if (qtyInput) qtyInput.placeholder = `Tối đa: ${avail}`;
-                        if (meta) meta.textContent = `Tồn kho: ${avail} ${productDataOut[id].unit}`;
-                    }
-                } catch {
-                    variantSel.innerHTML = '<option value="">Không tải được</option>';
-                    variantSel.disabled = false;
-                }
-            }
+async function fetchAvail(sel) {
+    const row   = sel.closest('.so-item-row');
+    const cell  = row.querySelector('.so-avail-cell');
+    const pid   = sel.value;
+    const fid   = document.getElementById('so_facilityId').value;
+    if (!pid) { cell.innerHTML = '—'; return; }
+    cell.innerHTML = '<span style="font-size:.7rem;color:var(--muted);">...</span>';
+    try {
+        const r = await fetch(`/AdminInventory/GetProductStock?facilityId=${fid}&productId=${pid}`);
+        const d = await r.json();
+        if (d.success) {
+            const cls = d.availableQuantity > 0 ? 'ok' : '';
+            cell.innerHTML = `<span class="avail-chip ${cls}">${d.availableQuantity} ${d.unit}</span>`;
+            row.querySelector('.so-qty').max = d.availableQuantity;
         } else {
-            if (unitInput) unitInput.value = '';
-            if (qtyInput)  qtyInput.placeholder = 'KD: 0';
-            if (meta)      meta.textContent = '';
-            if (variantSel) { variantSel.innerHTML = '<option value="">— Chọn SP trước —</option>'; variantSel.disabled = true; }
+            cell.innerHTML = '<span class="avail-chip">Chưa có kho</span>';
         }
+    } catch { cell.innerHTML = '<span class="avail-chip">Lỗi</span>'; }
+}
+
+async function loadAvailability() {
+    document.querySelectorAll('.so-product-sel').forEach(sel => {
+        if (sel.value) fetchAvail(sel);
+    });
+}
+
+let _soRowCount = 1;
+function addSoRow() {
+    _soRowCount++;
+    const opts = _soProducts.map(p => `<option value="${p.productId}" data-unit="${p.unit}">${p.productName}</option>`).join('');
+    const div = document.createElement('div');
+    div.className = 'so-item-row';
+    div.innerHTML = `
+        <select class="so-fc-sm so-product-sel" onchange="fetchAvail(this)">
+            <option value="">— Chọn sản phẩm —</option>${opts}
+        </select>
+        <input type="number" class="so-fc-sm so-qty" min="1" value="1" placeholder="SL" />
+        <div class="so-avail-cell" style="text-align:center;">
+            <button onclick="this.closest('.so-item-row').remove()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;" title="Xoá dòng">
+                <i class="bi bi-x-circle"></i>
+            </button>
+        </div>`;
+    document.getElementById('so_itemList').appendChild(div);
+}
+
+async function submitStockOut() {
+    const btn = document.getElementById('soSubmitBtn');
+    const rows = document.querySelectorAll('#so_itemList .so-item-row');
+    const items = [];
+    let valid = true;
+
+    rows.forEach(row => {
+        const pid = row.querySelector('.so-product-sel').value;
+        const qty = parseInt(row.querySelector('.so-qty').value);
+        if (pid && qty > 0) items.push({ productId: parseInt(pid), quantity: qty });
+    });
+
+    if (!items.length) { alert('Vui lòng chọn ít nhất 1 sản phẩm!'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner-sm"></div> Đang xử lý...';
+
+    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+    const form  = new FormData();
+    form.append('FacilityId',      document.getElementById('so_facilityId').value);
+    form.append('TransactionType', 'StockOut');
+    form.append('Reason',          document.getElementById('so_reason').value);
+    form.append('Note',            document.getElementById('so_note').value);
+    items.forEach((it, i) => {
+        form.append(`Items[${i}].ProductId`, it.productId);
+        form.append(`Items[${i}].Quantity`,  it.quantity);
+    });
+    form.append('__RequestVerificationToken', token);
+
+    try {
+        const res  = await fetch('/AdminInventory/StockOut', { method: 'POST', body: form });
+        const data = await res.json();
+        if (data.success) {
+            showToast(true, data.message);
+            setTimeout(() => { $('#inventoryModal').modal('hide'); location.reload(); }, 900);
+        } else {
+            showToast(false, data.message);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-box-arrow-up"></i> Xuất kho';
+        }
+    } catch {
+        showToast(false, 'Lỗi kết nối. Vui lòng thử lại.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-box-arrow-up"></i> Xuất kho';
     }
+}
 
-    function addRowOut() {
-        const idx = rowIndexOut;
-        const row = `
-        <tr class="product-row-out">
-            <td>
-                <select name="Items[${idx}].ProductId" class="fc stockout-product-sel">
-                    ${buildProductOptsOut()}
-                </select>
-                <small class="row-meta"></small>
-            </td>
-            <td>
-                <select name="Items[${idx}].VariantId" class="fc variant-select-out" disabled>
-                    <option value="">— Chọn SP trước —</option>
-                </select>
-            </td>
-            <td><input name="Items[${idx}].Quantity" type="number" class="fc" placeholder="KD: 0" min="1" /></td>
-            <td><input name="Items[${idx}].Unit" type="text" class="fc fw-mono" placeholder="—" readonly /></td>
-            <td style="text-align:center;"><button type="button" class="btn-remove stockout-remove-btn"><i class="bi bi-trash3"></i></button></td>
-        </tr>`;
-        const tbody = document.getElementById('productTableOutBody');
-        tbody.insertAdjacentHTML('beforeend', row);
-        attachRowEventsOut(tbody.lastElementChild);
-        rowIndexOut++;
-    }
-
-    function removeRowOut(btn) {
-        if (document.querySelectorAll('#productTableOutBody .product-row-out').length > 1)
-            btn.closest('tr').remove();
-    }
-
-    function attachRowEventsOut(row) {
-        const sel = row.querySelector('.stockout-product-sel');
-        if (sel) sel.addEventListener('change', () => fillUnitOut(sel));
-        const removeBtn = row.querySelector('.stockout-remove-btn');
-        if (removeBtn) removeBtn.addEventListener('click', () => removeRowOut(removeBtn));
-    }
-
-    // Init first row
-    document.querySelectorAll('#productTableOutBody .product-row-out').forEach(attachRowEventsOut);
-
-    // Add row button
-    const addBtn = document.getElementById('stockOutAddRowBtn');
-    if (addBtn) addBtn.addEventListener('click', addRowOut);
-
-    // Toggle return fields
-    const outReason = document.getElementById('outReasonSelect');
-    if (outReason) {
-        outReason.addEventListener('change', function () {
-            const rf = document.getElementById('returnFields');
-            if (rf) rf.classList.toggle('d-none', this.value !== 'Return');
-        });
-    }
-})();
+function showToast(ok, msg) {
+    const el = document.getElementById('invToastWrap');
+    if (!el) return;
+    const d = document.createElement('div');
+    d.className = 'inv-toast ' + (ok ? 'inv-toast-ok' : 'inv-toast-err');
+    d.textContent = msg;
+    el.appendChild(d);
+    setTimeout(() => d.remove(), 3500);
+}
 </script>

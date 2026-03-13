@@ -3,482 +3,113 @@
 @{
     ViewData["Title"] = "Quản lý sản phẩm";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    string curBehavior = ViewBag.CurrentBehavior ?? "";
 }
 
 <style>
     @@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
 
     :root {
-        --deep: #1a1209;
-        --gold: #d4a017;
-        --gold2: #f5c842;
-        --cream: #f5f4ec;
-        --warm: #f0ead8;
-        --card: #ffffff;
-        --border: #e4d9c8;
-        --muted: #8a7560;
-        --green: #15803d;
-        --green-soft: #dcfce7;
-        --red: #dc2626;
-        --red-soft: #fef2f2;
+        --deep: #1a1209; --gold: #d4a017; --gold2: #f5c842;
+        --cream: #f5f4ec; --warm: #f0ead8; --card: #ffffff;
+        --border: #e4d9c8; --muted: #8a7560;
+        --green: #15803d; --green-soft: #dcfce7;
+        --red: #dc2626;   --red-soft: #fef2f2;
+        --blue: #1d4ed8;  --blue-soft: #eff6ff;
+        --purple: #7c3aed; --purple-soft: #f5f3ff;
+        --orange: #c2410c; --orange-soft: #fff7ed;
     }
 
-    body, .container-fluid {
-        font-family: 'Outfit', sans-serif;
-        background: var(--cream);
-    }
+    body, .container-fluid { font-family: 'Outfit',sans-serif; background: var(--cream); }
 
     /* Page Header */
-    .page-hd {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        margin-bottom: 1.8rem;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
+    .page-hd { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:1.8rem; gap:1rem; flex-wrap:wrap; }
+    .page-label { font-size:.68rem; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); display:flex; align-items:center; gap:.6rem; margin-bottom:.35rem; }
+    .page-label::before { content:''; width:16px; height:1px; background:var(--gold); }
+    .page-title { font-family:'Playfair Display',serif; font-size:1.9rem; font-weight:700; color:var(--deep); margin:0; line-height:1.15; }
+    .page-title em { font-style:italic; color:var(--gold); }
+    .page-sub { font-size:.83rem; color:var(--muted); margin-top:.3rem; }
 
-    .page-label {
-        font-size: .68rem;
-        letter-spacing: .2em;
-        text-transform: uppercase;
-        color: var(--gold);
-        display: flex;
-        align-items: center;
-        gap: .6rem;
-        margin-bottom: .35rem;
-    }
+    .btn-add { display:inline-flex; align-items:center; gap:.5rem; padding:.65rem 1.4rem; background:var(--gold2); color:var(--deep); border:none; border-radius:10px; font-family:'Outfit',sans-serif; font-size:.88rem; font-weight:700; cursor:pointer; text-decoration:none; transition:.2s; white-space:nowrap; box-shadow:0 2px 8px rgba(212,160,23,.3); }
+    .btn-add:hover { background:var(--gold); color:#fff; }
 
-        .page-label::before {
-            content: '';
-            width: 16px;
-            height: 1px;
-            background: var(--gold);
-        }
+    /* Behavior Tabs */
+    .behavior-tabs { display:flex; gap:.5rem; margin-bottom:1.4rem; flex-wrap:wrap; }
+    .btab { display:inline-flex; align-items:center; gap:.4rem; padding:.45rem 1.1rem; border-radius:8px; font-size:.82rem; font-weight:700; text-decoration:none; transition:.15s; border:1px solid var(--border); background:var(--card); color:var(--muted); }
+    .btab .cnt { background:rgba(0,0,0,.08); color:inherit; font-size:.7rem; padding:.1rem .4rem; border-radius:5px; font-weight:800; }
+    .btab:hover { background:var(--warm); color:var(--deep); }
+    .btab.active { border-color:transparent; }
+    .btab.all.active  { background:var(--deep); color:var(--gold2); }
+    .btab.retail.active  { background:var(--green-soft); color:var(--green); border-color:#bbf7d0; }
+    .btab.rental.active  { background:var(--blue-soft);  color:var(--blue);  border-color:#bfdbfe; }
+    .btab.service.active { background:var(--purple-soft); color:var(--purple); border-color:#ddd6fe; }
 
-    .page-title {
-        font-family: 'Playfair Display',serif;
-        font-size: 1.9rem;
-        font-weight: 700;
-        color: var(--deep);
-        margin: 0;
-        line-height: 1.15;
-    }
-
-        .page-title em {
-            font-style: italic;
-            color: var(--gold);
-        }
-
-    .page-sub {
-        font-size: .83rem;
-        color: var(--muted);
-        margin-top: .3rem;
-    }
-
-    /* Add Button */
-    .btn-add {
-        display: inline-flex;
-        align-items: center;
-        gap: .5rem;
-        padding: .65rem 1.4rem;
-        background: var(--gold2);
-        color: var(--deep);
-        border: none;
-        border-radius: 10px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .88rem;
-        font-weight: 700;
-        cursor: pointer;
-        text-decoration: none;
-        transition: .2s;
-        white-space: nowrap;
-        box-shadow: 0 2px 8px rgba(212,160,23,.3);
-    }
-
-        .btn-add:hover {
-            background: var(--gold);
-            color: #fff;
-            box-shadow: 0 4px 14px rgba(212,160,23,.4);
-        }
+    /* Behavior badge trong card */
+    .behavior-badge { display:inline-flex; align-items:center; gap:.3rem; padding:.15rem .55rem; border-radius:6px; font-size:.67rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
+    .bh-retail  { background:var(--green-soft);  color:var(--green); }
+    .bh-rental  { background:var(--blue-soft);   color:var(--blue); }
+    .bh-service { background:var(--purple-soft); color:var(--purple); }
 
     /* Nav Pills */
-    .nav-pills-custom {
-        display: inline-flex;
-        gap: .35rem;
-        background: var(--warm);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: .3rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .nav-pill-item {
-        padding: .42rem 1.1rem;
-        border-radius: 7px;
-        font-size: .83rem;
-        font-weight: 600;
-        color: var(--muted);
-        text-decoration: none;
-        transition: .18s;
-        white-space: nowrap;
-    }
-
-        .nav-pill-item:hover {
-            color: var(--deep);
-            background: rgba(255,255,255,.6);
-        }
-
-        .nav-pill-item.active {
-            background: var(--deep);
-            color: var(--gold2);
-        }
+    .nav-pills-custom { display:inline-flex; gap:.35rem; background:var(--warm); border:1px solid var(--border); border-radius:10px; padding:.3rem; margin-bottom:1.5rem; }
+    .nav-pill-item { padding:.42rem 1.1rem; border-radius:7px; font-size:.83rem; font-weight:600; color:var(--muted); text-decoration:none; transition:.18s; white-space:nowrap; }
+    .nav-pill-item:hover { color:var(--deep); background:rgba(255,255,255,.6); }
+    .nav-pill-item.active { background:var(--deep); color:var(--gold2); }
 
     /* Search Bar */
-    .search-row {
-        display: flex;
-        gap: .75rem;
-        margin-bottom: 1.6rem;
-        flex-wrap: wrap;
-    }
-
-    .search-wrap {
-        display: flex;
-        align-items: center;
-        gap: .55rem;
-        padding: .5rem 1rem;
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        flex: 1;
-        min-width: 200px;
-        box-shadow: 0 1px 6px rgba(26,18,9,.05);
-    }
-
-        .search-wrap i {
-            color: var(--muted);
-            font-size: .9rem;
-            flex-shrink: 0;
-        }
-
-        .search-wrap input {
-            border: none;
-            background: transparent;
-            font-family: 'Outfit',sans-serif;
-            font-size: .86rem;
-            color: var(--deep);
-            outline: none;
-            width: 100%;
-        }
-
-            .search-wrap input::placeholder {
-                color: var(--muted);
-            }
-
-    .filter-select {
-        padding: .5rem 1rem;
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .84rem;
-        color: var(--deep);
-        background: var(--card);
-        cursor: pointer;
-        outline: none;
-        min-width: 180px;
-        box-shadow: 0 1px 6px rgba(26,18,9,.05);
-    }
-
-    .btn-search {
-        display: inline-flex;
-        align-items: center;
-        gap: .4rem;
-        padding: .5rem 1.2rem;
-        background: var(--deep);
-        color: var(--gold2);
-        border: none;
-        border-radius: 10px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .84rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: .18s;
-    }
-
-        .btn-search:hover {
-            background: #2d200a;
-        }
+    .search-row { display:flex; gap:.75rem; margin-bottom:1.6rem; flex-wrap:wrap; }
+    .search-wrap { display:flex; align-items:center; gap:.55rem; padding:.5rem 1rem; background:var(--card); border:1px solid var(--border); border-radius:10px; flex:1; min-width:200px; box-shadow:0 1px 6px rgba(26,18,9,.05); }
+    .search-wrap i { color:var(--muted); font-size:.9rem; flex-shrink:0; }
+    .search-wrap input { border:none; background:transparent; font-family:'Outfit',sans-serif; font-size:.86rem; color:var(--deep); outline:none; width:100%; }
+    .search-wrap input::placeholder { color:var(--muted); }
+    .filter-select { padding:.5rem 1rem; border:1px solid var(--border); border-radius:10px; font-family:'Outfit',sans-serif; font-size:.84rem; color:var(--deep); background:var(--card); cursor:pointer; outline:none; min-width:160px; }
+    .btn-search { display:inline-flex; align-items:center; gap:.4rem; padding:.5rem 1.2rem; background:var(--deep); color:var(--gold2); border:none; border-radius:10px; font-family:'Outfit',sans-serif; font-size:.84rem; font-weight:700; cursor:pointer; transition:.18s; }
+    .btn-search:hover { background:#2d200a; }
 
     /* Product Grid */
-    .products-grid {
-        display: grid;
-        grid-template-columns: repeat(2,1fr);
-        gap: 1.1rem;
-    }
+    .products-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1.1rem; }
+    @@media(max-width:900px) { .products-grid { grid-template-columns:1fr; } }
 
-    @@media(max-width:900px) {
-        .products-grid {
-            grid-template-columns: 1fr;
-        }
-    }
+    .product-card { background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:hidden; transition:.22s; box-shadow:0 2px 10px rgba(26,18,9,.05); }
+    .product-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(26,18,9,.1); border-color:#d4c4a8; }
+    .product-card-body { display:flex; gap:1.1rem; padding:1.3rem 1.4rem; }
+    .product-img { width:110px; height:110px; border-radius:12px; overflow:hidden; flex-shrink:0; background:var(--warm); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; }
+    .product-img img { width:100%; height:100%; object-fit:cover; }
+    .product-img i { font-size:2rem; color:var(--gold); opacity:.4; }
+    .product-info { flex:1; min-width:0; }
+    .product-name { font-weight:700; font-size:1rem; color:var(--deep); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .product-sku { font-size:.72rem; color:var(--muted); font-family:'Courier New',monospace; margin:.18rem 0; }
+    .product-cat { font-size:.75rem; color:var(--muted); display:flex; align-items:center; gap:.3rem; margin-bottom:.6rem; }
+    .product-cat i { color:var(--gold); }
 
-    .product-card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        overflow: hidden;
-        transition: .22s;
-        box-shadow: 0 2px 10px rgba(26,18,9,.05);
-    }
+    .product-stats { display:flex; gap:1rem; }
+    .product-stats > div { display:flex; flex-direction:column; }
+    .stat-lbl { font-size:.65rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:600; }
+    .stat-val-price { font-size:.92rem; font-weight:800; color:var(--deep); }
+    .stat-val-num { font-size:.92rem; font-weight:700; color:var(--deep); }
 
-        .product-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(26,18,9,.1);
-            border-color: #d4c4a8;
-        }
+    .status-badge { display:inline-flex; align-items:center; gap:.25rem; padding:.15rem .55rem; border-radius:6px; font-size:.68rem; font-weight:700; white-space:nowrap; }
+    .badge-available   { background:var(--green-soft); color:var(--green); }
+    .badge-outofstock  { background:#fef9c3; color:#92400e; }
+    .badge-discontinued{ background:var(--red-soft); color:var(--red); }
+    .badge-service     { background:var(--purple-soft); color:var(--purple); }
 
-    .product-card-body {
-        display: flex;
-        gap: 1.1rem;
-        padding: 1.3rem 1.4rem;
-    }
+    .product-card-foot { display:flex; gap:.5rem; padding:.9rem 1.4rem; border-top:1px solid var(--warm); background:#fdfcf8; }
+    .btn-edit { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:.4rem; padding:.5rem .9rem; border:1px solid var(--border); background:var(--warm); color:var(--deep); border-radius:9px; font-family:'Outfit',sans-serif; font-size:.82rem; font-weight:700; text-decoration:none; transition:.16s; }
+    .btn-edit:hover { background:var(--deep); color:var(--gold2); border-color:var(--deep); }
+    .btn-detail { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:.4rem; padding:.5rem .9rem; border:1px solid #bfdbfe; background:var(--blue-soft); color:var(--blue); border-radius:9px; font-family:'Outfit',sans-serif; font-size:.82rem; font-weight:700; text-decoration:none; transition:.16s; }
+    .btn-detail:hover { background:var(--blue); color:#fff; border-color:var(--blue); }
+    .btn-delete { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:.4rem; padding:.5rem .9rem; border:1px solid #fecaca; background:var(--red-soft); color:var(--red); border-radius:9px; font-family:'Outfit',sans-serif; font-size:.82rem; font-weight:700; cursor:pointer; transition:.16s; }
+    .btn-delete:hover { background:var(--red); color:#fff; border-color:var(--red); }
 
-    .product-img {
-        width: 110px;
-        height: 110px;
-        border-radius: 12px;
-        overflow: hidden;
-        flex-shrink: 0;
-        background: var(--warm);
-        border: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-        .product-img img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .product-img i {
-            font-size: 2rem;
-            color: var(--gold);
-            opacity: .4;
-        }
-
-    .product-info {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .product-name {
-        font-weight: 800;
-        font-size: .95rem;
-        color: var(--deep);
-        margin-bottom: .15rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .product-sku {
-        font-size: .73rem;
-        color: var(--muted);
-        font-family: 'Courier New',monospace;
-        margin-bottom: .5rem;
-    }
-
-    .product-cat {
-        display: inline-flex;
-        align-items: center;
-        gap: .3rem;
-        padding: .22rem .75rem;
-        background: #fef9ec;
-        border: 1px solid #f0dea0;
-        border-radius: 20px;
-        font-size: .72rem;
-        font-weight: 700;
-        color: var(--gold);
-        margin-bottom: .7rem;
-    }
-
-    .product-stats {
-        display: flex;
-        gap: 1.2rem;
-    }
-
-    .stat-lbl {
-        font-size: .65rem;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-        font-weight: 700;
-        color: var(--muted);
-        display: block;
-        margin-bottom: .1rem;
-    }
-
-    .stat-val-price {
-        font-weight: 800;
-        font-size: 1rem;
-        color: var(--green);
-    }
-
-    .stat-val-num {
-        font-weight: 700;
-        font-size: .9rem;
-        color: var(--deep);
-    }
-
-    /* Status Badges */
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: .28rem;
-        padding: .25rem .75rem;
-        border-radius: 20px;
-        font-size: .72rem;
-        font-weight: 700;
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-
-    .badge-available {
-        background: var(--green-soft);
-        color: var(--green);
-        border: 1px solid #a7f3d0;
-    }
-
-    .badge-outofstock {
-        background: #fef9ec;
-        color: #92600a;
-        border: 1px solid #f0dea0;
-    }
-
-    .badge-discontinued {
-        background: var(--red-soft);
-        color: var(--red);
-        border: 1px solid #fecaca;
-    }
-
-    /* Card Footer */
-    .product-card-foot {
-        display: flex;
-        gap: .5rem;
-        padding: .9rem 1.4rem;
-        border-top: 1px solid var(--warm);
-        background: #fdfcf8;
-    }
-
-    .btn-edit {
-        flex: 1;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: .4rem;
-        padding: .5rem .9rem;
-        border: 1px solid var(--border);
-        background: var(--warm);
-        color: var(--deep);
-        border-radius: 9px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .82rem;
-        font-weight: 700;
-        text-decoration: none;
-        transition: .16s;
-    }
-
-        .btn-edit:hover {
-            background: var(--deep);
-            color: var(--gold2);
-            border-color: var(--deep);
-        }
-
-    .btn-delete {
-        flex: 1;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: .4rem;
-        padding: .5rem .9rem;
-        border: 1px solid #fecaca;
-        background: var(--red-soft);
-        color: var(--red);
-        border-radius: 9px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .82rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: .16s;
-    }
-
-        .btn-delete:hover {
-            background: var(--red);
-            color: #fff;
-            border-color: var(--red);
-        }
-
-    /* Empty */
-    .empty-state {
-        text-align: center;
-        padding: 5rem 2rem;
-        color: var(--muted);
-        grid-column: 1/-1;
-    }
-
-        .empty-state i {
-            font-size: 3rem;
-            display: block;
-            margin-bottom: 1rem;
-            color: var(--gold);
-            opacity: .3;
-        }
-
-        .empty-state p {
-            font-size: .9rem;
-            margin: 0;
-        }
+    .empty-state { text-align:center; padding:5rem 2rem; color:var(--muted); grid-column:1/-1; }
+    .empty-state i { font-size:3rem; display:block; margin-bottom:1rem; color:var(--gold); opacity:.3; }
 
     /* Toast */
-    .toast-wrap {
-        position: fixed;
-        top: 1.2rem;
-        right: 1.2rem;
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        gap: .5rem;
-        pointer-events: none;
-    }
-
-    .toast-msg {
-        padding: .75rem 1.2rem;
-        border-radius: 10px;
-        font-size: .84rem;
-        font-weight: 600;
-        box-shadow: 0 8px 24px rgba(0,0,0,.14);
-        pointer-events: all;
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-        animation: slideIn .22s ease;
-        background: #fff;
-        border-left: 4px solid var(--red);
-        color: var(--red);
-    }
-
-    @@keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateX(20px)
-        }
-
-        to {
-            opacity: 1;
-            transform: translateX(0)
-        }
-    }
+    .toast-wrap { position:fixed; top:1.2rem; right:1.2rem; z-index:9999; display:flex; flex-direction:column; gap:.5rem; pointer-events:none; }
+    .toast-msg  { padding:.75rem 1.2rem; border-radius:10px; font-size:.84rem; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,.14); pointer-events:all; display:flex; align-items:center; gap:.5rem; animation:slideIn .22s ease; background:#fff; border-left:4px solid var(--red); color:var(--red); }
+    .toast-ok   { border-left-color:var(--green); color:var(--green); }
+    @@keyframes slideIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
 </style>
 
 <div class="container-fluid px-4 py-4">
@@ -488,7 +119,7 @@
         <div>
             <div class="page-label">Sản Phẩm</div>
             <div class="page-title">Quản lý <em>Sản Phẩm</em></div>
-            <div class="page-sub">Quản lý danh mục, sản phẩm và kho hàng của bạn</div>
+            <div class="page-sub">Bán lẻ · Cho thuê · Dịch vụ kỹ thuật</div>
         </div>
         <a asp-action="Create" class="btn-add">
             <i class="bi bi-plus-lg"></i> Thêm Sản Phẩm
@@ -499,28 +130,53 @@
     <div class="nav-pills-custom">
         <a href="/Admin/AdminCategory" class="nav-pill-item">Danh Mục</a>
         <a href="#" class="nav-pill-item active">Sản Phẩm</a>
-        <a href="#" class="nav-pill-item">Kho Hàng</a>
+        <a href="/Admin/AdminInventory" class="nav-pill-item">Kho Hàng</a>
+    </div>
+
+    <!-- Behavior Tabs -->
+    <div class="behavior-tabs">
+        <a href="?behaviorType=" class="btab all @(curBehavior=="" ? "active" : "")">
+            <i class="bi bi-grid-fill"></i> Tất cả
+            <span class="cnt">@Model.Count()</span>
+        </a>
+        <a href="?behaviorType=Retail" class="btab retail @(curBehavior=="Retail" ? "active" : "")">
+            <i class="bi bi-cart-fill"></i> Bán lẻ
+            <span class="cnt">@ViewBag.CountRetail</span>
+        </a>
+        <a href="?behaviorType=Rental" class="btab rental @(curBehavior=="Rental" ? "active" : "")">
+            <i class="bi bi-arrow-repeat"></i> Cho thuê
+            <span class="cnt">@ViewBag.CountRental</span>
+        </a>
+        <a href="?behaviorType=Service" class="btab service @(curBehavior=="Service" ? "active" : "")">
+            <i class="bi bi-tools"></i> Dịch vụ
+            <span class="cnt">@ViewBag.CountService</span>
+        </a>
     </div>
 
     <!-- Search -->
     <form method="get">
+        <input type="hidden" name="behaviorType" value="@curBehavior" />
         <div class="search-row">
             <div class="search-wrap">
                 <i class="bi bi-search"></i>
-                <input type="text" name="search" placeholder="Tìm kiếm sản phẩm..." value="@ViewBag.Search" />
+                <input type="text" name="search" placeholder="Tên sản phẩm, SKU..." value="@ViewBag.Search" />
             </div>
             <select class="filter-select" name="categoryId" onchange="this.form.submit()">
                 <option value="">Tất cả danh mục</option>
                 @foreach (var cat in ViewBag.Categories)
                 {
-                    <option value="@cat.CategoryId" selected="@(ViewBag.CurrentCategory == cat.CategoryId)">
+                    <option value="@cat.CategoryId"
+                            selected="@(ViewBag.CurrentCategory?.ToString() == cat.CategoryId.ToString())">
                         @cat.CategoryName
                     </option>
                 }
             </select>
-            <button type="submit" class="btn-search">
-                <i class="bi bi-funnel"></i> Lọc
-            </button>
+            <select class="filter-select" name="status" onchange="this.form.submit()">
+                <option value="Active" selected="@(ViewBag.CurrentStatus == "Active")">✓ Đang bán/hoạt động</option>
+                <option value="OutOfStock" selected="@(ViewBag.CurrentStatus == "OutOfStock")">⚠ Hết hàng</option>
+                <option value="Inactive" selected="@(ViewBag.CurrentStatus == "Inactive")">✕ Ngừng bán</option>
+            </select>
+            <button type="submit" class="btn-search"><i class="bi bi-funnel"></i> Lọc</button>
         </div>
     </form>
 
@@ -530,6 +186,7 @@
         {
             foreach (var product in Model)
             {
+                var behavior = product.Category?.BehaviorType ?? "Retail";
                 <div class="product-card">
                     <div class="product-card-body">
                         <div class="product-img">
@@ -539,53 +196,96 @@
                             }
                             else
                             {
-                                <i class="bi bi-image"></i>
+                                <i class="bi @(behavior=="Service" ? "bi-tools" : behavior=="Rental" ? "bi-arrow-repeat" : "bi-cart")"></i>
                             }
                         </div>
 
                         <div class="product-info">
-                            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;margin-bottom:.2rem">
+                            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.4rem;margin-bottom:.25rem">
                                 <div class="product-name">@product.ProductName</div>
-                                @switch (product.Status)
+                                @switch (behavior)
                                 {
-                                    case "Available":
-                                        <span class="status-badge badge-available"><i class="bi bi-check-circle-fill"></i> Còn hàng</span>
+                                    case "Rental":
+                                        <span class="status-badge badge-service" style="background:var(--blue-soft);color:var(--blue)"><i class="bi bi-arrow-repeat"></i> Cho thuê</span>
                                         break;
-                                    case "OutOfStock":
-                                        <span class="status-badge badge-outofstock"><i class="bi bi-exclamation-circle-fill"></i> Sắp hết</span>
+                                    case "Service":
+                                        <span class="status-badge badge-service"><i class="bi bi-tools"></i> Dịch vụ</span>
                                         break;
                                     default:
-                                        <span class="status-badge badge-discontinued"><i class="bi bi-x-circle-fill"></i> Ngừng bán</span>
+                                        @switch (product.Status)
+                                        {
+                                            case "Active":
+                                                <span class="status-badge badge-available"><i class="bi bi-check-circle-fill"></i> Còn hàng</span>
+                                                break;
+                                            case "OutOfStock":
+                                                <span class="status-badge badge-outofstock"><i class="bi bi-exclamation-circle-fill"></i> Hết hàng</span>
+                                                break;
+                                            default:
+                                                <span class="status-badge badge-discontinued"><i class="bi bi-x-circle-fill"></i> Ngừng bán</span>
+                                                break;
+                                        }
                                         break;
                                 }
                             </div>
-                            <div class="product-sku">SKU: @(product.ProductCode ?? "N/A")</div>
+
+                            <div class="product-sku">SKU: @(product.ProductCode ?? product.SKU ?? "N/A")</div>
                             <div class="product-cat">
                                 <i class="bi bi-tag-fill"></i>
                                 @product.Category?.CategoryName
+                                <span class="behavior-badge @(behavior=="Rental"?"bh-rental":behavior=="Service"?"bh-service":"bh-retail") ms-1">
+                                    @(behavior=="Retail"?"Bán lẻ":behavior=="Rental"?"Cho thuê":"Dịch vụ")
+                                </span>
                             </div>
+
                             <div class="product-stats">
                                 <div>
                                     <span class="stat-lbl">Giá</span>
                                     <span class="stat-val-price">₫@product.Price.ToString("N0")</span>
                                 </div>
-                                <div>
-                                    <span class="stat-lbl">Tồn kho</span>
-                                    <span class="stat-val-num">15</span>
-                                </div>
-                                <div>
-                                    <span class="stat-lbl">Đã bán</span>
-                                    <span class="stat-val-num">45</span>
-                                </div>
+                                @if (behavior == "Retail")
+                                {
+                                    <div>
+                                        <span class="stat-lbl">Tồn kho</span>
+                                        <span class="stat-val-num">@product.StockQuantity</span>
+                                    </div>
+                                }
+                                else if (behavior == "Rental")
+                                {
+                                    <div>
+                                        <span class="stat-lbl">Có sẵn</span>
+                                        <span class="stat-val-num" style="color:var(--blue)">@(product.StockQuantity - product.ReservedQuantity)</span>
+                                    </div>
+                                    <div>
+                                        <span class="stat-lbl">Đang cho thuê</span>
+                                        <span class="stat-val-num" style="color:var(--orange)">@product.ReservedQuantity</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div>
+                                        <span class="stat-lbl">Tiền công</span>
+                                        <span class="stat-val-price">₫@product.LaborPrice.ToString("N0")</span>
+                                    </div>
+                                    @if (product.MaterialPrice > 0)
+                                    {
+                                        <div>
+                                            <span class="stat-lbl">Vật tư</span>
+                                            <span class="stat-val-price">₫@product.MaterialPrice.ToString("N0")</span>
+                                        </div>
+                                    }
+                                }
                             </div>
                         </div>
                     </div>
 
                     <div class="product-card-foot">
-                        <a asp-action="Edit" asp-route-id="@product.ProductId" class="btn-edit">
-                            <i class="bi bi-pencil-square"></i> Chỉnh sửa
+                        <a asp-action="Details" asp-route-id="@product.ProductId" class="btn-detail">
+                            <i class="bi bi-eye"></i> Chi tiết
                         </a>
-                        <button onclick="deleteProduct(@product.ProductId)" class="btn-delete">
+                        <a asp-action="Edit" asp-route-id="@product.ProductId" class="btn-edit">
+                            <i class="bi bi-pencil-square"></i> Sửa
+                        </a>
+                        <button onclick="deleteProduct(@product.ProductId, '@product.ProductName')" class="btn-delete">
                             <i class="bi bi-trash-fill"></i> Xóa
                         </button>
                     </div>
@@ -606,23 +306,31 @@
 
 @section Scripts {
     <script>
-        function deleteProduct(id) {
-            if (!confirm('Bạn có chắc muốn xóa sản phẩm này? Thao tác này không thể hoàn tác.')) return;
+        function deleteProduct(id, name) {
+            if (!confirm(`Bạn có chắc muốn xóa "${name}"?\nThao tác này không thể hoàn tác.`)) return;
             fetch(`/Admin/AdminProduct/Delete/${id}`, {
                 method: 'POST',
                 headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '' }
-            }).then(r => {
-                if (r.ok) {
-                    location.reload();
-                } else {
-                    const wrap = document.getElementById('toastWrap');
-                    const el = document.createElement('div');
-                    el.className = 'toast-msg';
-                    el.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Đã xảy ra lỗi khi xóa sản phẩm!';
-                    wrap.appendChild(el);
-                    setTimeout(() => el.remove(), 3200);
-                }
-            });
+            }).then(r => r.json()).then(data => {
+                if (data.success) { location.reload(); }
+                else { showToast(data.message || 'Không thể xóa!', false); }
+            }).catch(() => showToast('Lỗi kết nối!', false));
+        }
+
+        function showToast(msg, ok = false) {
+            const wrap = document.getElementById('toastWrap');
+            const el = document.createElement('div');
+            el.className = 'toast-msg' + (ok ? ' toast-ok' : '');
+            el.innerHTML = `<i class="bi bi-${ok ? 'check-circle-fill' : 'exclamation-circle-fill'}"></i> ${msg}`;
+            wrap.appendChild(el);
+            setTimeout(() => el.remove(), 3200);
+        }
+
+        @if (TempData["SuccessMessage"] != null) {
+            <text>showToast('@TempData["SuccessMessage"]', true);</text>
+        }
+        @if (TempData["ErrorMessage"] != null) {
+            <text>showToast('@TempData["ErrorMessage"]', false);</text>
         }
     </script>
 }

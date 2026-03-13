@@ -1,534 +1,514 @@
-﻿@model IEnumerable<dynamic>
+﻿@model QuanLiSanCauLong.ViewModels.InventoryHistoryViewModel
 
 @{
-    var product = ViewBag.Product;
+    Layout = null; // luôn là partial
 }
 
 <style>
     :root {
-        --court-dark: #1a1a2e;
-        --court-gold: #e8c840;
-        --court-bg: #f5f0e8;
-        --court-card: #ffffff;
-        --court-border: #e8e0d0;
-        --court-text: #2d2d2d;
-        --court-muted: #7a7060;
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #f5f4ec;
+        --warm: #f0ead8;
+        --card: #fff;
+        --border: #e4d9c8;
+        --muted: #8a7560;
+        --green: #15803d;
+        --green-soft: #dcfce7;
+        --red: #dc2626;
+        --red-soft: #fef2f2;
+        --blue: #1d4ed8;
+        --blue-soft: #eff6ff;
+        --orange: #c2410c;
+        --orange-soft: #fff7ed;
+        --purple: #7c3aed;
+        --purple-soft: #f5f3ff;
+        --yellow: #92600a;
+        --yellow-soft: #fef9ec;
     }
 
-    .modal-hd-court {
-        background: var(--court-dark);
-        color: #fff;
-        border-radius: 16px 16px 0 0;
-        padding: 1.25rem 1.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-    }
-
-        .modal-hd-court h5 {
-            font-weight: 800;
-            font-size: 1.05rem;
-            margin: 0 0 2px;
-            color: #fff;
-        }
-
-        .modal-hd-court p {
-            font-size: .78rem;
-            color: rgba(255,255,255,.6);
-            margin: 0;
-        }
-
-    .icon-wrap-hist {
-        width: 38px;
-        height: 38px;
-        border-radius: 9px;
-        background: rgba(255,255,255,.12);
-        color: rgba(255,255,255,.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.1rem;
-        margin-right: 1rem;
-        flex-shrink: 0;
-    }
-
-    .btn-close-inv {
-        filter: invert(1);
-        opacity: .7;
+    .hist-wrap {
+        padding: 0;
+        font-family: 'Outfit',sans-serif;
     }
 
     /* Product header */
-    .prod-header {
-        background: var(--court-bg);
-        border: 1px solid var(--court-border);
-        border-radius: 12px;
-        padding: 1rem 1.2rem;
-        margin-bottom: 1rem;
+    .hist-prod-hd {
+        padding: 1rem 1.5rem;
+        background: linear-gradient(135deg,#1a1a2e,#2d1a4e);
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 1rem;
+        flex-wrap: wrap;
     }
 
-    .prod-thumb-hist {
-        width: 52px;
-        height: 52px;
-        border-radius: 9px;
-        overflow: hidden;
-        border: 1px solid var(--court-border);
-        flex-shrink: 0;
+    .hist-prod-name {
+        font-weight: 800;
+        font-size: 1rem;
+        color: #fff;
     }
 
-        .prod-thumb-hist img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+    .hist-prod-code {
+        font-size: .72rem;
+        color: rgba(255,255,255,.55);
+        font-family: 'Courier New',monospace;
+        margin-top: 2px;
+    }
 
-    .pi-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 3px;
-        padding: 2px 8px;
-        border-radius: 20px;
+    .hist-prod-badges {
+        display: flex;
+        gap: .4rem;
+        flex-wrap: wrap;
+    }
+
+    .hpb {
         font-size: .68rem;
         font-weight: 700;
-    }
-
-    .pi-sku {
-        background: var(--court-bg);
-        color: var(--court-muted);
-        border: 1px solid var(--court-border);
-    }
-
-    .pi-cat {
-        background: #eff6ff;
-        color: #1d4ed8;
-        border: 1px solid #93c5fd;
-    }
-
-    .pi-batch {
-        background: #f9fafb;
-        color: #374151;
-        border: 1px solid #d1d5db;
-    }
-
-    .fw-mono {
-        font-family: monospace;
-        letter-spacing: .3px;
-    }
-
-    /* Current stock highlight */
-    .stock-badge-hist {
-        background: var(--court-dark);
-        color: var(--court-gold);
-        border-radius: 9px;
-        padding: .4rem .85rem;
-        text-align: center;
+        padding: .18rem .6rem;
+        border-radius: 10px;
         white-space: nowrap;
     }
 
-        .stock-badge-hist .sv {
-            font-size: 1.3rem;
-            font-weight: 800;
-            line-height: 1;
-        }
-
-        .stock-badge-hist .sl {
-            font-size: .62rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            opacity: .6;
-        }
-
-    /* Summary mini stats */
-    .mini-summary {
-        display: grid;
-        grid-template-columns: repeat(3,1fr);
-        gap: .6rem;
-        margin-bottom: 1rem;
+    .hpb-total {
+        background: rgba(255,255,255,.12);
+        color: rgba(255,255,255,.85);
     }
 
-    .ms-card {
-        border-radius: 10px;
-        padding: .65rem;
-        text-align: center;
+    .hpb-in {
+        background: #dcfce7;
+        color: var(--green);
     }
 
-    .ms-val {
-        font-size: 1.2rem;
-        font-weight: 800;
-        line-height: 1;
-    }
-
-    .ms-lbl {
-        font-size: .65rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        margin-top: 3px;
-    }
-
-    .ms-in {
-        background: #f0fdf4;
-    }
-
-        .ms-in .ms-val {
-            color: #166534;
-        }
-
-        .ms-in .ms-lbl {
-            color: #4ade80;
-        }
-
-    .ms-out {
+    .hpb-out {
         background: #fef2f2;
+        color: var(--red);
     }
 
-        .ms-out .ms-val {
-            color: #dc2626;
-        }
-
-        .ms-out .ms-lbl {
-            color: #fca5a5;
-        }
-
-    .ms-adj {
-        background: #fffbeb;
-    }
-
-        .ms-adj .ms-val {
-            color: #b45309;
-        }
-
-        .ms-adj .ms-lbl {
-            color: #fcd34d;
-        }
-
-    /* Table */
-    .hist-tbl {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-        .hist-tbl thead {
-            position: sticky;
-            top: 0;
-            z-index: 1;
-        }
-
-            .hist-tbl thead tr {
-                background: var(--court-dark);
-            }
-
-            .hist-tbl thead th {
-                color: rgba(255,255,255,.65);
-                font-size: .66rem;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: .8px;
-                padding: .65rem .9rem;
-                border: none;
-                white-space: nowrap;
-            }
-
-        .hist-tbl tbody tr {
-            border-bottom: 1px solid var(--court-border);
-            transition: background .12s;
-        }
-
-            .hist-tbl tbody tr:last-child {
-                border-bottom: none;
-            }
-
-            .hist-tbl tbody tr:hover {
-                background: #faf8f0;
-            }
-
-        .hist-tbl td {
-            padding: .65rem .9rem;
-            vertical-align: middle;
-            font-size: .84rem;
-        }
-
-    /* Type badges */
-    .tbadge {
-        display: inline-flex;
+    /* Toolbar */
+    .hist-toolbar {
+        padding: .75rem 1.25rem;
+        display: flex;
+        gap: .6rem;
         align-items: center;
-        gap: 4px;
-        padding: 3px 9px;
-        border-radius: 20px;
-        font-size: .7rem;
-        font-weight: 700;
+        flex-wrap: wrap;
+        background: var(--warm);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .ht-search {
+        position: relative;
+        flex: 1;
+        min-width: 160px;
+        max-width: 240px;
+    }
+
+        .ht-search i {
+            position: absolute;
+            left: .6rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: .78rem;
+            pointer-events: none;
+        }
+
+        .ht-search input {
+            padding: .38rem .65rem .38rem 1.9rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: .82rem;
+            width: 100%;
+            background: var(--card);
+            outline: none;
+        }
+
+            .ht-search input:focus {
+                border-color: var(--gold);
+            }
+
+    .ht-sel {
+        padding: .38rem .8rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-size: .8rem;
+        background: var(--card);
+        cursor: pointer;
+        outline: none;
+    }
+
+    .ht-count {
+        font-size: .75rem;
+        color: var(--muted);
+        margin-left: auto;
+    }
+
+    /* Timeline */
+    .hist-timeline {
+        padding: 1.1rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: .55rem;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+        .hist-timeline::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .hist-timeline::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+    .ht-item {
+        display: flex;
+        gap: .85rem;
+        align-items: flex-start;
+        padding: .7rem .9rem;
+        border-radius: 11px;
+        border: 1.5px solid var(--border);
+        background: var(--card);
+        transition: .15s;
+        cursor: default;
+    }
+
+        .ht-item:hover {
+            background: #fdf9f2;
+            border-color: var(--gold2);
+        }
+
+    /* Icon */
+    .ht-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .9rem;
+        flex-shrink: 0;
+    }
+
+    .ico-in {
+        background: var(--green-soft);
+        color: var(--green);
+    }
+
+    .ico-out {
+        background: var(--red-soft);
+        color: var(--red);
+    }
+
+    .ico-neutral {
+        background: var(--yellow-soft);
+        color: var(--yellow);
+    }
+
+    .ico-hold {
+        background: var(--orange-soft);
+        color: var(--orange);
+    }
+
+    .ico-rent {
+        background: var(--blue-soft);
+        color: var(--blue);
+    }
+
+    .ico-damage {
+        background: var(--purple-soft);
+        color: var(--purple);
+    }
+
+    .ico-transfer {
+        background: #f0f9ff;
+        color: #0369a1;
+    }
+
+    /* Content */
+    .ht-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ht-row1 {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        flex-wrap: wrap;
+    }
+
+    .ht-type-badge {
+        font-size: .68rem;
+        font-weight: 800;
+        padding: .15rem .6rem;
+        border-radius: 10px;
+        white-space: nowrap;
     }
 
     .tb-in {
-        background: #f0fdf4;
-        color: #166534;
-        border: 1px solid #86efac;
+        background: var(--green-soft);
+        color: var(--green);
     }
 
     .tb-out {
-        background: #fffbeb;
-        color: #b45309;
-        border: 1px solid #fcd34d;
+        background: var(--red-soft);
+        color: var(--red);
     }
 
-    .tb-adj {
-        background: #eff6ff;
-        color: #1d4ed8;
-        border: 1px solid #93c5fd;
+    .tb-neutral {
+        background: var(--yellow-soft);
+        color: var(--yellow);
     }
 
-    .tb-oth {
-        background: var(--court-bg);
-        color: var(--court-muted);
-        border: 1px solid var(--court-border);
+    .tb-hold {
+        background: var(--orange-soft);
+        color: var(--orange);
     }
 
-    /* Qty cell */
-    .qty-cell {
+    .tb-rent {
+        background: var(--blue-soft);
+        color: var(--blue);
+    }
+
+    .tb-damage {
+        background: var(--purple-soft);
+        color: var(--purple);
+    }
+
+    .tb-transfer {
+        background: #f0f9ff;
+        color: #0369a1;
+    }
+
+    .ht-qty {
+        font-size: .88rem;
         font-weight: 800;
-        font-size: .95rem;
+        margin-left: auto;
+        white-space: nowrap;
     }
 
-    .qty-in {
-        color: #166534;
+        .ht-qty.plus {
+            color: var(--green);
+        }
+
+        .ht-qty.minus {
+            color: var(--red);
+        }
+
+        .ht-qty.neutral {
+            color: var(--yellow);
+        }
+
+    .ht-row2 {
+        display: flex;
+        gap: .6rem;
+        flex-wrap: wrap;
+        margin-top: .25rem;
+        align-items: center;
     }
 
-    .qty-out {
-        color: #dc2626;
+    .ht-meta {
+        font-size: .72rem;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: .2rem;
     }
 
-    .qty-adj {
-        color: #1d4ed8;
+    .ht-note {
+        font-size: .75rem;
+        color: var(--deep);
+        background: var(--warm);
+        border-radius: 6px;
+        padding: .15rem .5rem;
+        max-width: 260px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
+
+    .ht-after {
+        font-size: .7rem;
+        color: var(--muted);
+        margin-left: auto;
+        white-space: nowrap;
+    }
+
+        .ht-after strong {
+            color: var(--deep);
+        }
 
     /* Empty */
     .hist-empty {
         text-align: center;
-        padding: 3rem 1rem;
-        color: var(--court-muted);
+        padding: 2.5rem 1.5rem;
+        color: var(--muted);
     }
 
         .hist-empty i {
-            font-size: 2.5rem;
-            opacity: .2;
+            font-size: 2rem;
+            opacity: .3;
             display: block;
-            margin-bottom: .75rem;
-        }
-
-    /* Footer */
-    .modal-foot-court {
-        background: var(--court-bg);
-        border-top: 1px solid var(--court-border);
-        border-radius: 0 0 16px 16px;
-        padding: 1rem 1.5rem;
-    }
-
-    .btn-close-full {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: .4rem;
-        width: 100%;
-        padding: .6rem;
-        background: var(--court-dark);
-        color: #fff;
-        border: none;
-        border-radius: 9px;
-        font-weight: 700;
-        font-size: .875rem;
-        cursor: pointer;
-        transition: .18s;
-    }
-
-        .btn-close-full:hover {
-            background: #2a2a4a;
+            margin-bottom: .6rem;
         }
 </style>
 
-<div class="modal-hd-court">
-    <div class="d-flex align-items-center">
-        <div class="icon-wrap-hist"><i class="bi bi-clock-history"></i></div>
-        <div>
-            <h5>Lịch Sử Kho</h5>
-            <p>Toàn bộ biến động nhập / xuất / điều chỉnh</p>
-        </div>
-    </div>
-    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
-</div>
+@{
+    // Tính summary
+    int totalIn = Model.Transactions.Where(t => t.IsInbound).Sum(t => t.Quantity);
+    int totalOut = Model.Transactions.Where(t => t.IsOutbound).Sum(t => t.Quantity);
 
-<div class="modal-body p-4" style="background:#fff;">
+    // Helper: map type → label, icon, css
+    (string label, string icon, string iconCss, string badgeCss, string qtyCss, bool isPlus, bool isMinus) GetTypeMeta(string type) => type switch
+    {
+        "StockIn" => ("Nhập kho", "bi-box-arrow-in-down", "ico-in", "tb-in", "plus", true, false),
+        "StockOut" => ("Xuất kho", "bi-box-arrow-up", "ico-out", "tb-out", "minus", false, true),
+        "Sale" => ("Bán đứt", "bi-bag-check", "ico-out", "tb-out", "minus", false, true),
+        "Hold" => ("Treo đơn", "bi-lock", "ico-hold", "tb-hold", "minus", false, true),
+        "ReleaseHold" => ("Huỷ treo", "bi-lock-fill", "ico-in", "tb-in", "plus", true, false),
+        "RentOut" => ("Xuất thuê", "bi-arrow-right-circle", "ico-rent", "tb-rent", "minus", false, true),
+        "RentReturn" => ("Trả thuê", "bi-arrow-left-circle", "ico-in", "tb-in", "plus", true, false),
+        "RentLost" => ("Mất thuê", "bi-x-circle", "ico-out", "tb-out", "minus", false, true),
+        "Adjustment" => ("Điều chỉnh", "bi-sliders", "ico-neutral", "tb-neutral", "neutral", false, false),
+        "Damaged" => ("Hàng hỏng", "bi-tools", "ico-damage", "tb-damage", "neutral", false, false),
+        "DamagedWrite" => ("Xoá sổ hỏng", "bi-trash3", "ico-damage", "tb-damage", "minus", false, true),
+        "Transfer" => ("Chuyển kho", "bi-arrow-left-right", "ico-transfer", "tb-transfer", "neutral", false, false),
+        _ => (type, "bi-clock-history", "ico-neutral", "tb-neutral", "neutral", false, false),
+    };
+}
+
+<div class="hist-wrap">
 
     <!-- Product header -->
-    <div class="prod-header">
-        <div class="prod-thumb-hist">
-            <img src="@(product?.ImageUrl ?? "/images/no-image.png")"
-                 onerror="this.src='/images/no-image.png'" />
+    <div class="hist-prod-hd">
+        <div>
+            <div class="hist-prod-name">@Model.ProductName</div>
+            <div class="hist-prod-code">@Model.ProductCode</div>
         </div>
-        <div style="flex:1;min-width:0;">
-            <div style="font-size:.95rem;font-weight:800;color:var(--court-dark);margin-bottom:4px;">
-                @(product?.ProductName ?? "Sản phẩm")
-            </div>
-            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                @if (product?.SKU != null)
-                {
-                    <span class="pi-tag pi-sku fw-mono"><i class="bi bi-upc"></i>@product.SKU</span>
-                }
-                @if (product?.Category?.CategoryName != null)
-                {
-                    <span class="pi-tag pi-cat"><i class="bi bi-tag"></i>@product.Category.CategoryName</span>
-                }
-                @if (product?.BatchNumber != null)
-                {
-                    <span class="pi-tag pi-batch"><i class="bi bi-layers"></i>Lô: @product.BatchNumber</span>
-                }
-            </div>
-        </div>
-        <div class="stock-badge-hist">
-            <div class="sv">@ViewBag.CurrentStock</div>
-            <div class="sl">@product?.Unit hiện tồn</div>
+        <div class="hist-prod-badges">
+            <span class="hpb hpb-total">@Model.Transactions.Count giao dịch</span>
+            <span class="hpb hpb-in">+@totalIn nhập</span>
+            <span class="hpb hpb-out">-@totalOut xuất</span>
         </div>
     </div>
 
-    <!-- Summary stats -->
-    @if (Model != null && Model.Any())
+    <!-- Toolbar -->
+    <div class="hist-toolbar">
+        <div class="ht-search">
+            <i class="bi bi-search"></i>
+            <input type="text" id="htSearch" placeholder="Tìm ghi chú, người dùng..." oninput="applyHtFilter()" />
+        </div>
+        <select class="ht-sel" id="htTypeSel" onchange="applyHtFilter()">
+            <option value="">Tất cả loại</option>
+            <option value="StockIn">📥 Nhập kho</option>
+            <option value="StockOut">📤 Xuất kho</option>
+            <option value="Sale">🛒 Bán đứt</option>
+            <option value="Hold">🔒 Treo đơn</option>
+            <option value="ReleaseHold">🔓 Huỷ treo</option>
+            <option value="RentOut">🔄 Xuất thuê</option>
+            <option value="RentReturn">↩️ Trả thuê</option>
+            <option value="RentLost">❌ Mất thuê</option>
+            <option value="Adjustment">⚙️ Điều chỉnh</option>
+            <option value="Damaged">💔 Hàng hỏng</option>
+            <option value="DamagedWrite">🗑️ Xoá sổ hỏng</option>
+            <option value="Transfer">↔️ Chuyển kho</option>
+        </select>
+        <select class="ht-sel" id="htDirSel" onchange="applyHtFilter()">
+            <option value="">Tất cả chiều</option>
+            <option value="in">📥 Tăng kho</option>
+            <option value="out">📤 Giảm kho</option>
+            <option value="neutral">⚙️ Trung tính</option>
+        </select>
+        <span class="ht-count" id="htCount">@Model.Transactions.Count giao dịch</span>
+    </div>
+
+    <!-- Timeline -->
+    @if (Model.Transactions.Any())
     {
-        <div class="mini-summary">
-            <div class="ms-card ms-in">
-                <div class="ms-val">@Model.Where(l => l.Type == "StockIn").Sum(l => (int)l.Quantity)</div>
-                <div class="ms-lbl">Tổng Nhập</div>
-            </div>
-            <div class="ms-card ms-out">
-                <div class="ms-val">@Model.Where(l => l.Type == "StockOut").Sum(l => (int)l.Quantity)</div>
-                <div class="ms-lbl">Tổng Xuất</div>
-            </div>
-            <div class="ms-card ms-adj">
-                <div class="ms-val">@Model.Count(l => l.Type == "Adjustment")</div>
-                <div class="ms-lbl">Điều Chỉnh</div>
-            </div>
+        <div class="hist-timeline" id="htTimeline">
+            @foreach (var t in Model.Transactions)
+            {
+                var (label, icon, iconCss, badgeCss, qtyCss, isPlus, isMinus) = GetTypeMeta(t.Type);
+                var qtySign = isPlus ? "+" : isMinus ? "−" : "±";
+                var dirData = isPlus ? "in" : isMinus ? "out" : "neutral";
+                var searchData = $"{t.Type.ToLower()} {t.Note?.ToLower()} {t.UserEmail?.ToLower()} {t.FacilityName?.ToLower()} {t.BatchNumber?.ToLower()}";
+
+                <div class="ht-item"
+                     data-type="@t.Type"
+                     data-dir="@dirData"
+                     data-search="@searchData">
+                    <div class="ht-icon @iconCss">
+                        <i class="bi @icon"></i>
+                    </div>
+                    <div class="ht-content">
+                        <div class="ht-row1">
+                            <span class="ht-type-badge @badgeCss">@label</span>
+                            @if (t.OrderId.HasValue)
+                            {
+                                <span style="font-size:.66rem;color:var(--blue);font-weight:700;">Đơn #@t.OrderId</span>
+                            }
+                            @if (!string.IsNullOrEmpty(t.BatchNumber))
+                            {
+                                <span style="font-size:.66rem;font-family:monospace;color:var(--muted);">@t.BatchNumber</span>
+                            }
+                            <span class="ht-qty @qtyCss">@qtySign@t.Quantity</span>
+                        </div>
+                        <div class="ht-row2">
+                            <span class="ht-meta"><i class="bi bi-geo-alt"></i>@(t.FacilityName ?? "—")</span>
+                            @if (t.TargetFacilityId.HasValue)
+                            {
+                                <span class="ht-meta"><i class="bi bi-arrow-right"></i> CS #@t.TargetFacilityId</span>
+                            }
+                            <span class="ht-meta"><i class="bi bi-person"></i>@(t.UserEmail?.Split('@')[0] ?? "—")</span>
+                            <span class="ht-meta"><i class="bi bi-calendar3"></i>@t.TransactionDate.ToString("HH:mm dd/MM/yy")</span>
+                            @if (t.ExpiryDate.HasValue)
+                            {
+                                <span class="ht-meta" style="color:var(--orange);"><i class="bi bi-calendar-x"></i>HSD: @t.ExpiryDate.Value.ToString("dd/MM/yy")</span>
+                            }
+                            @if (t.CostPriceSnapshot.HasValue && t.CostPriceSnapshot > 0)
+                            {
+                                <span class="ht-meta" style="color:var(--green);"><i class="bi bi-coin"></i>@t.CostPriceSnapshot.Value.ToString("N0")₫</span>
+                            }
+                            @if (!string.IsNullOrEmpty(t.Note))
+                            {
+                                <span class="ht-note" title="@t.Note"><i class="bi bi-chat-left-text me-1"></i>@t.Note</span>
+                            }
+                            <span class="ht-after">Sau GD: <strong>@t.QuantityAfter</strong></span>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
     }
-
-    <!-- History table -->
-    <div style="max-height:360px;overflow-y:auto;border-radius:10px;border:1px solid var(--court-border);overflow:hidden;">
-        <table class="hist-tbl">
-            <thead>
-                <tr>
-                    <th style="width:90px;">Ngày</th>
-                    <th style="width:100px;">Loại</th>
-                    <th style="width:100px;">Phân loại</th>
-                    <th style="width:60px;text-align:center;">SL</th>
-                    <th style="width:90px;">Số lô</th>
-                    <th style="width:100px;">Chứng từ</th>
-                    <th>Người thực hiện / Ghi chú</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model != null && Model.Any())
-                {
-                    foreach (var log in Model)
-                    {
-                        <tr>
-                            <td>
-                                <div style="font-size:.82rem;font-weight:700;color:var(--court-dark);">
-                                    @log.TransactionDate.ToString("dd/MM/yyyy")
-                                </div>
-                                <div style="font-size:.72rem;color:var(--court-muted);">
-                                    @log.TransactionDate.ToString("HH:mm")
-                                </div>
-                            </td>
-                            <td>
-                                @if (log.Type == "StockIn")
-                                {
-                                    <span class="tbadge tb-in"><i class="bi bi-box-arrow-in-down"></i>Nhập</span>
-                                }
-                                else if (log.Type == "StockOut")
-                                {
-
-                                    <span class="tbadge tb-out"><i class="bi bi-box-arrow-up"></i>Xuất</span>
-                                }
-                                else if (log.Type == "Adjustment")
-                                {
-
-                                    <span class="tbadge tb-adj"><i class="bi bi-pencil-square"></i>Điều chỉnh</span>
-                                }
-                                else
-                                {
-
-                                    <span class="tbadge tb-oth">@log.Type</span>
-                                }
-                            </td>
-                            <td>
-                                @if (!string.IsNullOrEmpty((string)log.VariantDisplay))
-                                {
-                                    <span style="display:inline-flex;align-items:center;gap:.25rem;font-size:.75rem;font-weight:700;background:#f0ead8;border:1px solid #e4d9c8;padding:.15rem .45rem;border-radius:5px;color:#1a1209;">
-                                        <i class="bi bi-grid-3x3-gap" style="font-size:.7rem;"></i>@log.VariantDisplay
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span style="color:var(--court-muted);font-size:.75rem;">—</span>
-                                }
-                            </td>
-                            <td style="text-align:center;">
-                                <span class="qty-cell @(log.Type == "StockIn" ? "qty-in" : log.Type == "StockOut" ? "qty-out" : "qty-adj")">
-                                    @(log.Type == "StockIn" ? "+" : log.Type == "StockOut" ? "−" : "~")@log.Quantity
-                                </span>
-                            </td>
-                            <td>
-                                @if (!string.IsNullOrEmpty((string)log.BatchNumber))
-                                {
-                                    <span class="fw-mono" style="font-size:.75rem;color:var(--court-muted);">@log.BatchNumber</span>
-                                }
-                                else
-                                {
-
-                                    <span style="color:var(--court-muted);">—</span>
-                                }
-                            </td>
-                            <td>
-                                @if (!string.IsNullOrEmpty((string)log.DocumentReference))
-                                {
-                                    <span class="fw-mono" style="font-size:.75rem;color:var(--court-muted);">@log.DocumentReference</span>
-                                }
-                                else
-                                {
-
-                                    <span style="color:var(--court-muted);">—</span>
-                                }
-                            </td>
-                            <td>
-                                <div style="font-size:.82rem;font-weight:700;color:var(--court-dark);">@log.UserEmail</div>
-                                @if (!string.IsNullOrEmpty((string)log.Note))
-                                {
-                                    <div style="font-size:.72rem;color:var(--court-muted);">@log.Note</div>
-                                }
-                                @if (!string.IsNullOrEmpty((string)log.SupplierName))
-                                {
-                                    <div style="font-size:.72rem;color:var(--court-muted);"><i class="bi bi-building me-1"></i>@log.SupplierName</div>
-                                }
-                            </td>
-                        </tr>
-                    }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="7">
-                            <div class="hist-empty">
-                                <i class="bi bi-inbox"></i>
-                                Chưa có giao dịch nào được ghi nhận.
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+    else
+    {
+        <div class="hist-empty">
+            <i class="bi bi-clock-history"></i>
+            <p>Chưa có giao dịch nào được ghi nhận</p>
+        </div>
+    }
 </div>
 
-<div class="modal-foot-court">
-    <button type="button" class="btn-close-full" data-bs-dismiss="modal">
-        <i class="bi bi-x-circle"></i> Đóng
-    </button>
-</div>
+<script>
+    (function () {
+        function applyHtFilter() {
+            const q   = document.getElementById('htSearch')?.value.toLowerCase() ?? '';
+            const tp  = document.getElementById('htTypeSel')?.value ?? '';
+            const dir = document.getElementById('htDirSel')?.value ?? '';
+            let cnt = 0;
+            document.querySelectorAll('#htTimeline .ht-item').forEach(row => {
+                const ok = (!q   || (row.dataset.search ?? '').includes(q))
+                        && (!tp  || row.dataset.type === tp)
+                        && (!dir || row.dataset.dir  === dir);
+                row.style.display = ok ? '' : 'none';
+                if (ok) cnt++;
+            });
+            const el = document.getElementById('htCount');
+            if (el) el.textContent = cnt + ' giao dịch';
+        }
+        window.applyHtFilter = applyHtFilter;
+    })();
+</script>

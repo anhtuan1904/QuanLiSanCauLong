@@ -1,107 +1,176 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using QuanLiSanCauLong.Models;
-using System.ComponentModel.DataAnnotations;
+﻿// ===================================================================
+// FILE: ViewModels/InventoryViewModels.cs  (Final – tất cả trong 1 file)
+// XOÁ file cũ: InventoryItemViewModel.cs, StockTransactionViewModel.cs
+// ===================================================================
+using System;
+using System.Collections.Generic;
 
 namespace QuanLiSanCauLong.ViewModels
 {
-    /// <summary>
-    /// ViewModel cho danh sách kho hàng
-    /// </summary>
     public class InventoryListViewModel
     {
-        // ===== FIX: Thêm FacilityId, FacilityName =====
         public int FacilityId { get; set; }
         public string FacilityName { get; set; }
-
         public List<InventoryItemViewModel> Items { get; set; } = new();
-        public int LowStockCount { get; set; }
-        public int ExpiringCount { get; set; }
-        public int OutOfStockCount { get; set; }
     }
 
-    /// <summary>
-    /// ViewModel cho từng sản phẩm trong kho
-    /// </summary>
     public class InventoryItemViewModel
     {
         public int InventoryId { get; set; }
         public int ProductId { get; set; }
-
-        // Product info
         public string ProductName { get; set; }
-        public string ProductCode { get; set; }     // FIX: thêm (dùng trong Controller & InventoryService)
-        public string SKU { get; set; }
-        public string Barcode { get; set; }
-        public string BatchNumber { get; set; }
-        public string ImageUrl { get; set; }
-        public string Unit { get; set; }
-        public string StorageLocation { get; set; }
-        public decimal Price { get; set; }          // FIX: thêm
-
-        // Category
+        public string ProductCode { get; set; }
         public string CategoryName { get; set; }
-        public string CategoryType { get; set; }    // FIX: thêm
-
-        // Facility
-        public int FacilityId { get; set; }
+        public string CategoryType { get; set; }
+        public string BehaviorType { get; set; } = "Retail";
         public string FacilityName { get; set; }
-
-        // Stock numbers
+        public string Unit { get; set; }
+        public decimal Price { get; set; }
+        public DateTime LastUpdated { get; set; }
         public int Quantity { get; set; }
+        public int HoldQuantity { get; set; }
+        public int RentedQuantity { get; set; }
+        public int DamagedQuantity { get; set; }
+        public int AvailableQuantity { get; set; }
         public int MinQuantity { get; set; }
         public int MaxQuantity { get; set; }
-
-        // --- FIX LỖI: Thêm bí danh MinStockLevel để khớp với code ở View/Controller ---
-        public int MinStockLevel { get => MinQuantity; set => MinQuantity = value; }
-
-        // Timestamps
-        public DateTime LastUpdated { get; set; }   // FIX: thêm
-
-        // Expiry
-        public DateTime? ExpiryDate { get; set; }
-
-        // Supplier
-        public string SupplierName { get; set; }
-
-        // Computed
-        public bool IsLowStock => MinQuantity > 0 && Quantity <= MinQuantity;
-        public bool IsExpired => ExpiryDate.HasValue && ExpiryDate.Value < DateTime.Now;
-        public bool IsExpiringSoon => ExpiryDate.HasValue && !IsExpired && ExpiryDate.Value <= DateTime.Now.AddDays(30);
+        public bool IsLowStock => AvailableQuantity > 0 && AvailableQuantity <= MinQuantity;
+        public bool IsOutOfStock => AvailableQuantity == 0;
+        public bool HasHold => HoldQuantity > 0;
+        public bool HasRented => RentedQuantity > 0;
+        public bool HasDamaged => DamagedQuantity > 0;
     }
+
     public class StockTransactionViewModel
     {
         public int FacilityId { get; set; }
-        public string TransactionType { get; set; }     // FIX: thêm (Import / Export)
+        public int? SupplierId { get; set; }  // dùng cho StockIn
+        public string TransactionType { get; set; }
         public DateTime TransactionDate { get; set; } = DateTime.Now;
-
-        public int? SupplierId { get; set; }
-
-        [StringLength(100)]
-        public string BatchNumber { get; set; }
-
-        [DataType(DataType.Date)]
-        public DateTime? ExpiryDate { get; set; }
-
-        [StringLength(100)]
         public string DocumentReference { get; set; }
-
-        [StringLength(20)]
-        public string OutReason { get; set; } = "Sale";
-
+        public string BatchNumber { get; set; }
+        public DateTime? ExpiryDate { get; set; }
+        public string Reason { get; set; }
         public string Note { get; set; }
-
         public List<StockTransactionItemViewModel> Items { get; set; } = new();
     }
 
     public class StockTransactionItemViewModel
     {
         public int ProductId { get; set; }
+        public int? VariantId { get; set; }
         public int Quantity { get; set; }
-
         public string Unit { get; set; }
-
         public decimal CostPrice { get; set; }
-        public decimal UnitPrice { get; set; }      // FIX: thêm (dùng trong InventoryService)
-        public decimal TotalPrice { get; set; }     // FIX: thêm (dùng trong InventoryService)
+    }
+
+    public class ActiveRentalsViewModel
+    {
+        public List<RentalItemRowViewModel> Items { get; set; } = new();
+        public int TotalActive { get; set; }
+        public int TotalOverdue { get; set; }
+        public int TotalReturned { get; set; }
+        public int TotalLost { get; set; }
+    }
+
+    public class RentalItemRowViewModel
+    {
+        public int RentalItemId { get; set; }
+        public int InventoryId { get; set; }
+        public int ProductId { get; set; }
+        public string ProductName { get; set; }
+        public string ProductCode { get; set; }
+        public string CategoryName { get; set; }
+        public string FacilityName { get; set; }
+        public string CourtCode { get; set; }
+        public string CustomerName { get; set; }
+        public string CustomerPhone { get; set; }
+        public int Quantity { get; set; }
+        public string Size { get; set; }
+        public string Unit { get; set; }
+        public DateTime RentedAt { get; set; }
+        public DateTime? ExpectedReturnAt { get; set; }
+        public DateTime? ReturnedAt { get; set; }
+        public string Status { get; set; }
+        public bool IsOverdue { get; set; }
+        public double DurationHours { get; set; }
+        public string Note { get; set; }
+        public decimal CleaningFeeCharged { get; set; }
+        public string CreatedBy { get; set; }
+    }
+
+    public class LowStockViewModel
+    {
+        public List<LowStockItemViewModel> Items { get; set; } = new();
+        public int OutOfStockCount { get; set; }
+        public int LowStockCount { get; set; }
+        public int ExpiringCount { get; set; }
+        public int ExpiredCount { get; set; }
+        public int DamagedCount { get; set; }
+    }
+
+    public class LowStockItemViewModel
+    {
+        public int InventoryId { get; set; }
+        public int ProductId { get; set; }
+        public string ProductName { get; set; }
+        public string ProductCode { get; set; }
+        public string ImageUrl { get; set; }
+        public string CategoryName { get; set; }
+        public string BehaviorType { get; set; }
+        public string FacilityName { get; set; }
+        public string Unit { get; set; }
+        public string SupplierName { get; set; }
+        public string BatchNumber { get; set; }
+        public string StorageLocation { get; set; }
+        public int Quantity { get; set; }
+        public int AvailableQuantity { get; set; }
+        public int HoldQuantity { get; set; }
+        public int RentedQuantity { get; set; }
+        public int DamagedQuantity { get; set; }
+        public int MinQuantity { get; set; }
+        public DateTime? ExpiryDate { get; set; }
+        public int? DaysUntilExpiry { get; set; }
+        public bool IsOutOfStock { get; set; }
+        public bool IsLowStock { get; set; }
+        public bool IsExpired { get; set; }
+        public bool IsExpiringSoon { get; set; }
+        public bool HasDamaged { get; set; }
+        public List<LowStockVariantRow> LowVariants { get; set; } = new();
+    }
+
+    public class LowStockVariantRow
+    {
+        public string DisplayName { get; set; }
+        public int AvailableQty { get; set; }
+    }
+
+    public class InventoryHistoryViewModel
+    {
+        public int ProductId { get; set; }
+        public string ProductName { get; set; }
+        public string ProductCode { get; set; }
+        public List<InventoryTransactionRowViewModel> Transactions { get; set; } = new();
+    }
+
+    public class InventoryTransactionRowViewModel
+    {
+        public int TransactionId { get; set; }
+        public string Type { get; set; }
+        public int Quantity { get; set; }
+        public int QuantityAfter { get; set; }
+        public string FacilityName { get; set; }
+        public int? OrderId { get; set; }
+        public string Note { get; set; }
+        public string UserEmail { get; set; }
+        public DateTime TransactionDate { get; set; }
+        public decimal? CostPriceSnapshot { get; set; }
+        public string BatchNumber { get; set; }
+        public DateTime? ExpiryDate { get; set; }
+        public int? TargetFacilityId { get; set; }
+        public bool IsInbound => Type is "StockIn" or "RentalReturn" or "SaleCancel";
+        public bool IsOutbound => Type is "StockOut" or "SaleConfirmed" or "SaleHold"
+                                       or "RentalOut" or "RentalLost" or "DamagedWrite";
+        public bool IsNeutral => !IsInbound && !IsOutbound;
     }
 }

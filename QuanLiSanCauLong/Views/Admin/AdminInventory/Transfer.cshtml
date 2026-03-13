@@ -1,0 +1,281 @@
+﻿@{
+    Layout = null;
+    var facilities = ViewBag.Facilities as List<QuanLiSanCauLong.Models.Facility> ?? new();
+    var products   = ViewBag.Products   as List<QuanLiSanCauLong.Models.Product>  ?? new();
+}
+
+<style>
+    :root {
+        --deep:#1a1209;--gold:#d4a017;--gold2:#f5c842;
+        --cream:#f5f4ec;--warm:#f0ead8;--card:#fff;--border:#e4d9c8;--muted:#8a7560;
+        --teal:#0d9488;--teal-soft:#f0fdfa;
+    }
+    .tr-wrap { font-family:'Outfit',sans-serif; }
+    .tr-hd { background:linear-gradient(135deg,#134e4a,#0d9488);color:#fff;
+        padding:1.1rem 1.5rem;display:flex;align-items:center;gap:.85rem; }
+    .tr-hd-icon { width:38px;height:38px;border-radius:9px;background:rgba(255,255,255,.15);
+        display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0; }
+    .tr-hd h5 { font-weight:800;font-size:1rem;margin:0; }
+    .tr-hd p  { font-size:.75rem;color:rgba(255,255,255,.65);margin:0; }
+    .tr-close { margin-left:auto;background:none;border:none;color:rgba(255,255,255,.7);font-size:1.3rem;cursor:pointer; }
+
+    .tr-body { padding:1.25rem 1.5rem;background:var(--cream); }
+    .tr-field { display:flex;flex-direction:column;gap:.3rem;margin-bottom:.85rem; }
+    .tr-field label { font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted); }
+    .tr-fc { border:1.5px solid var(--border);border-radius:9px;padding:.5rem .8rem;
+        font-size:.875rem;width:100%;background:var(--card);outline:none;font-family:'Outfit',sans-serif; }
+    .tr-fc:focus { border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,148,136,.12); }
+
+    /* From → To arrow layout */
+    .tr-flow { display:grid;grid-template-columns:1fr 40px 1fr;gap:.5rem;align-items:end;margin-bottom:.85rem; }
+    .tr-arrow { display:flex;align-items:center;justify-content:center;padding-bottom:.5rem; }
+    .tr-arrow i { font-size:1.3rem;color:var(--teal); }
+
+    /* Stock preview cards */
+    .tr-stock-row { display:grid;grid-template-columns:1fr 40px 1fr;gap:.5rem;margin-bottom:.85rem; }
+    .tr-stock-card { background:var(--card);border:1px solid var(--border);border-radius:10px;
+        padding:.65rem .9rem;text-align:center; }
+    .tr-stock-card.src { border-top:3px solid #dc2626; }
+    .tr-stock-card.dst { border-top:3px solid var(--teal); }
+    .tsc-lbl { font-size:.65rem;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem; }
+    .tsc-val { font-size:1.1rem;font-weight:800;color:var(--deep); }
+    .tsc-avail { font-size:.72rem;color:#15803d;font-weight:700;margin-top:1px; }
+    .tsc-arrow { display:flex;align-items:center;justify-content:center; }
+    .tsc-arrow i { font-size:1.3rem;color:var(--teal); }
+
+    /* Qty info */
+    .tr-qty-wrap { display:grid;grid-template-columns:1fr 1fr;gap:.75rem; }
+
+    .tr-preview { background:var(--teal-soft);border:1px solid #99f6e4;border-radius:10px;
+        padding:.7rem 1rem;margin-bottom:.75rem;display:none; }
+    .tr-preview.show { display:block; }
+    .trp-row { display:flex;justify-content:space-between;font-size:.8rem;padding:.15rem 0; }
+    .trp-row strong { font-weight:800;color:var(--deep); }
+
+    .tr-foot { padding:.9rem 1.5rem;background:var(--warm);border-top:1px solid var(--border);
+        display:flex;gap:.6rem;justify-content:flex-end; }
+    .btn-cancel { padding:.5rem 1.2rem;border:1.5px solid var(--border);border-radius:9px;
+        background:transparent;font-size:.84rem;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif; }
+    .btn-transfer { padding:.5rem 1.5rem;border:none;border-radius:9px;background:var(--teal);
+        color:#fff;font-size:.84rem;font-weight:700;cursor:pointer;transition:.18s;
+        font-family:'Outfit',sans-serif;display:flex;align-items:center;gap:.4rem; }
+    .btn-transfer:hover { background:#0f766e; }
+    .btn-transfer:disabled { opacity:.5;cursor:not-allowed; }
+    .spinner-sm { width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+        border-radius:50%;animation:spin .7s linear infinite; }
+    @@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+
+<div class="tr-wrap">
+    <div class="tr-hd">
+        <div class="tr-hd-icon"><i class="bi bi-arrow-left-right"></i></div>
+        <div>
+            <h5>Chuyển Kho Giữa Cơ Sở</h5>
+            <p>Điều phối hàng từ cơ sở dư → cơ sở thiếu</p>
+        </div>
+        <button class="tr-close" onclick="$('#inventoryModal').modal('hide')">&times;</button>
+    </div>
+
+    <div class="tr-body">
+        <!-- Product -->
+        <div class="tr-field">
+            <label>Sản phẩm chuyển <span style="color:#dc2626">*</span></label>
+            <select id="tr_productId" class="tr-fc" onchange="loadTrStock()">
+                <option value="">— Chọn sản phẩm —</option>
+                @foreach (var p in products)
+                {
+                    <option value="@p.ProductId" data-unit="@p.Unit">@p.ProductName</option>
+                }
+            </select>
+        </div>
+
+        <!-- From → To -->
+        <div class="tr-flow">
+            <div class="tr-field" style="margin-bottom:0;">
+                <label>Từ cơ sở (nguồn) <span style="color:#dc2626">*</span></label>
+                <select id="tr_fromFacility" class="tr-fc" onchange="loadTrStock()">
+                    @foreach (var f in facilities)
+                    {
+                        <option value="@f.FacilityId">@f.FacilityName</option>
+                    }
+                </select>
+            </div>
+            <div class="tr-arrow"><i class="bi bi-arrow-right"></i></div>
+            <div class="tr-field" style="margin-bottom:0;">
+                <label>Đến cơ sở (đích) <span style="color:#dc2626">*</span></label>
+                <select id="tr_toFacility" class="tr-fc" onchange="loadTrStock()">
+                    @foreach (var f in facilities)
+                    {
+                        var isFirst = f == facilities.FirstOrDefault();
+                        <option value="@f.FacilityId" selected="@(f.FacilityId == Model.FacilityId)">@f.FacilityName</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <!-- Stock preview -->
+        <div class="tr-stock-row" id="trStockRow" style="display:none;">
+            <div class="tr-stock-card src">
+                <div class="tsc-lbl">📤 Nguồn</div>
+                <div class="tsc-val" id="tsc_srcQty">—</div>
+                <div class="tsc-avail" id="tsc_srcAvail">KD: —</div>
+            </div>
+            <div class="tsc-arrow"><i class="bi bi-arrow-right"></i></div>
+            <div class="tr-stock-card dst">
+                <div class="tsc-lbl">📥 Đích</div>
+                <div class="tsc-val" id="tsc_dstQty">—</div>
+                <div class="tsc-avail" id="tsc_dstAvail">KD: —</div>
+            </div>
+        </div>
+
+        <div class="tr-qty-wrap">
+            <div class="tr-field">
+                <label>Số lượng chuyển <span style="color:#dc2626">*</span></label>
+                <input type="number" id="tr_quantity" class="tr-fc" min="1" value="1"
+                       oninput="updateTrPreview()" />
+            </div>
+            <div class="tr-field">
+                <label>Đơn vị</label>
+                <input type="text" id="tr_unit" class="tr-fc" readonly placeholder="—" />
+            </div>
+        </div>
+
+        <!-- Transfer preview -->
+        <div class="tr-preview" id="trPreview">
+            <div class="trp-row">
+                <span style="color:var(--muted);">Số lượng chuyển</span>
+                <strong id="trp_qty">—</strong>
+            </div>
+            <div class="trp-row">
+                <span style="color:var(--muted);">Nguồn sau chuyển</span>
+                <strong id="trp_srcAfter" style="color:#dc2626;">—</strong>
+            </div>
+            <div class="trp-row">
+                <span style="color:var(--muted);">Đích sau chuyển</span>
+                <strong id="trp_dstAfter" style="color:var(--teal);">—</strong>
+            </div>
+        </div>
+
+        <div class="tr-field">
+            <label>Ghi chú</label>
+            <input type="text" id="tr_note" class="tr-fc" placeholder="Lý do điều chuyển..." />
+        </div>
+    </div>
+
+    <div class="tr-foot">
+        <button class="btn-cancel" onclick="$('#inventoryModal').modal('hide')">Huỷ</button>
+        <button class="btn-transfer" id="trSubmitBtn" onclick="submitTransfer()">
+            <i class="bi bi-arrow-left-right"></i> Xác nhận chuyển kho
+        </button>
+    </div>
+</div>
+
+<input type="hidden" id="tr_fromInventoryId" value="" />
+
+<script>
+let _trSrcAvail = 0, _trDstQty = 0, _trUnit = '';
+
+async function loadTrStock() {
+    const pid  = document.getElementById('tr_productId').value;
+    const from = document.getElementById('tr_fromFacility').value;
+    const to   = document.getElementById('tr_toFacility').value;
+    const row  = document.getElementById('trStockRow');
+
+    if (!pid) { row.style.display = 'none'; return; }
+
+    // Load nguồn
+    try {
+        const r1 = await fetch(`/AdminInventory/GetProductStock?facilityId=${from}&productId=${pid}`);
+        const d1 = await r1.json();
+        if (d1.success) {
+            _trSrcAvail = d1.availableQuantity;
+            _trUnit     = d1.unit;
+            document.getElementById('tsc_srcQty').textContent   = d1.quantity;
+            document.getElementById('tsc_srcAvail').textContent = 'KD: ' + d1.availableQuantity;
+            document.getElementById('tr_quantity').max          = d1.availableQuantity;
+            document.getElementById('tr_unit').value            = d1.unit;
+            // Cần inventoryId để gọi Transfer
+            // Fetch inventory ID via custom endpoint (hoặc embed trong page)
+        }
+    } catch {}
+
+    // Load đích
+    try {
+        const r2 = await fetch(`/AdminInventory/GetProductStock?facilityId=${to}&productId=${pid}`);
+        const d2 = await r2.json();
+        _trDstQty = d2.success ? d2.quantity : 0;
+        document.getElementById('tsc_dstQty').textContent   = d2.success ? d2.quantity : '0';
+        document.getElementById('tsc_dstAvail').textContent = d2.success ? 'KD: ' + d2.availableQuantity : 'Chưa có';
+    } catch {}
+
+    row.style.display = 'grid';
+    updateTrPreview();
+}
+
+function updateTrPreview() {
+    const qty  = parseInt(document.getElementById('tr_quantity').value) || 0;
+    const prev = document.getElementById('trPreview');
+    if (!qty || !_trSrcAvail) { prev.classList.remove('show'); return; }
+
+    document.getElementById('trp_qty').textContent      = qty + ' ' + _trUnit;
+    document.getElementById('trp_srcAfter').textContent = Math.max(0, _trSrcAvail - qty) + ' ' + _trUnit;
+    document.getElementById('trp_dstAfter').textContent = (_trDstQty + qty) + ' ' + _trUnit;
+    prev.classList.add('show');
+}
+
+async function submitTransfer() {
+    const btn  = document.getElementById('trSubmitBtn');
+    const pid  = document.getElementById('tr_productId').value;
+    const from = document.getElementById('tr_fromFacility').value;
+    const to   = document.getElementById('tr_toFacility').value;
+    const qty  = parseInt(document.getElementById('tr_quantity').value);
+
+    if (!pid)        { alert('Vui lòng chọn sản phẩm!'); return; }
+    if (from === to) { alert('Cơ sở nguồn và đích phải khác nhau!'); return; }
+    if (!qty || qty < 1) { alert('Số lượng phải lớn hơn 0!'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner-sm"></div> Đang chuyển...';
+
+    // Cần lấy fromInventoryId – gọi endpoint phụ hoặc truyền qua hidden field
+    // Giải pháp: dùng endpoint GetInventoryId (cần thêm vào controller)
+    // Hoặc: truyền facilityId+productId vào Transfer action (controller tự tìm)
+    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+    const form  = new FormData();
+    // Controller Transfer nhận fromInventoryId – ta truyền facilityId+productId thay thế
+    // Cần controller overload: Transfer(fromFacilityId, productId, targetFacilityId, qty)
+    form.append('fromFacilityId',    from);
+    form.append('productId',         pid);
+    form.append('targetFacilityId',  to);
+    form.append('quantity',          qty);
+    form.append('note',              document.getElementById('tr_note').value);
+    form.append('__RequestVerificationToken', token);
+
+    try {
+        const res  = await fetch('/AdminInventory/Transfer', { method: 'POST', body: form });
+        const data = await res.json();
+        if (data.success) {
+            showToast(true, data.message);
+            setTimeout(() => { $('#inventoryModal').modal('hide'); location.reload(); }, 900);
+        } else {
+            showToast(false, data.message);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-arrow-left-right"></i> Xác nhận chuyển kho';
+        }
+    } catch {
+        showToast(false, 'Lỗi kết nối.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-arrow-left-right"></i> Xác nhận chuyển kho';
+    }
+}
+
+function showToast(ok, msg) {
+    const el = document.getElementById('invToastWrap');
+    if (!el) return;
+    const d = document.createElement('div');
+    d.className = 'inv-toast ' + (ok ? 'inv-toast-ok' : 'inv-toast-err');
+    d.textContent = msg;
+    el.appendChild(d);
+    setTimeout(() => d.remove(), 3500);
+}
+</script>

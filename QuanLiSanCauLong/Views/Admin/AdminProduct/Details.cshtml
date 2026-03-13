@@ -2,6 +2,12 @@
 @{
     ViewData["Title"] = "Chi tiết sản phẩm";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    var behavior = Model.Category?.BehaviorType ?? "Retail";
+    var activeVariants = Model.Variants?.Where(v => v.IsActive).OrderBy(v => v.SizeName).ToList();
+    bool hasVariants = activeVariants != null && activeVariants.Any();
+    int totalStock = hasVariants ? activeVariants.Sum(v => v.StockQuantity) : Model.StockQuantity;
+    int totalReserved = hasVariants ? activeVariants.Sum(v => v.ReservedQuantity) : Model.ReservedQuantity;
+    int totalAvail = totalStock - totalReserved;
 }
 
 <style>
@@ -20,9 +26,11 @@
         --green-soft: #dcfce7;
         --red: #dc2626;
         --red-soft: #fef2f2;
-        --yellow-soft: #fef9c3;
-        --blue-soft: #eff6ff;
         --blue: #1d4ed8;
+        --blue-soft: #eff6ff;
+        --purple: #7c3aed;
+        --purple-soft: #f5f3ff;
+        --yellow-soft: #fef9c3;
     }
 
     body, .container-fluid {
@@ -45,7 +53,6 @@
             display: flex;
             align-items: center;
             gap: .3rem;
-            transition: .15s;
         }
 
             .bc a:hover {
@@ -63,7 +70,7 @@
 
     .detail-wrap {
         display: grid;
-        grid-template-columns: 360px 1fr;
+        grid-template-columns: 340px 1fr;
         gap: 1.4rem;
         align-items: start;
     }
@@ -90,12 +97,12 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        min-height: 280px;
+        min-height: 260px;
     }
 
     .product-main-img {
         max-width: 100%;
-        max-height: 280px;
+        max-height: 260px;
         object-fit: contain;
         border-radius: 12px;
     }
@@ -118,6 +125,316 @@
         gap: .6rem;
     }
 
+    /* Info cards */
+    .info-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+    }
+
+    .dc {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(26,18,9,.04);
+    }
+
+    .dc-hd {
+        padding: .9rem 1.4rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--warm);
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+    }
+
+        .dc-hd i {
+            color: var(--gold);
+            font-size: .88rem;
+        }
+
+    .dc-hd-title {
+        font-weight: 700;
+        font-size: .88rem;
+        color: var(--deep);
+    }
+
+    .dc-bd {
+        padding: 1.25rem 1.4rem;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: .45rem 0;
+        border-bottom: 1px solid var(--warm);
+    }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+    .info-lbl {
+        font-size: .78rem;
+        color: var(--muted);
+        font-weight: 600;
+    }
+
+    .info-val {
+        font-size: .88rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+    .desc-block {
+        font-size: .85rem;
+        color: var(--deep);
+        line-height: 1.65;
+        white-space: pre-wrap;
+    }
+
+    /* Behavior badge */
+    .behavior-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .3rem .8rem;
+        border-radius: 8px;
+        font-size: .75rem;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .bh-retail {
+        background: var(--green-soft);
+        color: var(--green);
+    }
+
+    .bh-rental {
+        background: var(--blue-soft);
+        color: var(--blue);
+    }
+
+    .bh-service {
+        background: var(--purple-soft);
+        color: var(--purple);
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        padding: .2rem .6rem;
+        border-radius: 6px;
+        font-size: .72rem;
+        font-weight: 700;
+    }
+
+    .badge-available {
+        background: var(--green-soft);
+        color: var(--green);
+    }
+
+    .badge-outofstock {
+        background: var(--yellow-soft);
+        color: #92400e;
+    }
+
+    .badge-discontinued {
+        background: var(--red-soft);
+        color: var(--red);
+    }
+
+    .badge-service {
+        background: var(--purple-soft);
+        color: var(--purple);
+    }
+
+    /* Stock summary */
+    .stock-summary {
+        display: flex;
+        gap: 1.2rem;
+        margin-bottom: 1.2rem;
+        flex-wrap: wrap;
+    }
+
+    .stock-stat {
+        text-align: center;
+        padding: .7rem 1.2rem;
+        border-radius: 10px;
+        background: var(--warm);
+        border: 1px solid var(--border);
+        flex: 1;
+        min-width: 80px;
+    }
+
+        .stock-stat.reserved {
+            background: var(--yellow-soft);
+            border-color: #fde68a;
+        }
+
+        .stock-stat.available {
+            background: var(--green-soft);
+            border-color: #86efac;
+        }
+
+        .stock-stat.rented {
+            background: var(--blue-soft);
+            border-color: #93c5fd;
+        }
+
+    .stock-stat-val {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--deep);
+        line-height: 1;
+    }
+
+    .stock-stat-lbl {
+        font-size: .68rem;
+        color: var(--muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-top: .2rem;
+    }
+
+    /* Variant table */
+    .vt {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .vt th {
+            font-size: .68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            color: var(--muted);
+            padding: .5rem .7rem;
+            border-bottom: 2px solid var(--border);
+            text-align: left;
+        }
+
+        .vt td {
+            padding: .5rem .7rem;
+            border-bottom: 1px solid var(--warm);
+            font-size: .84rem;
+            color: var(--deep);
+        }
+
+        .vt tr:last-child td {
+            border-bottom: none;
+        }
+
+    .size-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: .15rem .5rem;
+        background: var(--warm);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        font-size: .76rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+    .qty-ok {
+        color: var(--green);
+        font-weight: 700;
+    }
+
+    .qty-low {
+        color: #92400e;
+        font-weight: 700;
+    }
+
+    .qty-zero {
+        color: var(--red);
+        font-weight: 700;
+    }
+
+    .qty-reserved {
+        color: #92400e;
+        font-size: .8rem;
+    }
+
+    .qty-avail {
+        font-weight: 700;
+    }
+
+    /* Rental stats */
+    .rental-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: .75rem;
+    }
+
+    @@media(max-width:600px) {
+        .rental-info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .ri-box {
+        background: var(--warm);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: .8rem 1rem;
+        text-align: center;
+    }
+
+    .ri-val {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--deep);
+    }
+
+    .ri-lbl {
+        font-size: .68rem;
+        color: var(--muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-top: .15rem;
+    }
+
+    /* Service pricing */
+    .svc-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .svc-box {
+        background: var(--purple-soft);
+        border: 1px solid #ddd6fe;
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+    }
+
+    .svc-val {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--purple);
+    }
+
+    .svc-lbl {
+        font-size: .7rem;
+        color: var(--purple);
+        opacity: .7;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .svc-unit {
+        font-size: .78rem;
+        color: var(--muted);
+        margin-top: .2rem;
+    }
+
+    /* Action btns */
     .btn-edit {
         flex: 1;
         display: inline-flex;
@@ -165,515 +482,129 @@
             color: #fff;
         }
 
-    /* Info panel */
-    .info-panel {
-        display: flex;
-        flex-direction: column;
-        gap: 1.2rem;
-    }
-
-    .dc {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(26,18,9,.04);
-    }
-
-    .dc-hd {
-        padding: .9rem 1.4rem;
-        border-bottom: 1px solid var(--border);
-        background: var(--warm);
-        display: flex;
-        align-items: center;
-        gap: .55rem;
-    }
-
-        .dc-hd i {
-            color: var(--gold);
-            font-size: .88rem;
-        }
-
-    .dc-hd-title {
-        font-weight: 700;
-        font-size: .88rem;
-        color: var(--deep);
-    }
-
-    .dc-bd {
-        padding: 1.25rem 1.4rem;
-    }
-
-    /* Product info */
-    .prod-cat-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: .35rem;
-        font-size: .72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .06em;
-        color: var(--gold);
-        margin-bottom: .6rem;
-    }
-
-    .prod-heading {
-        font-family: 'Playfair Display',serif;
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: var(--deep);
-        margin-bottom: .25rem;
-    }
-
-    .prod-code {
-        font-size: .78rem;
-        color: var(--muted);
-        font-family: 'Courier New',monospace;
-        margin-bottom: .75rem;
-    }
-
-    .price-row {
-        display: flex;
-        align-items: baseline;
-        gap: .4rem;
-        margin-bottom: .75rem;
-    }
-
-    .price-main {
-        font-size: 1.6rem;
-        font-weight: 800;
-        color: var(--deep);
-    }
-
-    .price-unit {
-        font-size: .78rem;
-        color: var(--muted);
-    }
-
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: .35rem;
-        padding: .3rem .75rem;
-        border-radius: 20px;
-        font-size: .76rem;
-        font-weight: 700;
-    }
-
-    .badge-available {
-        background: var(--green-soft);
-        color: var(--green);
-    }
-
-    .badge-outofstock {
-        background: var(--yellow-soft);
-        color: #92400e;
-    }
-
-    .badge-discontinued {
-        background: var(--red-soft);
-        color: var(--red);
-    }
-
-    .info-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: .6rem 0;
-        border-bottom: 1px solid var(--border);
-    }
-
-        .info-row:last-child {
-            border-bottom: none;
-        }
-
-    .info-lbl {
-        font-size: .8rem;
-        color: var(--muted);
-    }
-
-    .info-val {
-        font-size: .88rem;
-        font-weight: 600;
-        color: var(--deep);
-    }
-
-    .desc-block {
-        font-size: .88rem;
-        color: var(--deep);
-        line-height: 1.6;
-    }
-
-    /* ── Stock summary bar ── */
-    .stock-summary {
-        display: grid;
-        grid-template-columns: repeat(3,1fr);
-        gap: .75rem;
-        margin-bottom: 1.25rem;
-    }
-
-    .stock-stat {
-        background: var(--cream);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: .85rem 1rem;
-        text-align: center;
-    }
-
-    .stock-stat-val {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--deep);
-        line-height: 1;
-    }
-
-    .stock-stat-lbl {
-        font-size: .7rem;
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: .06em;
-        margin-top: .25rem;
-    }
-
-    .stock-stat.available .stock-stat-val {
-        color: var(--green);
-    }
-
-    .stock-stat.reserved .stock-stat-val {
-        color: #92400e;
-    }
-
-    /* ── Variant table ── */
-    .vt {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-        .vt th {
-            font-size: .68rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .07em;
-            color: var(--muted);
-            padding: .55rem .8rem;
-            border-bottom: 2px solid var(--border);
-            text-align: left;
-            white-space: nowrap;
-        }
-
-        .vt td {
-            padding: .6rem .8rem;
-            border-bottom: 1px solid var(--border);
-            font-size: .85rem;
-            vertical-align: middle;
-        }
-
-        .vt tr:last-child td {
-            border-bottom: none;
-        }
-
-        .vt tr:hover td {
-            background: #fafaf7;
-        }
-
-    .size-chip {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 32px;
-        padding: .2rem .6rem;
-        border-radius: 6px;
-        font-size: .78rem;
-        font-weight: 700;
-        background: var(--warm);
-        border: 1px solid var(--border);
-        color: var(--deep);
-    }
-
-    .qty-ok {
-        color: var(--green);
-        font-weight: 700;
-    }
-
-    .qty-low {
-        color: #92400e;
-        font-weight: 700;
-    }
-
-    .qty-zero {
-        color: var(--red);
-        font-weight: 700;
-    }
-
-    .qty-reserved {
-        display: inline-flex;
-        align-items: center;
-        gap: .25rem;
-        font-size: .78rem;
-        color: #92400e;
-        background: var(--yellow-soft);
-        padding: .15rem .45rem;
-        border-radius: 5px;
-        font-weight: 600;
-    }
-
-    .qty-avail {
-        font-weight: 700;
-    }
-
-    .no-variant-note {
-        font-size: .85rem;
-        color: var(--muted);
-        text-align: center;
-        padding: 1.5rem 0;
-    }
-
     .toast-wrap {
         position: fixed;
-        bottom: 1.5rem;
-        right: 1.5rem;
+        top: 1.2rem;
+        right: 1.2rem;
         z-index: 9999;
         display: flex;
         flex-direction: column;
         gap: .5rem;
+        pointer-events: none;
     }
 
     .toast-msg {
-        background: #1a1209;
-        color: #fff;
-        padding: .7rem 1.2rem;
+        padding: .75rem 1.2rem;
         border-radius: 10px;
         font-size: .84rem;
         font-weight: 600;
-        animation: slideIn .25s ease;
+        box-shadow: 0 8px 24px rgba(0,0,0,.14);
+        pointer-events: all;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        animation: slideIn .22s ease;
+        background: #fff;
+        border-left: 4px solid var(--red);
+        color: var(--red);
     }
 
     @@keyframes slideIn {
         from {
             opacity: 0;
-            transform: translateX(20px);
+            transform: translateX(20px)
         }
 
         to {
             opacity: 1;
-            transform: translateX(0);
+            transform: translateX(0)
         }
     }
 </style>
 
 <div class="container-fluid px-4 py-4">
-
     <div class="bc">
         <a asp-action="Index"><i class="bi bi-house"></i> Sản phẩm</a>
         <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
         <span class="bc-cur">@Model.ProductName</span>
     </div>
 
-    <div class="detail-wrap">
-
-        <!-- LEFT: Image -->
-        <div class="img-panel">
-            <div class="img-panel-inner">
-                @if (!string.IsNullOrEmpty(Model.ImageUrl))
-                {
-                    <img src="@Model.ImageUrl" class="product-main-img"
-                         alt="@Model.ProductName" onerror="this.src='/images/no-image.png'" />
-                }
-                else
-                {
-                    <div class="img-placeholder">
-                        <i class="bi bi-image"></i>
-                        <span>Chưa có ảnh sản phẩm</span>
-                    </div>
-                }
-            </div>
-            <div class="img-panel-foot">
-                <a asp-action="Edit" asp-route-id="@Model.ProductId" class="btn-edit">
-                    <i class="bi bi-pencil-square"></i> Chỉnh sửa
-                </a>
-                <button class="btn-delete" onclick="deleteProduct(@Model.ProductId)">
-                    <i class="bi bi-trash"></i> Xóa
-                </button>
+    <!-- Page title -->
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.6rem;flex-wrap:wrap;">
+        <div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--deep);">@Model.ProductName</div>
+            <div style="font-size:.78rem;color:var(--muted);margin-top:.2rem">
+                SKU: <code>@(Model.ProductCode ?? Model.SKU ?? "N/A")</code>
             </div>
         </div>
+        <span class="behavior-badge @(behavior == "Rental" ? "bh-rental" : behavior == "Service" ? "bh-service" : "bh-retail")">
+            @(behavior == "Retail" ? "🛒 Bán lẻ" : behavior == "Rental" ? "🔄 Cho thuê" : "🔧 Dịch vụ kỹ thuật")
+        </span>
+    </div>
 
-        <!-- RIGHT: Info panels -->
-        <div class="info-panel">
+    <div class="detail-wrap">
 
-            <!-- Thông tin chính -->
-            <div class="dc">
-                <div class="dc-hd"><i class="bi bi-box-seam-fill"></i><span class="dc-hd-title">Thông tin sản phẩm</span></div>
-                <div class="dc-bd">
-                    <div class="prod-cat-tag"><i class="bi bi-tag-fill"></i> @Model.Category?.CategoryName</div>
-                    <div class="prod-heading">@Model.ProductName</div>
-                    <div class="prod-code">Mã SKU: @(Model.ProductCode ?? "N/A")</div>
-                    <div class="price-row">
-                        <span class="price-main">₫@Model.Price.ToString("N0")</span>
-                        <span class="price-unit">/ @Model.Unit</span>
-                    </div>
-                    @switch (Model.Status)
+        <!-- ── LEFT: Image + actions ── -->
+        <div>
+            <div class="img-panel">
+                <div class="img-panel-inner">
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
                     {
-                        case "Active":
-                            <span class="status-badge badge-available"><i class="bi bi-check-circle-fill"></i> Đang bán</span>
-                            break;
-                        case "OutOfStock":
-                            <span class="status-badge badge-outofstock"><i class="bi bi-exclamation-circle-fill"></i> Hết hàng</span>
-                            break;
-                        default:
-                            <span class="status-badge badge-discontinued"><i class="bi bi-x-circle-fill"></i> Ngừng bán</span>
-                            break;
-                    }
-                </div>
-            </div>
-
-            <!-- Mô tả -->
-            @if (!string.IsNullOrEmpty(Model.Description))
-            {
-                <div class="dc">
-                    <div class="dc-hd"><i class="bi bi-file-text-fill"></i><span class="dc-hd-title">Mô tả sản phẩm</span></div>
-                    <div class="dc-bd">
-                        <div class="desc-block">@Model.Description</div>
-                    </div>
-                </div>
-            }
-
-            <!-- Tồn kho theo size/variant -->
-            <div class="dc">
-                <div class="dc-hd"><i class="bi bi-bar-chart-fill"></i><span class="dc-hd-title">Tồn kho theo phân loại</span></div>
-                <div class="dc-bd">
-
-                    @{
-                        var activeVariants = Model.Variants?.Where(v => v.IsActive).ToList();
-                        bool hasVariants = activeVariants != null && activeVariants.Any();
-                        int totalStock = hasVariants ? activeVariants.Sum(v => v.StockQuantity) : Model.StockQuantity;
-                        int totalReserved = hasVariants ? activeVariants.Sum(v => v.ReservedQuantity) : Model.ReservedQuantity;
-                        int totalAvail = totalStock - totalReserved;
-                    }
-
-                    <!-- Summary bar -->
-                    <div class="stock-summary">
-                        <div class="stock-stat">
-                            <div class="stock-stat-val">@totalStock</div>
-                            <div class="stock-stat-lbl">Tổng tồn kho</div>
-                        </div>
-                        <div class="stock-stat reserved">
-                            <div class="stock-stat-val">@totalReserved</div>
-                            <div class="stock-stat-lbl">Đang treo</div>
-                        </div>
-                        <div class="stock-stat available">
-                            <div class="stock-stat-val">@totalAvail</div>
-                            <div class="stock-stat-lbl">Khả dụng</div>
-                        </div>
-                    </div>
-
-                    @if (hasVariants)
-                    {
-                        <table class="vt">
-                            <thead>
-                                <tr>
-                                    <th>Size / Màu</th>
-                                    <th>SKU</th>
-                                    <th style="text-align:right;">Tồn kho</th>
-                                    <th style="text-align:right;">Đang treo</th>
-                                    <th style="text-align:right;">Khả dụng</th>
-                                    <th style="text-align:right;">Cảnh báo</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var v in activeVariants.OrderBy(v => v.SizeName))
-                                {
-                                    int avail = v.AvailableQuantity;
-                                    <tr>
-                                        <td>
-                                            @if (!string.IsNullOrEmpty(v.SizeName))
-                                            {
-                                                <span class="size-chip">@v.SizeName</span>
-                                            }
-                                            @if (!string.IsNullOrEmpty(v.ColorName))
-                                            {
-                                                <span style="font-size:.82rem;color:var(--muted);margin-left:.35rem;">@v.ColorName</span>
-                                            }
-                                        </td>
-                                        <td style="font-family:'Courier New',monospace;font-size:.77rem;color:var(--muted);">
-                                            @(v.VariantSKU ?? "—")
-                                        </td>
-                                        <td style="text-align:right;">
-                                            <span class="@(v.StockQuantity == 0 ? "qty-zero" : v.IsLowStock ? "qty-low" : "qty-ok")">
-                                                @v.StockQuantity
-                                            </span>
-                                        </td>
-                                        <td style="text-align:right;">
-                                            @if (v.ReservedQuantity > 0)
-                                            {
-                                                <span class="qty-reserved"><i class="bi bi-hourglass-split"></i> @v.ReservedQuantity</span>
-                                            }
-                                            else
-                                            {
-                                                <span style="color:var(--muted);">—</span>
-                                            }
-                                        </td>
-                                        <td style="text-align:right;">
-                                            <span class="qty-avail @(avail == 0 ? "qty-zero" : avail <= v.MinStockLevel && v.MinStockLevel > 0 ? "qty-low" : "qty-ok")">
-                                                @avail
-                                            </span>
-                                        </td>
-                                        <td style="text-align:right;">
-                                            @if (avail == 0)
-                                            {
-                                                <span style="font-size:.72rem;background:var(--red-soft);color:var(--red);padding:.15rem .45rem;border-radius:5px;font-weight:700;">Hết hàng</span>
-                                            }
-                                            else if (v.IsLowStock)
-                                            {
-                                                <span style="font-size:.72rem;background:var(--yellow-soft);color:#92400e;padding:.15rem .45rem;border-radius:5px;font-weight:700;">Sắp hết</span>
-                                            }
-                                            else
-                                            {
-                                                <span style="color:var(--muted);font-size:.72rem;">✓ Ổn</span>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+                        <img src="@Model.ImageUrl" class="product-main-img"
+                             onerror="this.src='/images/no-image.png'" alt="@Model.ProductName" />
                     }
                     else
                     {
-                        <!-- Không có variant: hiển thị tổng -->
-                        <div class="info-row">
-                            <span class="info-lbl">Tồn kho thực</span>
-                            <span class="info-val" style="color:var(--green);">@Model.StockQuantity @Model.Unit</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-lbl">Đang treo (đơn chờ duyệt)</span>
-                            <span class="info-val" style="color:#92400e;">@Model.ReservedQuantity @Model.Unit</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-lbl">Khả dụng</span>
-                            <span class="info-val" style="color:var(--blue);">@(Model.StockQuantity - Model.ReservedQuantity) @Model.Unit</span>
-                        </div>
-                        <div class="no-variant-note" style="border-top:1px solid var(--border);margin-top:.75rem;padding-top:1rem;">
-                            <i class="bi bi-info-circle"></i> Sản phẩm này chưa có phân loại size/màu.
-                            <a asp-action="Edit" asp-route-id="@Model.ProductId" style="color:var(--gold);font-weight:700;">Thêm phân loại →</a>
+                        <div class="img-placeholder">
+                            <i class="bi @(behavior == "Service" ? "bi-tools" : behavior == "Rental" ? "bi-arrow-repeat" : "bi-image")"></i>
+                            <div style="font-size:.8rem">Chưa có ảnh</div>
                         </div>
                     }
                 </div>
+                <div class="img-panel-foot">
+                    <a asp-action="Edit" asp-route-id="@Model.ProductId" class="btn-edit">
+                        <i class="bi bi-pencil-fill"></i> Chỉnh sửa
+                    </a>
+                    <button onclick="deleteProduct(@Model.ProductId)" class="btn-delete">
+                        <i class="bi bi-trash-fill"></i> Xóa
+                    </button>
+                </div>
             </div>
+        </div>
+
+        <!-- ── RIGHT: Info cards ── -->
+        <div class="info-panel">
 
             <!-- Thông tin chung -->
             <div class="dc">
-                <div class="dc-hd"><i class="bi bi-info-circle-fill"></i><span class="dc-hd-title">Thông tin khác</span></div>
+                <div class="dc-hd">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span class="dc-hd-title">Thông tin chung</span>
+                    @switch (Model.Status)
+                    {
+                        case "Active":
+                            <span class="status-badge badge-available ms-auto"><i class="bi bi-check-circle-fill"></i> Đang bán</span>
+                            break;
+                        case "OutOfStock":
+                            <span class="status-badge badge-outofstock ms-auto"><i class="bi bi-exclamation-circle-fill"></i> Hết hàng</span>
+                            break;
+                        default:
+                            <span class="status-badge badge-discontinued ms-auto"><i class="bi bi-x-circle-fill"></i> Ngừng bán</span>
+                            break;
+                    }
+                </div>
                 <div class="dc-bd">
-                    <div class="info-row">
-                        <span class="info-lbl">Mã sản phẩm</span>
-                        <span class="info-val" style="font-family:'Courier New',monospace;">#@Model.ProductId</span>
-                    </div>
                     <div class="info-row">
                         <span class="info-lbl">Danh mục</span>
                         <span class="info-val">@Model.Category?.CategoryName</span>
                     </div>
                     <div class="info-row">
-                        <span class="info-lbl">Đơn vị tính</span>
+                        <span class="info-lbl">Đơn vị</span>
                         <span class="info-val">@Model.Unit</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-lbl">Giá @(behavior == "Rental" ? "cho thuê" : behavior == "Service" ? "trọn gói" : "bán")</span>
+                        <span class="info-val" style="color:var(--gold)">₫@Model.Price.ToString("N0")</span>
                     </div>
                     <div class="info-row">
                         <span class="info-lbl">Ngày tạo</span>
@@ -681,6 +612,184 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Mô tả -->
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="dc">
+                    <div class="dc-hd"><i class="bi bi-file-text-fill"></i><span class="dc-hd-title">Mô tả</span></div>
+                    <div class="dc-bd"><div class="desc-block">@Model.Description</div></div>
+                </div>
+            }
+
+            <!-- ── RETAIL / RENTAL: Tồn kho ── -->
+            @if (behavior != "Service")
+            {
+                <div class="dc">
+                    <div class="dc-hd">
+                        <i class="bi bi-bar-chart-fill" style="color:@(behavior == "Rental" ? "var(--blue)" : "var(--gold)")"></i>
+                        <span class="dc-hd-title">@(behavior == "Rental" ? "Tình trạng cho thuê" : "Tồn kho")</span>
+                    </div>
+                    <div class="dc-bd">
+                        <div class="stock-summary">
+                            <div class="stock-stat">
+                                <div class="stock-stat-val">@totalStock</div>
+                                <div class="stock-stat-lbl">Tổng</div>
+                            </div>
+                            <div class="stock-stat @(behavior == "Rental" ? "rented" : "reserved")">
+                                <div class="stock-stat-val">@totalReserved</div>
+                                <div class="stock-stat-lbl">@(behavior == "Rental" ? "Đang thuê" : "Đang treo")</div>
+                            </div>
+                            <div class="stock-stat available">
+                                <div class="stock-stat-val">@totalAvail</div>
+                                <div class="stock-stat-lbl">Có sẵn</div>
+                            </div>
+                        </div>
+
+                        @if (hasVariants)
+                        {
+                            <table class="vt">
+                                <thead>
+                                    <tr>
+                                        <th>Size / Màu</th>
+                                        <th>SKU</th>
+                                        <th style="text-align:right">Tổng</th>
+                                        <th style="text-align:right">@(behavior == "Rental" ? "Đang thuê" : "Treo")</th>
+                                        <th style="text-align:right">Có sẵn</th>
+                                        <th style="text-align:right">Cảnh báo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var v in activeVariants)
+                                    {
+                                        int avail = v.AvailableQuantity;
+                                        <tr>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(v.SizeName))
+                                                {
+                                                    <span class="size-chip">@v.SizeName</span>
+                                                }
+                                                @if (!string.IsNullOrEmpty(v.ColorName))
+                                                {
+                                                    <span style="font-size:.82rem;color:var(--muted);margin-left:.35rem">@v.ColorName</span>
+                                                }
+                                            </td>
+                                            <td style="font-family:'Courier New',monospace;font-size:.77rem;color:var(--muted)">@(v.VariantSKU ?? "—")</td>
+                                            <td style="text-align:right"><span class="@(v.StockQuantity == 0 ? "qty-zero" : v.IsLowStock ? "qty-low" : "qty-ok")">@v.StockQuantity</span></td>
+                                            <td style="text-align:right">
+                                                @if (v.ReservedQuantity > 0)
+                                                {
+                                                    <span class="qty-reserved"><i class="bi bi-hourglass-split"></i> @v.ReservedQuantity</span>
+                                                }
+                                                else
+                                                {
+
+                                                    <span style="color:var(--muted)">—</span>
+                                                }
+                                            </td>
+                                            <td style="text-align:right"><span class="qty-avail @(avail == 0 ? "qty-zero" : avail <= v.MinStockLevel && v.MinStockLevel > 0 ? "qty-low" : "qty-ok")">@avail</span></td>
+                                            <td style="text-align:right">
+                                                @if (avail == 0)
+                                                {
+                                                    <span style="font-size:.72rem;background:var(--red-soft);color:var(--red);padding:.15rem .45rem;border-radius:5px;font-weight:700">Hết</span>
+                                                }
+                                                else if (v.IsLowStock)
+                                                {
+
+                                                    <span style="font-size:.72rem;background:var(--yellow-soft);color:#92400e;padding:.15rem .45rem;border-radius:5px;font-weight:700">Sắp hết</span>
+                                                }
+                                                else
+                                                {
+
+                                                    <span style="color:var(--muted);font-size:.72rem">✓ Ổn</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <div class="info-row">
+                                <span class="info-lbl">Tồn kho thực</span>
+                                <span class="info-val" style="color:var(--green)">@Model.StockQuantity @Model.Unit</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-lbl">Đang @(behavior == "Rental" ? "cho thuê" : "treo")</span>
+                                <span class="info-val" style="color:#92400e">@Model.ReservedQuantity @Model.Unit</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-lbl">Có sẵn</span>
+                                <span class="info-val" style="color:var(--blue)">@(Model.StockQuantity - Model.ReservedQuantity) @Model.Unit</span>
+                            </div>
+                            <div style="border-top:1px solid var(--border);margin-top:.75rem;padding-top:1rem;font-size:.8rem;color:var(--muted)">
+                                <i class="bi bi-info-circle"></i> Chưa có phân loại size/màu.
+                                <a asp-action="Edit" asp-route-id="@Model.ProductId" style="color:var(--gold);font-weight:700">Thêm phân loại →</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- ── RENTAL: Chi tiết cài đặt ── -->
+            @if (behavior == "Rental")
+            {
+                <div class="dc">
+                    <div class="dc-hd" style="border-left:4px solid var(--blue)">
+                        <i class="bi bi-arrow-repeat" style="color:var(--blue)"></i>
+                        <span class="dc-hd-title">Cài đặt cho thuê</span>
+                    </div>
+                    <div class="dc-bd">
+                        <div class="rental-info-grid">
+                            <div class="ri-box">
+                                <div class="ri-val">₫@Model.DepositAmount.ToString("N0")</div>
+                                <div class="ri-lbl">Đặt cọc</div>
+                            </div>
+                            <div class="ri-box">
+                                <div class="ri-val">₫@Model.CleaningFee.ToString("N0")</div>
+                                <div class="ri-lbl">Phí vệ sinh</div>
+                            </div>
+                            <div class="ri-box">
+                                <div class="ri-val">@(Model.MaxRentalHours.HasValue? Model.MaxRentalHours + "h" : "∞")</div>
+                                <div class="ri-lbl">Tối đa</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- ── SERVICE: Bảng giá dịch vụ ── -->
+            @if (behavior == "Service")
+            {
+                <div class="dc">
+                    <div class="dc-hd" style="border-left:4px solid var(--purple)">
+                        <i class="bi bi-tools" style="color:var(--purple)"></i>
+                        <span class="dc-hd-title">Bảng giá dịch vụ</span>
+                    </div>
+                    <div class="dc-bd">
+                        <div class="svc-grid">
+                            <div class="svc-box">
+                                <div class="svc-val">₫@Model.LaborPrice.ToString("N0")</div>
+                                <div class="svc-lbl">Tiền công</div>
+                                <div class="svc-unit">/ @(Model.LaborUnit ?? "đơn vị")</div>
+                            </div>
+                            <div class="svc-box">
+                                <div class="svc-val">₫@Model.MaterialPrice.ToString("N0")</div>
+                                <div class="svc-lbl">Vật tư</div>
+                                <div class="svc-unit">@(Model.MaterialPrice == 0 ? "Khách tự mang" : $"/ {Model.LaborUnit ?? "đơn vị"}")</div>
+                            </div>
+                        </div>
+                        @if (Model.Price > 0)
+                        {
+                            <div class="info-row" style="margin-top:1rem">
+                                <span class="info-lbl">Giá trọn gói</span>
+                                <span class="info-val" style="color:var(--gold)">₫@Model.Price.ToString("N0")</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
 
         </div>
     </div>
@@ -691,19 +800,15 @@
 @section Scripts {
     <script>
         function deleteProduct(id) {
-            if (!confirm('Bạn có chắc muốn xóa sản phẩm này? Thao tác này không thể hoàn tác.')) return;
+            if (!confirm('Xóa sản phẩm này? Thao tác không thể hoàn tác.')) return;
             fetch(`/Admin/AdminProduct/Delete/${id}`, {
                 method: 'POST',
-                headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken\"]')?.value ?? '' }
+                headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '' }
             }).then(r => r.json()).then(data => {
-                if (data.success) {
-                    window.location.href = '/Admin/AdminProduct';
-                } else {
-                    showToast(data.message || 'Không thể xóa sản phẩm này!');
-                }
+                if (data.success) { window.location.href = '/Admin/AdminProduct'; }
+                else { showToast(data.message || 'Không thể xóa!'); }
             });
         }
-
         function showToast(msg) {
             const wrap = document.getElementById('toastWrap');
             const el = document.createElement('div');

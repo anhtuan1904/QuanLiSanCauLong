@@ -1,106 +1,114 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.ComponentModel.DataAnnotations;
 
 namespace QuanLiSanCauLong.ViewModels
 {
-    // =====================================================================
-    // BOOKING HISTORY VIEW MODEL
-    // Dùng cho: Booking/MyBookings, Booking/Details, Booking/Cancel
-    //           AdminBooking/Index, AdminBooking/Details
-    // =====================================================================
-    public class BookingHistoryViewModel
-    {
-        // --- Core ---
-        public int BookingId { get; set; }
-        public string BookingCode { get; set; }
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CREATE BOOKING (Booking/Create & Booking/Cancel views)
+    // ═══════════════════════════════════════════════════════════════════════════
 
-        // --- Customer (Admin only — Booking controller để null) ---
-        public string CustomerName { get; set; }
-        public string Phone { get; set; }
-        public string Email { get; set; }
-
-        // --- Court & Facility ---
-        public string FacilityName { get; set; }
-        public string CourtNumber { get; set; }   // string vì view render trực tiếp
-        public string CourtType { get; set; }
-
-        // --- Timing ---
-        public DateTime BookingDate { get; set; }
-        public TimeSpan StartTime { get; set; }
-        public TimeSpan EndTime { get; set; }
-        public int Duration { get; set; }
-
-        // --- Pricing ---
-        public decimal TotalPrice { get; set; }   // Tiền sân + phí dịch vụ - voucher
-
-        // GrandTotal = TotalPrice + tổng sản phẩm đi kèm
-        public decimal GrandTotal =>
-            TotalPrice + (RelatedOrders?.Sum(o => o.TotalAmount) ?? 0);
-
-        // --- Status ---
-        public string Status { get; set; }
-        public string PaymentStatus { get; set; }
-        public string PaymentMethod { get; set; }
-
-        // --- Meta ---
-        public DateTime CreatedAt { get; set; }
-        public string Note { get; set; }
-        public bool CanCancel { get; set; }
-
-        // --- Related ---
-        public List<OrderViewModel> RelatedOrders { get; set; } = new();
-    }
-
-
-    // =====================================================================
-    // CREATE BOOKING VIEW MODEL
-    // =====================================================================
     public class CreateBookingViewModel
     {
-        [System.ComponentModel.DataAnnotations.Required]
+        // Thông tin sân
         public int CourtId { get; set; }
+        public int FacilityId { get; set; }
+        public string CourtNumber { get; set; } = string.Empty;
+        public string CourtType { get; set; } = string.Empty;
+        public string? CourtDescription { get; set; }
+        public string? CourtImageUrl { get; set; }   // ← map từ Court.ImagePath
 
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.DataType(System.ComponentModel.DataAnnotations.DataType.Date)]
-        [System.ComponentModel.DataAnnotations.Display(Name = "Ngày đặt sân")]
+        // Thông tin cơ sở
+        public string FacilityName { get; set; } = string.Empty;
+        public string? FacilityAddress { get; set; }
+
+        // Thời gian
+        [DataType(DataType.Date)]
         public DateTime BookingDate { get; set; }
-
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.Display(Name = "Giờ bắt đầu")]
         public TimeSpan StartTime { get; set; }
-
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.Display(Name = "Giờ kết thúc")]
         public TimeSpan EndTime { get; set; }
-
-        [System.ComponentModel.DataAnnotations.Display(Name = "Ghi chú")]
-        public string Note { get; set; }
-
-        [System.ComponentModel.DataAnnotations.Display(Name = "Phương thức thanh toán")]
-        public string PaymentMethod { get; set; }
-
-        [System.ComponentModel.DataAnnotations.Display(Name = "Mã voucher")]
-        public string VoucherCode { get; set; }
-
-        // --- Display info ---
-        public string FacilityName { get; set; }
-        public string FacilityAddress { get; set; }   // ĐÃ THÊM
-        public string CourtNumber { get; set; }
-        public string CourtType { get; set; }
-        public string CourtImageUrl { get; set; }     // ĐÃ THÊM
-        public string CourtDescription { get; set; }  // ĐÃ THÊM
         public int Duration { get; set; }
 
-        // --- Pricing ---
+        // Giá
         public decimal CourtPrice { get; set; }
         public decimal ServiceFee { get; set; }
         public decimal DiscountAmount { get; set; }
-        public decimal TotalPrice { get; set; }       // CourtPrice + ServiceFee - Discount
+        public decimal TotalPrice { get; set; }
 
-        // --- Products ---
+        // Form
+        [StringLength(500)]
+        public string? Note { get; set; }
+
+        [StringLength(50)]
+        public string? VoucherCode { get; set; }
+
+        [Required(ErrorMessage = "Vui lòng chọn phương thức thanh toán")]
+        public string PaymentMethod { get; set; } = "Cash";
+
+        // OrderItemViewModel đã có trong OrderViewModels.cs — dùng trực tiếp
         public List<OrderItemViewModel> OrderItems { get; set; } = new();
-        public decimal OrderTotal => OrderItems?.Sum(i => i.TotalPrice) ?? 0;
-        public decimal GrandTotal => TotalPrice + OrderTotal;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // BOOKING HISTORY (MyBookings, Details, Invoice views)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    public class BookingHistoryViewModel
+    {
+        public int BookingId { get; set; }
+        public string BookingCode { get; set; } = string.Empty;
+        public string CustomerName { get; set; } = string.Empty;
+        public string? Phone { get; set; }
+        public string? Email { get; set; }
+
+        public string FacilityName { get; set; } = string.Empty;
+        public string? FacilityAddress { get; set; }
+        public string CourtNumber { get; set; } = string.Empty;
+        public string CourtType { get; set; } = string.Empty;
+        public string? CourtImageUrl { get; set; }
+
+        public DateTime BookingDate { get; set; }
+        public TimeSpan StartTime { get; set; }
+        public TimeSpan EndTime { get; set; }
+        public int Duration { get; set; }
+
+        public decimal TotalPrice { get; set; }
+
+        // Views dùng Model.GrandTotal / b.GrandTotal
+        public decimal GrandTotal => TotalPrice + (RelatedOrders?.Sum(o => o.TotalAmount) ?? 0);
+
+        public string Status { get; set; } = string.Empty;
+        public string? PaymentStatus { get; set; }
+        public string PaymentMethod { get; set; } = string.Empty;
+        public string? Note { get; set; }
+        public bool CanCancel { get; set; }
+        public DateTime CreatedAt { get; set; }
+
+        // OrderViewModel đã có trong OrderViewModels.cs — dùng trực tiếp
+        public List<OrderViewModel> RelatedOrders { get; set; } = new();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PRODUCT ITEM — ViewBag.FoodItems / BeverageItems / EquipmentItems
+    // View truy cập: item.ProductId, item.ProductName, item.Price,
+    //                item.ImageUrl, item.Unit, item.Description (dynamic binding)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    public class BookingProductItemViewModel
+    {
+        public int ProductId { get; set; }
+        public string ProductName { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public string? ImageUrl { get; set; }
+        public string? Unit { get; set; }
+        public string? Description { get; set; }
+    }
+
+    // ── Request model dùng chung ──
+    public class SearchCourtRequest
+    {
+        public int FacilityId { get; set; }
+        public DateTime BookingDate { get; set; }
+        public string StartTime { get; set; } = "";
     }
 }

@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Chi tiết - " + Model.CategoryName;
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    var behavior = Model.BehaviorType ?? "Retail";
 }
 
 @functions {
@@ -13,7 +14,7 @@
 }
 
 @{
-    var tc = Model.CategoryType;
+    var tc = Model.CategoryType ?? "";
     var productCount = Model.Products?.Count ?? 0;
     var activeCount = Model.Products?.Count(p => p.Status == "Active") ?? 0;
     var lowCount = Model.Products?.Count(p => p.StockQuantity <= p.MinStockLevel) ?? 0;
@@ -21,14 +22,14 @@
 
 <style>
     :root {
-        --court-dark: #1a1a2e;
-        --court-gold: #e8c840;
-        --court-gold-hover: #d4b320;
-        --court-bg: #f5f0e8;
-        --court-card: #ffffff;
-        --court-border: #e8e0d0;
-        --court-text: #2d2d2d;
-        --court-muted: #7a7060;
+        --dark: #1a1a2e;
+        --gold: #e8c840;
+        --gold-h: #d4b320;
+        --bg: #f5f0e8;
+        --card: #ffffff;
+        --border: #e8e0d0;
+        --text: #2d2d2d;
+        --muted: #7a7060;
         --green: #166534;
         --green-bg: #f0fdf4;
         --red: #dc2626;
@@ -36,7 +37,7 @@
     }
 
     .page-wrapper {
-        background: var(--court-bg);
+        background: var(--bg);
         min-height: 100vh;
         padding: 2rem;
     }
@@ -44,11 +45,11 @@
     .page-title {
         font-size: 1.75rem;
         font-weight: 800;
-        color: var(--court-dark);
+        color: var(--dark);
     }
 
         .page-title span {
-            color: var(--court-gold);
+            color: var(--gold);
             font-style: italic;
         }
 
@@ -57,12 +58,12 @@
         align-items: center;
         gap: .4rem;
         font-size: .82rem;
-        color: var(--court-muted);
+        color: var(--muted);
         margin-bottom: 1.5rem;
     }
 
         .bc a {
-            color: var(--court-muted);
+            color: var(--muted);
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -70,7 +71,7 @@
         }
 
             .bc a:hover {
-                color: var(--court-dark);
+                color: var(--dark);
             }
 
     .bc-sep {
@@ -78,102 +79,31 @@
     }
 
     .bc-cur {
-        color: var(--court-dark);
+        color: var(--dark);
         font-weight: 700;
     }
 
-    /* Action buttons */
-    .act-row {
-        display: flex;
-        gap: .55rem;
-        flex-wrap: wrap;
-        margin-bottom: 1.5rem;
-    }
-
-    .btn-act {
-        display: inline-flex;
-        align-items: center;
-        gap: .4rem;
-        padding: .55rem 1.2rem;
-        border-radius: 10px;
-        font-size: .84rem;
-        font-weight: 700;
-        cursor: pointer;
-        text-decoration: none;
-        transition: .18s;
-        border: 1.5px solid;
-        white-space: nowrap;
-    }
-
-    .btn-edit {
-        background: var(--court-gold);
-        color: var(--court-dark);
-        border-color: var(--court-gold);
-    }
-
-        .btn-edit:hover {
-            background: var(--court-gold-hover);
-            color: var(--court-dark);
-        }
-
-    .btn-products {
-        background: var(--court-card);
-        color: var(--court-text);
-        border-color: var(--court-border);
-    }
-
-        .btn-products:hover {
-            background: var(--court-bg);
-            border-color: var(--court-gold);
-            color: var(--court-dark);
-        }
-
-    .btn-del {
-        background: var(--court-card);
-        color: var(--red);
-        border-color: #fca5a5;
-    }
-
-        .btn-del:hover {
-            background: var(--red-bg);
-        }
-
-    .btn-back {
-        background: var(--court-card);
-        color: var(--court-muted);
-        border-color: var(--court-border);
-    }
-
-        .btn-back:hover {
-            background: var(--court-bg);
-            color: var(--court-dark);
-        }
-
-    /* Layout */
     .detail-layout {
         display: grid;
-        grid-template-columns: 300px 1fr;
-        gap: 1.25rem;
+        grid-template-columns: 320px 1fr;
+        gap: 1.5rem;
         align-items: start;
     }
-
-    @@media(max-width:900px) {
+    @@media(max - width:900px) {
         .detail-layout {
             grid-template-columns: 1fr;
         }
     }
 
-    /* Sidebar */
-    .sidebar-card {
-        background: var(--court-card);
-        border: 1px solid var(--court-border);
-        border-radius: 14px;
+    /* Hero Card */
+    .hero-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
         overflow: hidden;
-        position: sticky;
-        top: 1.25rem;
     }
 
-    .cat-visual {
+    .hero-visual {
         height: 200px;
         display: flex;
         align-items: center;
@@ -182,605 +112,556 @@
         overflow: hidden;
     }
 
-        .cat-visual img {
+        .hero-visual img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .cat-visual .big-ico {
-            font-size: 7rem;
-            opacity: .12;
-            position: absolute;
-        }
-
-        .cat-visual .center-ico {
-            font-size: 3.5rem;
-            z-index: 1;
-            filter: drop-shadow(0 4px 10px rgba(0,0,0,.12));
-        }
-
-    .sidebar-info {
-        padding: 1.3rem;
+    .hero-big-ico {
+        font-size: 8rem;
+        opacity: .1;
+        position: absolute;
     }
 
-    .cat-name-lg {
-        font-size: 1.15rem;
-        font-weight: 800;
-        color: var(--court-dark);
-        margin-bottom: .3rem;
+    .hero-center-ico {
+        font-size: 4rem;
+        z-index: 1;
+        filter: drop-shadow(0 6px 16px rgba(0,0,0,.15));
     }
 
-    .cat-id-row {
-        font-size: .76rem;
-        color: var(--court-muted);
-        margin-bottom: .85rem;
+    .hero-body {
+        padding: 1.4rem 1.5rem;
     }
 
-    .type-badge-lg {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: .3rem .9rem;
-        border-radius: 20px;
-        font-size: .78rem;
-        font-weight: 800;
-        border: 1.5px solid rgba(0,0,0,.08);
-    }
-
-    /* Rule tags */
-    .rule-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: .35rem;
-        margin-top: .75rem;
-    }
-
-    .rule-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: .25rem;
-        padding: .2rem .7rem;
-        border-radius: 20px;
-        font-size: .72rem;
-        font-weight: 700;
-        border: 1px solid;
-    }
-
-    .rt-hsd {
-        background: #fef2f2;
-        color: #dc2626;
-        border-color: #fca5a5;
-    }
-
-    .rt-fifo {
-        background: #eff6ff;
-        color: #1d4ed8;
-        border-color: #93c5fd;
-    }
-
-    .rt-lot {
-        background: #f9fafb;
-        color: #374151;
-        border-color: #d1d5db;
-    }
-
-    .rt-var {
-        background: #fffbeb;
-        color: #b45309;
-        border-color: #fcd34d;
-    }
-
-    .rt-none {
-        background: var(--court-bg);
-        color: var(--court-muted);
-        border-color: var(--court-border);
-    }
-
-    /* Mini stats */
-    .mini-stats {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-        padding-top: .85rem;
-        border-top: 1px solid var(--court-border);
-    }
-
-    .ms-item {
-        text-align: center;
-        flex: 1;
-    }
-
-    .ms-val {
+    .hero-name {
         font-size: 1.3rem;
         font-weight: 800;
-        color: var(--court-dark);
-        line-height: 1;
+        color: var(--dark);
+        margin-bottom: .5rem;
     }
 
-    .ms-lbl {
-        font-size: .65rem;
+    .hero-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .4rem;
+        margin-bottom: 1rem;
+    }
+
+    .badge-type {
+        padding: .25rem .85rem;
+        border-radius: 20px;
+        font-size: .75rem;
         font-weight: 700;
-        text-transform: uppercase;
-        color: var(--court-muted);
-        margin-top: 2px;
     }
 
-    /* Detail cards */
-    .dc {
-        background: var(--court-card);
-        border: 1px solid var(--court-border);
-        border-radius: 14px;
-        overflow: hidden;
-        margin-bottom: 1.1rem;
-    }
-
-    .dc-hd {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: .85rem 1.2rem;
-        border-bottom: 1px solid var(--court-border);
-        background: #faf8f4;
-    }
-
-    .dc-hd-left {
-        display: flex;
-        align-items: center;
-        gap: .6rem;
-    }
-
-    .dc-hd-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: .9rem;
-    }
-
-    .dc-hd-title {
-        font-size: .9rem;
-        font-weight: 800;
-        color: var(--court-dark);
-    }
-
-    .dc-bd {
-        padding: 1.2rem;
-    }
-
-    .desc-box {
-        font-size: .875rem;
-        color: #4a4a5a;
-        line-height: 1.7;
-        background: var(--court-bg);
-        border: 1px solid var(--court-border);
-        border-radius: 8px;
-        padding: .75rem 1rem;
-    }
-
-    /* Rule rows */
-    .rule-grid-det {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: .6rem;
-    }
-
-    @@media(max-width:600px) {
-        .rule-grid-det {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    .rule-row {
-        display: flex;
-        align-items: center;
-        gap: .65rem;
-        padding: .65rem .85rem;
-        border-radius: 9px;
-        border: 1px solid;
-    }
-
-        .rule-row.on {
-            background: var(--green-bg);
-            border-color: #86efac;
-        }
-
-        .rule-row.off {
-            background: #f9fafb;
-            border-color: #e5e7eb;
-        }
-
-        .rule-row i:first-child {
-            font-size: 1rem;
-        }
-
-        .rule-row.on i:first-child {
-            color: var(--green);
-        }
-
-        .rule-row.off i:first-child {
-            color: #9ca3af;
-        }
-
-    .rule-row-info {
-        flex: 1;
-    }
-
-    .rule-row-name {
-        font-size: .82rem;
+    .badge-behavior {
+        padding: .25rem .85rem;
+        border-radius: 20px;
+        font-size: .75rem;
         font-weight: 700;
-        color: var(--court-dark);
     }
 
-    .rule-row-desc {
-        font-size: .72rem;
-        color: var(--court-muted);
-    }
-
-    .check-ico {
-        margin-left: auto;
-    }
-
-    .rule-row.on .check-ico {
+    .badge-active {
+        padding: .25rem .85rem;
+        border-radius: 20px;
+        font-size: .75rem;
+        font-weight: 700;
+        background: var(--green-bg);
         color: var(--green);
     }
 
-    .rule-row.off .check-ico {
-        color: #d1d5db;
+    .badge-inactive {
+        padding: .25rem .85rem;
+        border-radius: 20px;
+        font-size: .75rem;
+        font-weight: 700;
+        background: var(--red-bg);
+        color: var(--red);
+    }
+
+    .hero-desc {
+        font-size: .82rem;
+        color: var(--muted);
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .hero-meta {
+        display: flex;
+        flex-direction: column;
+        gap: .4rem;
+    }
+
+    .hm-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: .8rem;
+        padding: .35rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+        .hm-row:last-child {
+            border: none;
+        }
+
+    .hm-key {
+        color: var(--muted);
+        font-weight: 600;
+    }
+
+    .hm-val {
+        font-weight: 700;
+        color: var(--dark);
+    }
+
+    .hero-actions {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: .65rem;
+    }
+
+    .ha-btn {
+        flex: 1;
+        padding: .5rem 0;
+        border-radius: 9px;
+        border: 1.5px solid var(--border);
+        background: transparent;
+        color: var(--dark);
+        font-size: .78rem;
+        font-weight: 700;
+        text-decoration: none;
+        text-align: center;
+        cursor: pointer;
+        transition: .15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .3rem;
+    }
+
+        .ha-btn:hover {
+            background: var(--bg);
+            color: var(--dark);
+        }
+
+        .ha-btn.gold-btn {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: var(--dark);
+        }
+
+            .ha-btn.gold-btn:hover {
+                background: var(--gold-h);
+                border-color: var(--gold-h);
+            }
+
+        .ha-btn.danger {
+            color: var(--red);
+        }
+
+            .ha-btn.danger:hover {
+                background: var(--red-bg);
+                border-color: #fca5a5;
+            }
+
+    /* Right Column */
+    .info-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1.4rem 1.5rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .ic-title {
+        font-size: .8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: var(--muted);
+        padding-bottom: .6rem;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+        .ic-title i {
+            font-size: 1rem;
+        }
+
+    /* Stats Row */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: .75rem;
+    }
+
+    .sr-item {
+        background: var(--bg);
+        border-radius: 10px;
+        padding: .85rem 1rem;
+        text-align: center;
+    }
+
+    .sr-val {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--dark);
+    }
+
+    .sr-lbl {
+        font-size: .7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .8px;
+        color: var(--muted);
+        margin-top: 2px;
+    }
+
+    /* Rules Grid */
+    .rule-grid-view {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .65rem;
+    }
+
+    .rv-item {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        padding: .6rem .85rem;
+        border-radius: 10px;
+        font-size: .78rem;
+        font-weight: 700;
+    }
+
+    .rv-on {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1.5px solid #86efac;
+    }
+
+    .rv-off {
+        background: #f9fafb;
+        color: #9ca3af;
+        border: 1.5px solid #e5e7eb;
+    }
+
+    .rv-item i {
+        font-size: .9rem;
+    }
+
+    /* Behavior panels */
+    .bh-panel {
+        border-radius: 12px;
+        padding: 1rem 1.1rem;
+        border: 1.5px solid transparent;
+    }
+
+    .bh-panel-retail {
+        background: #f0fdf4;
+        border-color: #86efac;
+    }
+
+    .bh-panel-rental {
+        background: #eff6ff;
+        border-color: #93c5fd;
+    }
+
+    .bh-panel-service {
+        background: #f5f3ff;
+        border-color: #c4b5fd;
+    }
+
+    .bh-panel-title {
+        font-size: .72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: .75rem;
+    }
+
+    .bh-panel-retail .bh-panel-title {
+        color: #166534;
+    }
+
+    .bh-panel-rental .bh-panel-title {
+        color: #1d4ed8;
+    }
+
+    .bh-panel-service .bh-panel-title {
+        color: #7c3aed;
+    }
+
+    .bh-detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .5rem;
+    }
+
+    .bh-detail-item {
+        padding: .5rem .75rem;
+        background: rgba(255,255,255,.6);
+        border-radius: 8px;
+    }
+
+    .bh-detail-key {
+        font-size: .67rem;
+        color: var(--muted);
+        font-weight: 600;
+    }
+
+    .bh-detail-val {
+        font-size: .82rem;
+        font-weight: 800;
+        color: var(--dark);
     }
 
     /* Product table */
     .prod-table {
         width: 100%;
         border-collapse: collapse;
+        font-size: .82rem;
     }
 
-        .prod-table thead tr {
-            background: var(--court-dark);
-        }
-
-        .prod-table thead th {
-            color: rgba(255,255,255,.7);
-            font-size: .68rem;
-            font-weight: 700;
+        .prod-table th {
+            background: var(--bg);
+            padding: .5rem .75rem;
+            text-align: left;
+            font-size: .7rem;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: .8px;
-            padding: .7rem 1rem;
+            color: var(--muted);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .prod-table td {
+            padding: .6rem .75rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+            vertical-align: middle;
+        }
+
+        .prod-table tr:last-child td {
             border: none;
         }
 
-        .prod-table tbody tr {
-            border-bottom: 1px solid var(--court-border);
-            transition: background .15s;
+        .prod-table tr:hover td {
+            background: var(--bg);
         }
 
-            .prod-table tbody tr:last-child {
-                border-bottom: none;
-            }
-
-            .prod-table tbody tr:hover {
-                background: #faf8f0;
-            }
-
-        .prod-table td {
-            padding: .7rem 1rem;
-            vertical-align: middle;
-            font-size: .875rem;
-        }
-
-    .prod-thumb {
-        width: 36px;
-        height: 36px;
-        border-radius: 7px;
-        object-fit: cover;
-        border: 1px solid var(--court-border);
-    }
-
-    .prod-thumb-ph {
-        width: 36px;
-        height: 36px;
-        border-radius: 7px;
-        background: var(--court-bg);
-        border: 1px solid var(--court-border);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--court-muted);
-        font-size: .9rem;
-    }
-
-    .prod-name-cell {
+    .status-active {
+        background: #f0fdf4;
+        color: #166534;
+        font-size: .68rem;
         font-weight: 700;
-        font-size: .85rem;
-        color: var(--court-dark);
-    }
-
-    .prod-sku {
-        font-size: .75rem;
-        color: var(--court-muted);
-    }
-
-    .prod-price {
-        font-weight: 700;
-        color: var(--court-dark);
-    }
-
-    .stock-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 2px 8px;
+        padding: .18rem .6rem;
         border-radius: 20px;
-        font-size: .72rem;
+    }
+
+    .status-inactive {
+        background: #f9fafb;
+        color: #6b7280;
+        font-size: .68rem;
         font-weight: 700;
+        padding: .18rem .6rem;
+        border-radius: 20px;
     }
 
-    .sb-ok {
-        background: var(--green-bg);
-        color: var(--green);
-        border: 1px solid #86efac;
+    .status-low {
+        background: #fef2f2;
+        color: #dc2626;
+        font-size: .68rem;
+        font-weight: 700;
+        padding: .18rem .6rem;
+        border-radius: 20px;
     }
 
-    .sb-low {
-        background: var(--red-bg);
-        color: var(--red);
-        border: 1px solid #fca5a5;
-    }
-
-    .btn-sm-view {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 28px;
-        height: 28px;
-        border-radius: 7px;
-        background: var(--court-dark);
-        color: #fff;
-        font-size: .8rem;
-        text-decoration: none;
-        transition: .15s;
-    }
-
-        .btn-sm-view:hover {
-            background: var(--court-gold);
-            color: var(--court-dark);
-        }
-
-    .more-row {
+    .empty-row td {
         text-align: center;
-        padding: .6rem;
-        font-size: .8rem;
-        color: var(--court-muted);
-        font-weight: 600;
-        background: #faf8f4;
-        border-top: 1px solid var(--court-border);
+        color: var(--muted);
+        padding: 2rem;
+        font-style: italic;
     }
-
-    .link-all {
-        font-size: .8rem;
-        font-weight: 700;
-        color: var(--court-gold);
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        gap: .3rem;
-    }
-
-        .link-all:hover {
-            color: var(--court-gold-hover);
-        }
 </style>
 
 <div class="page-wrapper">
-
-    <nav class="bc">
-        <a asp-action="Index"><i class="bi bi-collection"></i>Danh Mục</a>
+    <div class="bc">
+        <a asp-action="Index"><i class="bi bi-house-door"></i> Danh mục</a>
         <span class="bc-sep">›</span>
         <span class="bc-cur">@Model.CategoryName</span>
-    </nav>
-
-    <!-- Actions -->
-    <div class="act-row">
-        <a asp-action="Index" class="btn-act btn-back"><i class="bi bi-arrow-left"></i> Quay lại</a>
-        <a asp-action="Edit" asp-route-id="@Model.CategoryId" class="btn-act btn-edit"><i class="bi bi-pencil-square"></i> Chỉnh sửa</a>
-        <a href="/Admin/AdminProduct?categoryId=@Model.CategoryId" class="btn-act btn-products"><i class="bi bi-box-seam"></i> Xem sản phẩm</a>
-        <button onclick="deleteCategory(@Model.CategoryId, '@Model.CategoryName')" class="btn-act btn-del"><i class="bi bi-trash3"></i> Xóa</button>
     </div>
 
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success d-flex align-items-center gap-2 mb-3" style="border-radius:10px;font-size:.875rem;">
+            <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
+        </div>
+    }
+
     <div class="detail-layout">
-
-        <!-- Sidebar -->
-        <div class="sidebar-card">
-            <div class="cat-visual" style="background:@VisualBg(tc);">
-                @if (!string.IsNullOrEmpty(Model.ImageUrl))
-                {
-                    <img src="@Model.ImageUrl" alt="@Model.CategoryName" onerror="this.src='/images/no-image.png'" />
-                }
-                else
-                {
-                    <i class="bi @TypeIcon(tc) big-ico" style="color:@TypeColor(tc);"></i>
-                    <i class="bi @TypeIcon(tc) center-ico" style="color:@TypeColor(tc);"></i>
-                }
-            </div>
-
-            <div class="sidebar-info">
-                <div class="cat-name-lg">@Model.CategoryName</div>
-                <div class="cat-id-row">ID #@Model.CategoryId · Đơn vị: <strong>@(Model.DefaultUnit ?? "—")</strong> · Thứ tự: @Model.DisplayOrder</div>
-
-                <span class="type-badge-lg" style="background:@TypeBg(tc);color:@TypeColor(tc);">
-                    @TypeLabel(tc)
-                </span>
-
-                <div class="rule-tags">
-                    @if (Model.RequiresExpiry)
+        <!-- Hero Sidebar -->
+        <div>
+            <div class="hero-card">
+                <div class="hero-visual" style="background:@VisualBg(tc);">
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
                     {
-                        <span class="rule-tag rt-hsd"><i class="bi bi-calendar-x"></i>HSD</span>
+                        <img src="@Model.ImageUrl" alt="@Model.CategoryName" />
                     }
-                    @if (Model.UseFIFO)
+                    else
                     {
-                        <span class="rule-tag rt-fifo"><i class="bi bi-arrow-left-right"></i>FIFO</span>
-                    }
-                    @if (Model.RequiresBatch)
-                    {
-                        <span class="rule-tag rt-lot"><i class="bi bi-upc"></i>Theo lô</span>
-                    }
-                    @if (Model.HasVariants)
-                    {
-                        <span class="rule-tag rt-var"><i class="bi bi-layers"></i>Biến thể</span>
-                    }
-                    @if (!Model.RequiresExpiry && !Model.UseFIFO && !Model.RequiresBatch && !Model.HasVariants)
-                    {
-                        <span class="rule-tag rt-none">Không có quy tắc đặc biệt</span>
+                        <i class="bi @TypeIcon(tc) hero-big-ico" style="color:@TypeColor(tc);"></i>
+                        <i class="bi @TypeIcon(tc) hero-center-ico" style="color:@TypeColor(tc);"></i>
                     }
                 </div>
-
-                <div class="mini-stats">
-                    <div class="ms-item">
-                        <div class="ms-val">@productCount</div>
-                        <div class="ms-lbl">Tổng SP</div>
+                <div class="hero-body">
+                    <div class="hero-name">@Model.CategoryName</div>
+                    <div class="hero-badges">
+                        <span class="badge-type" style="background:@TypeBg(tc);color:@TypeColor(tc);">@TypeLabel(tc)</span>
+                        @{
+                            string bhLabel = behavior switch { "Rental" => "🔄 Cho thuê", "Service" => "🔧 Dịch vụ", _ => "🛒 Bán lẻ" };
+                            string bhColor = behavior switch { "Rental" => "#1d4ed8", "Service" => "#7c3aed", _ => "#166534" };
+                            string bhBg = behavior switch { "Rental" => "#eff6ff", "Service" => "#f5f3ff", _ => "#f0fdf4" };
+                        }
+                        <span class="badge-behavior" style="background:@bhBg;color:@bhColor;">@bhLabel</span>
+                        @if (Model.IsActive)
+                        {
+                            <span class="badge-active"><i class="bi bi-eye"></i> Hoạt động</span>
+                        }
+                        else
+                        {
+                            <span class="badge-inactive"><i class="bi bi-eye-slash"></i> Đã ẩn</span>
+                        }
                     </div>
-                    <div class="ms-item">
-                        <div class="ms-val" style="color:var(--green);">@activeCount</div>
-                        <div class="ms-lbl">Đang bán</div>
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="hero-desc">@Model.Description</div>
+                    }
+                    <div class="hero-meta">
+                        <div class="hm-row"><span class="hm-key">Đơn vị</span><span class="hm-val">@Model.DefaultUnit</span></div>
+                        <div class="hm-row"><span class="hm-key">Safety Stock</span><span class="hm-val">@(Model.DefaultMinStock > 0 ? Model.DefaultMinStock.ToString() : "—")</span></div>
+                        <div class="hm-row"><span class="hm-key">Thứ tự</span><span class="hm-val">@Model.DisplayOrder</span></div>
+                        <div class="hm-row"><span class="hm-key">Tạo lúc</span><span class="hm-val">@Model.CreatedAt.ToString("dd/MM/yyyy")</span></div>
+                        <div class="hm-row"><span class="hm-key">Cập nhật</span><span class="hm-val">@Model.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</span></div>
                     </div>
-                    <div class="ms-item">
-                        <div class="ms-val" style="color:var(--red);">@lowCount</div>
-                        <div class="ms-lbl">Tồn thấp</div>
-                    </div>
+                </div>
+                <div class="hero-actions">
+                    <a asp-action="Edit" asp-route-id="@Model.CategoryId" class="ha-btn gold-btn"><i class="bi bi-pencil"></i> Sửa</a>
+                    <a href="/Admin/AdminProduct?categoryId=@Model.CategoryId" class="ha-btn"><i class="bi bi-box-seam"></i> Sản phẩm</a>
+                    <button onclick="deleteCategory(@Model.CategoryId,'@Model.CategoryName')" class="ha-btn danger"><i class="bi bi-trash3"></i> Xóa</button>
                 </div>
             </div>
         </div>
 
-        <!-- Content -->
+        <!-- Right Column -->
         <div>
-            <!-- Mô tả -->
-            <div class="dc">
-                <div class="dc-hd">
-                    <div class="dc-hd-left">
-                        <div class="dc-hd-icon" style="background:#f1f5f9;color:#475569;"><i class="bi bi-file-text"></i></div>
-                        <span class="dc-hd-title">Mô tả danh mục</span>
-                    </div>
-                </div>
-                <div class="dc-bd">
-                    <div class="desc-box">
-                        @(string.IsNullOrEmpty(Model.Description) ? "Chưa có mô tả cho danh mục này." : Model.Description)
-                    </div>
+            <!-- Stats -->
+            <div class="info-card">
+                <div class="ic-title"><i class="bi bi-bar-chart-line"></i>Thống Kê Nhanh</div>
+                <div class="stats-row">
+                    <div class="sr-item"><div class="sr-val">@productCount</div><div class="sr-lbl">Sản phẩm</div></div>
+                    <div class="sr-item"><div class="sr-val" style="color:var(--green);">@activeCount</div><div class="sr-lbl">Đang bán</div></div>
+                    <div class="sr-item"><div class="sr-val" style="color:@(lowCount > 0 ? "var(--red)" : "var(--dark)");">@lowCount</div><div class="sr-lbl">Tồn thấp</div></div>
                 </div>
             </div>
 
-            <!-- Quy tắc kho -->
-            <div class="dc">
-                <div class="dc-hd">
-                    <div class="dc-hd-left">
-                        <div class="dc-hd-icon" style="background:var(--green-bg);color:var(--green);"><i class="bi bi-sliders2"></i></div>
-                        <span class="dc-hd-title">Quy tắc quản lý kho</span>
+            <!-- Behavior-specific config -->
+            <div class="info-card">
+                <div class="ic-title"><i class="bi bi-diagram-3"></i>Cấu Hình Nghiệp Vụ</div>
+                <div class="bh-panel bh-panel-@behavior.ToLower()">
+                    <div class="bh-panel-title">
+                        @(behavior == "Retail" ? "🛒 Bán Lẻ – Trừ kho thẳng" : behavior == "Rental" ? "🔄 Cho Thuê – Hoàn kho khi trả" : "🔧 Dịch Vụ – Không kho vật lý")
                     </div>
-                </div>
-                <div class="dc-bd">
-                    <div class="rule-grid-det">
-                        @{
-                            void RuleRow(bool on, string icon, string name, string desc)
-                            {
-                                <div class="rule-row @(on ? "on" : "off")">
-                                    <i class="bi @icon"></i>
-                                    <div class="rule-row-info">
-                                        <div class="rule-row-name">@name</div>
-                                        <div class="rule-row-desc">@desc</div>
-                                    </div>
-                                    <i class="bi @(on ? "bi-check-circle-fill" : "bi-x-circle") check-ico"></i>
-                                </div>
-                            }
-                        }
-                        @{
-                            RuleRow(Model.RequiresExpiry, "bi-calendar-x", "Theo dõi HSD", "Quản lý hạn sử dụng");
-                        }
-                        @{
-                            RuleRow(Model.UseFIFO, "bi-arrow-left-right", "Nguyên tắc FIFO", "Nhập trước – Xuất trước");
-                        }
-                        @{
-                            RuleRow(Model.RequiresBatch, "bi-upc", "Quản lý theo lô", "Truy xuất nguồn gốc Batch");
-                        }
-                        @{
-                            RuleRow(Model.HasVariants, "bi-layers", "Có biến thể", "Nhiều màu/size");
-                        }
-                    </div>
-                </div>
-            </div>
 
-            <!-- Sản phẩm -->
-            @if (Model.Products != null && Model.Products.Any())
-            {
-                <div class="dc">
-                    <div class="dc-hd">
-                        <div class="dc-hd-left">
-                            <div class="dc-hd-icon" style="background:var(--green-bg);color:var(--green);"><i class="bi bi-box-seam-fill"></i></div>
-                            <span class="dc-hd-title">Sản phẩm trong danh mục</span>
+                    @if (behavior == "Retail")
+                    {
+                        <div class="rule-grid-view">
+                            <div class="rv-item @(Model.RequiresExpiry ? "rv-on" : "rv-off")"><i class="bi @(Model.RequiresExpiry ? "bi-calendar-x" : "bi-calendar")"></i>Theo dõi HSD</div>
+                            <div class="rv-item @(Model.UseFIFO ? "rv-on" : "rv-off")"><i class="bi @(Model.UseFIFO ? "bi-arrow-left-right" : "bi-dash")"></i>FIFO</div>
+                            <div class="rv-item @(Model.RequiresBatch ? "rv-on" : "rv-off")"><i class="bi @(Model.RequiresBatch ? "bi-upc" : "bi-dash")"></i>Quản lý Lô</div>
+                            <div class="rv-item @(Model.HasVariants ? "rv-on" : "rv-off")"><i class="bi @(Model.HasVariants ? "bi-layers" : "bi-dash")"></i>Biến thể</div>
                         </div>
-                        <a href="/Admin/AdminProduct?categoryId=@Model.CategoryId" class="link-all">
-                            Xem tất cả <i class="bi bi-arrow-right"></i>
-                        </a>
-                    </div>
-                    <div style="overflow-x:auto;">
-                        <table class="prod-table">
-                            <thead>
-                                <tr>
-                                    <th>Sản phẩm</th>
-                                    <th>SKU</th>
-                                    <th>Giá bán</th>
-                                    <th>Tồn kho</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var p in Model.Products.Take(6))
+                    }
+                    else if (behavior == "Rental")
+                    {
+                        <div class="bh-detail-grid">
+                            <div class="bh-detail-item"><div class="bh-detail-key">Quản lý Size</div><div class="bh-detail-val">@(Model.RequiresSize ? "✅ Có" : "—")</div></div>
+                            <div class="bh-detail-item"><div class="bh-detail-key">Trả từng phần</div><div class="bh-detail-val">@(Model.AllowPartialReturn ? "✅ Cho phép" : "—")</div></div>
+                            <div class="bh-detail-item"><div class="bh-detail-key">Đặt cọc</div><div class="bh-detail-val">@(Model.DepositRequired ? $"✅ {Model.DefaultDepositAmount:N0}₫" : "—")</div></div>
+                            <div class="bh-detail-item"><div class="bh-detail-key">Phí vệ sinh</div><div class="bh-detail-val">@(Model.DefaultCleaningFee > 0 ? $"{Model.DefaultCleaningFee:N0}₫" : "—")</div></div>
+                            <div class="bh-detail-item"><div class="bh-detail-key">Giờ thuê tối đa</div><div class="bh-detail-val">@(Model.MaxRentalHours > 0 ? $"{Model.MaxRentalHours}h" : "Không giới hạn")</div></div>
+                            <div class="bh-detail-item"><div class="bh-detail-key">Phụ thu overtime</div><div class="bh-detail-val">@(Model.ChargeOvertime ? "✅ Có" : "—")</div></div>
+                        </div>
+                    }
+                    else if (behavior == "Service")
+                    {
+                        <div class="bh-detail-grid">
+                            <div class="bh-detail-item"><div class="bh-detail-key">Mô hình giá</div><div class="bh-detail-val">@Model.PricingModel</div></div>
+                            <div class="bh-detail-item"><div class="bh-detail-key">Tách Công+VL</div><div class="bh-detail-val">@(Model.SeparateLaborAndMaterial ? "✅ Có" : "—")</div></div>
+                            <div class="bh-detail-item"><div class="bh-detail-key">Đơn vị vật liệu</div><div class="bh-detail-val">@(string.IsNullOrEmpty(Model.MaterialUnit) ? "—" : Model.MaterialUnit)</div></div>
+                            <div class="bh-detail-item"><div class="bh-detail-key">Vật liệu khách</div><div class="bh-detail-val">@(Model.AllowCustomerMaterial ? "✅ Cho phép" : "—")</div></div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Product List -->
+            <div class="info-card">
+                <div class="ic-title d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-box-seam"></i>Sản Phẩm Trong Danh Mục</span>
+                    <a href="/Admin/AdminProduct?categoryId=@Model.CategoryId" style="font-size:.72rem;color:var(--gold);text-decoration:none;font-weight:700;">Xem tất cả →</a>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table class="prod-table">
+                        <thead>
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th>Đơn giá</th>
+                                <th>Tồn kho</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Products != null && Model.Products.Any())
+                            {
+                                foreach (var p in Model.Products.Take(8))
                                 {
                                     var isLow = p.StockQuantity <= p.MinStockLevel;
                                     <tr>
+                                        <td><strong>@p.ProductName</strong></td>
+                                        <td>@p.SalePrice.ToString("N0")₫</td>
                                         <td>
-                                            <div class="d-flex align-items-center gap-2">
-                                                @if (!string.IsNullOrEmpty(p.ImageUrl))
-                                                {
-                                                    <img src="@p.ImageUrl" class="prod-thumb" onerror="this.src='/images/no-image.png'" />
-                                                }
-                                                else
-                                                {
-
-                                                    <div class="prod-thumb-ph"><i class="bi bi-image"></i></div>
-                                                }
-                                                <div class="prod-name-cell">@p.ProductName</div>
-                                            </div>
+                                            <span class="@(isLow ? "status-low" : "")">@p.StockQuantity @p.Unit</span>
                                         </td>
-                                        <td><span class="prod-sku" style="font-family:monospace;">@(p.SKU ?? "—")</span></td>
-                                        <td><span class="prod-price">@p.SalePrice.ToString("N0")đ</span></td>
                                         <td>
-                                            @if (isLow)
-                                            {
-                                                <span class="stock-badge sb-low"><i class="bi bi-exclamation-circle"></i> @p.StockQuantity</span>
-                                            }
-                                            else
-                                            {
-
-                                                <span class="stock-badge sb-ok"><i class="bi bi-check-circle"></i> @p.StockQuantity</span>
-                                            }
-                                        </td>
-                                        <td style="text-align:right;">
-                                            <a href="/Admin/AdminProduct/Details/@p.ProductId" class="btn-sm-view">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
+                                            <span class="@(p.Status == "Active" ? "status-active" : "status-inactive")">
+                                                @(p.Status == "Active" ? "Đang bán" : "Ngừng")
+                                            </span>
                                         </td>
                                     </tr>
                                 }
-                            </tbody>
-                        </table>
-                        @if (Model.Products.Count > 6)
-                        {
-                            <div class="more-row">+ @(Model.Products.Count - 6) sản phẩm khác · <a href="/Admin/AdminProduct?categoryId=@Model.CategoryId" style="color:var(--court-gold);text-decoration:none;font-weight:700;">Xem tất cả</a></div>
-                        }
-                    </div>
+                                @if (Model.Products.Count > 8)
+                                {
+                                    <tr>
+                                        <td colspan="4" style="text-align:center;color:var(--muted);font-size:.78rem;padding:.75rem;">
+                                            ... và @(Model.Products.Count - 8) sản phẩm khác
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr class="empty-row"><td colspan="4">Chưa có sản phẩm nào trong danh mục này</td></tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
-            }
+            </div>
         </div>
     </div>
 </div>
@@ -791,18 +672,22 @@
         function deleteCategory(id, name) {
             Swal.fire({
                 title: 'Xóa danh mục?',
-                html: `Bạn đang chuẩn bị xóa <b>${name}</b>.<br>Hành động này không thể hoàn tác.`,
+                html: `Bạn đang xóa <b>${name}</b>.<br>Hành động này không thể hoàn tác.`,
                 icon: 'warning', showCancelButton: true,
                 confirmButtonColor: '#dc2626', cancelButtonColor: '#1a1a2e',
                 confirmButtonText: 'Xóa ngay', cancelButtonText: 'Hủy bỏ'
             }).then(r => {
                 if (!r.isConfirmed) return;
-                fetch(`/Admin/AdminCategory/Delete/${id}`, { method: 'POST' })
-                    .then(r => r.json())
-                    .then(d => {
-                        if (d.success) Swal.fire('Thành công!', d.message, 'success').then(() => window.location.href = '/Admin/AdminCategory');
-                        else Swal.fire('Không thể xóa!', d.message, 'error');
-                    });
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+                fetch(`/Admin/AdminCategory/Delete/${id}`, {
+                    method: 'POST', headers: { 'RequestVerificationToken': token }
+                })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) window.location.href = '/Admin/AdminCategory';
+                    else Swal.fire('Không thể xóa!', d.message, 'error');
+                })
+                .catch(() => Swal.fire('Lỗi!', 'Không thể kết nối máy chủ.', 'error'));
             });
         }
     </script>

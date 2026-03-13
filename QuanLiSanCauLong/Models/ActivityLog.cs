@@ -14,25 +14,26 @@ namespace QuanLiSanCauLong.Models
 
         [Required]
         [StringLength(100)]
-        public string Action { get; set; }
+        public string Action { get; set; } = string.Empty;
 
         [StringLength(50)]
-        public string TableName { get; set; }
+        public string? TableName { get; set; }
 
         public int? RecordId { get; set; }
 
-        public string OldValue { get; set; }
-        public string NewValue { get; set; }
+        public string? OldValue { get; set; }
+
+        public string? NewValue { get; set; }
 
         [StringLength(50)]
-        public string IpAddress { get; set; }
+        public string? IpAddress { get; set; }
 
         [StringLength(500)]
-        public string UserAgent { get; set; }
+        public string? UserAgent { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         [ForeignKey("UserId")]
-        public virtual User User { get; set; }
+        public virtual User User { get; set; } = null!;
     }
 }

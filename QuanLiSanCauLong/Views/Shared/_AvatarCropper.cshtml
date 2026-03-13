@@ -1,0 +1,541 @@
+﻿@{
+    var userId = ViewData["UserId"] as int? ?? 0;
+    var avatarUrl = ViewData["AvatarUrl"] as string;
+    var fullName = ViewData["FullName"] as string ?? "User";
+    var initials = string.Join("", fullName
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .TakeLast(2)
+        .Select(x => char.ToUpper(x[0])));
+}
+
+<div class="av-widget" id="avWidget_@userId">
+    <div class="av-display" onclick="openAvatarCropper(@userId)" title="Thay đổi ảnh đại diện">
+        @if (!string.IsNullOrEmpty(avatarUrl))
+        {
+            <img id="avImg_@userId" src="@avatarUrl" alt="@fullName" class="av-photo" />
+        }
+        else
+        {
+            <div id="avInitials_@userId" class="av-initials">@initials</div>
+            <img id="avImg_@userId" src="" alt="@fullName" class="av-photo" style="display:none;" />
+        }
+        <div class="av-overlay">
+            <i class="bi bi-camera-fill"></i>
+            <span>Thay ảnh</span>
+        </div>
+    </div>
+    <button type="button"
+            id="avDelBtn_@userId"
+            class="av-del-btn @(string.IsNullOrEmpty(avatarUrl) ? "d-none" : "")"
+            onclick="deleteAvatar(@userId, '@Html.Raw(fullName.Replace("'", "\\'"))')"
+            title="Xóa ảnh đại diện">
+        <i class="bi bi-x"></i>
+    </button>
+</div>
+
+<div class="modal fade v-modal" id="avatarModal_@userId" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="v-mh">
+                <div>
+                    <div class="v-mlabel"><i class="bi bi-camera"></i> ẢNH ĐẠI DIỆN</div>
+                    <div class="v-mtitle">Chỉnh Sửa <em>Ảnh Đại Diện</em></div>
+                </div>
+                <button class="v-mclose" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+            </div>
+
+            <div id="avStep1_@userId" class="v-mb">
+                <div class="av-source-grid">
+                    <label class="av-source-card" for="avFileInput_@userId">
+                        <div class="av-source-icon"><i class="bi bi-upload"></i></div>
+                        <div class="av-source-label">Tải ảnh lên</div>
+                        <div class="av-source-sub">JPG, PNG, WebP · Tối đa 10MB</div>
+                        <input type="file" id="avFileInput_@userId" accept="image/*"
+                               style="display:none;"
+                               onchange="handleFileSelect(@userId, this)" />
+                    </label>
+                    <div class="av-source-card" onclick="showAvatarLibrary(@userId)">
+                        <div class="av-source-icon" style="background:rgba(79,70,229,.08);color:#4f46e5;">
+                            <i class="bi bi-grid-3x3-gap-fill"></i>
+                        </div>
+                        <div class="av-source-label">Thư viện mẫu</div>
+                        <div class="av-source-sub">Chọn avatar có sẵn</div>
+                    </div>
+                </div>
+
+                <div class="av-drop-zone" id="avDropZone_@userId"
+                     ondragover="event.preventDefault();this.classList.add('drag-over')"
+                     ondragleave="this.classList.remove('drag-over')"
+                     ondrop="handleDrop(@userId, event)">
+                    <i class="bi bi-cloud-upload"></i>
+                    <p>Kéo &amp; thả ảnh vào đây</p>
+                    <span>hoặc click để chọn file</span>
+                    <input type="file" accept="image/*"
+                           style="position:absolute;inset:0;opacity:0;cursor:pointer;"
+                           onchange="handleFileSelect(@userId, this)" />
+                </div>
+
+                <div id="avLibrary_@userId" style="display:none;">
+                    <div class="av-lib-title"><i class="bi bi-grid-3x3-gap me-1"></i> Chọn Avatar Mẫu</div>
+                    <div class="av-lib-grid" id="avLibGrid_@userId"></div>
+                </div>
+            </div>
+
+            <div id="avStep2_@userId" class="v-mb" style="display:none;">
+                <div class="crop-toolbar">
+                    <div class="crop-tb-group">
+                        <button type="button" class="crop-btn" onclick="cropAction(@userId,'zoom-in')" title="Phóng to">
+                            <i class="bi bi-zoom-in"></i>
+                        </button>
+                        <button type="button" class="crop-btn" onclick="cropAction(@userId,'zoom-out')" title="Thu nhỏ">
+                            <i class="bi bi-zoom-out"></i>
+                        </button>
+                    </div>
+                    <div class="crop-tb-group">
+                        <button type="button" class="crop-btn" onclick="cropAction(@userId,'rotate-left')" title="Xoay trái">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </button>
+                        <button type="button" class="crop-btn" onclick="cropAction(@userId,'rotate-right')" title="Xoay phải">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                    <div class="crop-tb-group">
+                        <button type="button" class="crop-btn" onclick="cropAction(@userId,'flip-h')" title="Lật ngang">
+                            <i class="bi bi-symmetry-horizontal"></i>
+                        </button>
+                        <button type="button" class="crop-btn" onclick="cropAction(@userId,'flip-v')" title="Lật dọc">
+                            <i class="bi bi-symmetry-vertical"></i>
+                        </button>
+                    </div>
+                    <div class="crop-tb-group">
+                        <button type="button" class="crop-btn" onclick="cropAction(@userId,'reset')">
+                            <i class="bi bi-arrow-repeat"></i> Đặt lại
+                        </button>
+                    </div>
+                    <div class="crop-tb-group" style="margin-left:auto;">
+                        <span style="font-size:.75rem;color:var(--muted);margin-right:.4rem;">Tỉ lệ:</span>
+                        <button type="button" class="crop-btn crop-ratio active" onclick="setRatio(@userId,1)" data-ratio="1">1:1</button>
+                        <button type="button" class="crop-btn crop-ratio" onclick="setRatio(@userId,1.3333)" data-ratio="1.33">4:3</button>
+                        <button type="button" class="crop-btn crop-ratio" onclick="setRatio(@userId,0)" data-ratio="0">Tự do</button>
+                    </div>
+                </div>
+
+                <div class="crop-container">
+                    <img id="avCropImg_@userId" style="max-width:100%;display:block;" alt="" />
+                </div>
+
+                <div class="crop-preview-row">
+                    <div>
+                        <div class="crop-preview-label">Xem trước</div>
+                        <div class="crop-preview-wrap">
+                            <div id="avPreviewCircle_@userId" class="crop-preview circle"></div>
+                            <div id="avPreviewSquare_@userId" class="crop-preview square"></div>
+                        </div>
+                    </div>
+                    <div class="crop-info" id="avCropInfo_@userId">
+                        <div class="crop-info-row"><span>Kích thước gốc</span><span id="avOrigSize_@userId">—</span></div>
+                        <div class="crop-info-row"><span>Vùng crop</span><span id="avCropSize_@userId">—</span></div>
+                        <div class="crop-info-row"><span>Xuất ra</span><span>256 × 256 WebP</span></div>
+                    </div>
+                </div>
+
+                <div id="avSaveLoader_@userId" style="display:none;text-align:center;padding:1rem;">
+                    <div class="av-spinner"></div>
+                    <div style="font-size:.82rem;color:var(--muted);margin-top:.5rem;">Đang lưu ảnh…</div>
+                </div>
+            </div>
+
+            <div class="v-mf" id="avFooter_@userId">
+                <button class="btn-ov" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Hủy</button>
+                <button id="avStep2Back_@userId" class="btn-ov" onclick="backToStep1(@userId)"
+                        style="display:none;">
+                    <i class="bi bi-arrow-left"></i> Chọn lại
+                </button>
+                <button id="avSaveBtn_@userId" class="btn-gold" onclick="saveCrop(@userId)"
+                        style="display:none;">
+                    <i class="bi bi-check-circle"></i> Lưu Ảnh Đại Diện
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .av-widget {
+        position: relative;
+        display: inline-block;
+    }
+
+    .av-display {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        cursor: pointer;
+        overflow: hidden;
+        border: 3px solid var(--border);
+        transition: border-color .2s;
+    }
+
+        .av-display:hover {
+            border-color: var(--gold);
+        }
+
+            .av-display:hover .av-overlay {
+                opacity: 1;
+            }
+
+    .av-photo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .av-initials {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Playfair Display',serif;
+        font-weight: 700;
+        font-size: 1.6rem;
+        color: var(--deep);
+    }
+
+    .av-overlay {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: rgba(26,18,9,.55);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: .1rem;
+        opacity: 0;
+        transition: opacity .2s;
+        color: #fff;
+    }
+
+        .av-overlay i {
+            font-size: 1.1rem;
+        }
+
+        .av-overlay span {
+            font-size: .6rem;
+            font-weight: 700;
+            letter-spacing: .05em;
+        }
+
+    .av-del-btn {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #c94b2a;
+        border: 2px solid #fff;
+        color: #fff;
+        font-size: .65rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all .2s;
+        padding: 0;
+    }
+
+        .av-del-btn:hover {
+            background: #a33a1d;
+            transform: scale(1.1);
+        }
+
+    .av-source-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .75rem;
+        margin-bottom: .85rem;
+    }
+
+    .av-source-card {
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: 1.1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all .2s;
+        background: #fff;
+        position: relative;
+    }
+
+        .av-source-card:hover {
+            border-color: var(--gold);
+            background: rgba(212,160,23,.04);
+        }
+
+    .av-source-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: rgba(212,160,23,.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto .55rem;
+        font-size: 1.15rem;
+        color: var(--gold);
+    }
+
+    .av-source-label {
+        font-size: .86rem;
+        font-weight: 700;
+        color: var(--deep);
+        margin-bottom: .2rem;
+    }
+
+    .av-source-sub {
+        font-size: .72rem;
+        color: var(--muted);
+    }
+
+    .av-drop-zone {
+        border: 2px dashed var(--border);
+        border-radius: 10px;
+        padding: 1.75rem;
+        text-align: center;
+        color: var(--muted);
+        cursor: pointer;
+        transition: all .2s;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .av-drop-zone:hover, .av-drop-zone.drag-over {
+            border-color: var(--gold);
+            background: rgba(212,160,23,.04);
+            color: var(--deep);
+        }
+
+        .av-drop-zone i {
+            font-size: 1.8rem;
+            display: block;
+            margin-bottom: .5rem;
+            opacity: .4;
+        }
+
+        .av-drop-zone p {
+            font-size: .84rem;
+            font-weight: 600;
+            margin: .2rem 0;
+        }
+
+        .av-drop-zone span {
+            font-size: .72rem;
+        }
+
+    .av-lib-title {
+        font-size: .71rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: .85rem 0 .6rem;
+    }
+
+    .av-lib-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill,minmax(64px,1fr));
+        gap: .6rem;
+    }
+
+    .av-lib-item {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        border: 2.5px solid var(--border);
+        cursor: pointer;
+        overflow: hidden;
+        transition: all .2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Playfair Display',serif;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+        .av-lib-item:hover {
+            border-color: var(--gold);
+            transform: scale(1.08);
+        }
+
+        .av-lib-item.selected {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(212,160,23,.3);
+        }
+
+    .crop-toolbar {
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        flex-wrap: wrap;
+        padding: .65rem .85rem;
+        background: var(--warm);
+        border-radius: 8px;
+        margin-bottom: .75rem;
+    }
+
+    .crop-tb-group {
+        display: flex;
+        gap: .3rem;
+    }
+
+    .crop-btn {
+        padding: .38rem .65rem;
+        border: 1.5px solid var(--border);
+        border-radius: 6px;
+        background: #fff;
+        font-size: .78rem;
+        cursor: pointer;
+        color: var(--muted);
+        transition: all .15s;
+        font-family: 'Outfit',sans-serif;
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        white-space: nowrap;
+    }
+
+        .crop-btn:hover {
+            border-color: var(--gold);
+            color: var(--deep);
+        }
+
+        .crop-btn.active {
+            border-color: var(--gold);
+            background: rgba(212,160,23,.1);
+            color: #92660a;
+            font-weight: 700;
+        }
+
+    .crop-container {
+        background: #111;
+        border-radius: 8px;
+        overflow: hidden;
+        max-height: 360px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .crop-container img {
+            max-height: 360px;
+        }
+
+    .crop-preview-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 1.5rem;
+        margin-top: .85rem;
+        padding-top: .85rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .crop-preview-label {
+        font-size: .7rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: .5rem;
+    }
+
+    .crop-preview-wrap {
+        display: flex;
+        gap: .75rem;
+        align-items: center;
+    }
+
+    .crop-preview {
+        overflow: hidden;
+        background: var(--warm);
+    }
+
+        .crop-preview.circle {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+        }
+
+        .crop-preview.square {
+            width: 72px;
+            height: 72px;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+        }
+
+    .crop-info {
+        flex: 1;
+        background: var(--warm);
+        border-radius: 8px;
+        padding: .75rem 1rem;
+    }
+
+    .crop-info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: .25rem 0;
+        font-size: .78rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+        .crop-info-row:last-child {
+            border-bottom: none;
+        }
+
+        .crop-info-row span:first-child {
+            color: var(--muted);
+        }
+
+        .crop-info-row span:last-child {
+            font-weight: 600;
+            color: var(--deep);
+        }
+
+    .av-spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid var(--border);
+        border-top-color: var(--gold);
+        border-radius: 50%;
+        animation: avSpin .7s linear infinite;
+        margin: 0 auto;
+    }
+
+    @@keyframes avSpin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .av-widget.lg .av-display {
+        width: 120px;
+        height: 120px;
+    }
+
+    .av-widget.lg .av-initials {
+        font-size: 2.5rem;
+    }
+
+    .av-widget.lg .av-del-btn {
+        width: 26px;
+        height: 26px;
+        font-size: .75rem;
+    }
+</style>

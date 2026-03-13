@@ -47,12 +47,15 @@ namespace QuanLiSanCauLong.Models
         // ===== 3. TỒN KHO & VỊ TRÍ =====
         /// <summary>
         /// Tổng tồn kho (tổng các Variant.StockQuantity).
-        /// Vẫn giữ để tương thích với các query cũ — cập nhật bằng cách
-        /// gọi Product.SyncStockFromVariants() sau mỗi thay đổi variant.
+        /// Cập nhật bằng cách gọi SyncStockFromVariants() sau mỗi thay đổi variant.
+        /// Với nhóm Service: luôn = 0 (không quản lý kho vật lý).
         /// </summary>
         public int StockQuantity { get; set; } = 0;
 
-        /// <summary>Tổng số lượng đang treo trên toàn sản phẩm</summary>
+        /// <summary>
+        /// Tổng số lượng đang treo trên toàn sản phẩm.
+        /// Với nhóm Rental: đây là số lượng đang được khách thuê chưa trả.
+        /// </summary>
         public int ReservedQuantity { get; set; } = 0;
 
         public int MinStockLevel { get; set; } = 0;
@@ -77,10 +80,63 @@ namespace QuanLiSanCauLong.Models
         // ===== 5. GIÁ TRỊ TÀI CHÍNH =====
         public decimal CostPrice { get; set; } = 0;
         public decimal COGSPrice { get; set; } = 0;
-        public decimal SalePrice { get; set; }
-        public decimal Price { get; set; }
+        public decimal SalePrice { get; set; } = 0;
 
-        // ===== 6. QUẢN LÝ TRẠNG THÁI =====
+        /// <summary>
+        /// Giá niêm yết:
+        /// - Retail  → giá bán lẻ
+        /// - Rental  → giá thuê mỗi lần / giờ
+        /// - Service → giá trọn gói (nếu có), hoặc 0 nếu tính theo LaborPrice + MaterialPrice
+        /// </summary>
+        public decimal Price { get; set; } = 0;
+
+        // ===== 6. RENTAL — Cho thuê =====
+        /// <summary>
+        /// Tiền đặt cọc khi thuê đồ. Mặc định kế thừa từ ProductCategory.DefaultDepositAmount.
+        /// Chỉ có ý nghĩa khi Category.BehaviorType == "Rental".
+        /// </summary>
+        public decimal DepositAmount { get; set; } = 0;
+
+        /// <summary>
+        /// Phí vệ sinh / giặt ủi thu khi khách trả đồ.
+        /// Chỉ có ý nghĩa khi Category.BehaviorType == "Rental".
+        /// </summary>
+        public decimal CleaningFee { get; set; } = 0;
+
+        /// <summary>
+        /// Thời gian thuê tối đa (giờ). Null = không giới hạn.
+        /// Chỉ có ý nghĩa khi Category.BehaviorType == "Rental".
+        /// </summary>
+        public int? MaxRentalHours { get; set; }
+
+        /// <summary>
+        /// Sản phẩm yêu cầu đặt cọc khi thuê.
+        /// Kế thừa từ ProductCategory.DepositRequired nhưng có thể override theo từng sản phẩm.
+        /// </summary>
+        public bool RequiresDeposit { get; set; } = false;
+
+        // ===== 7. SERVICE — Dịch vụ kỹ thuật =====
+        /// <summary>
+        /// Đơn vị tính công (ví dụ: "bộ", "chiếc", "cặp", "m").
+        /// Chỉ có ý nghĩa khi Category.BehaviorType == "Service".
+        /// </summary>
+        [StringLength(30)]
+        public string LaborUnit { get; set; }
+
+        /// <summary>
+        /// Tiền công / đơn vị (ví dụ: 50.000đ / bộ căng vợt).
+        /// Chỉ có ý nghĩa khi Category.BehaviorType == "Service".
+        /// </summary>
+        public decimal LaborPrice { get; set; } = 0;
+
+        /// <summary>
+        /// Giá vật tư / đơn vị (ví dụ: giá cước theo bộ, giá keo dán đế).
+        /// = 0 nếu khách tự mang vật tư.
+        /// Chỉ có ý nghĩa khi Category.BehaviorType == "Service".
+        /// </summary>
+        public decimal MaterialPrice { get; set; } = 0;
+
+        // ===== 8. QUẢN LÝ TRẠNG THÁI =====
         [StringLength(20)]
         public string Status { get; set; } = "Active";
 
@@ -89,11 +145,11 @@ namespace QuanLiSanCauLong.Models
         [StringLength(100)]
         public string DocumentReference { get; set; }
 
-        // ===== 7. TIMESTAMPS =====
+        // ===== 9. TIMESTAMPS =====
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
-        // ===== 8. KHÓA NGOẠI =====
+        // ===== 10. KHÓA NGOẠI =====
         public int? CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         public virtual ProductCategory Category { get; set; }
@@ -102,14 +158,12 @@ namespace QuanLiSanCauLong.Models
         [ForeignKey("SupplierId")]
         public virtual Supplier Supplier { get; set; }
 
-        // ===== 9. NAVIGATION PROPERTIES =====
+        // ===== 11. NAVIGATION PROPERTIES =====
         public virtual ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
         public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
-
-        /// <summary>Danh sách các phân loại (size/màu) của sản phẩm này</summary>
         public virtual ICollection<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
 
-        // ===== 10. COMPUTED (NOT MAPPED) =====
+        // ===== 12. COMPUTED (NOT MAPPED) =====
         [NotMapped]
         public int AvailableQuantity => StockQuantity - ReservedQuantity;
 
@@ -125,15 +179,24 @@ namespace QuanLiSanCauLong.Models
                                       && ExpiryDate.Value <= DateTime.Now.AddDays(30);
 
         /// <summary>
-        /// Đồng bộ StockQuantity và ReservedQuantity từ tổng các Variants.
-        /// Gọi sau mỗi thao tác nhập/xuất/điều chỉnh variant.
+        /// Tổng doanh thu dịch vụ ước tính mỗi đơn vị (công + vật tư).
+        /// Chỉ có ý nghĩa khi Category.BehaviorType == "Service".
+        /// </summary>
+        [NotMapped]
+        public decimal ServiceTotalPerUnit => LaborPrice + MaterialPrice;
+
+        /// <summary>
+        /// Đồng bộ StockQuantity và ReservedQuantity từ tổng các Variants active.
+        /// Gọi sau mỗi thao tác nhập / xuất / điều chỉnh variant.
+        /// Không gọi với nhóm Service (không có kho vật lý).
         /// </summary>
         public void SyncStockFromVariants()
         {
-            if (Variants != null && Variants.Any())
+            if (Variants != null && Variants.Any(v => v.IsActive))
             {
-                StockQuantity = Variants.Where(v => v.IsActive).Sum(v => v.StockQuantity);
-                ReservedQuantity = Variants.Where(v => v.IsActive).Sum(v => v.ReservedQuantity);
+                var active = Variants.Where(v => v.IsActive);
+                StockQuantity = active.Sum(v => v.StockQuantity);
+                ReservedQuantity = active.Sum(v => v.ReservedQuantity);
             }
         }
     }

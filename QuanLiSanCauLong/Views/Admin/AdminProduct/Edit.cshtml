@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = "Chỉnh sửa sản phẩm";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    var behavior = Model.Category?.BehaviorType ?? "Retail";
+    var categoriesJson = ViewBag.CategoriesJson as string ?? "[]";
 }
 
 <style>
@@ -17,7 +19,12 @@
         --border: #e4d9c8;
         --muted: #8a7560;
         --green: #15803d;
+        --green-soft: #dcfce7;
         --red: #dc2626;
+        --blue: #1d4ed8;
+        --blue-soft: #eff6ff;
+        --purple: #7c3aed;
+        --purple-soft: #f5f3ff;
     }
 
     body, .container-fluid {
@@ -40,7 +47,6 @@
             display: flex;
             align-items: center;
             gap: .3rem;
-            transition: .15s;
         }
 
             .bc a:hover {
@@ -57,7 +63,7 @@
     }
 
     .cf-wrap {
-        max-width: 760px;
+        max-width: 780px;
         margin: 0 auto;
     }
 
@@ -149,7 +155,7 @@
         margin-bottom: .5rem;
     }
 
-    .field-input, .field-select {
+    .field-input, .field-select, .field-textarea {
         width: 100%;
         padding: .6rem .9rem;
         background: var(--cream);
@@ -162,7 +168,7 @@
         transition: .18s;
     }
 
-        .field-input:focus, .field-select:focus {
+        .field-input:focus, .field-select:focus, .field-textarea:focus {
             border-color: var(--gold);
             background: #fff;
             box-shadow: 0 0 0 3px rgba(212,160,23,.1);
@@ -174,13 +180,52 @@
         gap: 1rem;
     }
 
+    .field-row-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1rem;
+    }
+
     @@media(max-width:600px) {
-        .field-row {
+        .field-row, .field-row-3 {
             grid-template-columns: 1fr;
         }
     }
 
-    /* ── Variant Table ── */
+    .field-hint {
+        font-size: .74rem;
+        color: var(--muted);
+        margin-top: .25rem;
+    }
+
+    .behavior-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .3rem .75rem;
+        border-radius: 7px;
+        font-size: .75rem;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .bh-retail {
+        background: var(--green-soft);
+        color: var(--green);
+    }
+
+    .bh-rental {
+        background: var(--blue-soft);
+        color: var(--blue);
+    }
+
+    .bh-service {
+        background: var(--purple-soft);
+        color: var(--purple);
+    }
+
+    /* Variant Table */
     .variant-table {
         width: 100%;
         border-collapse: collapse;
@@ -226,69 +271,14 @@
             background: #fff;
         }
 
-    .vt-reserved {
-        font-size: .78rem;
-        color: var(--muted);
-        font-style: italic;
-    }
-
-    .btn-rm-row {
-        background: none;
-        border: none;
-        cursor: pointer;
-        color: #e57373;
-        font-size: .95rem;
-        padding: .2rem .4rem;
-        border-radius: 5px;
-        transition: .15s;
-    }
-
-        .btn-rm-row:hover {
-            background: #fef2f2;
-            color: var(--red);
-        }
-
-        .btn-rm-row:disabled {
-            opacity: .35;
-            cursor: not-allowed;
-        }
-
-    .btn-add-row {
-        display: inline-flex;
-        align-items: center;
-        gap: .4rem;
-        padding: .5rem 1rem;
-        background: var(--warm);
-        border: 1px dashed var(--border);
-        border-radius: 8px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .82rem;
-        font-weight: 700;
-        color: var(--muted);
-        cursor: pointer;
-        transition: .18s;
-        margin-top: 1rem;
-    }
-
-        .btn-add-row:hover {
-            border-color: var(--gold);
-            color: var(--gold);
-            background: #fef9ec;
-        }
-
     .stock-badge {
         display: inline-flex;
         align-items: center;
-        gap: .3rem;
-        padding: .2rem .55rem;
-        border-radius: 6px;
-        font-size: .75rem;
+        gap: .25rem;
+        padding: .12rem .45rem;
+        border-radius: 5px;
+        font-size: .72rem;
         font-weight: 700;
-    }
-
-    .stock-ok {
-        background: #dcfce7;
-        color: var(--green);
     }
 
     .stock-low {
@@ -296,24 +286,65 @@
         color: #92400e;
     }
 
-    .stock-zero {
-        background: #fef2f2;
-        color: var(--red);
+    .vt-reserved {
+        color: var(--muted);
+        font-size: .8rem;
     }
+
+    .btn-rm-row {
+        background: none;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        padding: .3rem;
+        border-radius: 5px;
+        transition: .15s;
+    }
+
+        .btn-rm-row:hover {
+            color: var(--red);
+        }
+
+        .btn-rm-row:disabled {
+            opacity: .3;
+            cursor: not-allowed;
+        }
+
+    .btn-add-row {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        margin-top: .8rem;
+        padding: .45rem 1rem;
+        background: var(--warm);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .82rem;
+        font-weight: 700;
+        color: var(--muted);
+        cursor: pointer;
+        transition: .15s;
+    }
+
+        .btn-add-row:hover {
+            background: var(--border);
+        }
 
     /* Image edit */
     .img-edit-box {
         display: flex;
-        align-items: center;
-        gap: 1.5rem;
+        gap: 1.2rem;
+        align-items: flex-start;
     }
 
     .img-edit-thumb {
-        width: 100px;
-        height: 100px;
+        width: 110px;
+        height: 110px;
         object-fit: cover;
-        border-radius: 12px;
+        border-radius: 10px;
         border: 1px solid var(--border);
+        flex-shrink: 0;
     }
 
     .img-edit-right {
@@ -326,24 +357,19 @@
         gap: .3rem;
         font-size: .75rem;
         font-weight: 700;
-        background: var(--warm);
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        padding: .2rem .55rem;
-        color: var(--muted);
-        margin-bottom: .5rem;
+        color: var(--gold);
+        margin-bottom: .4rem;
     }
 
     .img-edit-hint {
-        font-size: .8rem;
+        font-size: .76rem;
         color: var(--muted);
-        margin-bottom: .7rem;
+        margin-bottom: .6rem;
     }
 
     .field-file {
-        display: block;
         font-size: .82rem;
-        color: var(--deep);
+        color: var(--muted);
     }
 
     .btn-row {
@@ -357,8 +383,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: .4rem;
-        padding: .65rem 1.2rem;
+        gap: .5rem;
+        padding: .65rem 1.4rem;
         background: var(--warm);
         color: var(--muted);
         border: 1px solid var(--border);
@@ -397,27 +423,52 @@
         .btn-submit:hover {
             background: var(--gold);
             color: #fff;
-            box-shadow: 0 4px 14px rgba(212,160,23,.4);
+        }
+
+    .info-box {
+        padding: .75rem 1rem;
+        border-radius: 9px;
+        font-size: .8rem;
+        line-height: 1.5;
+        margin-bottom: .75rem;
+    }
+
+        .info-box.blue {
+            background: var(--blue-soft);
+            color: var(--blue);
+            border: 1px solid #93c5fd;
+        }
+
+        .info-box.purple {
+            background: var(--purple-soft);
+            color: var(--purple);
+            border: 1px solid #c4b5fd;
         }
 </style>
 
 <div class="container-fluid px-4 py-4">
-
     <div class="bc">
         <a asp-action="Index"><i class="bi bi-house"></i> Sản phẩm</a>
         <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
-        <span class="bc-cur">Chỉnh sửa #@Model.ProductId</span>
+        <a asp-action="Details" asp-route-id="@Model.ProductId">@Model.ProductName</a>
+        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
+        <span class="bc-cur">Chỉnh sửa</span>
     </div>
 
     <div class="cf-wrap">
-
         <div class="cf-head">
             <div class="cf-head-label">Sản Phẩm</div>
-            <div class="cf-title">Cập nhật <em>Sản Phẩm</em></div>
-            <div class="cf-sub">ID: #@Model.ProductId — @Model.ProductName</div>
+            <div class="cf-title">Chỉnh sửa <em>Sản Phẩm</em></div>
+            <div class="cf-sub">
+                ID: #@Model.ProductId —
+                <span class="behavior-chip @(behavior == "Rental" ? "bh-rental" : behavior == "Service" ? "bh-service" : "bh-retail")">
+                    @(behavior == "Retail" ? "🛒 Bán lẻ" : behavior == "Rental" ? "🔄 Cho thuê" : "🔧 Dịch vụ")
+                </span>
+            </div>
         </div>
 
         <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
             <input type="hidden" asp-for="ProductId" />
             <input type="hidden" asp-for="ImageUrl" />
 
@@ -429,19 +480,13 @@
                 </div>
                 <div class="cf-card-body">
                     <div class="field-group">
-                        <label class="field-label">Tên Sản Phẩm</label>
-                        <input asp-for="ProductName" class="field-input" placeholder="Nhập tên sản phẩm..." />
+                        <label class="field-label">Tên Sản Phẩm / Dịch vụ *</label>
+                        <input asp-for="ProductName" class="field-input" />
                         <span asp-validation-for="ProductName" style="font-size:.78rem;color:var(--red);display:block;margin-top:.3rem"></span>
                     </div>
                     <div class="field-row">
-                        <div class="field-group">
-                            <label class="field-label">Mã SKU</label>
-                            <input asp-for="ProductCode" class="field-input" />
-                        </div>
-                        <div class="field-group">
-                            <label class="field-label">Đơn vị</label>
-                            <input asp-for="Unit" class="field-input" />
-                        </div>
+                        <div class="field-group"><label class="field-label">Mã SKU</label><input asp-for="ProductCode" class="field-input" /></div>
+                        <div class="field-group"><label class="field-label">Đơn vị</label><input asp-for="Unit" class="field-input" /></div>
                     </div>
                     <div class="field-row">
                         <div class="field-group">
@@ -458,9 +503,9 @@
                     </div>
                     <div class="field-row">
                         <div class="field-group">
-                            <label class="field-label">Trạng Thái</label>
+                            <label class="field-label">Trạng thái</label>
                             <select asp-for="Status" class="field-select">
-                                <option value="Active">✓ Đang bán</option>
+                                <option value="Active">✓ Đang bán / hoạt động</option>
                                 <option value="OutOfStock">⚠ Hết hàng</option>
                                 <option value="Inactive">✕ Ngừng bán</option>
                             </select>
@@ -469,98 +514,156 @@
                 </div>
             </div>
 
-            <!-- ── Phân loại Size / Màu sắc ── -->
-            <div class="cf-card">
-                <div class="cf-card-head">
-                    <i class="bi bi-grid-3x3-gap-fill"></i>
-                    <span class="cf-card-head-title">Phân loại sản phẩm</span>
-                    <span style="font-size:.75rem;color:var(--muted);">Chỉnh sửa hoặc thêm mới size/màu</span>
-                </div>
-                <div class="cf-card-body">
-                    <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem;">
-                        <i class="bi bi-info-circle"></i>
-                        Tồn kho ở đây là điều chỉnh trực tiếp. Nếu sản phẩm có đơn đang treo, cột <strong>Đang treo</strong> sẽ hiển thị để tránh nhầm.
-                    </p>
-
-                    <div style="overflow-x:auto;">
-                        <table class="variant-table">
-                            <thead>
-                                <tr>
-                                    <th style="width:36px;">#</th>
-                                    <th>Size</th>
-                                    <th>Màu sắc</th>
-                                    <th style="width:105px;">Tồn kho</th>
-                                    <th style="width:90px;">Đang treo</th>
-                                    <th style="width:105px;">Tồn tối thiểu</th>
-                                    <th style="width:40px;"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="variantBody">
-                                @if (Model.Variants != null && Model.Variants.Any())
-                                {
-                                    int idx = 0;
-                                    foreach (var v in Model.Variants.Where(v => v.IsActive))
-                                    {
-                                        <tr>
-                                            <td style="color:var(--muted);font-size:.8rem;">@(++idx)</td>
-                                            <td>
-                                                <input type="hidden" name="variantId" value="@v.VariantId" />
-                                                <input type="text" name="variantSize" class="vt-input" value="@v.SizeName" placeholder="VD: S, M, 38..." />
-                                            </td>
-                                            <td>
-                                                <input type="text" name="variantColor" class="vt-input" value="@v.ColorName" placeholder="VD: Đỏ..." />
-                                            </td>
-                                            <td>
-                                                <input type="number" name="variantStock" class="vt-input" value="@v.StockQuantity" min="0" />
-                                            </td>
-                                            <td>
-                                                @if (v.ReservedQuantity > 0)
-                                                {
-                                                    <span class="stock-badge stock-low"><i class="bi bi-hourglass-split"></i> @v.ReservedQuantity</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="vt-reserved">—</span>
-                                                }
-                                            </td>
-                                            <td>
-                                                <input type="number" name="variantMinStock" class="vt-input" value="@v.MinStockLevel" min="0" />
-                                            </td>
-                                            <td>
-                                                <button type="button" class="btn-rm-row"
-                                                        @(v.ReservedQuantity > 0 ? "disabled title=\"Có đơn đang treo, không thể xóa\"" : $"onclick=\"removeRow(this)\"")>
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                            </tbody>
-                        </table>
+            <!-- ── RENTAL FIELDS ── -->
+            @if (behavior == "Rental")
+            {
+                <div class="cf-card">
+                    <div class="cf-card-head" style="border-left:4px solid var(--blue)">
+                        <i class="bi bi-arrow-repeat" style="color:var(--blue)"></i>
+                        <span class="cf-card-head-title">Cài đặt Cho thuê</span>
                     </div>
-
-                    <button type="button" class="btn-add-row" onclick="addVariantRow()">
-                        <i class="bi bi-plus-lg"></i> Thêm phân loại
-                    </button>
+                    <div class="cf-card-body">
+                        <div class="info-box blue">
+                            <i class="bi bi-info-circle-fill"></i>
+                            Khi xuất → khách cầm đi. Khi nhập → khách trả về kho. Phí vệ sinh được thu khi nhận lại.
+                        </div>
+                        <div class="field-row-3">
+                            <div class="field-group">
+                                <label class="field-label">Tiền đặt cọc (₫)</label>
+                                <input type="number" name="depositAmount" class="field-input" value="@Model.DepositAmount" min="0" />
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Phí vệ sinh (₫)</label>
+                                <input type="number" name="cleaningFee" class="field-input" value="@Model.CleaningFee" min="0" />
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Tối đa (giờ)</label>
+                                <input type="number" name="maxRentalHours" class="field-input" value="@Model.MaxRentalHours" min="1" placeholder="—" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            }
+
+            <!-- ── SERVICE FIELDS ── -->
+            @if (behavior == "Service")
+            {
+                <div class="cf-card">
+                    <div class="cf-card-head" style="border-left:4px solid var(--purple)">
+                        <i class="bi bi-tools" style="color:var(--purple)"></i>
+                        <span class="cf-card-head-title">Cài đặt Dịch vụ kỹ thuật</span>
+                    </div>
+                    <div class="cf-card-body">
+                        <div class="info-box purple">
+                            <i class="bi bi-info-circle-fill"></i>
+                            Dịch vụ không quản lý kho vật lý. Tính tiền = tiền công + vật tư.
+                        </div>
+                        <div class="field-row">
+                            <div class="field-group">
+                                <label class="field-label">Tiền công (₫ / đơn vị)</label>
+                                <input type="number" name="laborPrice" class="field-input" value="@Model.LaborPrice" min="0" />
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Đơn vị công</label>
+                                <input type="text" name="laborUnit" class="field-input" value="@Model.LaborUnit" placeholder="bộ, chiếc..." />
+                            </div>
+                        </div>
+                        <div class="field-row">
+                            <div class="field-group">
+                                <label class="field-label">Tiền vật tư (₫ / đơn vị)</label>
+                                <input type="number" name="materialPrice" class="field-input" value="@Model.MaterialPrice" min="0" />
+                                <div class="field-hint">Để 0 nếu khách tự mang vật tư</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- ── RETAIL + RENTAL: Phân loại Size / Màu ── -->
+            @if (behavior != "Service")
+            {
+                <div class="cf-card">
+                    <div class="cf-card-head">
+                        <i class="bi bi-grid-3x3-gap-fill"></i>
+                        <span class="cf-card-head-title">Phân loại sản phẩm</span>
+                        <span style="font-size:.75rem;color:var(--muted)">Chỉnh sửa hoặc thêm mới size/màu</span>
+                    </div>
+                    <div class="cf-card-body">
+                        <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem;">
+                            <i class="bi bi-info-circle"></i>
+                            Điều chỉnh số lượng trực tiếp tại đây. Cột <strong>Đang treo/thuê</strong> không chỉnh sửa được.
+                        </p>
+                        <div style="overflow-x:auto;">
+                            <table class="variant-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:36px;">#</th>
+                                        <th>Size</th>
+                                        <th>Màu sắc</th>
+                                        <th style="width:110px;">Số lượng</th>
+                                        <th style="width:100px;">Đang @(behavior == "Rental" ? "thuê" : "treo")</th>
+                                        <th style="width:110px;">Tối thiểu</th>
+                                        <th style="width:40px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="variantBody">
+                                    @if (Model.Variants != null && Model.Variants.Any())
+                                    {
+                                        int idx = 0;
+                                        foreach (var v in Model.Variants.Where(v => v.IsActive))
+                                        {
+                                            <tr>
+                                                <td style="color:var(--muted);font-size:.8rem;">@(++idx)</td>
+                                                <td>
+                                                    <input type="hidden" name="variantId" value="@v.VariantId" />
+                                                    <input type="text" name="variantSize" class="vt-input" value="@v.SizeName" placeholder="S, M, 38..." />
+                                                </td>
+                                                <td><input type="text" name="variantColor" class="vt-input" value="@v.ColorName" placeholder="Đỏ, Xanh..." /></td>
+                                                <td><input type="number" name="variantStock" class="vt-input" value="@v.StockQuantity" min="0" /></td>
+                                                <td>
+                                                    @if (v.ReservedQuantity > 0)
+                                                    {
+                                                        <span class="stock-badge stock-low"><i class="bi bi-hourglass-split"></i> @v.ReservedQuantity</span>
+                                                    }
+                                                    else
+                                                    {
+
+                                                        <span class="vt-reserved">—</span>
+                                                    }
+                                                </td>
+                                                <td><input type="number" name="variantMinStock" class="vt-input" value="@v.MinStockLevel" min="0" /></td>
+                                                <td>
+                                                    <button type="button" class="btn-rm-row"
+                                                            @(v.ReservedQuantity > 0 ? "disabled title=\"Đang được sử dụng\"" : "onclick=\"removeRow(this)\"")>
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <button type="button" class="btn-add-row" onclick="addVariantRow()">
+                            <i class="bi bi-plus-lg"></i> Thêm phân loại
+                        </button>
+                    </div>
+                </div>
+            }
 
             <!-- ── Hình ảnh ── -->
             <div class="cf-card">
                 <div class="cf-card-head">
                     <i class="bi bi-image-fill"></i>
-                    <span class="cf-card-head-title">Hình ảnh sản phẩm</span>
+                    <span class="cf-card-head-title">Hình ảnh</span>
                 </div>
                 <div class="cf-card-body">
                     <div class="img-edit-box">
-                        <img id="previewEdit"
-                             src="@Model.ImageUrl"
-                             class="img-edit-thumb"
-                             onerror="this.src='/images/no-image.png'"
-                             alt="@Model.ProductName" />
+                        <img id="previewEdit" src="@Model.ImageUrl" class="img-edit-thumb"
+                             onerror="this.src='/images/no-image.png'" alt="@Model.ProductName" />
                         <div class="img-edit-right">
-                            <div class="img-edit-badge"><i class="bi bi-pencil-fill"></i> Thay đổi ảnh</div>
-                            <div class="img-edit-hint">Tải lên ảnh mới để thay thế ảnh hiện tại<br><small>Định dạng: JPG, PNG, WEBP</small></div>
+                            <div class="img-edit-badge"><i class="bi bi-pencil-fill"></i> Thay ảnh</div>
+                            <div class="img-edit-hint">Tải ảnh mới để thay thế. Định dạng JPG, PNG, WEBP.</div>
                             <input type="file" name="ImageFile" class="field-file" accept="image/*" id="imgEditInput" />
                         </div>
                     </div>
@@ -569,12 +672,8 @@
 
             <!-- ── Actions ── -->
             <div class="btn-row">
-                <a asp-action="Index" class="btn-cancel">
-                    <i class="bi bi-x-lg"></i> Hủy thay đổi
-                </a>
-                <button type="submit" class="btn-submit">
-                    <i class="bi bi-cloud-arrow-up-fill"></i> Lưu thay đổi
-                </button>
+                <a asp-action="Index" class="btn-cancel"><i class="bi bi-x-lg"></i> Hủy</a>
+                <button type="submit" class="btn-submit"><i class="bi bi-cloud-arrow-up-fill"></i> Lưu thay đổi</button>
             </div>
         </form>
     </div>
@@ -583,8 +682,8 @@
 @section Scripts {
     <script>
         document.getElementById('imgEditInput').onchange = function () {
-            const [file] = this.files;
-            if (file) document.getElementById('previewEdit').src = URL.createObjectURL(file);
+            const [f] = this.files;
+            if (f) document.getElementById('previewEdit').src = URL.createObjectURL(f);
         };
 
         function addVariantRow() {
@@ -593,25 +692,16 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td style="color:var(--muted);font-size:.8rem;">${idx}</td>
-                <td>
-                    <input type="hidden" name="variantId" value="" />
-                    <input type="text" name="variantSize" class="vt-input" placeholder="VD: S, M, 38..." />
-                </td>
-                <td><input type="text" name="variantColor" class="vt-input" placeholder="VD: Đỏ, Xanh..." /></td>
+                <td><input type="hidden" name="variantId" value="" /><input type="text" name="variantSize" class="vt-input" placeholder="S, M, 38..." /></td>
+                <td><input type="text" name="variantColor" class="vt-input" placeholder="Đỏ, Xanh..." /></td>
                 <td><input type="number" name="variantStock" class="vt-input" placeholder="0" min="0" value="0" /></td>
                 <td><span class="vt-reserved">—</span></td>
                 <td><input type="number" name="variantMinStock" class="vt-input" placeholder="0" min="0" value="0" /></td>
-                <td><button type="button" class="btn-rm-row" onclick="removeRow(this)"><i class="bi bi-trash"></i></button></td>
-            `;
+                <td><button type="button" class="btn-rm-row" onclick="removeRow(this)"><i class="bi bi-trash"></i></button></td>`;
             tbody.appendChild(tr);
             reindex();
         }
-
-        function removeRow(btn) {
-            btn.closest('tr').remove();
-            reindex();
-        }
-
+        function removeRow(btn) { btn.closest('tr').remove(); reindex(); }
         function reindex() {
             document.querySelectorAll('#variantBody tr').forEach((tr, i) => {
                 tr.querySelector('td:first-child').textContent = i + 1;

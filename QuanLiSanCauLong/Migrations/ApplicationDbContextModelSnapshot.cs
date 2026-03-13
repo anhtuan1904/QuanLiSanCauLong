@@ -73,28 +73,23 @@ namespace QuanLiSanCauLong.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("IpAddress")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("NewValue")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OldValue")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("RecordId")
                         .HasColumnType("int");
 
                     b.Property<string>("TableName")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("UserAgent")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
@@ -381,7 +376,6 @@ namespace QuanLiSanCauLong.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CancelReason")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
@@ -418,7 +412,6 @@ namespace QuanLiSanCauLong.Migrations
                         .HasColumnType("time");
 
                     b.Property<string>("Note")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
@@ -834,10 +827,16 @@ namespace QuanLiSanCauLong.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("InventoryId"));
 
+                    b.Property<int>("DamagedQuantity")
+                        .HasColumnType("int");
+
                     b.Property<int>("FacilityId")
                         .HasColumnType("int");
 
                     b.Property<int?>("FacilityId1")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HoldQuantity")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("LastUpdated")
@@ -855,6 +854,9 @@ namespace QuanLiSanCauLong.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
+                    b.Property<int>("RentedQuantity")
+                        .HasColumnType("int");
+
                     b.HasKey("InventoryId");
 
                     b.HasIndex("FacilityId");
@@ -865,6 +867,149 @@ namespace QuanLiSanCauLong.Migrations
                         .IsUnique();
 
                     b.ToTable("Inventories");
+                });
+
+            modelBuilder.Entity("QuanLiSanCauLong.Models.InventoryBatch", b =>
+                {
+                    b.Property<int>("BatchId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BatchId"));
+
+                    b.Property<string>("BatchNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("CostPrice")
+                        .HasPrecision(18)
+                        .HasColumnType("decimal(18,0)");
+
+                    b.Property<string>("DocumentReference")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("InventoryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OriginalQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ReceivedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<int>("RemainingQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasDefaultValue("Active");
+
+                    b.HasKey("BatchId");
+
+                    b.HasIndex("ExpiryDate");
+
+                    b.HasIndex("InventoryId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("InventoryBatches");
+                });
+
+            modelBuilder.Entity("QuanLiSanCauLong.Models.InventoryTransaction", b =>
+                {
+                    b.Property<int>("TransactionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TransactionId"));
+
+                    b.Property<string>("BatchNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("CostPrice")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18)
+                        .HasColumnType("decimal(18,0)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityAfter")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ReferenceId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReferenceType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<decimal>("SalePrice")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18)
+                        .HasColumnType("decimal(18,0)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<int?>("TargetFacilityId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("UserEmail")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("TransactionId");
+
+                    b.HasIndex("FacilityId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("TransactionDate");
+
+                    b.HasIndex("Type");
+
+                    b.HasIndex("ReferenceId", "ReferenceType");
+
+                    b.ToTable("InventoryTransactions");
                 });
 
             modelBuilder.Entity("QuanLiSanCauLong.Models.JobApplication", b =>
@@ -1237,6 +1382,9 @@ namespace QuanLiSanCauLong.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<int>("BufferMinutes")
+                        .HasColumnType("int");
+
                     b.Property<int>("CourtId")
                         .HasColumnType("int");
 
@@ -1268,9 +1416,18 @@ namespace QuanLiSanCauLong.Migrations
                     b.Property<bool>("IsPeakHour")
                         .HasColumnType("bit");
 
+                    b.Property<decimal>("MemberDiscount")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("MinDurationMinutes")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("Price")
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
 
                     b.Property<int>("RoundingMinutes")
                         .HasColumnType("int");
@@ -1328,6 +1485,9 @@ namespace QuanLiSanCauLong.Migrations
                     b.Property<int?>("CategoryId")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("CleaningFee")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Color")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1339,6 +1499,9 @@ namespace QuanLiSanCauLong.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DepositAmount")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -1368,10 +1531,24 @@ namespace QuanLiSanCauLong.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<decimal>("LaborPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("LaborUnit")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
                     b.Property<string>("Material")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("MaterialPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("MaxRentalHours")
+                        .HasColumnType("int");
 
                     b.Property<string>("Metadata")
                         .IsRequired()
@@ -1398,6 +1575,9 @@ namespace QuanLiSanCauLong.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("RequiresDeposit")
+                        .HasColumnType("bit");
 
                     b.Property<int>("ReservedQuantity")
                         .HasColumnType("int");
@@ -1472,6 +1652,17 @@ namespace QuanLiSanCauLong.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryId"));
 
+                    b.Property<bool>("AllowCustomerMaterial")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AllowPartialReturn")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("BehaviorType")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
                     b.Property<string>("CategoryName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1482,8 +1673,17 @@ namespace QuanLiSanCauLong.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<bool>("ChargeOvertime")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DefaultCleaningFee")
+                        .HasColumnType("decimal(18,0)");
+
+                    b.Property<decimal>("DefaultDepositAmount")
+                        .HasColumnType("decimal(18,0)");
 
                     b.Property<int>("DefaultMinStock")
                         .HasColumnType("int");
@@ -1492,6 +1692,9 @@ namespace QuanLiSanCauLong.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("DepositRequired")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -1508,10 +1711,32 @@ namespace QuanLiSanCauLong.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MaterialUnit")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int>("MaxRentalHours")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PricingModel")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<bool>("RequiresBatch")
                         .HasColumnType("bit");
 
                     b.Property<bool>("RequiresExpiry")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequiresSize")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SeparateLaborAndMaterial")
                         .HasColumnType("bit");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -1541,10 +1766,16 @@ namespace QuanLiSanCauLong.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("DamagedQuantity")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
+
+                    b.Property<int>("MaxQuantity")
+                        .HasColumnType("int");
 
                     b.Property<int>("MinStockLevel")
                         .ValueGeneratedOnAdd()
@@ -1552,6 +1783,9 @@ namespace QuanLiSanCauLong.Migrations
                         .HasDefaultValue(0);
 
                     b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RentedQuantity")
                         .HasColumnType("int");
 
                     b.Property<int>("ReservedQuantity")
@@ -1582,6 +1816,88 @@ namespace QuanLiSanCauLong.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("ProductVariants");
+                });
+
+            modelBuilder.Entity("QuanLiSanCauLong.Models.RentalItem", b =>
+                {
+                    b.Property<int>("RentalItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RentalItemId"));
+
+                    b.Property<decimal>("CleaningFeeCharged")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18)
+                        .HasColumnType("decimal(18,0)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<string>("CourtCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CustomerPhone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("ExpectedReturnAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("InventoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("RentedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<DateTime?>("ReturnedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Size")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)")
+                        .HasDefaultValue("Active");
+
+                    b.HasKey("RentalItemId");
+
+                    b.HasIndex("InventoryId");
+
+                    b.HasIndex("RentedAt");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("RentalItems");
                 });
 
             modelBuilder.Entity("QuanLiSanCauLong.Models.Service", b =>
@@ -2116,6 +2432,10 @@ namespace QuanLiSanCauLong.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
 
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -2419,6 +2739,36 @@ namespace QuanLiSanCauLong.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("QuanLiSanCauLong.Models.InventoryBatch", b =>
+                {
+                    b.HasOne("QuanLiSanCauLong.Models.Inventory", "Inventory")
+                        .WithMany("Batches")
+                        .HasForeignKey("InventoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Inventory");
+                });
+
+            modelBuilder.Entity("QuanLiSanCauLong.Models.InventoryTransaction", b =>
+                {
+                    b.HasOne("QuanLiSanCauLong.Models.Facility", "Facility")
+                        .WithMany()
+                        .HasForeignKey("FacilityId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("QuanLiSanCauLong.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Facility");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("QuanLiSanCauLong.Models.JobApplication", b =>
                 {
                     b.HasOne("QuanLiSanCauLong.Models.JobPosting", "Job")
@@ -2533,6 +2883,17 @@ namespace QuanLiSanCauLong.Migrations
                         .IsRequired();
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("QuanLiSanCauLong.Models.RentalItem", b =>
+                {
+                    b.HasOne("QuanLiSanCauLong.Models.Inventory", "Inventory")
+                        .WithMany("RentalItems")
+                        .HasForeignKey("InventoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Inventory");
                 });
 
             modelBuilder.Entity("QuanLiSanCauLong.Models.ServiceImage", b =>
@@ -2709,6 +3070,13 @@ namespace QuanLiSanCauLong.Migrations
                     b.Navigation("Inventories");
 
                     b.Navigation("PriceSlots");
+                });
+
+            modelBuilder.Entity("QuanLiSanCauLong.Models.Inventory", b =>
+                {
+                    b.Navigation("Batches");
+
+                    b.Navigation("RentalItems");
                 });
 
             modelBuilder.Entity("QuanLiSanCauLong.Models.JobPosting", b =>

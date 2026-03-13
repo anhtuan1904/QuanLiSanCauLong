@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using QuanLiSanCauLong.Models;
+﻿using QuanLiSanCauLong.Models;
 
 namespace QuanLiSanCauLong.Services.Interfaces
 {

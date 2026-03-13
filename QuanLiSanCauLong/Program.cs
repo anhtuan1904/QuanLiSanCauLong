@@ -91,7 +91,20 @@ else
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+
+// ✅ Static files với cache headers cho ảnh avatar WebP
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        if (ctx.File.Name.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
+        {
+            ctx.Context.Response.Headers.Append(
+                "Cache-Control", "public, max-age=31536000, immutable");
+        }
+    }
+});
+
 app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
@@ -122,6 +135,10 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Lỗi khi khởi tạo dữ liệu Database.");
     }
 }
+
+// ✅ Tạo thư mục lưu ảnh avatar nếu chưa tồn tại
+var avatarDir = Path.Combine(builder.Environment.WebRootPath, "uploads", "avatars");
+Directory.CreateDirectory(avatarDir);
 
 app.Run();
 
@@ -160,7 +177,6 @@ public static class DbInitializer
 
         if (!await context.ProductCategories.AnyAsync())
         {
-            // Sửa lại thành như này
             context.ProductCategories.AddRange(
                 new ProductCategory { CategoryName = "Đồ ăn", CategoryType = "Food" },
                 new ProductCategory { CategoryName = "Nước uống", CategoryType = "Beverage" },

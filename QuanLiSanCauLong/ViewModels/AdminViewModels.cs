@@ -22,11 +22,17 @@ namespace QuanLiSanCauLong.ViewModels
         public int TotalOrders { get; set; }
 
         // Biểu đồ & phân tích
-        public List<RevenueByDateViewModel> RevenueByDate { get; set; }
-        public List<RevenueByFacilityViewModel> RevenueByFacility { get; set; }
-        public List<PopularTimeSlotViewModel> PopularTimeSlots { get; set; }
-        public List<TopProductViewModel> TopProducts { get; set; }
-        public List<TopCustomerViewModel> TopCustomers { get; set; }
+        public List<RevenueByDateViewModel> RevenueByDate { get; set; } = new();
+        public List<RevenueByFacilityViewModel> RevenueByFacility { get; set; } = new();
+        public List<PopularTimeSlotViewModel> PopularTimeSlots { get; set; } = new();
+        public List<TopProductViewModel> TopProducts { get; set; } = new();
+        public List<TopCustomerViewModel> TopCustomers { get; set; } = new();
+
+        // ── BỔ SUNG: Analytics.cshtml cần FacilityStats ──
+        public List<FacilityStatsViewModel> FacilityStats { get; set; } = new();
+
+        // ── BỔ SUNG: Index.cshtml (dashboard) cần RecentBookings ──
+        public List<RecentBookingViewModel> RecentBookings { get; set; } = new();
     }
 
     /// <summary>
@@ -85,17 +91,64 @@ namespace QuanLiSanCauLong.ViewModels
         public decimal TotalSpent { get; set; }
     }
 
+    /// <summary>
+    /// Thống kê hiệu suất từng cơ sở — dùng trong Analytics.cshtml
+    /// </summary>
+    public class FacilityStatsViewModel
+    {
+        public int FacilityId { get; set; }
+        public string FacilityName { get; set; }
+        public string Address { get; set; }
+        public int TotalBookings { get; set; }
+        public decimal TotalRevenue { get; set; }
+
+        /// <summary>Tỷ lệ lấp đầy 0–100 (%)</summary>
+        public double OccupancyRate { get; set; }
+
+        /// <summary>Đánh giá trung bình (★)</summary>
+        public double AverageRating { get; set; }
+    }
+
+    /// <summary>
+    /// Đặt sân gần đây — dùng trong Index.cshtml (dashboard)
+    /// </summary>
+    public class RecentBookingViewModel
+    {
+        public int BookingId { get; set; }
+        public string BookingCode { get; set; }
+        public string CustomerName { get; set; }
+
+        /// <summary>Tên / số sân, ví dụ "Sân A1"</summary>
+        public string CourtNumber { get; set; }
+
+        public TimeSpan StartTime { get; set; }
+        public decimal TotalAmount { get; set; }
+
+        /// <summary>Pending | Confirmed | Playing | Completed | Cancelled</summary>
+        public string Status { get; set; }
+    }
+
     public class BulkPriceSlotRequest
     {
         public List<int> CourtIds { get; set; }
         public List<PriceSlotDetailRequest> TimeSlots { get; set; }
+        public List<string> Days { get; set; }  // ← THÊM DÒNG NÀY
     }
 
     public class PriceSlotDetailRequest
     {
-        public TimeSpan StartTime { get; set; }
-        public TimeSpan EndTime { get; set; }
+        public string StartTimeStr { get; set; }
+        public string EndTimeStr { get; set; }
         public decimal Price { get; set; }
         public bool IsPeakHour { get; set; }
+
+        // ← THÊM 4 DÒNG NÀY:
+        public decimal Surcharge { get; set; }
+        public string SlotName { get; set; }
+        public string CustType { get; set; }
+        public string SurNote { get; set; }
+
+        public TimeSpan StartTime => TimeSpan.Parse(StartTimeStr);
+        public TimeSpan EndTime => TimeSpan.Parse(EndTimeStr);
     }
 }

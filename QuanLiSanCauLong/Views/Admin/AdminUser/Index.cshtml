@@ -1,185 +1,616 @@
 ﻿@model IEnumerable<QuanLiSanCauLong.Models.User>
-
 @{
-    ViewData["Title"] = "Quản lý người dùng";
+    ViewData["Title"] = "Quản lý Người Dùng";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    var curRole = (string)ViewBag.CurrentRole ?? "";
+    var curSearch = (string)ViewBag.CurrentSearch ?? "";
+    var curIsActive = ViewBag.CurrentIsActive as bool?;
 }
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #fdf8f0;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+    }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold">
-        <i class="bi bi-people text-primary me-2"></i>
-        Quản lý người dùng
-    </h2>
-    <a asp-action="Create" class="btn btn-primary">
-        <i class="bi bi-person-plus me-2"></i>Thêm người dùng
-    </a>
-</div>
+    * {
+        font-family: 'Outfit',sans-serif;
+        box-sizing: border-box;
+    }
 
-<!-- Filter -->
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-4">
-                <input type="text" class="form-control" name="search"
-                       placeholder="Tìm theo tên, email..." value="@ViewBag.Search">
-            </div>
-            <div class="col-md-3">
-                <select class="form-select" name="role">
-                    <option value="">Tất cả vai trò</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Staff">Staff</option>
-                    <option value="Customer">Customer</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <select class="form-select" name="status">
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="Active">Hoạt động</option>
-                    <option value="Inactive">Khóa</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search"></i> Tìm
-                </button>
-            </div>
-        </form>
+    .pg-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .pg-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: var(--deep);
+        line-height: 1.2;
+    }
+
+        .pg-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    .pg-sub {
+        font-size: .82rem;
+        color: var(--muted);
+        margin-top: .25rem;
+    }
+
+    .btn-gold {
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep) !important;
+        border: none;
+        padding: .72rem 1.5rem;
+        font-family: 'Outfit',sans-serif;
+        font-size: .86rem;
+        font-weight: 700;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        text-decoration: none;
+        transition: all .25s;
+    }
+
+        .btn-gold:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(212,160,23,.35);
+        }
+
+    .btn-ov {
+        padding: .65rem 1.25rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--muted);
+        font-size: .84rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+        font-family: 'Outfit',sans-serif;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+        .btn-ov:hover {
+            border-color: var(--deep);
+            color: var(--deep) !important;
+        }
+
+    .sys-ok {
+        padding: .9rem 1.25rem;
+        border-radius: 8px;
+        margin-bottom: 1.25rem;
+        font-size: .84rem;
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        background: rgba(22,163,74,.08);
+        border: 1px solid rgba(22,163,74,.25);
+        color: #16a34a;
+    }
+
+    .sys-err {
+        padding: .9rem 1.25rem;
+        border-radius: 8px;
+        margin-bottom: 1.25rem;
+        font-size: .84rem;
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        background: rgba(201,75,42,.06);
+        border: 1px solid rgba(201,75,42,.25);
+        color: #c94b2a;
+    }
+
+    .stat-strip {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1.75rem;
+    }
+
+    .stat-box {
+        background: #fff;
+        padding: 1.2rem 1.5rem;
+    }
+
+    .stat-n {
+        font-family: 'Playfair Display',serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--deep);
+        line-height: 1;
+    }
+
+    .stat-l {
+        font-size: .71rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: .35rem;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+    .stat-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .toolbar {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+    }
+
+    .tb-search {
+        position: relative;
+        flex: 1;
+        min-width: 200px;
+        max-width: 320px;
+    }
+
+        .tb-search input {
+            width: 100%;
+            padding: .65rem 1rem .65rem 2.25rem;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            font-family: 'Outfit',sans-serif;
+            font-size: .84rem;
+            color: var(--deep);
+            background: #fff;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+            .tb-search input:focus {
+                border-color: var(--gold);
+                background: var(--cream);
+            }
+
+        .tb-search i {
+            position: absolute;
+            left: .8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: .82rem;
+        }
+
+    .tb-sel {
+        padding: .65rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .84rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
+        cursor: pointer;
+    }
+
+        .tb-sel:focus {
+            border-color: var(--gold);
+        }
+
+    .v-table-wrap {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .v-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .v-table th {
+            background: var(--warm);
+            padding: .8rem 1rem;
+            font-size: .67rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .v-table td {
+            padding: .95rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: .86rem;
+            vertical-align: middle;
+            color: var(--deep);
+        }
+
+        .v-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .v-table tbody tr:hover td {
+            background: var(--cream);
+        }
+
+    .u-ava {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Playfair Display',serif;
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: var(--deep);
+        flex-shrink: 0;
+    }
+
+        .u-ava.sm {
+            width: 36px;
+            height: 36px;
+            font-size: .9rem;
+        }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        font-size: .67rem;
+        font-weight: 700;
+        padding: .22rem .6rem;
+        border-radius: 4px;
+        letter-spacing: .04em;
+        white-space: nowrap;
+    }
+
+    .chip-green {
+        background: rgba(22,163,74,.1);
+        color: #16a34a;
+    }
+
+    .chip-red {
+        background: rgba(201,75,42,.1);
+        color: #c94b2a;
+    }
+
+    .role-admin {
+        background: rgba(201,75,42,.1);
+        color: #c94b2a;
+    }
+
+    .role-staff {
+        background: rgba(212,160,23,.12);
+        color: #92660a;
+    }
+
+    .role-cust {
+        background: rgba(79,70,229,.08);
+        color: #4f46e5;
+    }
+
+    .act-g {
+        display: flex;
+        gap: .3rem;
+        align-items: center;
+    }
+
+    .act-b {
+        width: 30px;
+        height: 30px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--muted);
+        transition: all .2s;
+        font-size: .78rem;
+        text-decoration: none;
+    }
+
+        .act-b.view:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(212,160,23,.07);
+        }
+
+        .act-b.edit:hover {
+            border-color: #4f46e5;
+            color: #4f46e5;
+            background: rgba(79,70,229,.07);
+        }
+
+        .act-b.del:hover {
+            border-color: #c94b2a;
+            color: #c94b2a;
+            background: rgba(201,75,42,.07);
+        }
+
+        .act-b.lock:hover {
+            border-color: #c94b2a;
+            color: #c94b2a;
+            background: rgba(201,75,42,.07);
+        }
+
+        .act-b.unlock:hover {
+            border-color: #16a34a;
+            color: #16a34a;
+            background: rgba(22,163,74,.07);
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--muted);
+    }
+
+        .empty-state i {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 1rem;
+            opacity: .25;
+        }
+    /* ✅ NÂNG CẤP: Badge lọc đang active */
+    .filter-active {
+        background: rgba(212,160,23,.12);
+        border-color: var(--gold);
+        color: #92660a;
+    }
+</style>
+
+<div>
+    <div class="pg-head">
+        <div>
+            <h1 class="pg-title">Người Dùng & <em>Tài Khoản</em></h1>
+            <div class="pg-sub">Quản lý tất cả tài khoản trong hệ thống</div>
+        </div>
+        <a asp-action="Create" class="btn-gold"><i class="bi bi-person-plus"></i> Thêm Người Dùng</a>
     </div>
-</div>
 
-<!-- Users Table -->
-<div class="card shadow-sm">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Người dùng</th>
-                        <th>Email</th>
-                        <th>Điện thoại</th>
-                        <th>Vai trò</th>
-                        <th>Trạng thái</th>
-                        <th>Ngày tạo</th>
-                        <th class="text-end">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model != null && Model.Any())
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="sys-ok"><i class="bi bi-check-circle-fill"></i>@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="sys-err"><i class="bi bi-exclamation-circle"></i>@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="stat-strip">
+        <div class="stat-box">
+            <div class="stat-n">@ViewBag.TotalUsers</div>
+            <div class="stat-l"><span class="stat-dot" style="background:var(--gold);"></span>Tổng người dùng</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-n" style="color:#16a34a;">@ViewBag.ActiveUsers</div>
+            <div class="stat-l"><span class="stat-dot" style="background:#16a34a;"></span>Đang hoạt động</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-n" style="color:#c94b2a;">@ViewBag.InactiveUsers</div>
+            <div class="stat-l"><span class="stat-dot" style="background:#c94b2a;"></span>Đã bị khóa</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-n" style="color:#4f46e5;">@(Model?.Count(u => u.Role == "Staff") ?? 0)</div>
+            <div class="stat-l"><span class="stat-dot" style="background:#4f46e5;"></span>Nhân viên</div>
+        </div>
+    </div>
+
+    {{!-- ✅ FIX: Thanh tìm kiếm server-side thay vì client-side JS (để giữ kết quả khi reload) --}}
+    <form method="get" id="filterForm">
+        <div class="toolbar">
+            <div class="tb-search">
+                <i class="bi bi-search"></i>
+                <input type="text" name="search" value="@curSearch"
+                       placeholder="Tìm tên, email, số điện thoại..."
+                       oninput="debounceSubmit()" />
+            </div>
+            <select name="role" class="tb-sel @(!string.IsNullOrEmpty(curRole) ? "filter-active" : "")"
+                    onchange="this.form.submit()">
+                <option value="">Tất cả vai trò</option>
+                <option value="Admin" selected="@(curRole == "Admin" ? "selected" : null)">Admin</option>
+                <option value="Staff" selected="@(curRole == "Staff" ? "selected" : null)">Staff</option>
+                <option value="Customer" selected="@(curRole == "Customer" ? "selected" : null)">Customer</option>
+            </select>
+            <select name="isActive" class="tb-sel @(curIsActive.HasValue ? "filter-active" : "")"
+                    onchange="this.form.submit()">
+                <option value="">Tất cả trạng thái</option>
+                <option value="true" selected="@(curIsActive == true ? "selected" : null)">Hoạt động</option>
+                <option value="false" selected="@(curIsActive == false ? "selected" : null)">Bị khóa</option>
+            </select>
+            @if (!string.IsNullOrEmpty(curSearch) || !string.IsNullOrEmpty(curRole) || curIsActive.HasValue)
+            {
+                <a asp-action="Index" class="btn-ov" title="Xóa bộ lọc">
+                    <i class="bi bi-x-circle"></i> Xóa lọc
+                </a>
+            }
+        </div>
+    </form>
+
+    <div class="v-table-wrap">
+        <table class="v-table">
+            <thead>
+                <tr>
+                    <th>Người Dùng</th>
+                    <th>Liên Hệ</th>
+                    <th>Vai Trò</th>
+                    <th>Cơ Sở</th>
+                    <th>Ngày Tạo</th>
+                    <th>Trạng Thái</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var user in Model)
                     {
-                        foreach (var user in Model)
-                        {
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
-                                            <i class="bi bi-person text-primary"></i>
-                                        </div>
-                                        <strong>@user.FullName</strong>
-                                    </div>
-                                </td>
-                                <td>
-                                    <i class="bi bi-envelope text-muted me-2"></i>
-                                    @user.Email
-                                </td>
-                                <td>@(user.Phone ?? "-")</td>
-                                <td>
-                                    @if (user.Role == "Admin")
-                                    {
-                                        <span class="badge bg-danger">
-                                            <i class="bi bi-shield-fill me-1"></i>Admin
-                                        </span>
-                                    }
-                                    else if (user.Role == "Staff")
-                                    {
-                                        <span class="badge bg-warning">
-                                            <i class="bi bi-person-badge me-1"></i>Staff
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-info">
-                                            <i class="bi bi-person me-1"></i>Customer
-                                        </span>
-                                    }
-                                </td>
-                                <td>
-                                    @if (user.Status == "Active")
-                                    {
-                                        <span class="badge bg-success">Hoạt động</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary">Khóa</span>
-                                    }
-                                </td>
-                                <td>
-                                    <small class="text-muted">
-                                        @user.CreatedAt.ToString("dd/MM/yyyy")
-                                    </small>
-                                </td>
-                                <td class="text-end">
-                                    <div class="btn-group btn-group-sm">
-                                        <a asp-action="Details" asp-route-id="@user.UserId"
-                                           class="btn btn-outline-primary" title="Xem chi tiết">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <a asp-action="Edit" asp-route-id="@user.UserId"
-                                           class="btn btn-outline-warning" title="Chỉnh sửa">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        @if (user.Status == "Active")
-                                        {
-                                            <button class="btn btn-outline-secondary"
-                                                    onclick="toggleStatus(@user.UserId, 'Inactive')"
-                                                    title="Khóa tài khoản">
-                                                <i class="bi bi-lock"></i>
-                                            </button>
-                                        }
-                                        else
-                                        {
-                                            <button class="btn btn-outline-success"
-                                                    onclick="toggleStatus(@user.UserId, 'Active')"
-                                                    title="Mở khóa">
-                                                <i class="bi bi-unlock"></i>
-                                            </button>
-                                        }
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
+                        var ini = string.Join("", user.FullName.Split(' ').TakeLast(2).Select(x => x[0]));
+                        var rc = user.Role == "Admin" ? "role-admin" : user.Role == "Staff" ? "role-staff" : "role-cust";
+                        var ri = user.Role == "Admin" ? "bi-shield-fill" : user.Role == "Staff" ? "bi-person-badge" : "bi-person";
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
-                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                Chưa có người dùng
+                            <td>
+                                <div style="display:flex;align-items:center;gap:.75rem;">
+                                    @if (!string.IsNullOrEmpty(user.AvatarUrl))
+                                    {
+                                        <img src="@user.AvatarUrl" alt="@user.FullName"
+                                             style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="u-ava sm">@ini</div>
+                                    }
+                                    <div>
+                                        <div style="font-weight:700;font-size:.88rem;">@user.FullName</div>
+                                        <div style="font-size:.72rem;color:var(--muted);">ID #@user.UserId</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-size:.83rem;">@user.Email</div>
+                                <div style="font-size:.74rem;color:var(--muted);">@(user.Phone ?? "—")</div>
+                            </td>
+                            <td><span class="chip @rc"><i class="bi @ri"></i> @user.Role</span></td>
+                            <td style="font-size:.82rem;color:var(--muted);">@(user.Facility?.FacilityName ?? "—")</td>
+                            <td style="font-size:.8rem;color:var(--muted);">@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @if (user.IsActive)
+                                {
+                                    <span class="chip chip-green">● Hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="chip chip-red">● Bị khóa</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="act-g">
+                                    <a asp-action="Details" asp-route-id="@user.UserId" class="act-b view" title="Chi tiết"><i class="bi bi-eye"></i></a>
+                                    <a asp-action="Edit" asp-route-id="@user.UserId" class="act-b edit" title="Sửa"><i class="bi bi-pencil"></i></a>
+                                    @if (user.IsActive)
+                                    {
+                                        <button onclick="toggleStatus(@user.UserId,false)" class="act-b lock" title="Khóa"><i class="bi bi-lock"></i></button>
+                                    }
+                                    else
+                                    {
+                                        <button onclick="toggleStatus(@user.UserId,true)" class="act-b unlock" title="Mở khóa"><i class="bi bi-unlock"></i></button>
+                                    }
+                                    <button onclick="deleteUser(@user.UserId,'@Html.Raw(user.FullName.Replace("'", "&#39;"))')" class="act-b del" title="Xóa"><i class="bi bi-trash3"></i></button>
+                                </div>
                             </td>
                         </tr>
                     }
-                </tbody>
-            </table>
-        </div>
+                }
+                else
+                {
+                    <tr><td colspan="7"><div class="empty-state"><i class="bi bi-people"></i><div>Không tìm thấy người dùng nào</div></div></td></tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @Html.AntiForgeryToken()
     <script>
-        function toggleStatus(userId, newStatus) {
-            const message = newStatus === 'Inactive'
-                ? 'Bạn có chắc muốn khóa tài khoản này?'
-                : 'Bạn có chắc muốn mở khóa tài khoản này?';
+        // ✅ FIX: Debounce để không submit mỗi keystroke
+        var debounceTimer;
+        function debounceSubmit() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function() {
+                document.getElementById('filterForm').submit();
+            }, 500);
+        }
 
-            if (confirm(message)) {
-                fetch(`/Admin/User/ToggleStatus/${userId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: newStatus })
-                }).then(response => {
-                    if (response.ok) location.reload();
-                    else alert('Có lỗi xảy ra!');
-                });
-            }
+        // ✅ FIX: Thêm CSRF token vào tất cả fetch POST
+        function getAntiForgeryToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]').value;
+        }
+
+        function toggleStatus(id, isActive) {
+            var msg = isActive ? 'Mở khóa tài khoản này?' : 'Khóa tài khoản này?';
+            Swal.fire({
+                title: msg, icon: isActive ? 'question' : 'warning', showCancelButton: true,
+                confirmButtonColor: isActive ? '#16a34a' : '#c94b2a',
+                cancelButtonColor: '#8a7560',
+                confirmButtonText: isActive ? 'Mở khóa' : 'Khóa',
+                cancelButtonText: 'Hủy', reverseButtons: true
+            }).then(function(r) {
+                if (!r.isConfirmed) return;
+                var fd = new FormData();
+                fd.append('userId', id);
+                fd.append('isActive', isActive);
+                fd.append('__RequestVerificationToken', getAntiForgeryToken());
+                fetch('/AdminUser/ToggleStatus', { method: 'POST', body: fd })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        Swal.fire({ icon: 'success', title: 'Thành công!', text: data.message, timer: 1500, showConfirmButton: false })
+                        .then(function() { location.reload(); });
+                    } else {
+                        Swal.fire('Lỗi!', data.message, 'error');
+                    }
+                }).catch(function() { Swal.fire('Lỗi!', 'Có lỗi xảy ra.', 'error'); });
+            });
+        }
+
+        function deleteUser(id, name) {
+            Swal.fire({
+                title: 'Xóa "' + name + '"?',
+                text: 'Nếu có lịch đặt, tài khoản sẽ bị ẩn (soft delete). Nếu chưa có, sẽ xóa vĩnh viễn.',
+                icon: 'warning', showCancelButton: true,
+                confirmButtonColor: '#c94b2a', cancelButtonColor: '#8a7560',
+                confirmButtonText: 'Xóa', cancelButtonText: 'Hủy', reverseButtons: true
+            }).then(function(r) {
+                if (!r.isConfirmed) return;
+                var fd = new FormData();
+                fd.append('id', id);
+                fd.append('__RequestVerificationToken', getAntiForgeryToken());
+                fetch('/AdminUser/Delete/' + id, { method: 'POST', body: fd })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        Swal.fire({ icon: 'success', title: 'Xong!', text: data.message, timer: 1800, showConfirmButton: false })
+                        .then(function() { location.reload(); });
+                    } else {
+                        Swal.fire('Lỗi!', data.message, 'error');
+                    }
+                }).catch(function() { Swal.fire('Lỗi!', 'Không thể kết nối máy chủ.', 'error'); });
+            });
         }
     </script>
 }

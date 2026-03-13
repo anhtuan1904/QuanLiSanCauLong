@@ -12,7 +12,7 @@ namespace QuanLiSanCauLong.Models
         public int FacilityId { get; set; }
         public decimal? HourlyRate { get; set; }
 
-        // --- THÊM DÒNG NÀY ĐỂ SỬA LỖI ---
+        // Alias cho HourlyRate (tránh breaking changes ở nơi khác)
         [NotMapped]
         public decimal? PricePerHour { get => HourlyRate; set => HourlyRate = value; }
 
@@ -21,7 +21,6 @@ namespace QuanLiSanCauLong.Models
         [StringLength(50)]
         [Display(Name = "Tên / Số sân")]
         public string CourtNumber { get; set; } = string.Empty;
-        // VD: "Sân số 1", "Sân VIP", "Sân A"
 
         [Required(ErrorMessage = "Vui lòng chọn vị trí sân")]
         [Display(Name = "Vị trí")]
@@ -42,7 +41,6 @@ namespace QuanLiSanCauLong.Models
         [Display(Name = "Vị trí tầng")]
         [StringLength(30)]
         public string? FloorNumber { get; set; }
-        // VD: "Tầng 1", "Tầng 2" — tuỳ chọn
 
         // ── Tiện ích của sân ─────────────────────────────────────
         [Display(Name = "Đèn chiếu sáng")]
@@ -55,11 +53,16 @@ namespace QuanLiSanCauLong.Models
         [StringLength(1000)]
         [Display(Name = "Mô tả thêm")]
         public string? Description { get; set; }
-        // VD: "Gần cửa sổ, ánh sáng tự nhiên tốt nhất, vị trí góc yên tĩnh"
 
         // ── Hình ảnh ─────────────────────────────────────────────
         [Display(Name = "Hình ảnh sân")]
         public string? ImagePath { get; set; }
+
+        // SỬA LỖI: RuntimeBinderException: 'Court' does not contain a definition for 'ImageUrl'
+        // Court/Details.cshtml truy cập court.ImageUrl qua dynamic binding
+        // → [NotMapped] alias trỏ về ImagePath, không tạo thêm cột trong DB
+        [NotMapped]
+        public string? ImageUrl { get => ImagePath; set => ImagePath = value; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 

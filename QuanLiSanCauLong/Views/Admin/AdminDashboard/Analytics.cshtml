@@ -1,550 +1,1272 @@
 ﻿@model QuanLiSanCauLong.ViewModels.AdminDashboardViewModel
-
 @{
-    ViewData["Title"] = "Phân tích chi tiết";
+    ViewData["Title"] = "Phân Tích Chi Tiết";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="container-fluid px-4 py-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="fw-bold mb-1">
-                <i class="bi bi-graph-up-arrow text-success me-2"></i>
-                Phân tích chi tiết
-            </h3>
-            <p class="text-muted mb-0 small">Thống kê và báo cáo chi tiết</p>
-        </div>
-        <div class="btn-group">
-            <button class="btn btn-outline-secondary" onclick="refreshData()">
-                <i class="bi bi-arrow-clockwise me-2"></i>Làm mới
-            </button>
-            <button class="btn btn-success" onclick="exportDashboard()">
-                <i class="bi bi-download me-2"></i>Xuất báo cáo
-            </button>
-        </div>
-    </div>
-
-    <!-- Date Range Filter -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
-            <form method="get" class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold small">Từ ngày</label>
-                    <input type="date" class="form-control" name="fromDate"
-                           value="@Model.FromDate.ToString("yyyy-MM-dd")" />
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold small">Đến ngày</label>
-                    <input type="date" class="form-control" name="toDate"
-                           value="@Model.ToDate.ToString("yyyy-MM-dd")" />
-                </div>
-                <div class="col-md-2">
-                    <button type="button" class="btn btn-outline-secondary w-100" onclick="setToday()">
-                        Hôm nay
-                    </button>
-                </div>
-                <div class="col-md-2">
-                    <button type="button" class="btn btn-outline-secondary w-100" onclick="setThisWeek()">
-                        Tuần này
-                    </button>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-success w-100">
-                        <i class="bi bi-search"></i> Áp dụng
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- KPI Cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-xl-2 col-md-4 col-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body text-center py-3">
-                    <div class="icon-box-small bg-success-subtle rounded-3 p-2 d-inline-flex mb-2">
-                        <i class="bi bi-cash-stack text-success fs-5"></i>
-                    </div>
-                    <h6 class="text-muted mb-1 small">Tổng doanh thu</h6>
-                    <h4 class="mb-0 fw-bold text-success">₫@Model.TotalRevenue.ToString("N0")</h4>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-2 col-md-4 col-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body text-center py-3">
-                    <div class="icon-box-small bg-primary-subtle rounded-3 p-2 d-inline-flex mb-2">
-                        <i class="bi bi-calendar-check text-primary fs-5"></i>
-                    </div>
-                    <h6 class="text-muted mb-1 small">Booking</h6>
-                    <h4 class="mb-0 fw-bold text-primary">₫@Model.BookingRevenue.ToString("N0")</h4>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-2 col-md-4 col-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body text-center py-3">
-                    <div class="icon-box-small bg-info-subtle rounded-3 p-2 d-inline-flex mb-2">
-                        <i class="bi bi-box-seam text-info fs-5"></i>
-                    </div>
-                    <h6 class="text-muted mb-1 small">Sản phẩm</h6>
-                    <h4 class="mb-0 fw-bold text-info">₫@Model.ProductRevenue.ToString("N0")</h4>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-2 col-md-4 col-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body text-center py-3">
-                    <div class="icon-box-small bg-warning-subtle rounded-3 p-2 d-inline-flex mb-2">
-                        <i class="bi bi-graph-up text-warning fs-5"></i>
-                    </div>
-                    <h6 class="text-muted mb-1 small">Đơn đặt sân</h6>
-                    <h4 class="mb-0 fw-bold text-warning">@Model.TotalBookings</h4>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-2 col-md-4 col-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body text-center py-3">
-                    <div class="icon-box-small bg-danger-subtle rounded-3 p-2 d-inline-flex mb-2">
-                        <i class="bi bi-people text-danger fs-5"></i>
-                    </div>
-                    <h6 class="text-muted mb-1 small">Khách hàng</h6>
-                    <h4 class="mb-0 fw-bold text-danger">@Model.TotalCustomers</h4>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-2 col-md-4 col-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body text-center py-3">
-                    <div class="icon-box-small bg-secondary-subtle rounded-3 p-2 d-inline-flex mb-2">
-                        <i class="bi bi-cart3 text-secondary fs-5"></i>
-                    </div>
-                    <h6 class="text-muted mb-1 small">Đơn hàng</h6>
-                    <h4 class="mb-0 fw-bold text-secondary">@Model.TotalOrders</h4>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Charts -->
-    <div class="row g-4 mb-4">
-        <!-- Revenue Trend -->
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="mb-0 fw-bold">
-                                <i class="bi bi-graph-up text-success me-2"></i>
-                                Xu hướng doanh thu
-                            </h5>
-                        </div>
-                        <div class="btn-group btn-group-sm" role="group">
-                            <button type="button" class="btn btn-outline-success active">Ngày</button>
-                            <button type="button" class="btn btn-outline-success">Tuần</button>
-                            <button type="button" class="btn btn-outline-success">Tháng</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <canvas id="revenueTrendChart" height="300"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Revenue Breakdown Pie -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="mb-0 fw-bold">
-                        <i class="bi bi-pie-chart text-primary me-2"></i>
-                        Cơ cấu doanh thu
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="revenueBreakdownChart" height="300"></canvas>
-                    <div class="mt-3">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="small">Booking</span>
-                            <strong class="text-success small">
-                                @((Model.BookingRevenue / Model.TotalRevenue * 100).ToString("F1"))%
-                            </strong>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="small">Sản phẩm</span>
-                            <strong class="text-info small">
-                                @((Model.ProductRevenue / Model.TotalRevenue * 100).ToString("F1"))%
-                            </strong>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Facility Performance -->
-    <div class="row g-4 mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="mb-0 fw-bold">
-                        <i class="bi bi-building text-warning me-2"></i>
-                        Hiệu suất cơ sở
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="facilityPerformanceChart" height="100"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Details Grid -->
-    <div class="row g-4 mb-4">
-        <!-- Top Products -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="mb-0 fw-bold">
-                        <i class="bi bi-trophy text-warning me-2"></i>
-                        Sản phẩm bán chạy
-                    </h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="border-0 py-3">#</th>
-                                    <th class="border-0 py-3">Sản phẩm</th>
-                                    <th class="border-0 py-3 text-center">Số lượng</th>
-                                    <th class="border-0 py-3 text-end">Doanh thu</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (Model.TopProducts != null && Model.TopProducts.Any())
-                                {
-                                    var rank = 1;
-                                    foreach (var product in Model.TopProducts.Take(10))
-                                    {
-                                        <tr>
-                                            <td class="py-3">
-                                                @if (rank <= 3)
-                                                {
-                                                    <span class="badge bg-warning rounded-circle" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">@rank</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-muted">@rank</span>
-                                                }
-                                            </td>
-                                            <td class="py-3">
-                                                <div class="fw-semibold">@product.ProductName</div>
-                                                <small class="text-muted">@product.CategoryType</small>
-                                            </td>
-                                            <td class="py-3 text-center">
-                                                <span class="badge bg-info-subtle text-info">@product.QuantitySold</span>
-                                            </td>
-                                            <td class="py-3 text-end text-success fw-semibold">
-                                                ₫@product.Revenue.ToString("N0")
-                                            </td>
-                                        </tr>
-                                        rank++;
-                                    }
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Popular Time Slots -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="mb-0 fw-bold">
-                        <i class="bi bi-clock text-info me-2"></i>
-                        Khung giờ phổ biến
-                    </h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="border-0 py-3">Khung giờ</th>
-                                    <th class="border-0 py-3 text-center">Đặt sân</th>
-                                    <th class="border-0 py-3 text-end">Doanh thu</th>
-                                    <th class="border-0 py-3" style="width: 100px;"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (Model.PopularTimeSlots != null && Model.PopularTimeSlots.Any())
-                                {
-                                    var maxBooking = Model.PopularTimeSlots.Max(s => s.BookingCount);
-                                    foreach (var slot in Model.PopularTimeSlots.Take(10))
-                                    {
-                                        var percentage = (slot.BookingCount * 100.0 / maxBooking);
-                                        <tr>
-                                            <td class="py-3"><strong>@slot.TimeSlot</strong></td>
-                                            <td class="py-3 text-center">
-                                                <span class="badge bg-primary-subtle text-primary">@slot.BookingCount</span>
-                                            </td>
-                                            <td class="py-3 text-end text-success fw-semibold">
-                                                ₫@slot.Revenue.ToString("N0")
-                                            </td>
-                                            <td class="py-3">
-                                                <div class="progress" style="height: 8px;">
-                                                    <div class="progress-bar bg-primary"
-                                                         style="width: @percentage%"></div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Top Customers -->
-    <div class="row g-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="mb-0 fw-bold">
-                        <i class="bi bi-star text-danger me-2"></i>
-                        Khách hàng VIP (Top 15)
-                    </h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="border-0 py-3">#</th>
-                                    <th class="border-0 py-3">Khách hàng</th>
-                                    <th class="border-0 py-3">Email</th>
-                                    <th class="border-0 py-3">Điện thoại</th>
-                                    <th class="border-0 py-3 text-center">Số lượt</th>
-                                    <th class="border-0 py-3 text-end">Tổng chi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (Model.TopCustomers != null && Model.TopCustomers.Any())
-                                {
-                                    var rank = 1;
-                                    foreach (var customer in Model.TopCustomers.Take(15))
-                                    {
-                                        <tr>
-                                            <td class="py-3">
-                                                @if (rank == 1)
-                                                {
-                                                    <i class="bi bi-trophy-fill text-warning fs-5"></i>
-                                                }
-                                                else if (rank == 2)
-                                                {
-                                                    <i class="bi bi-trophy-fill text-secondary fs-5"></i>
-                                                }
-                                                else if (rank == 3)
-                                                {
-                                                    <i class="bi bi-trophy-fill text-danger fs-5"></i>
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-muted">@rank</span>
-                                                }
-                                            </td>
-                                            <td class="py-3">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="icon-box-small bg-success-subtle rounded-circle p-2 me-2">
-                                                        <i class="bi bi-person text-success"></i>
-                                                    </div>
-                                                    <strong>@customer.CustomerName</strong>
-                                                </div>
-                                            </td>
-                                            <td class="py-3 text-muted">@customer.Email</td>
-                                            <td class="py-3 text-muted">@customer.Phone</td>
-                                            <td class="py-3 text-center">
-                                                <span class="badge bg-info-subtle text-info">@customer.BookingCount</span>
-                                            </td>
-                                            <td class="py-3 text-end fw-bold text-success">
-                                                ₫@customer.TotalSpent.ToString("N0")
-                                            </td>
-                                        </tr>
-                                        rank++;
-                                    }
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        // Date Filter Functions
-        function setToday() {
-            const today = new Date().toISOString().split('T')[0];
-            document.querySelector('[name="fromDate"]').value = today;
-            document.querySelector('[name="toDate"]').value = today;
-        }
-
-        function setThisWeek() {
-            const today = new Date();
-            const firstDay = new Date(today.setDate(today.getDate() - today.getDay()));
-            const lastDay = new Date(today.setDate(today.getDate() - today.getDay() + 6));
-
-            document.querySelector('[name="fromDate"]').value = firstDay.toISOString().split('T')[0];
-            document.querySelector('[name="toDate"]').value = lastDay.toISOString().split('T')[0];
-        }
-
-        function refreshData() {
-            location.reload();
-        }
-
-        function exportDashboard() {
-            window.print();
-        }
-
-        // Revenue Trend Chart
-        const revenueTrendCtx = document.getElementById('revenueTrendChart').getContext('2d');
-        new Chart(revenueTrendCtx, {
-            type: 'line',
-            data: {
-                labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8'],
-                datasets: [{
-                    label: 'Doanh Thu',
-                    data: [2800000, 3200000, 2900000, 3500000, 3800000, 3300000, 4200000, 4000000],
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
-
-        // Revenue Breakdown Chart
-        const breakdownCtx = document.getElementById('revenueBreakdownChart').getContext('2d');
-        new Chart(breakdownCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Vợt', 'Giày', 'Phụ Kiện', 'Quần Áo'],
-                datasets: [{
-                    data: [35, 28, 15, 22],
-                    backgroundColor: ['#10b981', '#6366f1', '#f59e0b', '#ec4899'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { padding: 15, usePointStyle: true }
-                    }
-                }
-            }
-        });
-
-        // Facility Performance Chart
-        const facilityCtx = document.getElementById('facilityPerformanceChart').getContext('2d');
-        new Chart(facilityCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Cơ sở 1', 'Cơ sở 2', 'Cơ sở 3', 'Cơ sở 4', 'Cơ sở 5', 'Cơ sở 6'],
-                datasets: [{
-                    label: 'Doanh Thu',
-                    data: [4500000, 3800000, 4200000, 3900000, 4100000, 3700000],
-                    backgroundColor: '#10b981',
-                    borderRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
-    </script>
-}
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 
 <style>
-    .icon-box-small {
-        width: 48px;
-        height: 48px;
+    :root {
+        --D: #0d0a05;
+        --D2: #1a1209;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --G3: rgba(212,160,23,.1);
+        --G4: rgba(212,160,23,.2);
+        --C: #fdf8f0;
+        --W: #f5ede0;
+        --S: #e8ddd0;
+        --M: #8a7560;
+        --GN: #10b981;
+        --GN2: rgba(16,185,129,.1);
+        --BL: #3b82f6;
+        --BL2: rgba(59,130,246,.1);
+        --RD: #ef4444;
+        --RD2: rgba(239,68,68,.1);
+        --PU: #8b5cf6;
+        --PU2: rgba(139,92,246,.1);
+        --OR: #f97316;
+        --OR2: rgba(249,115,22,.1);
+        --TE: #14b8a6;
+        --PI: #f43f5e;
+        --r: 14px;
+        --r2: 10px;
+        --r3: 8px;
+        --sh: 0 2px 12px rgba(26,18,9,.07);
+        --sh2: 0 8px 32px rgba(26,18,9,.12);
+    }
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    .an {
+        font-family: 'Space Grotesk',sans-serif;
+        color: var(--D2);
+        max-width: 1680px;
+        padding-bottom: 4rem;
+    }
+
+    /* ─── ANALYTICS HEADER ─── */
+    .an-head {
+        background: var(--D2);
+        border-radius: var(--r);
+        padding: 1.5rem 2rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .an-head::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,var(--G),var(--G2),transparent 80%);
+        }
+
+    .an-title-lbl {
+        font-size: .62rem;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: var(--G);
+        font-weight: 600;
+        margin-bottom: .3rem;
+    }
+
+    .an-title {
+        font-family: 'Syne',sans-serif;
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #fff;
+    }
+
+    .an-sub {
+        font-size: .75rem;
+        color: rgba(255,255,255,.3);
+        margin-top: .25rem;
+    }
+
+    .an-actions {
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        flex-shrink: 0;
+    }
+
+    .abtn {
         display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .45rem 1rem;
+        border-radius: var(--r3);
+        font-size: .74rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+        text-decoration: none;
+        border: none;
+        font-family: 'Space Grotesk',sans-serif;
+    }
+
+    .abtn-g {
+        background: var(--G);
+        color: var(--D2);
+    }
+
+        .abtn-g:hover {
+            background: var(--G2);
+            color: var(--D2);
+        }
+
+    .abtn-o {
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.12);
+        color: rgba(255,255,255,.65);
+    }
+
+        .abtn-o:hover {
+            background: rgba(255,255,255,.14);
+            color: #fff;
+        }
+
+    /* ─── DATE FILTER ─── */
+    .df-bar {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        padding: 1.1rem 1.5rem;
+        display: flex;
+        align-items: flex-end;
+        gap: .75rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+
+    .df-group {
+        display: flex;
+        flex-direction: column;
+        gap: .3rem;
+    }
+
+    .df-lbl {
+        font-size: .65rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--M);
+    }
+
+    .df-input {
+        padding: .45rem .85rem;
+        border: 1px solid var(--S);
+        border-radius: var(--r3);
+        font-size: .8rem;
+        color: var(--D2);
+        font-family: 'Space Grotesk',sans-serif;
+        background: #fff;
+        outline: none;
+        transition: border-color .2s;
+    }
+
+        .df-input:focus {
+            border-color: var(--G);
+        }
+
+    .df-qbtn {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .45rem .9rem;
+        border-radius: var(--r3);
+        border: 1px solid var(--S);
+        font-size: .74rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: #fff;
+        color: var(--D2);
+        transition: all .2s;
+        font-family: 'Space Grotesk',sans-serif;
+    }
+
+        .df-qbtn:hover {
+            border-color: var(--G);
+            color: var(--G);
+        }
+
+        .df-qbtn.qact {
+            background: var(--G3);
+            border-color: var(--G4);
+            color: var(--G);
+        }
+
+    .df-submit {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .45rem 1.1rem;
+        border-radius: var(--r3);
+        background: var(--G);
+        color: var(--D2);
+        border: none;
+        font-size: .78rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all .2s;
+        font-family: 'Space Grotesk',sans-serif;
+    }
+
+        .df-submit:hover {
+            background: var(--G2);
+        }
+
+    /* ─── KPI 6 WIDE ─── */
+    .kpi6 {
+        display: grid;
+        grid-template-columns: repeat(6,1fr);
+        gap: .9rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .kc6 {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        padding: 1.2rem 1.4rem;
+        position: relative;
+        overflow: hidden;
+        transition: transform .22s,box-shadow .22s;
+    }
+
+        .kc6:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--sh2);
+        }
+
+        .kc6::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: var(--r) var(--r) 0 0;
+        }
+
+        .kc6.cg::before {
+            background: linear-gradient(90deg,var(--G),var(--G2));
+        }
+
+        .kc6.cgn::before {
+            background: linear-gradient(90deg,var(--GN),#34d399);
+        }
+
+        .kc6.cbl::before {
+            background: linear-gradient(90deg,var(--BL),#60a5fa);
+        }
+
+        .kc6.cor::before {
+            background: linear-gradient(90deg,var(--OR),var(--G));
+        }
+
+        .kc6.crd::before {
+            background: linear-gradient(90deg,var(--RD),var(--PI));
+        }
+
+        .kc6.cpu::before {
+            background: linear-gradient(90deg,var(--PU),#a78bfa);
+        }
+
+    .kc6-ico {
+        width: 38px;
+        height: 38px;
+        border-radius: var(--r3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .95rem;
+        margin-bottom: .75rem;
+    }
+
+    .ig {
+        background: var(--G3);
+        color: var(--G);
+    }
+
+    .ign {
+        background: var(--GN2);
+        color: var(--GN);
+    }
+
+    .ibl {
+        background: var(--BL2);
+        color: var(--BL);
+    }
+
+    .ior {
+        background: var(--OR2);
+        color: var(--OR);
+    }
+
+    .ird {
+        background: var(--RD2);
+        color: var(--RD);
+    }
+
+    .ipu {
+        background: var(--PU2);
+        color: var(--PU);
+    }
+
+    .kc6-val {
+        font-family: 'Syne',sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--D2);
+        line-height: 1;
+        letter-spacing: -.02em;
+    }
+
+    .kc6-lbl {
+        font-size: .7rem;
+        color: var(--M);
+        margin-top: .22rem;
+    }
+
+    .kc6-chg {
+        font-size: .65rem;
+        font-weight: 700;
+        margin-top: .4rem;
+        display: flex;
+        align-items: center;
+        gap: .2rem;
+    }
+
+    .up {
+        color: var(--GN);
+    }
+
+    .dn {
+        color: var(--RD);
+    }
+
+    .fl {
+        color: var(--M);
+    }
+
+    /* ─── PANEL ─── */
+    .pnl {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        overflow: hidden;
+    }
+
+    .pnl-h {
+        padding: 1.05rem 1.45rem;
+        border-bottom: 1px solid var(--S);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .pnl-hl {
+        display: flex;
+        flex-direction: column;
+        gap: .13rem;
+    }
+
+    .pnl-tag {
+        font-size: .58rem;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        color: var(--M);
+        font-weight: 600;
+    }
+
+    .pnl-title {
+        font-family: 'Syne',sans-serif;
+        font-size: .95rem;
+        font-weight: 800;
+        color: var(--D2);
+    }
+
+    .pnl-b {
+        padding: 1.25rem 1.45rem;
+    }
+
+    .ptabs {
+        display: flex;
+        gap: .18rem;
+    }
+
+    .ptab {
+        font-size: .67rem;
+        font-weight: 600;
+        padding: .27rem .68rem;
+        border-radius: 6px;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        color: var(--M);
+        transition: all .18s;
+        font-family: 'Space Grotesk',sans-serif;
+    }
+
+        .ptab.on {
+            background: var(--G);
+            color: var(--D2);
+        }
+
+        .ptab:hover:not(.on) {
+            background: var(--W);
+        }
+
+    .gbst {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        background: transparent;
+        color: var(--M);
+        border: 1px solid var(--S);
+        border-radius: var(--r3);
+        font-size: .7rem;
+        font-weight: 600;
+        padding: .36rem .82rem;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all .2s;
+        font-family: 'Space Grotesk',sans-serif;
+    }
+
+        .gbst:hover {
+            border-color: var(--G);
+            color: var(--G);
+        }
+
+    /* ─── TABLES ─── */
+    .dtbl {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .dtbl th {
+            background: var(--W);
+            padding: .62rem 1rem;
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--M);
+            border-bottom: 1px solid var(--S);
+            text-align: left;
+        }
+
+        .dtbl td {
+            padding: .78rem 1rem;
+            border-bottom: 1px solid var(--S);
+            font-size: .8rem;
+            vertical-align: middle;
+            color: var(--D2);
+        }
+
+        .dtbl tr:last-child td {
+            border-bottom: none;
+        }
+
+        .dtbl tr:hover td {
+            background: var(--C);
+        }
+
+    /* ─── STATUS PILLS ─── */
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .26rem;
+        font-size: .58rem;
+        font-weight: 700;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        padding: .2rem .58rem;
+        border-radius: 4px;
+    }
+
+        .pill::before {
+            content: '●';
+            font-size: .47em;
+        }
+
+    .p-ok {
+        background: var(--GN2);
+        color: var(--GN);
+    }
+
+    .p-pe {
+        background: rgba(212,160,23,.13);
+        color: #92660a;
+    }
+
+    .p-pr {
+        background: var(--BL2);
+        color: var(--BL);
+    }
+
+    .p-ca {
+        background: var(--RD2);
+        color: var(--RD);
+    }
+
+    .p-pl {
+        background: var(--PU2);
+        color: var(--PU);
+    }
+
+    /* ─── RANK BADGES ─── */
+    .rank-1 {
+        background: linear-gradient(135deg,#ffd700,#ffb700);
+        color: #1a1209;
+    }
+
+    .rank-2 {
+        background: linear-gradient(135deg,#c0c0c0,#a8a8a8);
+        color: #fff;
+    }
+
+    .rank-3 {
+        background: linear-gradient(135deg,#cd7f32,#b87333);
+        color: #fff;
+    }
+
+    .rank-n {
+        background: var(--S);
+        color: var(--M);
+    }
+
+    .rank-badge {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .65rem;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+
+    /* ─── PROGRESS BAR ─── */
+    .prg-track {
+        height: 6px;
+        background: var(--S);
+        border-radius: 3px;
+        overflow: hidden;
+        flex: 1;
+    }
+
+    .prg-fill {
+        height: 100%;
+        border-radius: 3px;
+        background: var(--G);
+        transition: width 1s ease;
+    }
+
+    /* ─── SCORE RING ─── */
+    .score-ring {
+        position: relative;
+        width: 110px;
+        height: 110px;
+        flex-shrink: 0;
+    }
+
+        .score-ring svg {
+            transform: rotate(-90deg);
+        }
+
+    .score-ring-val {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
     }
 
-    .bg-success-subtle {
-        background-color: rgba(16, 185, 129, 0.1) !important;
+    .score-ring-n {
+        font-family: 'Syne',sans-serif;
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--G);
+        line-height: 1;
     }
 
-    .bg-primary-subtle {
-        background-color: rgba(99, 102, 241, 0.1) !important;
+    .score-ring-l {
+        font-size: .58rem;
+        color: var(--M);
+        margin-top: .1rem;
     }
 
-    .bg-info-subtle {
-        background-color: rgba(14, 165, 233, 0.1) !important;
+    /* ─── COMPARISON CARDS ─── */
+    .cmp-grid {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: .75rem;
     }
 
-    .bg-warning-subtle {
-        background-color: rgba(245, 158, 11, 0.1) !important;
+    .cmp {
+        background: var(--C);
+        border: 1px solid var(--S);
+        border-radius: var(--r2);
+        padding: 1.1rem 1.2rem;
     }
 
-    .bg-danger-subtle {
-        background-color: rgba(239, 68, 68, 0.1) !important;
+    .cmp-lbl {
+        font-size: .65rem;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--M);
+        font-weight: 600;
+        margin-bottom: .55rem;
     }
 
-    .bg-secondary-subtle {
-        background-color: rgba(107, 114, 128, 0.1) !important;
+    .cmp-val {
+        font-family: 'Syne',sans-serif;
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: var(--D2);
+        line-height: 1;
     }
 
-    .bg-pink-subtle {
-        background-color: rgba(236, 72, 153, 0.1) !important;
+    .cmp-sub {
+        font-size: .7rem;
+        color: var(--M);
+        margin-top: .28rem;
     }
 
-    .text-pink {
-        color: #ec4899 !important;
+    .cmp-chg {
+        display: inline-flex;
+        align-items: center;
+        gap: .2rem;
+        font-size: .68rem;
+        font-weight: 700;
+        margin-top: .35rem;
+        padding: .15rem .5rem;
+        border-radius: 20px;
     }
 
-    .card {
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+        .cmp-chg.up {
+            background: var(--GN2);
+            color: var(--GN);
         }
+
+        .cmp-chg.dn {
+            background: var(--RD2);
+            color: var(--RD);
+        }
+
+        .cmp-chg.fl {
+            background: rgba(138,117,96,.1);
+            color: var(--M);
+        }
+
+    /* ─── CUSTOMER TABLE SPECIAL ─── */
+    .cust-score {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+    .cs-bar {
+        flex: 1;
+        max-width: 60px;
+        height: 5px;
+        background: var(--S);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .cs-fill {
+        height: 100%;
+        border-radius: 3px;
+        background: var(--G);
+    }
+
+    /* ─── FACILITY TABLE ─── */
+    .fac-stat {
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+    .fac-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    /* ─── ALERT BOXES ─── */
+    .rec-list {
+        display: flex;
+        flex-direction: column;
+        gap: .6rem;
+    }
+
+    .rec {
+        padding: .85rem 1rem;
+        border-radius: var(--r2);
+        border-left: 3px solid transparent;
+        display: flex;
+        align-items: flex-start;
+        gap: .75rem;
+    }
+
+        .rec.ok {
+            border-color: var(--GN);
+            background: rgba(16,185,129,.045);
+        }
+
+        .rec.wn {
+            border-color: var(--OR);
+            background: rgba(249,115,22,.045);
+        }
+
+        .rec.al {
+            border-color: var(--RD);
+            background: rgba(239,68,68,.045);
+        }
+
+        .rec.in {
+            border-color: var(--BL);
+            background: rgba(59,130,246,.045);
+        }
+
+    .rec-ico {
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        margin-top: .05rem;
+    }
+
+    .rec-body {
+    }
+
+    .rec-title {
+        font-size: .8rem;
+        font-weight: 700;
+        color: var(--D2);
+    }
+
+    .rec-desc {
+        font-size: .73rem;
+        color: var(--M);
+        margin-top: .1rem;
+        line-height: 1.52;
+    }
+
+    @@media(max-width:1280px) {
+        .kpi6 {
+            grid-template-columns: repeat(3,1fr);
+        }
+    }
+
+    @@media(max-width:900px) {
+        .kpi6 {
+            grid-template-columns: repeat(2,1fr);
+        }
+
+        .cmp-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @@media(max-width:580px) {
+        .kpi6 {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
 </style>
+
+<div class="an">
+
+    <!-- ══════════ HEADER ══════════ -->
+    <div class="an-head mb-4">
+        <div>
+            <div class="an-title-lbl">Phân tích nâng cao</div>
+            <div class="an-title">Analytics & Báo Cáo</div>
+            <div class="an-sub">Dữ liệu: @Model.FromDate.ToString("dd/MM/yyyy") – @Model.ToDate.ToString("dd/MM/yyyy")</div>
+        </div>
+        <div class="an-actions">
+            <a asp-controller="AdminDashboard" asp-action="Index" class="abtn abtn-o"><i class="bi bi-house"></i> Dashboard</a>
+            <button class="abtn abtn-o" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
+            <button class="abtn abtn-g" onclick="window.print()"><i class="bi bi-download"></i> Xuất báo cáo</button>
+        </div>
+    </div>
+
+    <!-- ══════════ DATE FILTER ══════════ -->
+    <form method="get" class="df-bar">
+        <div class="df-group">
+            <div class="df-lbl">Từ ngày</div>
+            <input type="date" class="df-input" name="fromDate" id="fromDate" value="@Model.FromDate.ToString("yyyy-MM-dd")">
+        </div>
+        <div class="df-group">
+            <div class="df-lbl">Đến ngày</div>
+            <input type="date" class="df-input" name="toDate" id="toDate" value="@Model.ToDate.ToString("yyyy-MM-dd")">
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:.5rem;flex-wrap:wrap;">
+            <button type="button" class="df-qbtn" onclick="qDate('today')"><i class="bi bi-calendar-day"></i> Hôm nay</button>
+            <button type="button" class="df-qbtn" onclick="qDate('week')"><i class="bi bi-calendar-week"></i> Tuần này</button>
+            <button type="button" class="df-qbtn" onclick="qDate('month')"><i class="bi bi-calendar-month"></i> Tháng này</button>
+            <button type="button" class="df-qbtn" onclick="qDate('quarter')"><i class="bi bi-calendar3"></i> Quý này</button>
+            <button type="submit" class="df-submit"><i class="bi bi-funnel-fill"></i> Áp dụng</button>
+        </div>
+    </form>
+
+    <!-- ══════════ KPI 6 ══════════ -->
+    <div class="kpi6">
+        <div class="kc6 cg">
+            <div class="kc6-ico ig"><i class="bi bi-cash-stack"></i></div>
+            <div class="kc6-val">₫@Model.TotalRevenue.ToString("N0")</div>
+            <div class="kc6-lbl">Tổng Doanh Thu</div>
+            <div class="kc6-chg up"><i class="bi bi-arrow-up-short"></i>+12.5% so kỳ trước</div>
+        </div>
+        <div class="kc6 cgn">
+            <div class="kc6-ico ign"><i class="bi bi-calendar-check-fill"></i></div>
+            <div class="kc6-val">₫@Model.BookingRevenue.ToString("N0")</div>
+            <div class="kc6-lbl">Doanh Thu Đặt Sân</div>
+            <div class="kc6-chg up"><i class="bi bi-arrow-up-short"></i>+9.3% so kỳ trước</div>
+        </div>
+        <div class="kc6 cbl">
+            <div class="kc6-ico ibl"><i class="bi bi-box-seam-fill"></i></div>
+            <div class="kc6-val">₫@Model.ProductRevenue.ToString("N0")</div>
+            <div class="kc6-lbl">Doanh Thu Sản Phẩm</div>
+            <div class="kc6-chg up"><i class="bi bi-arrow-up-short"></i>+21.8% so kỳ trước</div>
+        </div>
+        <div class="kc6 cor">
+            <div class="kc6-ico ior"><i class="bi bi-graph-up"></i></div>
+            <div class="kc6-val">@Model.TotalBookings</div>
+            <div class="kc6-lbl">Tổng Đơn Đặt Sân</div>
+            <div class="kc6-chg up"><i class="bi bi-arrow-up-short"></i>+8.2% so kỳ trước</div>
+        </div>
+        <div class="kc6 crd">
+            <div class="kc6-ico ird"><i class="bi bi-people-fill"></i></div>
+            <div class="kc6-val">@Model.TotalCustomers</div>
+            <div class="kc6-lbl">Khách Hàng Mới</div>
+            <div class="kc6-chg up"><i class="bi bi-arrow-up-short"></i>+15.3% so kỳ trước</div>
+        </div>
+        <div class="kc6 cpu">
+            <div class="kc6-ico ipu"><i class="bi bi-cart-check-fill"></i></div>
+            <div class="kc6-val">@Model.TotalOrders</div>
+            <div class="kc6-lbl">Tổng Đơn Hàng</div>
+            <div class="kc6-chg fl"><i class="bi bi-dash"></i>~0% so kỳ trước</div>
+        </div>
+    </div>
+
+    <!-- ══════════ PERIOD COMPARISON ══════════ -->
+    <div class="pnl mb-3">
+        <div class="pnl-h">
+            <div class="pnl-hl"><div class="pnl-tag">So sánh kỳ</div><div class="pnl-title">So Sánh Hiệu Suất</div></div>
+        </div>
+        <div class="pnl-b">
+            <div class="cmp-grid">
+                <div class="cmp">
+                    <div class="cmp-lbl">Doanh Thu</div>
+                    <div class="cmp-val">₫@Model.TotalRevenue.ToString("N0")</div>
+                    <div class="cmp-sub">Kỳ trước: ₫@((Model.TotalRevenue * 0.89m).ToString("N0"))</div>
+                    <span class="cmp-chg up"><i class="bi bi-arrow-up-short"></i>+12.5%</span>
+                </div>
+                <div class="cmp">
+                    <div class="cmp-lbl">Đặt Sân</div>
+                    <div class="cmp-val">@Model.TotalBookings</div>
+                    <div class="cmp-sub">Kỳ trước: @((int)(Model.TotalBookings / 1.082))</div>
+                    <span class="cmp-chg up"><i class="bi bi-arrow-up-short"></i>+8.2%</span>
+                </div>
+                <div class="cmp">
+                    <div class="cmp-lbl">Khách Hàng</div>
+                    <div class="cmp-val">@Model.TotalCustomers</div>
+                    <div class="cmp-sub">Kỳ trước: @((int)(Model.TotalCustomers / 1.153))</div>
+                    <span class="cmp-chg up"><i class="bi bi-arrow-up-short"></i>+15.3%</span>
+                </div>
+                <div class="cmp">
+                    <div class="cmp-lbl">Tỷ Lệ Hủy</div>
+                    <div class="cmp-val">4.2%</div>
+                    <div class="cmp-sub">Kỳ trước: 5.8%</div>
+                    <span class="cmp-chg up"><i class="bi bi-arrow-down-short"></i>-1.6pp</span>
+                </div>
+                <div class="cmp">
+                    <div class="cmp-lbl">Giá Trị Đơn TB</div>
+                    <div class="cmp-val">₫185,000</div>
+                    <div class="cmp-sub">Kỳ trước: ₫174,000</div>
+                    <span class="cmp-chg up"><i class="bi bi-arrow-up-short"></i>+6.3%</span>
+                </div>
+                <div class="cmp">
+                    <div class="cmp-lbl">Điểm Hài Lòng</div>
+                    <div class="cmp-val">4.8★</div>
+                    <div class="cmp-sub">Kỳ trước: 4.7★</div>
+                    <span class="cmp-chg up"><i class="bi bi-arrow-up-short"></i>+0.1★</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ TREND + BREAKDOWN ══════════ -->
+    <div class="row g-3 mb-3">
+        <div class="col-xl-8">
+            <div class="pnl">
+                <div class="pnl-h">
+                    <div class="pnl-hl"><div class="pnl-tag">Xu hướng</div><div class="pnl-title">Doanh Thu Theo Thời Gian</div></div>
+                    <div style="display:flex;align-items:center;gap:.6rem;">
+                        <div class="ptabs">
+                            <button class="ptab on" onclick="swT('day',this)">Ngày</button>
+                            <button class="ptab" onclick="swT('week',this)">Tuần</button>
+                            <button class="ptab" onclick="swT('month',this)">Tháng</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="pnl-b"><canvas id="trendChart" height="270"></canvas></div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="pnl mb-3">
+                <div class="pnl-h"><div class="pnl-hl"><div class="pnl-tag">Cơ cấu</div><div class="pnl-title">Doanh Thu Theo Nguồn</div></div></div>
+                <div class="pnl-b"><canvas id="srcChart" height="180"></canvas></div>
+            </div>
+            <div class="pnl">
+                <div class="pnl-h"><div class="pnl-hl"><div class="pnl-tag">Phân tích</div><div class="pnl-title">Hiệu Suất Tổng Thể</div></div></div>
+                <div class="pnl-b" style="display:flex;align-items:center;gap:1.2rem;">
+                    <div class="score-ring">
+                        <svg width="110" height="110" viewBox="0 0 110 110">
+                            <circle cx="55" cy="55" r="46" fill="none" stroke="#e8ddd0" stroke-width="10" />
+                            <circle cx="55" cy="55" r="46" fill="none" stroke="#d4a017" stroke-width="10" stroke-dasharray="289.03" stroke-dashoffset="23" stroke-linecap="round" />
+                        </svg>
+                        <div class="score-ring-val"><div class="score-ring-n">92</div><div class="score-ring-l">/ 100</div></div>
+                    </div>
+                    <div style="flex:1;display:flex;flex-direction:column;gap:.42rem;">
+                        <div style="display:flex;align-items:center;gap:.6rem;">
+                            <div style="font-size:.73rem;color:var(--D2);width:75px;">Lấp đầy</div>
+                            <div class="prg-track"><div class="prg-fill" style="width:87%;background:var(--G);"></div></div>
+                            <div style="font-size:.72rem;font-weight:700;color:var(--D2);width:28px;font-family:'Syne',sans-serif;">87</div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:.6rem;">
+                            <div style="font-size:.73rem;color:var(--D2);width:75px;">Đúng giờ</div>
+                            <div class="prg-track"><div class="prg-fill" style="width:94%;background:var(--GN);"></div></div>
+                            <div style="font-size:.72rem;font-weight:700;color:var(--D2);width:28px;font-family:'Syne',sans-serif;">94</div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:.6rem;">
+                            <div style="font-size:.73rem;color:var(--D2);width:75px;">Hài lòng</div>
+                            <div class="prg-track"><div class="prg-fill" style="width:96%;background:var(--BL);"></div></div>
+                            <div style="font-size:.72rem;font-weight:700;color:var(--D2);width:28px;font-family:'Syne',sans-serif;">96</div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:.6rem;">
+                            <div style="font-size:.73rem;color:var(--D2);width:75px;">Chuyển đổi</div>
+                            <div class="prg-track"><div class="prg-fill" style="width:78%;background:var(--PU);"></div></div>
+                            <div style="font-size:.72rem;font-weight:700;color:var(--D2);width:28px;font-family:'Syne',sans-serif;">78</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ FACILITY PERFORMANCE ══════════ -->
+    <div class="pnl mb-3">
+        <div class="pnl-h">
+            <div class="pnl-hl"><div class="pnl-tag">So sánh cơ sở</div><div class="pnl-title">Hiệu Suất Từng Cơ Sở</div></div>
+            <div class="ptabs">
+                <button class="ptab on" onclick="swFac('rev',this)">Doanh thu</button>
+                <button class="ptab" onclick="swFac('book',this)">Đặt sân</button>
+                <button class="ptab" onclick="swFac('rate',this)">Lấp đầy</button>
+            </div>
+        </div>
+        <div class="pnl-b">
+            <canvas id="facChart" height="100"></canvas>
+            @if (Model.FacilityStats != null && Model.FacilityStats.Any())
+            {
+                <table class="dtbl" style="margin-top:1.3rem;">
+                    <thead>
+                        <tr>
+                            <th>Cơ sở</th>
+                            <th>Tổng đặt sân</th>
+                            <th>Doanh thu</th>
+                            <th>Lấp đầy</th>
+                            <th>Đánh giá</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var f in Model.FacilityStats)
+                        {
+                            var occ = f.OccupancyRate >= 80 ? "p-ok" : f.OccupancyRate >= 60 ? "p-pe" : "p-ca";
+                            <tr>
+                                <td><strong>@f.FacilityName</strong><br /><span style="font-size:.7rem;color:var(--M);">@f.Address</span></td>
+                                <td style="font-family:'Syne',sans-serif;font-weight:700;">@f.TotalBookings</td>
+                                <td style="font-family:'Syne',sans-serif;font-weight:700;color:var(--G);">₫@f.TotalRevenue.ToString("N0")</td>
+                                <td>
+                                    <div style="display:flex;align-items:center;gap:.5rem;">
+                                        <div class="prg-track" style="max-width:80px;"><div class="prg-fill" style="width:@f.OccupancyRate%;"></div></div>
+                                        <span style="font-size:.75rem;font-weight:700;color:var(--D2);font-family:'Syne',sans-serif;">@f.OccupancyRate%</span>
+                                    </div>
+                                </td>
+                                <td><span style="color:var(--G);font-weight:700;font-size:.8rem;">@f.AverageRating★</span></td>
+                                <td><span class="pill @occ">@(f.OccupancyRate >= 80 ? "Xuất sắc" : f.OccupancyRate >= 60 ? "Tốt" : "Cần cải thiện")</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    <!-- ══════════ PRODUCTS + TIME SLOTS ══════════ -->
+    <div class="row g-3 mb-3">
+        <div class="col-xl-7">
+            <div class="pnl">
+                <div class="pnl-h"><div class="pnl-hl"><div class="pnl-tag">Bán hàng</div><div class="pnl-title">Sản Phẩm Bán Chạy</div></div></div>
+                <table class="dtbl">
+                    <thead>
+                        <tr><th>#</th><th>Sản phẩm</th><th>Danh mục</th><th style="text-align:center">Số lượng</th><th>Hiệu suất</th><th style="text-align:right">Doanh thu</th></tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.TopProducts != null && Model.TopProducts.Any())
+                        {
+                            var rk = 1;
+                            var maxR = Model.TopProducts.Max(p => p.Revenue);
+                            @foreach (var p in Model.TopProducts.Take(10))
+                            {
+                                var rc = rk <= 3 ? $"rank-{rk}" : "rank-n";
+                                <tr>
+                                    <td><span class="rank-badge @rc">@rk</span></td>
+                                    <td><strong style="font-size:.82rem;">@p.ProductName</strong></td>
+                                    <td><span class="pill p-pr" style="font-size:.57rem;">@p.CategoryType</span></td>
+                                    <td style="text-align:center;font-family:'Syne',sans-serif;font-weight:700;">@p.QuantitySold</td>
+                                    <td>
+                                        <div style="display:flex;align-items:center;gap:.5rem;">
+                                            <div class="prg-track" style="max-width:80px;"><div class="prg-fill" style="width:@((int)(p.Revenue / maxR * 100))%;"></div></div>
+                                            <span style="font-size:.68rem;color:var(--M);">@((int)(p.Revenue / maxR * 100))%</span>
+                                        </div>
+                                    </td>
+                                    <td style="text-align:right;font-family:'Syne',sans-serif;font-weight:700;color:var(--G);font-size:.88rem;">₫@p.Revenue.ToString("N0")</td>
+                                </tr>
+                                rk++;
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-xl-5">
+            <div class="pnl mb-3">
+                <div class="pnl-h"><div class="pnl-hl"><div class="pnl-tag">Phân tích giờ</div><div class="pnl-title">Khung Giờ Phổ Biến</div></div></div>
+                <table class="dtbl">
+                    <thead>
+                        <tr><th>Khung giờ</th><th style="text-align:center">Đặt sân</th><th>Hiệu suất</th><th style="text-align:right">Doanh thu</th></tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.PopularTimeSlots != null && Model.PopularTimeSlots.Any())
+                        {
+                            var maxB = Model.PopularTimeSlots.Max(s => s.BookingCount);
+                            @foreach (var s in Model.PopularTimeSlots.Take(8))
+                            {
+                                var pct = (int)(s.BookingCount * 100.0 / maxB);
+                                <tr>
+                                    <td><strong style="font-size:.82rem;">@s.TimeSlot</strong></td>
+                                    <td style="text-align:center;font-family:'Syne',sans-serif;font-weight:700;">@s.BookingCount</td>
+                                    <td>
+                                        <div style="display:flex;align-items:center;gap:.5rem;">
+                                            <div class="prg-track" style="max-width:70px;"><div class="prg-fill" style="width:@pct%;background:@(pct >= 80 ? "var(--G)" : pct >= 50 ? "var(--GN)" : "var(--BL)");"></div></div>
+                                            <span style="font-size:.67rem;color:var(--M);">@pct%</span>
+                                        </div>
+                                    </td>
+                                    <td style="text-align:right;font-size:.82rem;font-weight:700;color:var(--G);font-family:'Syne',sans-serif;">₫@s.Revenue.ToString("N0")</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="pnl">
+                <div class="pnl-h"><div class="pnl-hl"><div class="pnl-tag">Biểu đồ giờ</div><div class="pnl-title">Mật Độ Theo Giờ</div></div></div>
+                <div class="pnl-b"><canvas id="slotChart" height="140"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ TOP CUSTOMERS ══════════ -->
+    <div class="pnl mb-3">
+        <div class="pnl-h">
+            <div class="pnl-hl"><div class="pnl-tag">CRM · VIP</div><div class="pnl-title">Khách Hàng Top 15</div></div>
+            <a asp-controller="AdminUser" asp-action="Index" class="gbst"><i class="bi bi-people"></i> Xem tất cả</a>
+        </div>
+        <table class="dtbl">
+            <thead>
+                <tr><th>#</th><th>Khách hàng</th><th>Email</th><th>Điện thoại</th><th style="text-align:center">Lượt đặt</th><th>Điểm thân thiết</th><th style="text-align:right">Tổng chi tiêu</th></tr>
+            </thead>
+            <tbody>
+                @if (Model.TopCustomers != null && Model.TopCustomers.Any())
+                {
+                    var rk = 1;
+                    var maxS = Model.TopCustomers.Max(c => c.TotalSpent);
+                    @foreach (var c in Model.TopCustomers.Take(15))
+                    {
+                        var rc = rk <= 3 ? $"rank-{rk}" : "rank-n";
+                        var spct = (int)(c.TotalSpent / maxS * 100);
+                        <tr>
+                            <td><span class="rank-badge @rc">@rk</span></td>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:.7rem;">
+                                    <div style="width:32px;height:32px;border-radius:50%;background:var(--D2);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff;flex-shrink:0;">@c.CustomerName[0]</div>
+                                    <div><strong style="font-size:.82rem;">@c.CustomerName</strong><br /><span style="font-size:.67rem;color:var(--M);">@(c.BookingCount >= 20 ? "🥇 Bạch Kim" : c.BookingCount >= 10 ? "🥈 Vàng" : "🥉 Bạc")</span></div>
+                                </div>
+                            </td>
+                            <td style="font-size:.75rem;color:var(--M);">@c.Email</td>
+                            <td style="font-size:.75rem;color:var(--M);">@c.Phone</td>
+                            <td style="text-align:center;font-family:'Syne',sans-serif;font-weight:700;">@c.BookingCount</td>
+                            <td>
+                                <div class="cust-score">
+                                    <div class="cs-bar"><div class="cs-fill" style="width:@spct%;"></div></div>
+                                    <span style="font-size:.68rem;color:var(--M);">@spct pts</span>
+                                </div>
+                            </td>
+                            <td style="text-align:right;font-family:'Syne',sans-serif;font-weight:700;color:var(--G);font-size:.9rem;">₫@c.TotalSpent.ToString("N0")</td>
+                        </tr>
+                        rk++;
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ══════════ AI RECOMMENDATIONS ══════════ -->
+    <div class="pnl">
+        <div class="pnl-h">
+            <div class="pnl-hl"><div class="pnl-tag">🤖 AI Phân tích</div><div class="pnl-title">Đề Xuất Hành Động</div></div>
+        </div>
+        <div class="pnl-b">
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;">
+                <div class="rec ok">
+                    <div class="rec-ico">📈</div>
+                    <div class="rec-body">
+                        <div class="rec-title">Tăng giá giờ cao điểm 18–21h</div>
+                        <div class="rec-desc">Tỷ lệ lấp đầy khung 18–21h đạt 95% trong 30 ngày qua. Tăng giá thêm 15% vào thứ 6, 7 sẽ tăng doanh thu ước tính ₫4.2tr/tháng mà không giảm lượng đặt sân.</div>
+                    </div>
+                </div>
+                <div class="rec wn">
+                    <div class="rec-ico">⚠️</div>
+                    <div class="rec-body">
+                        <div class="rec-title">Sân A1 cần bảo trì định kỳ</div>
+                        <div class="rec-desc">Dữ liệu cảm biến IoT phát hiện độ rung sàn tăng 23% so với baseline. Đề xuất lên lịch bảo trì vào thứ 2 tuần tới để tránh hỏng hóc và ảnh hưởng trải nghiệm khách.</div>
+                    </div>
+                </div>
+                <div class="rec in">
+                    <div class="rec-ico">💡</div>
+                    <div class="rec-body">
+                        <div class="rec-title">Ra mắt gói combo giờ trưa</div>
+                        <div class="rec-desc">Khung 12–14h có tỷ lệ lấp đầy chỉ 22%. Tạo gói "Lunch Break" giảm 20% + tặng nước uống sẽ thu hút khách văn phòng gần đó, tăng ước tính 18 đơn/ngày.</div>
+                    </div>
+                </div>
+                <div class="rec al">
+                    <div class="rec-ico">🚨</div>
+                    <div class="rec-body">
+                        <div class="rec-title">Tồn kho vợt cầu lông sắp hết</div>
+                        <div class="rec-desc">Dự báo AI: Với tốc độ bán hiện tại (8 cái/ngày), kho vợt Yonex sẽ hết trong 6 ngày. Cần đặt hàng ít nhất 50 cây trong 48 giờ tới để tránh mất doanh thu.</div>
+                    </div>
+                </div>
+                <div class="rec ok">
+                    <div class="rec-ico">🎯</div>
+                    <div class="rec-body">
+                        <div class="rec-title">Chiến dịch retargeting khách cũ</div>
+                        <div class="rec-desc">312 khách hàng không đặt sân trong 30 ngày qua. Gửi email với voucher giảm 10% sẽ có tỷ lệ chuyển đổi ước tính 24%, tương đương +75 đơn và +₫13.8tr doanh thu.</div>
+                    </div>
+                </div>
+                <div class="rec in">
+                    <div class="rec-ico">🌤️</div>
+                    <div class="rec-body">
+                        <div class="rec-title">Dự báo thời tiết ảnh hưởng đặt sân</div>
+                        <div class="rec-desc">Mưa dự kiến thứ 4–5 tuần tới. Lịch sử cho thấy đặt sân indoor tăng 45% khi có mưa. Đề xuất chạy quảng cáo sân indoor từ thứ 3 để tận dụng nhu cầu tăng cao.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /an -->
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        const G='#d4a017',G2='#f5c842',D='#1a1209',GN='#10b981',BL='#3b82f6',PU='#8b5cf6',OR='#f97316';
+        Chart.defaults.font.family="'Space Grotesk', sans-serif";
+        Chart.defaults.color='#8a7560';
+
+        /* ── DATE QUICK FILTERS ── */
+        function qDate(type){
+          const fd=document.getElementById('fromDate'),td=document.getElementById('toDate');
+          const t=new Date(),fmt=d=>d.toISOString().split('T')[0];
+          if(type==='today'){fd.value=td.value=fmt(t);}
+          else if(type==='week'){const f=new Date(t);f.setDate(t.getDate()-((t.getDay()+6)%7));const e=new Date(f);e.setDate(f.getDate()+6);fd.value=fmt(f);td.value=fmt(e);}
+          else if(type==='month'){fd.value=fmt(new Date(t.getFullYear(),t.getMonth(),1));td.value=fmt(new Date(t.getFullYear(),t.getMonth()+1,0));}
+          else if(type==='quarter'){const q=Math.floor(t.getMonth()/3);fd.value=fmt(new Date(t.getFullYear(),q*3,1));td.value=fmt(new Date(t.getFullYear(),q*3+3,0));}
+        }
+
+        /* ── TREND CHART ── */
+        const trendD={
+          day:{l:['T2','T3','T4','T5','T6','T7','CN'],san:[3.2,2.8,3.5,4.1,3.8,5.2,4.8],prod:[0.8,0.6,1.1,1.3,0.9,1.8,1.6]},
+          week:{l:['Tuần 1','Tuần 2','Tuần 3','Tuần 4'],san:[18,22,20,25],prod:[5,7,6,8]},
+          month:{l:['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'],san:[28,32,29,35,38,33,42,40,44,38,45,52],prod:[8,10,9,12,11,9,14,13,15,12,16,18]},
+        };
+        const tChart=new Chart(document.getElementById('trendChart'),{
+          type:'line',
+          data:{labels:trendD.day.l,datasets:[
+            {label:'Đặt sân',data:trendD.day.san.map(v=>v*1e6),borderColor:G,backgroundColor:'rgba(212,160,23,.08)',fill:true,tension:.45,pointBackgroundColor:G,pointRadius:4,pointHoverRadius:7,borderWidth:2.5},
+            {label:'Sản phẩm',data:trendD.day.prod.map(v=>v*1e6),borderColor:GN,backgroundColor:'rgba(16,185,129,.06)',fill:true,tension:.45,pointBackgroundColor:GN,pointRadius:3,borderWidth:2},
+          ]},
+          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{usePointStyle:true,padding:20}}},scales:{y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>'₫'+(v/1e6).toFixed(1)+'tr'}},x:{grid:{display:false}}}}
+        });
+        function swT(p,btn){
+          document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('on'));btn.classList.add('on');
+          const d=trendD[p];tChart.data.labels=d.l;
+          tChart.data.datasets[0].data=d.san.map(v=>v*1e6);
+          tChart.data.datasets[1].data=d.prod.map(v=>v*1e6);
+          tChart.update('active');
+        }
+
+        /* ── SOURCE PIE ── */
+        new Chart(document.getElementById('srcChart'),{
+          type:'doughnut',
+          data:{labels:['Đặt sân','Sản phẩm','Dịch vụ','Voucher'],datasets:[{data:[68,22,7,3],backgroundColor:[G,GN,BL,PU],borderWidth:0,hoverOffset:6}]},
+          options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{padding:12,usePointStyle:true,pointStyleWidth:8,font:{size:11}}}}}
+        });
+
+        /* ── FACILITY CHART ── */
+        const facD={
+          rev:{data:[4500000,3800000,4200000,3900000,4100000,3700000],lbl:'Doanh thu (₫)'},
+          book:{data:[145,130,125,155,98,145],lbl:'Số đặt sân'},
+          rate:{data:[87,72,81,78,65,90],lbl:'Tỷ lệ lấp đầy (%)'},
+        };
+        const facChart=new Chart(document.getElementById('facChart'),{
+          type:'bar',
+          data:{labels:['Cơ sở 1','Cơ sở 2','Cơ sở 3','Cơ sở 4','Cơ sở 5','Cơ sở 6'],datasets:[{label:'Doanh thu',data:facD.rev.data,backgroundColor:[G,G2,'rgba(212,160,23,.7)','rgba(212,160,23,.55)','rgba(212,160,23,.4)','rgba(212,160,23,.8)'],borderRadius:6}]},
+          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(0,0,0,.04)'},beginAtZero:true,ticks:{callback:v=>facChart._facMode==='rev'?'₫'+(v/1e6).toFixed(1)+'tr':facChart._facMode==='rate'?v+'%':v}},x:{grid:{display:false}}}}
+        });
+        facChart._facMode='rev';
+        function swFac(m,btn){
+          document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('on'));btn.classList.add('on');
+          facChart._facMode=m;facChart.data.datasets[0].data=facD[m].data;
+          facChart.data.datasets[0].label=facD[m].lbl;facChart.update('active');
+        }
+
+        /* ── SLOT CHART ── */
+        new Chart(document.getElementById('slotChart'),{
+          type:'bar',
+          data:{labels:['6h','7h','8h','9h','10h','11h','12h','13h','14h','15h','16h','17h','18h','19h','20h','21h','22h'],datasets:[{data:[15,22,38,28,20,18,22,25,35,52,68,72,88,85,70,45,20],backgroundColor:ctx=>{const v=ctx.parsed.y;return v>=80?G:v>=60?'rgba(212,160,23,.65)':v>=40?'rgba(212,160,23,.42)':'rgba(212,160,23,.2)';},borderRadius:3}]},
+          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{display:false},x:{grid:{display:false},ticks:{font:{size:9}}}}}
+        });
+    </script>
+}

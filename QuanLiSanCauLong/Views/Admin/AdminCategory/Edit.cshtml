@@ -2,31 +2,29 @@
 @{
     ViewData["Title"] = "Sửa - " + Model.CategoryName;
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
-}
-
-@functions {
-    string TypeIcon(string t) => t switch { "Food" => "bi-egg-fried", "Beverage" => "bi-cup-straw", "Equipment" => "bi-gear-wide-connected", "Clothing" => "bi-bag-heart", "Accessory" => "bi-watch", _ => "bi-folder2-open" };
-    string TypeColor(string t) => t switch { "Food" => "#b45309", "Beverage" => "#0369a1", "Equipment" => "#166534", "Clothing" => "#7e22ce", "Accessory" => "#be185d", _ => "#4b5563" };
-    string TypeBg(string t) => t switch { "Food" => "#fffbeb", "Beverage" => "#f0f9ff", "Equipment" => "#f0fdf4", "Clothing" => "#faf5ff", "Accessory" => "#fdf2f8", _ => "#f9fafb" };
-    string TypeLabel(string t) => t switch { "Food" => "🍱 Đồ ăn", "Beverage" => "🥤 Thức uống", "Equipment" => "🏸 Dụng cụ", "Clothing" => "👕 Quần áo", "Accessory" => "🧢 Phụ kiện", _ => "📦 Khác" };
-    string VisualBg(string t) => t switch { "Food" => "linear-gradient(135deg,#fffbeb,#fef3c7)", "Beverage" => "linear-gradient(135deg,#f0f9ff,#dbeafe)", "Equipment" => "linear-gradient(135deg,#f0fdf4,#dcfce7)", "Clothing" => "linear-gradient(135deg,#faf5ff,#ede9fe)", "Accessory" => "linear-gradient(135deg,#fdf2f8,#fce7f3)", _ => "linear-gradient(135deg,#f9fafb,#f3f4f6)" };
+    var behavior = Model.BehaviorType ?? "Retail";
 }
 
 <style>
     :root {
-        --court-dark: #1a1a2e;
-        --court-gold: #e8c840;
-        --court-gold-hover: #d4b320;
-        --court-bg: #f5f0e8;
-        --court-card: #ffffff;
-        --court-border: #e8e0d0;
-        --court-text: #2d2d2d;
-        --court-muted: #7a7060;
-        --red: #dc2626;
+        --dark: #1a1a2e;
+        --gold: #e8c840;
+        --gold-h: #d4b320;
+        --bg: #f5f0e8;
+        --card: #ffffff;
+        --border: #e8e0d0;
+        --text: #2d2d2d;
+        --muted: #7a7060;
+        --retail-c: #166534;
+        --retail-bg: #f0fdf4;
+        --rental-c: #1d4ed8;
+        --rental-bg: #eff6ff;
+        --service-c: #7c3aed;
+        --service-bg: #f5f3ff;
     }
 
     .page-wrapper {
-        background: var(--court-bg);
+        background: var(--bg);
         min-height: 100vh;
         padding: 2rem;
     }
@@ -34,11 +32,11 @@
     .page-title {
         font-size: 1.75rem;
         font-weight: 800;
-        color: var(--court-dark);
+        color: var(--dark);
     }
 
         .page-title span {
-            color: var(--court-gold);
+            color: var(--gold);
             font-style: italic;
         }
 
@@ -47,17 +45,17 @@
         align-items: center;
         gap: .4rem;
         font-size: .82rem;
-        color: var(--court-muted);
+        color: var(--muted);
         margin-bottom: 1.5rem;
     }
 
         .bc a {
-            color: var(--court-muted);
+            color: var(--muted);
             text-decoration: none;
         }
 
             .bc a:hover {
-                color: var(--court-dark);
+                color: var(--dark);
             }
 
     .bc-sep {
@@ -65,7 +63,7 @@
     }
 
     .bc-cur {
-        color: var(--court-dark);
+        color: var(--dark);
         font-weight: 700;
     }
 
@@ -83,8 +81,8 @@
     }
 
     .preview-side {
-        background: var(--court-card);
-        border: 1px solid var(--court-border);
+        background: var(--card);
+        border: 1px solid var(--border);
         border-radius: 14px;
         overflow: hidden;
         position: sticky;
@@ -101,11 +99,10 @@
         transition: background .35s;
     }
 
-        .prev-visual img.bg-img {
+        .prev-visual img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            position: absolute;
         }
 
     .prev-big-icon {
@@ -128,7 +125,7 @@
     .prev-name {
         font-size: 1rem;
         font-weight: 800;
-        color: var(--court-dark);
+        color: var(--dark);
         margin-bottom: .3rem;
     }
 
@@ -138,149 +135,174 @@
         border-radius: 20px;
         font-size: .72rem;
         font-weight: 700;
-        margin-bottom: .75rem;
+        margin-bottom: .5rem;
     }
 
-    .prev-id-row {
-        font-size: .75rem;
-        color: var(--court-muted);
-    }
-
-    .prev-label {
+    .prev-behavior {
+        display: inline-block;
+        padding: .2rem .65rem;
+        border-radius: 20px;
         font-size: .68rem;
         font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: var(--court-muted);
-        padding: .6rem 1.2rem .3rem;
-        border-top: 1px solid var(--court-border);
+        letter-spacing: .5px;
+        margin-left: .3rem;
+        margin-bottom: .5rem;
+    }
+
+    .bh-retail {
+        background: var(--retail-bg);
+        color: var(--retail-c);
+    }
+
+    .bh-rental {
+        background: var(--rental-bg);
+        color: var(--rental-c);
+    }
+
+    .bh-service {
+        background: var(--service-bg);
+        color: var(--service-c);
+    }
+
+    .prev-meta-row {
+        font-size: .76rem;
+        color: var(--muted);
+        display: flex;
+        flex-direction: column;
+        gap: .25rem;
     }
 
     .upload-zone {
-        border: 2px dashed var(--court-border);
+        border: 2px dashed var(--border);
         border-radius: 10px;
-        padding: 1rem;
+        padding: 1.1rem;
         text-align: center;
         cursor: pointer;
         transition: .2s;
-        background: var(--court-bg);
+        background: var(--bg);
         margin: 0 1.2rem 1.2rem;
     }
 
         .upload-zone:hover {
-            border-color: var(--court-gold);
+            border-color: var(--gold);
             background: #faf8f0;
         }
 
         .upload-zone i {
-            font-size: 1.4rem;
-            color: var(--court-muted);
+            font-size: 1.5rem;
+            color: var(--muted);
             display: block;
             margin-bottom: .3rem;
         }
 
         .upload-zone p {
-            font-size: .74rem;
-            color: var(--court-muted);
+            font-size: .75rem;
+            color: var(--muted);
             margin: 0;
         }
 
     .upload-preview {
-        margin-top: .5rem;
+        margin-top: .6rem;
         border-radius: 8px;
         overflow: hidden;
     }
 
         .upload-preview img {
             width: 100%;
-            max-height: 100px;
+            max-height: 110px;
             object-fit: cover;
         }
 
+    .prev-label {
+        font-size: .68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--muted);
+        padding: .6rem 1.2rem .3rem;
+        border-top: 1px solid var(--border);
+    }
+
     .form-card {
-        background: var(--court-card);
-        border: 1px solid var(--court-border);
+        background: var(--card);
+        border: 1px solid var(--border);
         border-radius: 14px;
         padding: 1.75rem;
     }
 
     .form-card-title {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
         font-weight: 800;
-        color: var(--court-dark);
+        color: var(--dark);
         margin-bottom: .2rem;
     }
 
     .form-card-sub {
-        font-size: .83rem;
-        color: var(--court-muted);
+        font-size: .82rem;
+        color: var(--muted);
         margin-bottom: 1.5rem;
     }
 
     .section-div {
-        font-size: .7rem;
+        font-size: .75rem;
         font-weight: 800;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        color: var(--court-dark);
-        display: inline-block;
-        padding-bottom: .4rem;
-        border-bottom: 2px solid var(--court-gold);
-        margin-bottom: .9rem;
+        letter-spacing: 1.2px;
+        color: var(--muted);
+        padding: .5rem 0;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 1rem;
     }
 
     .fl {
-        margin-bottom: .9rem;
+        display: flex;
+        flex-direction: column;
+        gap: .3rem;
+        margin-bottom: 1rem;
     }
 
         .fl label {
-            display: block;
-            font-size: .78rem;
+            font-size: .82rem;
             font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .5px;
-            color: var(--court-muted);
-            margin-bottom: 5px;
+            color: var(--dark);
         }
 
+    .req {
+        color: #dc2626;
+    }
+
     .fc {
-        border: 1.5px solid var(--court-border);
+        border: 1.5px solid var(--border);
         border-radius: 8px;
-        background: var(--court-bg);
-        color: var(--court-text);
+        padding: .55rem .85rem;
         font-size: .875rem;
-        padding: .5rem .75rem;
+        color: var(--text);
+        background: var(--bg);
         width: 100%;
-        transition: all .2s;
+        transition: .2s;
     }
 
         .fc:focus {
             outline: none;
-            border-color: var(--court-gold);
+            border-color: var(--gold);
             background: #fff;
-            box-shadow: 0 0 0 3px rgba(232,200,64,.2);
+            box-shadow: 0 0 0 3px rgba(232,200,64,.15);
         }
 
     textarea.fc {
-        resize: vertical;
         min-height: 80px;
-    }
-
-    .req {
-        color: var(--red);
+        resize: vertical;
     }
 
     .err-msg {
-        display: block;
-        font-size: .76rem;
-        color: var(--red);
-        margin-top: 3px;
+        font-size: .75rem;
+        color: #dc2626;
     }
 
     .two-col {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: .85rem;
+        gap: 1rem;
     }
 
     @@media(max-width:600px) {
@@ -289,48 +311,179 @@
         }
     }
 
-    .rule-grid {
-        display: grid;
-        grid-template-columns: repeat(2,1fr);
-        gap: .7rem;
-        margin-bottom: 1rem;
+    .behavior-tabs {
+        display: flex;
+        gap: .6rem;
+        margin-bottom: 1.25rem;
     }
 
-    @@media(max-width:600px) {
-        .rule-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    .rule-toggle {
-        border: 1.5px solid var(--court-border);
+    .bh-tab {
+        flex: 1;
+        padding: .7rem .5rem;
         border-radius: 10px;
-        padding: .75rem .9rem;
+        border: 2px solid var(--border);
         cursor: pointer;
-        transition: all .2s;
-        background: var(--court-bg);
-        display: block;
+        text-align: center;
+        transition: .2s;
+        background: var(--bg);
         position: relative;
     }
 
-        .rule-toggle input[type="checkbox"] {
+        .bh-tab:hover {
+            border-color: #aaa;
+        }
+
+        .bh-tab.active-retail {
+            border-color: var(--retail-c);
+            background: var(--retail-bg);
+        }
+
+        .bh-tab.active-rental {
+            border-color: var(--rental-c);
+            background: var(--rental-bg);
+        }
+
+        .bh-tab.active-service {
+            border-color: var(--service-c);
+            background: var(--service-bg);
+        }
+
+    .bh-tab-icon {
+        font-size: 1.4rem;
+        display: block;
+        margin-bottom: .2rem;
+    }
+
+    .bh-tab-label {
+        font-size: .78rem;
+        font-weight: 800;
+    }
+
+    .bh-tab-desc {
+        font-size: .67rem;
+        color: var(--muted);
+        margin-top: .1rem;
+    }
+
+    .bh-tab.active-retail .bh-tab-label {
+        color: var(--retail-c);
+    }
+
+    .bh-tab.active-rental .bh-tab-label {
+        color: var(--rental-c);
+    }
+
+    .bh-tab.active-service .bh-tab-label {
+        color: var(--service-c);
+    }
+
+    .bh-tab .check-badge {
+        display: none;
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        font-size: .85rem;
+    }
+
+    .bh-tab.active-retail .check-badge,
+    .bh-tab.active-rental .check-badge,
+    .bh-tab.active-service .check-badge {
+        display: inline;
+    }
+
+    .cond-panel {
+        display: none;
+        border-radius: 10px;
+        padding: 1rem 1.1rem;
+        margin-bottom: 1rem;
+        border: 1.5px solid transparent;
+    }
+
+        .cond-panel.show {
+            display: block;
+            animation: fadeIn .2s ease;
+        }
+
+    .panel-retail {
+        background: var(--retail-bg);
+        border-color: #86efac;
+    }
+
+    .panel-rental {
+        background: var(--rental-bg);
+        border-color: #93c5fd;
+    }
+
+    .panel-service {
+        background: var(--service-bg);
+        border-color: #c4b5fd;
+    }
+
+    .panel-title {
+        font-size: .75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: .75rem;
+    }
+
+    .panel-retail .panel-title {
+        color: var(--retail-c);
+    }
+
+    .panel-rental .panel-title {
+        color: var(--rental-c);
+    }
+
+    .panel-service .panel-title {
+        color: var(--service-c);
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-6px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .rule-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .65rem;
+        margin-bottom: 1rem;
+    }
+
+    .rule-toggle {
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: .75rem .9rem;
+        cursor: pointer;
+        transition: .2s;
+        background: var(--bg);
+        user-select: none;
+    }
+
+        .rule-toggle input {
             display: none;
         }
 
         .rule-toggle:hover {
-            border-color: var(--court-gold);
-            background: #faf8f0;
+            border-color: #aaa;
         }
 
     .rt-header {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        margin-bottom: .25rem;
+        justify-content: space-between;
     }
 
     .rt-ico-label {
-        font-size: .83rem;
+        font-size: .8rem;
         font-weight: 700;
         display: flex;
         align-items: center;
@@ -338,200 +491,249 @@
     }
 
     .rt-desc {
-        font-size: .72rem;
-        color: var(--court-muted);
+        font-size: .69rem;
+        color: var(--muted);
+        margin-top: .25rem;
     }
 
     .toggle-dot {
-        width: 32px;
-        height: 18px;
-        border-radius: 20px;
+        width: 30px;
+        height: 16px;
+        border-radius: 10px;
         background: #d1d5db;
         position: relative;
-        transition: background .2s;
+        transition: .25s;
         flex-shrink: 0;
     }
 
         .toggle-dot::after {
             content: '';
             position: absolute;
-            top: 3px;
-            left: 3px;
+            top: 2px;
+            left: 2px;
             width: 12px;
             height: 12px;
             border-radius: 50%;
             background: #fff;
-            transition: transform .2s;
+            transition: .25s;
         }
 
     .active-hsd {
+        border-color: #dc2626;
         background: #fef2f2;
-        border-color: #fca5a5;
     }
 
         .active-hsd .toggle-dot {
-            background: #ef4444;
+            background: #dc2626;
         }
 
-            .active-hsd .toggle-dot::after {
-                transform: translateX(14px);
-            }
-
     .active-fifo {
+        border-color: #3b82f6;
         background: #eff6ff;
-        border-color: #93c5fd;
     }
 
         .active-fifo .toggle-dot {
             background: #3b82f6;
         }
 
-            .active-fifo .toggle-dot::after {
-                transform: translateX(14px);
-            }
-
     .active-lot {
+        border-color: #6b7280;
         background: #f9fafb;
-        border-color: #d1d5db;
     }
 
         .active-lot .toggle-dot {
             background: #6b7280;
         }
 
-            .active-lot .toggle-dot::after {
-                transform: translateX(14px);
-            }
-
     .active-var {
+        border-color: #f59e0b;
         background: #fffbeb;
-        border-color: #fcd34d;
     }
 
         .active-var .toggle-dot {
             background: #f59e0b;
         }
 
-            .active-var .toggle-dot::after {
-                transform: translateX(14px);
+    .active-size {
+        border-color: #8b5cf6;
+        background: #f5f3ff;
+    }
+
+        .active-size .toggle-dot {
+            background: #8b5cf6;
+        }
+
+            .active-hsd .toggle-dot::after, .active-fifo .toggle-dot::after,
+            .active-lot .toggle-dot::after, .active-var .toggle-dot::after,
+            .active-size .toggle-dot::after {
+                left: 16px;
             }
 
-    /* Changed indicator */
-    .rule-toggle.changed::before {
-        content: '';
+    .money-input-wrap {
+        position: relative;
+    }
+
+        .money-input-wrap .fc {
+            padding-right: 3rem;
+        }
+
+    .money-suffix {
         position: absolute;
-        top: 8px;
-        right: 8px;
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: var(--court-gold);
+        right: .75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: .75rem;
+        font-weight: 700;
+        color: var(--muted);
     }
 
     .btn-row {
         display: flex;
+        gap: .75rem;
         justify-content: flex-end;
-        gap: .6rem;
         margin-top: 1.5rem;
         padding-top: 1.25rem;
-        border-top: 1px solid var(--court-border);
+        border-top: 1px solid var(--border);
     }
 
     .btn-cancel {
+        padding: .65rem 1.5rem;
+        border-radius: 10px;
+        border: 2px solid var(--border);
+        background: transparent;
+        color: var(--dark);
+        font-weight: 700;
+        font-size: .88rem;
+        text-decoration: none;
         display: inline-flex;
         align-items: center;
-        gap: .4rem;
-        padding: .6rem 1.4rem;
-        background: var(--court-bg);
-        color: var(--court-text);
-        border: 1.5px solid var(--court-border);
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: .875rem;
-        text-decoration: none;
-        cursor: pointer;
-        transition: .18s;
+        gap: 6px;
+        transition: .2s;
     }
 
         .btn-cancel:hover {
-            background: #ede8de;
-            color: var(--court-text);
+            border-color: #aaa;
+            color: var(--dark);
         }
 
     .btn-submit {
+        padding: .65rem 1.75rem;
+        border-radius: 10px;
+        border: none;
+        background: var(--gold);
+        color: var(--dark);
+        font-weight: 800;
+        font-size: .88rem;
         display: inline-flex;
         align-items: center;
-        gap: .4rem;
-        padding: .6rem 1.75rem;
-        background: var(--court-gold);
-        color: var(--court-dark);
-        border: none;
-        border-radius: 10px;
-        font-weight: 800;
-        font-size: .875rem;
+        gap: 6px;
+        transition: .2s;
         cursor: pointer;
-        transition: .18s;
     }
 
         .btn-submit:hover {
-            background: var(--court-gold-hover);
+            background: var(--gold-h);
+            transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(232,200,64,.4);
         }
 
-    .link-detail {
-        font-size: .82rem;
-        font-weight: 700;
-        color: var(--court-muted);
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        gap: .3rem;
+    .info-hint {
+        font-size: .72rem;
+        color: var(--muted);
+        margin-top: 3px;
     }
 
-        .link-detail:hover {
-            color: var(--court-dark);
+    .active-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .3rem .85rem;
+        border-radius: 20px;
+        font-size: .78rem;
+        font-weight: 700;
+        cursor: pointer;
+        border: 1.5px solid;
+        user-select: none;
+        transition: .2s;
+    }
+
+        .active-badge.on {
+            background: #f0fdf4;
+            color: #166534;
+            border-color: #86efac;
+        }
+
+        .active-badge.off {
+            background: #fef2f2;
+            color: #dc2626;
+            border-color: #fca5a5;
         }
 </style>
 
 <div class="page-wrapper">
-
-    <nav class="bc">
-        <a asp-action="Index"><i class="bi bi-collection me-1"></i>Danh Mục</a>
+    <div class="bc">
+        <a asp-action="Index"><i class="bi bi-house-door"></i> Danh mục</a>
         <span class="bc-sep">›</span>
-        <a asp-action="Details" asp-route-id="@Model.CategoryId">@Model.CategoryName</a>
-        <span class="bc-sep">›</span>
-        <span class="bc-cur">Chỉnh sửa</span>
-    </nav>
+        <span class="bc-cur">Sửa: @Model.CategoryName</span>
+    </div>
 
-    <h1 class="page-title mb-4">Cập Nhật <span>Danh Mục</span></h1>
+    <div class="d-flex align-items-center mb-3 gap-3">
+        <div>
+            <h1 class="page-title mb-0">Sửa <span>@Model.CategoryName</span></h1>
+            <p class="mb-0" style="color:var(--muted);font-size:.85rem;">Cập nhật thông tin và quy tắc cho danh mục</p>
+        </div>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" style="border-radius:10px;font-size:.875rem;">
+            <i class="bi bi-exclamation-circle-fill"></i> @TempData["ErrorMessage"]
+        </div>
+    }
 
     <div class="form-layout">
-
-        <!-- Preview Sidebar -->
+        <!-- Sidebar -->
         <div class="preview-side">
-            <div class="prev-visual" id="prevVisual" style="background:@VisualBg(Model.CategoryType);">
+            @{
+                var tc = Model.CategoryType ?? "";
+                string PIcon(string t) => t switch { "Food" => "bi-egg-fried", "Beverage" => "bi-cup-straw", "Equipment" => "bi-gear-wide-connected", "Clothing" => "bi-bag-heart", "Accessory" => "bi-watch", _ => "bi-folder2-open" };
+                string PColor(string t) => t switch { "Food" => "#b45309", "Beverage" => "#0369a1", "Equipment" => "#166534", "Clothing" => "#7e22ce", "Accessory" => "#be185d", _ => "#4b5563" };
+                string PBg(string t) => t switch { "Food" => "linear-gradient(135deg,#fffbeb,#fef3c7)", "Beverage" => "linear-gradient(135deg,#f0f9ff,#dbeafe)", "Equipment" => "linear-gradient(135deg,#f0fdf4,#dcfce7)", "Clothing" => "linear-gradient(135deg,#faf5ff,#ede9fe)", "Accessory" => "linear-gradient(135deg,#fdf2f8,#fce7f3)", _ => "linear-gradient(135deg,#f1f5f9,#e2e8f0)" };
+                string PLabel(string t) => t switch { "Food" => "🍱 Đồ ăn", "Beverage" => "🥤 Thức uống", "Equipment" => "🏸 Dụng cụ", "Clothing" => "👕 Quần áo", "Accessory" => "🧢 Phụ kiện", _ => "📦 Khác" };
+                string PBgColor(string t) => t switch { "Food" => "#fffbeb", "Beverage" => "#e0f2fe", "Equipment" => "#f0fdf4", "Clothing" => "#faf5ff", "Accessory" => "#fdf2f8", _ => "#f9fafb" };
+                string BhLabel(string b) => b switch { "Retail" => "🛒 Bán lẻ", "Rental" => "🔄 Cho thuê", "Service" => "🔧 Dịch vụ", _ => "🛒 Bán lẻ" };
+            }
+            <div class="prev-visual" id="prevVisual" style="background:@PBg(tc);">
                 @if (!string.IsNullOrEmpty(Model.ImageUrl))
                 {
-                    <img class="bg-img" id="prevBgImg" src="@Model.ImageUrl" alt="@Model.CategoryName" />
+                    <img src="@Model.ImageUrl" id="prevImg" alt="" />
                 }
                 else
                 {
-                    <i class="bi @TypeIcon(Model.CategoryType) prev-big-icon" id="prevBigIcon" style="color:@TypeColor(Model.CategoryType);"></i>
-                    <i class="bi @TypeIcon(Model.CategoryType) prev-center-icon" id="prevCenterIcon" style="color:@TypeColor(Model.CategoryType);"></i>
+                    <i class="bi @PIcon(tc) prev-big-icon" id="prevBigIcon" style="color:@PColor(tc);"></i>
+                    <i class="bi @PIcon(tc) prev-center-icon" id="prevCenterIcon" style="color:@PColor(tc);"></i>
                 }
             </div>
             <div class="prev-body">
                 <div class="prev-name" id="prevName">@Model.CategoryName</div>
-                <span class="prev-type" id="prevType" style="background:@TypeBg(Model.CategoryType);color:@TypeColor(Model.CategoryType);">
-                    @TypeLabel(Model.CategoryType)
-                </span>
-                <div class="prev-id-row">ID #@Model.CategoryId · Đơn vị: <strong>@(Model.DefaultUnit ?? "—")</strong></div>
+                <span class="prev-type" id="prevType" style="background:@PBgColor(tc);color:@PColor(tc);">@PLabel(tc)</span>
+                <span class="prev-behavior bh-@behavior.ToLower()" id="prevBehavior">@BhLabel(behavior)</span>
+                <div class="prev-meta-row">
+                    <span><i class="bi bi-box-seam me-1"></i>Đơn vị: <strong id="prevUnit">@Model.DefaultUnit</strong></span>
+                    <span><i class="bi bi-arrow-down-up me-1"></i>Safety Stock: <strong id="prevStock">@(Model.DefaultMinStock > 0 ? Model.DefaultMinStock.ToString() : "—")</strong></span>
+                </div>
             </div>
             <div class="prev-label">Cập nhật hình ảnh</div>
             <div style="padding:0 1.2rem 1.2rem;">
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <div style="margin-bottom:.6rem;border-radius:8px;overflow:hidden;">
+                        <img src="@Model.ImageUrl" style="width:100%;max-height:90px;object-fit:cover;" />
+                    </div>
+                }
                 <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
                     <i class="bi bi-cloud-arrow-up"></i>
-                    <p>Click để thay đổi ảnh</p>
+                    <p>@(string.IsNullOrEmpty(Model.ImageUrl) ? "Click để tải ảnh mới" : "Click để thay ảnh")</p>
                 </div>
                 <input type="file" id="fileInput" name="CategoryImage" accept="image/*" class="d-none" onchange="onImageSelect(this)" />
                 <div id="uploadPreview" class="upload-preview"></div>
@@ -540,22 +742,38 @@
 
         <!-- Form -->
         <div class="form-card">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                    <div class="form-card-title">Cập Nhật Danh Mục</div>
-                    <div class="form-card-sub" style="margin-bottom:0;">Chỉnh sửa thông tin danh mục</div>
-                </div>
-                <a asp-action="Details" asp-route-id="@Model.CategoryId" class="link-detail">
-                    <i class="bi bi-eye"></i> Xem chi tiết
-                </a>
-            </div>
+            <div class="form-card-title">Cập Nhật Danh Mục</div>
+            <div class="form-card-sub">Chỉnh sửa thông tin và cấu hình nghiệp vụ</div>
 
-            <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            <form asp-action="Edit" asp-route-id="@Model.CategoryId" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="CategoryId" />
-                <input type="hidden" asp-for="ImageUrl" />
+                <input type="hidden" asp-for="BehaviorType" id="BehaviorTypeInput" value="@behavior" />
 
-                <!-- Thông tin cơ bản -->
+                <!-- Hành vi -->
+                <div class="section-div"><i class="bi bi-diagram-3 me-1"></i>Hành Vi Nghiệp Vụ</div>
+                <div class="behavior-tabs">
+                    <div class="bh-tab @(behavior == "Retail" ? "active-retail" : "")" data-val="Retail" onclick="selectBehavior('Retail')">
+                        <span class="bh-tab-icon">🛒</span>
+                        <div class="bh-tab-label">Bán Lẻ</div>
+                        <div class="bh-tab-desc">Trừ kho thẳng</div>
+                        <span class="check-badge" style="color:var(--retail-c);">✓</span>
+                    </div>
+                    <div class="bh-tab @(behavior == "Rental" ? "active-rental" : "")" data-val="Rental" onclick="selectBehavior('Rental')">
+                        <span class="bh-tab-icon">🔄</span>
+                        <div class="bh-tab-label">Cho Thuê</div>
+                        <div class="bh-tab-desc">Hoàn kho khi trả</div>
+                        <span class="check-badge" style="color:var(--rental-c);">✓</span>
+                    </div>
+                    <div class="bh-tab @(behavior == "Service" ? "active-service" : "")" data-val="Service" onclick="selectBehavior('Service')">
+                        <span class="bh-tab-icon">🔧</span>
+                        <div class="bh-tab-label">Dịch Vụ</div>
+                        <div class="bh-tab-desc">Không kho vật lý</div>
+                        <span class="check-badge" style="color:var(--service-c);">✓</span>
+                    </div>
+                </div>
+
+                <!-- Cơ bản -->
                 <div class="section-div"><i class="bi bi-info-circle me-1"></i>Thông Tin Cơ Bản</div>
 
                 <div class="fl">
@@ -566,8 +784,9 @@
 
                 <div class="two-col">
                     <div class="fl">
-                        <label>Loại danh mục <span class="req">*</span></label>
+                        <label>Loại hàng hoá <span class="req">*</span></label>
                         <select asp-for="CategoryType" id="inputType" class="fc">
+                            <option value="">-- Chọn --</option>
                             <option value="Food">🍱 Đồ ăn</option>
                             <option value="Beverage">🥤 Thức uống</option>
                             <option value="Clothing">👕 Quần áo</option>
@@ -575,10 +794,11 @@
                             <option value="Accessory">🧢 Phụ kiện</option>
                             <option value="Other">📦 Khác</option>
                         </select>
+                        <span asp-validation-for="CategoryType" class="err-msg"></span>
                     </div>
                     <div class="fl">
                         <label>Đơn vị mặc định</label>
-                        <select asp-for="DefaultUnit" class="fc">
+                        <select asp-for="DefaultUnit" id="inputUnit" class="fc">
                             <option value="Cái">Cái</option>
                             <option value="Bộ">Bộ</option>
                             <option value="Hộp">Hộp</option>
@@ -600,68 +820,117 @@
                     <textarea asp-for="Description" class="fc"></textarea>
                 </div>
 
-                <!-- Quy tắc kho -->
-                <div class="section-div mt-3"><i class="bi bi-sliders2 me-1"></i>Quy Tắc Quản Lý Kho</div>
-
-                <div class="rule-grid">
-                    <label class="rule-toggle @(Model.RequiresExpiry ? "active-hsd" : "")" id="rtHsd" onclick="toggleRule('RequiresExpiry','rtHsd','active-hsd')">
-                        <input type="checkbox" asp-for="RequiresExpiry" id="RequiresExpiry" />
-                        <div class="rt-header">
-                            <div class="rt-ico-label" style="color:#dc2626;"><i class="bi bi-calendar-x"></i> Theo dõi HSD</div>
-                            <div class="toggle-dot"></div>
-                        </div>
-                        <div class="rt-desc">Đồ ăn, đồ uống có hạn sử dụng</div>
-                    </label>
-
-                    <label class="rule-toggle @(Model.UseFIFO ? "active-fifo" : "")" id="rtFifo" onclick="toggleRule('UseFIFO','rtFifo','active-fifo')">
-                        <input type="checkbox" asp-for="UseFIFO" id="UseFIFO" />
-                        <div class="rt-header">
-                            <div class="rt-ico-label" style="color:#3b82f6;"><i class="bi bi-arrow-left-right"></i> FIFO</div>
-                            <div class="toggle-dot"></div>
-                        </div>
-                        <div class="rt-desc">Nhập trước – Xuất trước</div>
-                    </label>
-
-                    <label class="rule-toggle @(Model.RequiresBatch ? "active-lot" : "")" id="rtLot" onclick="toggleRule('RequiresBatch','rtLot','active-lot')">
-                        <input type="checkbox" asp-for="RequiresBatch" id="RequiresBatch" />
-                        <div class="rt-header">
-                            <div class="rt-ico-label" style="color:#6b7280;"><i class="bi bi-upc"></i> Theo lô</div>
-                            <div class="toggle-dot"></div>
-                        </div>
-                        <div class="rt-desc">Truy xuất nguồn gốc Batch/Lot</div>
-                    </label>
-
-                    <label class="rule-toggle @(Model.HasVariants ? "active-var" : "")" id="rtVar" onclick="toggleRule('HasVariants','rtVar','active-var')">
-                        <input type="checkbox" asp-for="HasVariants" id="HasVariants" />
-                        <div class="rt-header">
-                            <div class="rt-ico-label" style="color:#f59e0b;"><i class="bi bi-layers"></i> Biến thể</div>
-                            <div class="toggle-dot"></div>
-                        </div>
-                        <div class="rt-desc">Nhiều màu/size (quần áo, giày)</div>
-                    </label>
+                <!-- Trạng thái -->
+                <div class="fl" style="flex-direction:row;align-items:center;gap:.75rem;">
+                    <label style="margin:0;">Trạng thái danh mục</label>
+                    <span class="active-badge @(Model.IsActive ? "on" : "off")" id="activeBadge" onclick="toggleActive()">
+                        <i class="bi @(Model.IsActive ? "bi-eye" : "bi-eye-slash")"></i>
+                        @(Model.IsActive ? "Đang hoạt động" : "Đã ẩn")
+                    </span>
+                    <input type="hidden" asp-for="IsActive" id="IsActiveInput" value="@Model.IsActive.ToString().ToLower()" />
                 </div>
 
-                <!-- Cấu hình -->
-                <div class="section-div mt-3"><i class="bi bi-gear me-1"></i>Cấu Hình</div>
+                <!-- RETAIL panel -->
+                <div class="cond-panel panel-retail @(behavior == "Retail" ? "show" : "")" id="panelRetail">
+                    <div class="panel-title"><i class="bi bi-boxes me-1"></i>Quy Tắc Kho</div>
+                    <div class="rule-grid">
+                        <label class="rule-toggle @(Model.RequiresExpiry ? "active-hsd" : "")" id="rtHsd" onclick="toggleRule('RequiresExpiry','rtHsd','active-hsd')">
+                            <input type="checkbox" asp-for="RequiresExpiry" id="RequiresExpiry" />
+                            <div class="rt-header"><div class="rt-ico-label" style="color:#dc2626;"><i class="bi bi-calendar-x"></i> HSD</div><div class="toggle-dot @(Model.RequiresExpiry ? "" : "") " id="dotHsd"></div></div>
+                            <div class="rt-desc">Theo dõi hạn sử dụng</div>
+                        </label>
+                        <label class="rule-toggle @(Model.UseFIFO ? "active-fifo" : "")" id="rtFifo" onclick="toggleRule('UseFIFO','rtFifo','active-fifo')">
+                            <input type="checkbox" asp-for="UseFIFO" id="UseFIFO" />
+                            <div class="rt-header"><div class="rt-ico-label" style="color:#3b82f6;"><i class="bi bi-arrow-left-right"></i> FIFO</div><div class="toggle-dot" id="dotFifo"></div></div>
+                            <div class="rt-desc">Nhập trước – Xuất trước</div>
+                        </label>
+                        <label class="rule-toggle @(Model.RequiresBatch ? "active-lot" : "")" id="rtLot" onclick="toggleRule('RequiresBatch','rtLot','active-lot')">
+                            <input type="checkbox" asp-for="RequiresBatch" id="RequiresBatch" />
+                            <div class="rt-header"><div class="rt-ico-label" style="color:#6b7280;"><i class="bi bi-upc"></i> Lô</div><div class="toggle-dot" id="dotLot"></div></div>
+                            <div class="rt-desc">Truy xuất nguồn gốc Batch</div>
+                        </label>
+                        <label class="rule-toggle @(Model.HasVariants ? "active-var" : "")" id="rtVar" onclick="toggleRule('HasVariants','rtVar','active-var')">
+                            <input type="checkbox" asp-for="HasVariants" id="HasVariants" />
+                            <div class="rt-header"><div class="rt-ico-label" style="color:#f59e0b;"><i class="bi bi-layers"></i> Biến thể</div><div class="toggle-dot" id="dotVar"></div></div>
+                            <div class="rt-desc">Nhiều màu/size</div>
+                        </label>
+                    </div>
+                    <div class="two-col">
+                        <div class="fl"><label>Safety Stock</label><input asp-for="DefaultMinStock" type="number" min="0" class="fc" oninput="syncStock(this.value)" /></div>
+                        <div class="fl"><label>Thứ tự hiển thị</label><input asp-for="DisplayOrder" type="number" min="0" class="fc" /></div>
+                    </div>
+                </div>
 
-                <div class="two-col">
-                    <div class="fl">
-                        <label>Safety Stock mặc định</label>
-                        <input asp-for="DefaultMinStock" type="number" min="0" class="fc" />
+                <!-- RENTAL panel -->
+                <div class="cond-panel panel-rental @(behavior == "Rental" ? "show" : "")" id="panelRental">
+                    <div class="panel-title"><i class="bi bi-arrow-repeat me-1"></i>Cấu Hình Cho Thuê</div>
+                    <div class="rule-grid" style="margin-bottom:.85rem;">
+                        <label class="rule-toggle @(Model.RequiresSize ? "active-size" : "")" id="rtSize" onclick="toggleRule('RequiresSize','rtSize','active-size')">
+                            <input type="checkbox" asp-for="RequiresSize" id="RequiresSize" />
+                            <div class="rt-header"><div class="rt-ico-label" style="color:#8b5cf6;"><i class="bi bi-rulers"></i> Theo Size</div><div class="toggle-dot" id="dotSize"></div></div>
+                            <div class="rt-desc">Giày, quần áo theo size</div>
+                        </label>
+                        <label class="rule-toggle @(Model.AllowPartialReturn ? "active-var" : "")" id="rtPart" onclick="toggleRule('AllowPartialReturn','rtPart','active-var')">
+                            <input type="checkbox" asp-for="AllowPartialReturn" id="AllowPartialReturn" />
+                            <div class="rt-header"><div class="rt-ico-label" style="color:#f59e0b;"><i class="bi bi-box-arrow-in-left"></i> Trả từng phần</div><div class="toggle-dot" id="dotPart"></div></div>
+                            <div class="rt-desc">Trả lại từng cái/bộ</div>
+                        </label>
+                        <label class="rule-toggle @(Model.DepositRequired ? "active-hsd" : "")" id="rtDep" onclick="toggleRule('DepositRequired','rtDep','active-hsd'); toggleDepositAmt()">
+                            <input type="checkbox" asp-for="DepositRequired" id="DepositRequired" />
+                            <div class="rt-header"><div class="rt-ico-label" style="color:#dc2626;"><i class="bi bi-cash-coin"></i> Đặt cọc</div><div class="toggle-dot" id="dotDep"></div></div>
+                            <div class="rt-desc">Yêu cầu tiền đặt cọc</div>
+                        </label>
+                        <label class="rule-toggle @(Model.ChargeOvertime ? "active-fifo" : "")" id="rtOt" onclick="toggleRule('ChargeOvertime','rtOt','active-fifo')">
+                            <input type="checkbox" asp-for="ChargeOvertime" id="ChargeOvertime" />
+                            <div class="rt-header"><div class="rt-ico-label" style="color:#3b82f6;"><i class="bi bi-clock-history"></i> Overtime</div><div class="toggle-dot" id="dotOt"></div></div>
+                            <div class="rt-desc">Phụ thu khi trả trễ</div>
+                        </label>
                     </div>
-                    <div class="fl">
-                        <label>Thứ tự hiển thị</label>
-                        <input asp-for="DisplayOrder" type="number" min="0" class="fc" />
+                    <div class="two-col" id="depositAmtRow" style="display:@(Model.DepositRequired ? "" : "none");">
+                        <div class="fl"><label>Tiền đặt cọc mặc định</label><div class="money-input-wrap"><input asp-for="DefaultDepositAmount" type="number" min="0" class="fc" /><span class="money-suffix">₫</span></div></div>
+                        <div class="fl"><label>Phí vệ sinh/giặt ủi</label><div class="money-input-wrap"><input asp-for="DefaultCleaningFee" type="number" min="0" class="fc" /><span class="money-suffix">₫</span></div></div>
                     </div>
+                    <div class="two-col">
+                        <div class="fl"><label>Giờ thuê tối đa</label><input asp-for="MaxRentalHours" type="number" min="0" class="fc" /><div class="info-hint">0 = không giới hạn</div></div>
+                        <div class="fl"><label>Safety Stock</label><input asp-for="DefaultMinStock" type="number" min="0" class="fc" /></div>
+                    </div>
+                    <div class="fl"><label>Thứ tự hiển thị</label><input asp-for="DisplayOrder" type="number" min="0" class="fc" /></div>
+                </div>
+
+                <!-- SERVICE panel -->
+                <div class="cond-panel panel-service @(behavior == "Service" ? "show" : "")" id="panelService">
+                    <div class="panel-title"><i class="bi bi-tools me-1"></i>Cấu Hình Dịch Vụ</div>
+                    <div class="fl">
+                        <label>Mô hình tính giá</label>
+                        <select asp-for="PricingModel" class="fc">
+                            <option value="Fixed">💰 Giá cố định</option>
+                            <option value="PerUnit">📦 Tính theo số lượng</option>
+                            <option value="Labor+Material">🔧 Tiền công + Vật liệu</option>
+                            <option value="Bundle">🎁 Gói dịch vụ</option>
+                        </select>
+                    </div>
+                    <div class="rule-grid">
+                        <label class="rule-toggle @(Model.SeparateLaborAndMaterial ? "active-lot" : "")" id="rtLab" onclick="toggleRule('SeparateLaborAndMaterial','rtLab','active-lot'); toggleLaborFields()">
+                            <input type="checkbox" asp-for="SeparateLaborAndMaterial" id="SeparateLaborAndMaterial" />
+                            <div class="rt-header"><div class="rt-ico-label" style="color:#6b7280;"><i class="bi bi-scissors"></i> Tách công/vật liệu</div><div class="toggle-dot" id="dotLab"></div></div>
+                            <div class="rt-desc">Căng vợt: tách tiền công & cước</div>
+                        </label>
+                        <label class="rule-toggle @(Model.AllowCustomerMaterial ? "active-var" : "")" id="rtCustMat" onclick="toggleRule('AllowCustomerMaterial','rtCustMat','active-var')">
+                            <input type="checkbox" asp-for="AllowCustomerMaterial" id="AllowCustomerMaterial" />
+                            <div class="rt-header"><div class="rt-ico-label" style="color:#f59e0b;"><i class="bi bi-bag-check"></i> Vật liệu khách</div><div class="toggle-dot" id="dotCustMat"></div></div>
+                            <div class="rt-desc">Khách tự mang cước/vật liệu</div>
+                        </label>
+                    </div>
+                    <div class="fl" id="materialUnitRow" style="display:@(Model.SeparateLaborAndMaterial ? "" : "none");">
+                        <label>Đơn vị vật liệu</label>
+                        <input asp-for="MaterialUnit" class="fc" placeholder="VD: bộ cước, đôi đế..." />
+                    </div>
+                    <div class="fl"><label>Thứ tự hiển thị</label><input asp-for="DisplayOrder" type="number" min="0" class="fc" /></div>
                 </div>
 
                 <div class="btn-row">
-                    <a asp-action="Details" asp-route-id="@Model.CategoryId" class="btn-cancel">
-                        <i class="bi bi-x-lg"></i> Hủy thay đổi
-                    </a>
-                    <button type="submit" class="btn-submit">
-                        <i class="bi bi-cloud-arrow-up-fill"></i> Lưu Thay Đổi
-                    </button>
+                    <a asp-action="Index" class="btn-cancel"><i class="bi bi-x-lg"></i> Hủy</a>
+                    <button type="submit" class="btn-submit"><i class="bi bi-save"></i> Lưu Thay Đổi</button>
                 </div>
             </form>
         </div>
@@ -671,59 +940,75 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        const ICONS  = { Food:'bi-egg-fried',Beverage:'bi-cup-straw',Equipment:'bi-gear-wide-connected',Clothing:'bi-bag-heart',Accessory:'bi-watch',Other:'bi-folder2-open' };
-        const COLORS = { Food:'#b45309',Beverage:'#0369a1',Equipment:'#166534',Clothing:'#7e22ce',Accessory:'#be185d',Other:'#4b5563' };
-        const BGS    = { Food:'linear-gradient(135deg,#fffbeb,#fef3c7)',Beverage:'linear-gradient(135deg,#f0f9ff,#dbeafe)',Equipment:'linear-gradient(135deg,#f0fdf4,#dcfce7)',Clothing:'linear-gradient(135deg,#faf5ff,#ede9fe)',Accessory:'linear-gradient(135deg,#fdf2f8,#fce7f3)',Other:'linear-gradient(135deg,#f9fafb,#f3f4f6)' };
-        const LABELS = { Food:'🍱 Đồ ăn',Beverage:'🥤 Thức uống',Equipment:'🏸 Dụng cụ',Clothing:'👕 Quần áo',Accessory:'🧢 Phụ kiện',Other:'📦 Khác' };
-        const TC_BG  = { Food:'#fffbeb',Beverage:'#e0f2fe',Equipment:'#f0fdf4',Clothing:'#faf5ff',Accessory:'#fdf2f8',Other:'#f9fafb' };
+        const ICONS  = { Food:'bi-egg-fried', Beverage:'bi-cup-straw', Equipment:'bi-gear-wide-connected', Clothing:'bi-bag-heart', Accessory:'bi-watch', Other:'bi-folder2-open', '':'bi-folder2-open' };
+        const COLORS = { Food:'#b45309', Beverage:'#0369a1', Equipment:'#166534', Clothing:'#7e22ce', Accessory:'#be185d', Other:'#4b5563', '':'#9ca3af' };
+        const BGS    = { Food:'linear-gradient(135deg,#fffbeb,#fef3c7)', Beverage:'linear-gradient(135deg,#f0f9ff,#dbeafe)', Equipment:'linear-gradient(135deg,#f0fdf4,#dcfce7)', Clothing:'linear-gradient(135deg,#faf5ff,#ede9fe)', Accessory:'linear-gradient(135deg,#fdf2f8,#fce7f3)', Other:'linear-gradient(135deg,#f9fafb,#f3f4f6)', '':'linear-gradient(135deg,#f1f5f9,#e2e8f0)' };
+        const LABELS = { Food:'🍱 Đồ ăn', Beverage:'🥤 Thức uống', Equipment:'🏸 Dụng cụ', Clothing:'👕 Quần áo', Accessory:'🧢 Phụ kiện', Other:'📦 Khác', '':'Chọn loại' };
+        const TC_BG  = { Food:'#fffbeb', Beverage:'#e0f2fe', Equipment:'#f0fdf4', Clothing:'#faf5ff', Accessory:'#fdf2f8', Other:'#f9fafb', '':'#f3f4f6' };
+        const BH_LABELS = { Retail:'🛒 Bán lẻ', Rental:'🔄 Cho thuê', Service:'🔧 Dịch vụ' };
+        const BH_CLS    = { Retail:'bh-retail', Rental:'bh-rental', Service:'bh-service' };
 
-        const ORIG = {
-            RequiresExpiry: document.getElementById('RequiresExpiry').checked,
-            UseFIFO:        document.getElementById('UseFIFO').checked,
-            RequiresBatch:  document.getElementById('RequiresBatch').checked,
-            HasVariants:    document.getElementById('HasVariants').checked
-        };
-
-        document.getElementById('inputName').addEventListener('input', e => {
-            document.getElementById('prevName').textContent = e.target.value || '@Model.CategoryName';
-        });
-
+        document.getElementById('inputName').addEventListener('input', e => { document.getElementById('prevName').textContent = e.target.value || 'Tên danh mục'; });
         document.getElementById('inputType').addEventListener('change', function () {
             const v = this.value;
-            document.getElementById('prevVisual').style.background = BGS[v] || BGS['Other'];
-            ['prevBigIcon', 'prevCenterIcon'].forEach(id => {
+            document.getElementById('prevVisual').style.background = BGS[v]||BGS[''];
+            ['prevBigIcon','prevCenterIcon'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) { el.className = `bi ${ICONS[v] || 'bi-folder2-open'} ${id.includes('Big') ? 'prev-big-icon' : 'prev-center-icon'}`; el.style.color = COLORS[v] || '#6b7280'; }
+                if (!el) return;
+                el.className = `bi ${ICONS[v]||'bi-folder2-open'} ${id.includes('Big') ? 'prev-big-icon' : 'prev-center-icon'}`;
+                el.style.color = COLORS[v]||'#9ca3af';
             });
-            const bi = document.getElementById('prevBgImg');
-            if (bi) bi.style.opacity = '.3';
             const pt = document.getElementById('prevType');
-            pt.textContent = LABELS[v] || v;
-            pt.style.background = TC_BG[v] || '#f3f4f6';
-            pt.style.color = COLORS[v] || '#6b7280';
+            pt.textContent = LABELS[v]; pt.style.background = TC_BG[v]||'#f3f4f6'; pt.style.color = COLORS[v]||'#6b7280';
         });
+        document.getElementById('inputUnit').addEventListener('change', function () { document.getElementById('prevUnit').textContent = this.value; });
+
+        function selectBehavior(val) {
+            document.getElementById('BehaviorTypeInput').value = val;
+            document.querySelectorAll('.bh-tab').forEach(t => {
+                t.classList.remove('active-retail','active-rental','active-service');
+                if (t.dataset.val === val) t.classList.add(`active-${val.toLowerCase()}`);
+            });
+            ['Retail','Rental','Service'].forEach(b => {
+                document.getElementById(`panel${b}`).classList.toggle('show', b === val);
+            });
+            const pb = document.getElementById('prevBehavior');
+            pb.textContent = BH_LABELS[val];
+            pb.className = `prev-behavior ${BH_CLS[val]}`;
+        }
 
         function toggleRule(cbId, divId, cls) {
-            const cb  = document.getElementById(cbId);
-            const div = document.getElementById(divId);
+            const cb = document.getElementById(cbId);
             cb.checked = !cb.checked;
-            if (cb.checked) div.classList.add(cls); else div.classList.remove(cls);
-            if (cb.checked !== ORIG[cbId]) div.classList.add('changed');
-            else div.classList.remove('changed');
+            document.getElementById(divId).classList.toggle(cls, cb.checked);
+        }
+
+        function toggleDepositAmt() {
+            const show = document.getElementById('DepositRequired')?.checked;
+            document.getElementById('depositAmtRow').style.display = show ? '' : 'none';
+        }
+
+        function toggleLaborFields() {
+            const show = document.getElementById('SeparateLaborAndMaterial')?.checked;
+            document.getElementById('materialUnitRow').style.display = show ? '' : 'none';
+        }
+
+        function syncStock(v) { document.getElementById('prevStock').textContent = v || '—'; }
+
+        let _isActive = @Model.IsActive.ToString().ToLower();
+        function toggleActive() {
+            _isActive = !_isActive;
+            const badge = document.getElementById('activeBadge');
+            badge.className = `active-badge ${_isActive ? 'on' : 'off'}`;
+            badge.innerHTML = `<i class="bi bi-${_isActive ? 'eye' : 'eye-slash'}"></i> ${_isActive ? 'Đang hoạt động' : 'Đã ẩn'}`;
+            document.getElementById('IsActiveInput').value = _isActive;
         }
 
         function onImageSelect(input) {
             if (!input.files[0]) return;
             const url = URL.createObjectURL(input.files[0]);
             document.getElementById('uploadPreview').innerHTML = `<img src="${url}" />`;
-            const vis = document.getElementById('prevVisual');
-            let bi = document.getElementById('prevBgImg');
-            if (bi) bi.src = url;
-            else {
-                const img = document.createElement('img');
-                img.src = url; img.id = 'prevBgImg'; img.className = 'bg-img';
-                vis.insertBefore(img, vis.firstChild);
-            }
+            document.getElementById('prevVisual').innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;" />`;
         }
     </script>
 }

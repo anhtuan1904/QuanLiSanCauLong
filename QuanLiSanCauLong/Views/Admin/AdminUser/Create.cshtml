@@ -1,101 +1,369 @@
 ﻿@model QuanLiSanCauLong.Models.User
-
 @{
-    ViewData["Title"] = "Thêm người dùng";
+    ViewData["Title"] = "Thêm Người Dùng";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    var roles = ViewBag.Roles as IEnumerable<string> ?? new[] { "Customer", "Staff", "Admin" };
+    var facs = ViewBag.Facilities as IEnumerable<QuanLiSanCauLong.Models.Facility>
+                ?? new List<QuanLiSanCauLong.Models.Facility>();
 }
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #fdf8f0;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+    }
 
-<div class="row">
-    <div class="col-lg-6 mx-auto">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white py-3">
-                <h4 class="mb-0">
-                    <i class="bi bi-person-plus me-2"></i>Thêm người dùng mới
-                </h4>
-            </div>
-            <div class="card-body p-4">
-                <form asp-action="Create" method="post">
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+    * {
+        font-family: 'Outfit',sans-serif;
+        box-sizing: border-box;
+    }
 
-                    <div class="mb-3">
-                        <label asp-for="FullName" class="form-label fw-semibold required">
-                            Họ và tên
-                        </label>
-                        <input asp-for="FullName" class="form-control" placeholder="Nguyễn Văn A" />
-                        <span asp-validation-for="FullName" class="text-danger small"></span>
+    .pg-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .pg-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: var(--deep);
+        line-height: 1.2;
+    }
+
+        .pg-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    .pg-sub {
+        font-size: .82rem;
+        color: var(--muted);
+        margin-top: .25rem;
+    }
+
+    .btn-gold {
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep) !important;
+        border: none;
+        padding: .72rem 1.5rem;
+        font-family: 'Outfit',sans-serif;
+        font-size: .86rem;
+        font-weight: 700;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        text-decoration: none;
+        transition: all .25s;
+    }
+
+        .btn-gold:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(212,160,23,.35);
+        }
+
+    .btn-ov {
+        padding: .65rem 1.25rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--muted);
+        font-size: .84rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+        font-family: 'Outfit',sans-serif;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+        .btn-ov:hover {
+            border-color: var(--deep);
+            color: var(--deep) !important;
+        }
+
+    .sys-err {
+        padding: .9rem 1.25rem;
+        border-radius: 8px;
+        margin-bottom: 1.25rem;
+        font-size: .84rem;
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        background: rgba(201,75,42,.06);
+        border: 1px solid rgba(201,75,42,.25);
+        color: #c94b2a;
+    }
+
+    .v-crumb {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .78rem;
+        color: var(--muted);
+        margin-bottom: 1.5rem;
+    }
+
+        .v-crumb a {
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+            .v-crumb a:hover {
+                color: var(--gold);
+            }
+
+    .f-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1.1rem;
+    }
+
+    .f-card-head {
+        padding: .85rem 1.25rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--warm);
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+    }
+
+        .f-card-head i {
+            color: var(--gold);
+            font-size: .9rem;
+        }
+
+    .f-card-title {
+        font-size: .67rem;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: var(--muted);
+    }
+
+    .f-card-body {
+        padding: 1.25rem;
+    }
+
+    .fg {
+        margin-bottom: 1.1rem;
+    }
+
+        .fg:last-child {
+            margin-bottom: 0;
+        }
+
+    .fg-r2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .9rem;
+    }
+
+    .fg-label {
+        display: block;
+        font-size: .71rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: .45rem;
+    }
+
+    .req {
+        color: #c94b2a;
+    }
+
+    .fg-input, .fg-sel {
+        width: 100%;
+        padding: .65rem 1rem;
+        border: 1.5px solid var(--border);
+        border-radius: 7px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .86rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
+        transition: border-color .2s,background .2s;
+    }
+
+        .fg-input:focus, .fg-sel:focus {
+            border-color: var(--gold);
+            background: var(--cream);
+        }
+
+    .fg-hint {
+        font-size: .7rem;
+        color: var(--muted);
+        margin-top: .3rem;
+    }
+
+        .fg-hint.err {
+            color: #c94b2a;
+        }
+
+    .fg-addon {
+        display: flex;
+    }
+
+        .fg-addon .fg-input {
+            border-radius: 7px 0 0 7px;
+            border-right: none;
+        }
+
+    .fg-addon-txt {
+        padding: .65rem .9rem;
+        background: var(--warm);
+        border: 1.5px solid var(--border);
+        border-left: none;
+        border-radius: 0 7px 7px 0;
+        font-size: .84rem;
+        font-weight: 700;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+    }
+
+    .pg-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.5rem;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        margin-top: 1.5rem;
+    }
+    /* ✅ NÂNG CẤP: Hiệu ứng required rõ hơn khi Staff */
+    .facility-required label::after {
+        content: " *";
+        color: #c94b2a;
+    }
+
+    .facility-required .fg-sel {
+        border-color: rgba(212,160,23,.5);
+    }
+</style>
+
+<div>
+    <div class="v-crumb">
+        <a asp-action="Index"><i class="bi bi-people"></i> Người dùng</a>
+        <i class="bi bi-chevron-right" style="font-size:.65rem;"></i>
+        <span>Thêm mới</span>
+    </div>
+    <div class="pg-head">
+        <div>
+            <h1 class="pg-title">Thêm <em>Người Dùng Mới</em></h1>
+            <div class="pg-sub">Tạo tài khoản mới trong hệ thống</div>
+        </div>
+        <a asp-action="Index" class="btn-ov"><i class="bi bi-arrow-left"></i> Quay Lại</a>
+    </div>
+
+    <div asp-validation-summary="ModelOnly" class="sys-err"></div>
+
+    <form asp-action="Create" method="post">
+
+        <div class="f-card">
+            <div class="f-card-head"><i class="bi bi-person-circle"></i><span class="f-card-title">Thông Tin Cá Nhân</span></div>
+            <div class="f-card-body">
+                <div class="fg-r2 fg">
+                    <div>
+                        <label class="fg-label" for="FullName">Họ và Tên <span class="req">*</span></label>
+                        <input asp-for="FullName" id="FullName" class="fg-input" placeholder="Nguyễn Văn A"
+                               required autocomplete="name" />
+                        <span asp-validation-for="FullName" class="fg-hint err"></span>
                     </div>
-
-                    <div class="mb-3">
-                        <label asp-for="Email" class="form-label fw-semibold required">
-                            Email
-                        </label>
-                        <input asp-for="Email" type="email" class="form-control"
-                               placeholder="email@example.com" />
-                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    <div>
+                        <label class="fg-label" for="Phone">Số Điện Thoại</label>
+                        <input asp-for="Phone" id="Phone" class="fg-input" placeholder="0xxx xxx xxx"
+                               autocomplete="tel" />
+                        <span asp-validation-for="Phone" class="fg-hint err"></span>
                     </div>
-
-                    <div class="mb-3">
-                        <label asp-for="Phone" class="form-label fw-semibold">
-                            Số điện thoại
-                        </label>
-                        <input asp-for="Phone" class="form-control" placeholder="0xxx xxx xxx" />
-                        <span asp-validation-for="Phone" class="text-danger small"></span>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="PasswordHash" class="form-label fw-semibold required">
-                            Mật khẩu
-                        </label>
-                        <input asp-for="PasswordHash" type="password" class="form-control" />
-                        <span asp-validation-for="PasswordHash" class="text-danger small"></span>
-                        <small class="text-muted">Tối thiểu 6 ký tự</small>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="Role" class="form-label fw-semibold required">
-                            Vai trò
-                        </label>
-                        <select asp-for="Role" class="form-select">
-                            <option value="">-- Chọn vai trò --</option>
-                            <option value="Admin">Admin</option>
-                            <option value="Staff">Staff</option>
-                            <option value="Customer">Customer</option>
-                        </select>
-                        <span asp-validation-for="Role" class="text-danger small"></span>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="FacilityId" class="form-label fw-semibold">
-                            Cơ sở làm việc
-                            <small class="text-muted">(Chỉ cho Staff)</small>
-                        </label>
-                        <select asp-for="FacilityId" class="form-select" asp-items="ViewBag.FacilityId">
-                            <option value="">-- Không chọn --</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="Status" class="form-label fw-semibold">
-                            Trạng thái
-                        </label>
-                        <select asp-for="Status" class="form-select">
-                            <option value="Active">Hoạt động</option>
-                            <option value="Inactive">Khóa</option>
-                        </select>
-                    </div>
-
-                    <div class="d-flex gap-2 justify-content-end mt-4">
-                        <a asp-action="Index" class="btn btn-secondary">
-                            <i class="bi bi-x-circle me-2"></i>Hủy
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle me-2"></i>Tạo tài khoản
-                        </button>
-                    </div>
-                </form>
+                </div>
+                <div class="fg" style="margin-bottom:0;">
+                    <label class="fg-label" for="Email">Email <span class="req">*</span></label>
+                    <input asp-for="Email" id="Email" type="email" class="fg-input"
+                           placeholder="email@example.com" required autocomplete="email" />
+                    <span asp-validation-for="Email" class="fg-hint err"></span>
+                </div>
             </div>
         </div>
-    </div>
+
+        <div class="f-card">
+            <div class="f-card-head"><i class="bi bi-shield-lock"></i><span class="f-card-title">Mật Khẩu</span></div>
+            <div class="f-card-body">
+                <label class="fg-label" for="pwdField">Mật Khẩu <span class="req">*</span></label>
+                <div class="fg-addon" style="margin-bottom:0;">
+                    <input name="password" type="password" id="pwdField" class="fg-input"
+                           placeholder="Tối thiểu 6 ký tự" required minlength="6"
+                           autocomplete="new-password" />
+                    <button type="button" class="fg-addon-txt" style="cursor:pointer;"
+                            onclick="var f=document.getElementById('pwdField'),e=document.getElementById('eyeIcon');
+                                 f.type=f.type==='password'?'text':'password';
+                                 e.className=f.type==='text'?'bi bi-eye-slash':'bi bi-eye';">
+                        <i class="bi bi-eye" id="eyeIcon"></i>
+                    </button>
+                </div>
+                <div class="fg-hint">Tối thiểu 6 ký tự</div>
+            </div>
+        </div>
+
+        <div class="f-card">
+            <div class="f-card-head"><i class="bi bi-diagram-3"></i><span class="f-card-title">Vai Trò & Phân Công</span></div>
+            <div class="f-card-body">
+                <div class="fg-r2 fg" style="margin-bottom:0;">
+                    <div>
+                        <label class="fg-label">Vai Trò <span class="req">*</span></label>
+                        <select asp-for="Role" id="roleSelect" class="fg-sel" required onchange="onRoleChange(this.value)">
+                            <option value="">— Chọn vai trò —</option>
+                            @foreach (var r in roles)
+                            {
+                                <option value="@r">@r</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Role" class="fg-hint err"></span>
+                    </div>
+                    {{!-- ✅ FIX: Cơ sở bắt buộc khi Staff, validate rõ ràng --}}
+                    <div id="facilityGroup" style="opacity:.4;pointer-events:none;">
+                        <label class="fg-label" id="facilityLabel">
+                            Cơ Sở Làm Việc <span style="font-weight:400;color:var(--muted);">(Chỉ Staff)</span>
+                        </label>
+                        <select asp-for="FacilityId" id="facilitySelect" class="fg-sel">
+                            <option value="">— Không chọn —</option>
+                            @foreach (var f in facs)
+                            {
+                                <option value="@f.FacilityId">@f.FacilityName</option>
+                            }
+                        </select>
+                        <span asp-validation-for="FacilityId" class="fg-hint err"></span>
+                        <div id="facilityHint" class="fg-hint" style="display:none;color:#c94b2a;">
+                            <i class="bi bi-exclamation-circle"></i> Bắt buộc chọn cơ sở cho Staff
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pg-foot">
+            <a asp-action="Index" class="btn-ov"><i class="bi bi-x-circle"></i> Hủy Bỏ</a>
+            <button type="submit" class="btn-gold"><i class="bi bi-person-check"></i> Tạo Tài Khoản</button>
+        </div>
+    </form>
 </div>
 
 @section Scripts {
@@ -103,10 +371,23 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
-        // Show/hide facility selector based on role
-        document.querySelector('[name="Role"]').addEventListener('change', function() {
-            const facilityGroup = document.querySelector('[name="FacilityId"]').closest('.mb-3');
-            facilityGroup.style.display = this.value === 'Staff' ? 'block' : 'none';
-        });
+        function onRoleChange(val) {
+            var fg = document.getElementById('facilityGroup');
+            var hint = document.getElementById('facilityHint');
+            var sel = document.getElementById('facilitySelect');
+
+            if (val === 'Staff') {
+                fg.style.opacity = '1';
+                fg.style.pointerEvents = 'auto';
+                sel.setAttribute('required', 'required');
+                hint.style.display = 'block';
+            } else {
+                fg.style.opacity = '0.4';
+                fg.style.pointerEvents = 'none';
+                sel.removeAttribute('required');
+                sel.value = '';
+                hint.style.display = 'none';
+            }
+        }
     </script>
 }

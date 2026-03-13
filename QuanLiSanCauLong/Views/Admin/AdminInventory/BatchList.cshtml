@@ -1,0 +1,644 @@
+﻿@model IEnumerable<QuanLiSanCauLong.Models.InventoryBatch>
+@{
+    ViewData["Title"] = "Quản Lý Lô Hàng (FIFO)";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    var now = DateTime.Now;
+    var soon = now.AddDays(7);
+    var soon30 = now.AddDays(30);
+    var productName = ViewBag.ProductName as string ?? "—";
+    var productCode = ViewBag.ProductCode as string ?? "";
+    var facilityName = ViewBag.FacilityName as string ?? "Tất cả cơ sở";
+    var productId = ViewBag.ProductId as int? ?? 0;
+    var batches = Model.ToList();
+    int totalRemaining = batches.Where(b => b.Status == "Active").Sum(b => b.RemainingQuantity);
+}
+
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #f5f4ec;
+        --warm: #f0ead8;
+        --card: #fff;
+        --border: #e4d9c8;
+        --muted: #8a7560;
+        --green: #15803d;
+        --green-soft: #dcfce7;
+        --red: #dc2626;
+        --red-soft: #fef2f2;
+        --yellow: #92600a;
+        --yellow-soft: #fef9ec;
+        --orange: #c2410c;
+        --orange-soft: #fff7ed;
+        --purple: #7c3aed;
+        --purple-soft: #f5f3ff;
+        --blue: #1d4ed8;
+        --blue-soft: #eff6ff;
+    }
+
+    body, .bl-wrapper {
+        font-family: 'Outfit',sans-serif;
+    }
+
+    .bl-wrapper {
+        padding: 1.75rem 2rem;
+        background: var(--cream);
+        min-height: 100vh;
+    }
+
+    /* Header */
+    .bl-hd {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: .75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .bl-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--deep);
+        margin: 0;
+    }
+
+        .bl-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    .bl-sub {
+        font-size: .82rem;
+        color: var(--muted);
+        margin-top: .2rem;
+    }
+
+    .bl-back {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .45rem 1rem;
+        border: 1.5px solid var(--border);
+        border-radius: 9px;
+        background: var(--card);
+        font-size: .82rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-decoration: none;
+        transition: .15s;
+    }
+
+        .bl-back:hover {
+            background: var(--deep);
+            color: #fff;
+            border-color: var(--deep);
+        }
+
+    /* FIFO info banner */
+    .fifo-banner {
+        background: var(--blue-soft);
+        border: 1px solid #93c5fd;
+        border-radius: 12px;
+        padding: .85rem 1.1rem;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: flex-start;
+        gap: .75rem;
+        font-size: .82rem;
+        color: var(--blue);
+    }
+
+        .fifo-banner i {
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+    /* Stats */
+    .bl-stats {
+        display: grid;
+        grid-template-columns: repeat(5,1fr);
+        gap: .75rem;
+        margin-bottom: 1.25rem;
+    }
+    @@media(max - width:800px) {
+        .bl-stats {
+            grid-template-columns: repeat(3,1fr);
+        }
+    }
+
+    .bl-stat {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: .8rem 1rem;
+    }
+
+    .bl-stat-val {
+        font-size: 1.4rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .bl-stat-lbl {
+        font-size: .65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: 2px;
+    }
+
+    .s-active .bl-stat-val {
+        color: var(--green);
+    }
+
+    .s-depleted.bl-stat-val {
+        color: var(--muted);
+    }
+
+    .s-expiring.bl-stat-val {
+        color: var(--orange);
+    }
+
+    .s-expired .bl-stat-val {
+        color: var(--red);
+    }
+
+    .s-total .bl-stat-val {
+        color: var(--deep);
+    }
+
+    /* Filter bar */
+    .bl-toolbar {
+        display: flex;
+        gap: .6rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .bl-search-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 160px;
+        max-width: 240px;
+    }
+
+        .bl-search-wrap i {
+            position: absolute;
+            left: .6rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: .8rem;
+            pointer-events: none;
+        }
+
+    .bl-search {
+        padding: .4rem .7rem .4rem 1.85rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-size: .83rem;
+        width: 100%;
+        outline: none;
+        background: var(--card);
+    }
+
+        .bl-search:focus {
+            border-color: var(--gold);
+        }
+
+    .bl-sel {
+        padding: .4rem .85rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-size: .81rem;
+        background: var(--card);
+        cursor: pointer;
+        outline: none;
+    }
+
+    .bl-count {
+        font-size: .75rem;
+        color: var(--muted);
+        margin-left: auto;
+    }
+
+    /* Table */
+    .bl-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(26,18,9,.05);
+    }
+
+    .bl-tbl {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .bl-tbl thead tr {
+            background: var(--warm);
+        }
+
+        .bl-tbl th {
+            padding: .65rem 1rem;
+            font-size: .67rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            color: var(--muted);
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .bl-tbl td {
+            padding: .75rem 1rem;
+            border-bottom: 1px solid #f5f0e8;
+            font-size: .82rem;
+            vertical-align: middle;
+        }
+
+        .bl-tbl tr:last-child td {
+            border: none;
+        }
+
+        .bl-tbl tr:hover td {
+            background: #fdf9f0;
+        }
+
+    /* FIFO order badge */
+    .fifo-badge {
+        display: inline-flex;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--gold2);
+        color: var(--deep);
+        font-weight: 800;
+        font-size: .75rem;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .fifo-badge.next {
+            background: var(--deep);
+            color: var(--gold2);
+            animation: pulse 1.5s infinite;
+        }
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.1);
+        }
+    }
+
+    /* Progress bar */
+    .batch-bar-wrap {
+        background: #f0ead8;
+        border-radius: 4px;
+        height: 6px;
+        width: 80px;
+        display: inline-block;
+        margin-left: .5rem;
+        vertical-align: middle;
+    }
+
+    .batch-bar {
+        height: 6px;
+        border-radius: 4px;
+    }
+
+    .bb-ok {
+        background: var(--green);
+    }
+
+    .bb-low {
+        background: #f59e0b;
+    }
+
+    .bb-depleted {
+        background: var(--border);
+    }
+
+    /* Status badges */
+    .bbadge {
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        padding: .2rem .65rem;
+        border-radius: 20px;
+        font-size: .7rem;
+        font-weight: 700;
+    }
+
+    .bb-active {
+        background: var(--green-soft);
+        color: var(--green);
+    }
+
+    .bb-depleted {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    .bb-expired {
+        background: var(--red-soft);
+        color: var(--red);
+    }
+
+    .bb-expiring {
+        background: var(--orange-soft);
+        color: var(--orange);
+    }
+
+    /* HSD */
+    .hsd-dead {
+        color: var(--red);
+        font-weight: 700;
+        font-size: .8rem;
+    }
+
+    .hsd-soon7 {
+        color: var(--red);
+        font-weight: 700;
+        font-size: .8rem;
+    }
+
+    .hsd-soon30 {
+        color: var(--orange);
+        font-weight: 700;
+        font-size: .8rem;
+    }
+
+    .hsd-ok {
+        color: var(--green);
+        font-size: .8rem;
+    }
+
+    .hsd-sub {
+        font-size: .68rem;
+        color: var(--muted);
+        margin-top: 1px;
+    }
+
+    /* Empty */
+    .bl-empty {
+        text-align: center;
+        padding: 3rem;
+        color: var(--muted);
+    }
+
+        .bl-empty i {
+            font-size: 2.2rem;
+            opacity: .3;
+            display: block;
+            margin-bottom: .75rem;
+        }
+</style>
+
+<div class="bl-wrapper">
+    <!-- Header -->
+    <div class="bl-hd">
+        <div>
+            <h1 class="bl-title">Lô hàng <em>FIFO</em></h1>
+            <p class="bl-sub">
+                <strong>@productName</strong> @(!string.IsNullOrEmpty(productCode) ? $"· {productCode}" : "")
+                · @facilityName
+            </p>
+        </div>
+        <a href="/Admin/AdminInventory/Index" class="bl-back">
+            <i class="bi bi-arrow-left"></i> Về tổng kho
+        </a>
+    </div>
+
+    <!-- FIFO info -->
+    <div class="fifo-banner">
+        <i class="bi bi-info-circle-fill"></i>
+        <div>
+            <strong>Nguyên tắc FIFO:</strong> Khi xuất hàng, hệ thống tự động trừ từ lô <strong>nhập sớm nhất</strong> (hoặc lô có HSD gần nhất) trước.
+            Lô có huy hiệu <strong style="background:#1a1209;color:#f5c842;padding:1px 6px;border-radius:4px;font-size:.7rem;">NEXT</strong> sẽ được xuất tiếp theo.
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="bl-stats">
+        <div class="bl-stat s-total">
+            <div class="bl-stat-val">@totalRemaining</div>
+            <div class="bl-stat-lbl">📦 Còn lại</div>
+        </div>
+        <div class="bl-stat s-active">
+            <div class="bl-stat-val" style="color:var(--green);">@batches.Count(b => b.Status == "Active")</div>
+            <div class="bl-stat-lbl">✅ Lô đang dùng</div>
+        </div>
+        <div class="bl-stat">
+            <div class="bl-stat-val" style="color:var(--muted);">@batches.Count(b => b.Status == "Depleted")</div>
+            <div class="bl-stat-lbl">🗑️ Đã dùng hết</div>
+        </div>
+        <div class="bl-stat">
+            <div class="bl-stat-val" style="color:var(--orange);">
+                @batches.Count(b => b.ExpiryDate.HasValue && b.ExpiryDate > now && b.ExpiryDate <= soon30)
+            </div>
+            <div class="bl-stat-lbl">⏳ Sắp hết hạn</div>
+        </div>
+        <div class="bl-stat">
+            <div class="bl-stat-val" style="color:var(--red);">
+                @batches.Count(b => b.IsExpired)
+            </div>
+            <div class="bl-stat-lbl">🚫 Đã hết hạn</div>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="bl-toolbar">
+        <div class="bl-search-wrap">
+            <i class="bi bi-search"></i>
+            <input class="bl-search" id="blSearch" placeholder="Tìm số lô, chứng từ..." oninput="applyBlFilter()" />
+        </div>
+        <select class="bl-sel" id="blStatusSel" onchange="applyBlFilter()">
+            <option value="">Tất cả trạng thái</option>
+            <option value="Active">✅ Đang dùng</option>
+            <option value="Depleted">🗑️ Hết</option>
+            <option value="expiring">⏳ Sắp hết hạn</option>
+            <option value="expired">🚫 Đã hết hạn</option>
+        </select>
+        <span class="bl-count" id="blCount">@batches.Count lô hàng</span>
+    </div>
+
+    <!-- Table -->
+    <div class="bl-card">
+        @if (batches.Any())
+        {
+            // Sort: Active FIFO first (expiry-first, then received-first), then depleted
+            var sorted = batches
+            .OrderBy(b => b.Status == "Depleted" ? 1 : 0)
+            .ThenBy(b => b.ExpiryDate ?? DateTime.MaxValue)
+            .ThenBy(b => b.ReceivedDate)
+            .ToList();
+            var nextBatchId = sorted.FirstOrDefault(b => b.Status == "Active" && !b.IsDepleted)?.BatchId;
+
+            <div style="overflow-x:auto;">
+                <table class="bl-tbl" id="blTable">
+                    <thead>
+                        <tr>
+                            <th style="padding-left:1.25rem;width:50px;">FIFO</th>
+                            <th>Số lô</th>
+                            <th style="text-align:center;">Nhập / Còn</th>
+                            <th>Ngày nhập</th>
+                            <th>Hạn sử dụng</th>
+                            <th style="text-align:right;">Giá vốn / đvt</th>
+                            <th>Chứng từ</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int fifoOrder = 0;
+                        }
+                        @foreach (var b in sorted)
+                        {
+                            if (b.Status == "Active") fifoOrder++;
+                            var isNext = b.BatchId == nextBatchId;
+                            var isExpired = b.IsExpired;
+                            var isExpiring7 = !isExpired && b.ExpiryDate.HasValue && b.ExpiryDate <= soon;
+                            var isExpiring30 = !isExpired && !isExpiring7 && b.ExpiryDate.HasValue && b.ExpiryDate <= soon30;
+                            var pct = b.OriginalQuantity > 0
+                            ? (double)b.RemainingQuantity / b.OriginalQuantity * 100 : 0;
+                            var barCls = b.IsDepleted ? "bb-depleted" : pct < 20 ? "bb-low" : "bb-ok";
+                            var filterStatus = b.Status == "Depleted" ? "Depleted"
+                            : isExpired ? "expired"
+                            : (isExpiring7 || isExpiring30) ? "expiring"
+                            : "Active";
+
+                            <tr data-status="@filterStatus"
+                                data-search="@b.BatchNumber?.ToLower() @b.DocumentReference?.ToLower()">
+                                <td style="padding-left:1.25rem;">
+                                    @if (b.Status == "Active")
+                                    {
+                                        <span class="fifo-badge @(isNext ? "next" : "")">@fifoOrder</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:var(--border);font-size:.8rem;">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div style="font-weight:700;font-family:monospace;font-size:.82rem;">
+                                        @(b.BatchNumber ?? "—")
+                                    </div>
+                                </td>
+                                <td style="text-align:center;">
+                                    <div style="font-weight:700;font-size:.88rem;">
+                                        @b.RemainingQuantity <span style="color:var(--muted);font-weight:400;">/ @b.OriginalQuantity</span>
+                                    </div>
+                                    <span class="batch-bar-wrap">
+                                        <span class="batch-bar @barCls" style="width:@pct.ToString("F0")%;display:block;"></span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div style="font-size:.8rem;">@b.ReceivedDate.ToString("dd/MM/yyyy")</div>
+                                    <div style="font-size:.68rem;color:var(--muted);">@b.ReceivedDate.ToString("HH:mm")</div>
+                                </td>
+                                <td>
+                                    @if (b.ExpiryDate.HasValue)
+                                    {
+                                        var daysLeft = (b.ExpiryDate.Value - now).Days;
+                                        var cls = isExpired ? "hsd-dead" : isExpiring7 ? "hsd-soon7" : isExpiring30 ? "hsd-soon30" : "hsd-ok";
+                                        <div class="@cls">@b.ExpiryDate.Value.ToString("dd/MM/yyyy")</div>
+                                        <div class="hsd-sub">
+                                            @if (isExpired)
+                                            {
+                                                @($"Quá {-daysLeft} ngày")
+                                            }
+                                            else
+                                            {
+
+                                                @($"Còn {daysLeft} ngày")
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:var(--muted);">Không có HSD</span>
+                                    }
+                                </td>
+                                <td style="text-align:right;">
+                                    @if (b.CostPrice > 0)
+                                    {
+                                        <div style="font-weight:700;font-size:.85rem;">@b.CostPrice.ToString("N0")₫</div>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:var(--muted);">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div style="font-size:.78rem;color:var(--muted);">
+                                        @(string.IsNullOrEmpty(b.DocumentReference) ? "—" : b.DocumentReference)
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (isExpired)
+                                    {
+                                        <span class="bbadge bb-expired"><i class="bi bi-slash-circle"></i> Hết hạn</span>
+                                    }
+                                    else if (isExpiring7)
+                                    {
+
+                                        <span class="bbadge bb-expiring"><i class="bi bi-exclamation-triangle-fill"></i> HSD còn @(b.DaysUntilExpiry)d</span>
+                                    }
+                                    else if (isExpiring30)
+                                    {
+
+                                        <span class="bbadge bb-expiring"><i class="bi bi-clock"></i> Sắp hết hạn</span>
+                                    }
+                                    else if (b.IsDepleted)
+                                    {
+
+                                        <span class="bbadge bb-depleted"><i class="bi bi-check2-all"></i> Đã xuất hết</span>
+                                    }
+                                    else
+                                    {
+
+                                        <span class="bbadge bb-active"><i class="bi bi-circle-fill" style="font-size:.4rem;"></i> Đang dùng</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="bl-empty">
+                <i class="bi bi-layers"></i>
+                <p>Chưa có lô hàng nào được ghi nhận</p>
+                <p style="font-size:.78rem;">Nhập kho lần đầu sẽ tự động tạo lô</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function applyBlFilter() {
+            const q   = document.getElementById('blSearch').value.toLowerCase();
+            const st  = document.getElementById('blStatusSel').value;
+            let cnt = 0;
+            document.querySelectorAll('#blTable tbody tr').forEach(row => {
+                const ok = (!q  || (row.dataset.search ?? '').includes(q))
+                        && (!st || row.dataset.status === st);
+                row.style.display = ok ? '' : 'none';
+                if (ok) cnt++;
+            });
+            document.getElementById('blCount').textContent = cnt + ' lô hàng';
+        }
+    </script>
+}

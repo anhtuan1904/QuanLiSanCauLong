@@ -64,7 +64,6 @@ namespace QuanLiSanCauLong.Controllers
             ViewBag.TotalVouchers = model.Count;
             ViewBag.ActiveVouchers = model.Count(v => v.IsActive && v.StartDate <= currentTime && v.EndDate >= currentTime);
             ViewBag.ExpiredVouchers = model.Count(v => v.EndDate < currentTime);
-
             ViewBag.TotalUsage = model.Sum(v => v.UsedCount);
 
             return View(model);
@@ -112,8 +111,9 @@ namespace QuanLiSanCauLong.Controllers
                         MinOrderAmount = model.MinOrderAmount,
                         MaxDiscount = model.MaxDiscount,
                         ApplicableFor = model.ApplicableFor,
-                        StartDate = model.StartDate,
-                        EndDate = model.EndDate,
+                        // ✅ FIX CS0266 dòng 115-116: DateTime? không thể gán trực tiếp vào DateTime
+                        StartDate = model.StartDate ?? DateTime.Now,
+                        EndDate = model.EndDate ?? DateTime.Now.AddMonths(1),
                         UsageLimit = model.UsageLimit,
                         UsageLimitPerUser = model.UsageLimitPerUser,
                         UsedCount = 0,
@@ -130,8 +130,6 @@ namespace QuanLiSanCauLong.Controllers
                 }
             }
 
-            // Cập nhật quan trọng: Nếu có lỗi khi tạo từ Modal ở Index, 
-            // ta cần load lại danh sách để trả về View Index thay vì trả về View Create trống.
             var vouchers = await _context.Vouchers.OrderByDescending(v => v.CreatedAt).ToListAsync();
             var listModel = vouchers.Select(v => MapToViewModel(v)).ToList();
             TempData["ErrorMessage"] = "Có lỗi xảy ra, vui lòng kiểm tra lại thông tin!";
@@ -146,22 +144,14 @@ namespace QuanLiSanCauLong.Controllers
 
             var model = MapToViewModel(voucher);
 
-            // FIX: Kiểm tra UsageLimit có null không trước khi trừ
             if (voucher.UsageLimit.HasValue)
-            {
                 ViewBag.RemainingUsage = voucher.UsageLimit.Value - voucher.UsedCount;
-            }
             else
-            {
                 ViewBag.RemainingUsage = "Không giới hạn";
-            }
 
             double percentage = 0;
-            // FIX: Kiểm tra UsageLimit.HasValue để tránh lỗi chia cho null
             if (voucher.UsageLimit.HasValue && voucher.UsageLimit.Value > 0)
-            {
                 percentage = (double)voucher.UsedCount * 100.0 / (double)voucher.UsageLimit.Value;
-            }
 
             ViewBag.UsagePercentage = percentage.ToString("F1");
 
@@ -198,8 +188,9 @@ namespace QuanLiSanCauLong.Controllers
                 voucher.MinOrderAmount = model.MinOrderAmount;
                 voucher.MaxDiscount = model.MaxDiscount;
                 voucher.ApplicableFor = model.ApplicableFor;
-                voucher.StartDate = model.StartDate;
-                voucher.EndDate = model.EndDate;
+                // ✅ FIX CS0266 dòng 201-202: dùng ?? để giữ giá trị cũ nếu null
+                voucher.StartDate = model.StartDate ?? voucher.StartDate;
+                voucher.EndDate = model.EndDate ?? voucher.EndDate;
                 voucher.UsageLimit = model.UsageLimit;
                 voucher.UsageLimitPerUser = model.UsageLimitPerUser;
                 voucher.IsActive = model.IsActive;
@@ -216,7 +207,8 @@ namespace QuanLiSanCauLong.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var voucher = await _context.Vouchers.FindAsync(id);
-            if (voucher == null) return Json(new { success = false, message = "Không tìm thấy!" });
+            if (voucher == null)
+                return Json(new { success = false, message = "Không tìm thấy!" });
 
             if (voucher.UsedCount > 0)
                 return Json(new { success = false, message = "Voucher đã dùng không thể xóa!" });
@@ -243,8 +235,11 @@ namespace QuanLiSanCauLong.Controllers
         {
             var voucher = await _context.Vouchers.FindAsync(id);
             if (voucher == null) return NotFound();
-            ViewBag.Voucher = voucher;
-            return View();
+
+            ViewBag.Voucher = MapToViewModel(voucher);
+            ViewBag.TotalDiscounted = 0m;
+
+            return View(new List<VoucherUsageViewModel>());
         }
 
         private VoucherViewModel MapToViewModel(Voucher v)
@@ -273,9 +268,7 @@ namespace QuanLiSanCauLong.Controllers
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
-            {
                 return userId;
-            }
             return 0;
         }
     }

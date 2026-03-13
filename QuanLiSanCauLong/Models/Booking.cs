@@ -11,7 +11,7 @@ namespace QuanLiSanCauLong.Models
 
         [Required]
         [StringLength(20)]
-        public string BookingCode { get; set; }
+        public string BookingCode { get; set; } = string.Empty;
 
         [Required]
         public int UserId { get; set; }
@@ -36,7 +36,6 @@ namespace QuanLiSanCauLong.Models
         [Column(TypeName = "decimal(10,2)")]
         public decimal CourtPrice { get; set; }
 
-        // --- THÊM DÒNG NÀY ĐỂ SỬA LỖI TRUY XUẤT ---
         [Column(TypeName = "decimal(10,2)")]
         public decimal PricePerHour { get; set; }
 
@@ -51,16 +50,16 @@ namespace QuanLiSanCauLong.Models
         public decimal TotalPrice { get; set; }
 
         public string Status { get; set; } = "Pending";
-        public string PaymentMethod { get; set; }
+        public string PaymentMethod { get; set; } = "Cash";
         public string PaymentStatus { get; set; } = "Unpaid";
 
         [StringLength(500)]
-        public string Note { get; set; }
+        public string? Note { get; set; }           // nullable — chưa có khi tạo mới
 
         [StringLength(500)]
-        public string CancelReason { get; set; }
+        public string? CancelReason { get; set; }   // nullable — chưa có khi tạo mới
 
-        public DateTime? CancelledAt { get; set; }
+        public DateTime? CancelledAt { get; set; }  // nullable — chưa hủy khi tạo mới
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
         public DateTime? CheckInTime { get; set; }
@@ -68,15 +67,15 @@ namespace QuanLiSanCauLong.Models
         public int? CheckInBy { get; set; }
 
         [ForeignKey("UserId")]
-        public virtual User User { get; set; }
+        public virtual User User { get; set; } = null!;
 
         [ForeignKey("CourtId")]
-        public virtual Court Court { get; set; }
+        public virtual Court Court { get; set; } = null!;
 
         [ForeignKey("CheckInBy")]
-        public virtual User CheckInStaff { get; set; }
+        public virtual User? CheckInStaff { get; set; }
 
-        public virtual ICollection<Order> Orders { get; set; }
-        public virtual ICollection<VoucherUsage> VoucherUsages { get; set; }
+        public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+        public virtual ICollection<VoucherUsage> VoucherUsages { get; set; } = new List<VoucherUsage>();
     }
 }
