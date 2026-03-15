@@ -475,12 +475,48 @@
             align-items: center;
             gap: .3rem;
             border: 1px solid var(--border);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all .2s;
+            z-index: 2;
         }
+
+            .rating-chip:hover {
+                background: linear-gradient(135deg, var(--gold), var(--gold2));
+                color: var(--deep);
+                border-color: transparent;
+            }
 
             .rating-chip i {
                 color: var(--gold);
                 font-size: .75rem;
+                transition: color .2s;
             }
+
+            .rating-chip:hover i {
+                color: var(--deep);
+            }
+
+        .rating-chip-new {
+            background: rgba(26,18,9,.75);
+            border-color: rgba(212,160,23,.35);
+            cursor: pointer;
+        }
+
+            .rating-chip-new i {
+                color: rgba(255,255,255,.55);
+                transition: color .2s;
+            }
+
+            .rating-chip-new:hover {
+                background: linear-gradient(135deg, var(--gold), var(--gold2));
+                color: var(--deep);
+                border-color: transparent;
+            }
+
+                .rating-chip-new:hover i {
+                    color: var(--deep);
+                }
 
         .avail-badge {
             position: absolute;
@@ -508,8 +544,83 @@
             font-size: 1.2rem;
             font-weight: 700;
             color: var(--deep);
-            margin-bottom: .85rem;
             line-height: 1.2;
+        }
+
+        /* ── RATING BADGE beside name ────────────────── */
+        .fac-name-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: .65rem;
+            margin-bottom: .85rem;
+        }
+
+        .fac-rating-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .28rem;
+            background: var(--deep);
+            color: var(--gold2);
+            font-family: 'Outfit', sans-serif;
+            font-size: .72rem;
+            font-weight: 700;
+            padding: .32rem .72rem;
+            border-radius: 5px;
+            border: 1px solid var(--border);
+            text-decoration: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all .2s;
+            cursor: pointer;
+        }
+
+            .fac-rating-badge:hover {
+                background: linear-gradient(135deg, var(--gold), var(--gold2));
+                color: var(--deep);
+                border-color: transparent;
+                transform: translateY(-1px);
+                box-shadow: 0 3px 10px rgba(212,160,23,.3);
+            }
+
+            .fac-rating-badge i {
+                color: var(--gold);
+                font-size: .72rem;
+            }
+
+            .fac-rating-badge:hover i {
+                color: var(--deep);
+            }
+
+        .fac-rating-empty {
+            background: rgba(138,117,96,.1);
+            color: #8c7a68;
+            border-color: var(--sand);
+            cursor: pointer;
+        }
+
+            .fac-rating-empty:hover {
+                background: linear-gradient(135deg, var(--gold), var(--gold2));
+                color: var(--deep);
+                border-color: transparent;
+                transform: translateY(-1px);
+                box-shadow: 0 3px 10px rgba(212,160,23,.3);
+            }
+
+                .fac-rating-empty i,
+                .fac-rating-empty:hover i {
+                    color: inherit;
+                }
+
+        .rb-score {
+            font-size: .78rem;
+            font-weight: 800;
+        }
+
+        .rb-cnt {
+            font-size: .65rem;
+            opacity: .7;
+            font-weight: 500;
         }
 
         .fac-meta {
@@ -756,7 +867,18 @@
         {
             @foreach (var item in Model)
             {
-                <div class="fac-card" data-district="@item.District" data-price="100000" data-rating="4.8">
+                var detailUrl = Url.Action("Details", "Facility", new { id = item.FacilityId });
+                var reviewUrl = Url.Action("Details", "Facility", new { id = item.FacilityId }) + "#reviews";
+                var ratingStr = item.AverageRating.HasValue
+                ? item.AverageRating.Value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)
+                : "0";
+                var priceVal = item.MinPrice > 0 ? item.MinPrice : 100000;
+                <div class="fac-card"
+                     data-district="@item.District"
+                     data-price="@priceVal"
+                     data-rating="@ratingStr"
+                     onclick="window.location.href='@detailUrl'"
+                     style="cursor:pointer;">
                     <div class="fac-img-wrap">
                         @if (!string.IsNullOrEmpty(item.ImageUrl))
                         {
@@ -766,11 +888,47 @@
                         {
                             <div class="no-img"><i class="bi bi-building"></i></div>
                         }
-                        <div class="rating-chip"><i class="bi bi-star-fill"></i> 4.8</div>
+                        <!-- Rating chip trên ảnh — luôn là link đến #reviews -->
+                        @if (item.AverageRating.HasValue && item.ReviewCount > 0)
+                        {
+                            <a href="@reviewUrl" class="rating-chip" onclick="event.stopPropagation()" title="Xem @item.ReviewCount đánh giá">
+                                <i class="bi bi-star-fill"></i> @item.AverageRating.Value.ToString("0.0")
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="@reviewUrl" class="rating-chip rating-chip-new" onclick="event.stopPropagation()" title="Xem đánh giá">
+                                <i class="bi bi-chat-dots"></i> Xem đánh giá
+                            </a>
+                        }
                         <div class="avail-badge"><i class="bi bi-check-circle me-1"></i>Sẵn sàng</div>
                     </div>
                     <div class="fac-body">
-                        <div class="fac-name">@item.FacilityName</div>
+                        <div class="fac-name-row">
+                            <div class="fac-name">@item.FacilityName</div>
+                            <!-- Badge rating bên cạnh tên — luôn là link đến #reviews -->
+                            @if (item.AverageRating.HasValue && item.ReviewCount > 0)
+                            {
+                                <a href="@reviewUrl"
+                                   class="fac-rating-badge"
+                                   onclick="event.stopPropagation()"
+                                   title="Xem @item.ReviewCount đánh giá">
+                                    <i class="bi bi-star-fill"></i>
+                                    <span class="rb-score">@item.AverageRating.Value.ToString("0.0")</span>
+                                    <span class="rb-cnt">(@item.ReviewCount)</span>
+                                </a>
+                            }
+                            else
+                            {
+                                <a href="@reviewUrl"
+                                   class="fac-rating-badge fac-rating-empty"
+                                   onclick="event.stopPropagation()"
+                                   title="Xem đánh giá">
+                                    <i class="bi bi-chat-dots"></i>
+                                    <span class="rb-score">Đánh giá</span>
+                                </a>
+                            }
+                        </div>
                         <div class="fac-meta">
                             <div class="fac-meta-item">
                                 <i class="bi bi-geo-alt-fill" style="color:#e74c3c"></i>
@@ -783,10 +941,13 @@
                         </div>
                         <div class="fac-footer">
                             <div>
-                                <div class="fac-price-val">100.000đ</div>
+                                <div class="fac-price-val">@(item.MinPrice > 0 ? item.MinPrice.ToString("N0") + "đ" : "100.000đ")</div>
                                 <div class="fac-price-unit">/ giờ / sân</div>
                             </div>
-                            <a asp-action="Details" asp-route-id="@item.FacilityId" class="fac-cta">
+                            <!-- Nút "Đặt sân" — stopPropagation để không double navigate -->
+                            <a href="@detailUrl"
+                               class="fac-cta"
+                               onclick="event.stopPropagation()">
                                 Đặt sân <i class="bi bi-arrow-right"></i>
                             </a>
                         </div>
@@ -811,11 +972,38 @@
             });
         });
 
-        // Sort buttons
+        // Sort buttons — actually reorder cards
+        const grid = document.getElementById('facilityGrid');
+        function sortCards(key, asc) {
+            const cards = Array.from(grid.querySelectorAll('.fac-card'));
+            cards.sort((a, b) => {
+                const va = parseFloat(a.dataset[key]) || 0;
+                const vb = parseFloat(b.dataset[key]) || 0;
+                return asc ? va - vb : vb - va;
+            });
+            cards.forEach(c => grid.appendChild(c));
+        }
+
+        let priceSortAsc = true, ratingSortDesc = true;
+
         document.querySelectorAll('.sort-btn').forEach(btn => {
             btn.addEventListener('click', function () {
                 document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
+
+                if (this.id === 'sortPrice') {
+                    sortCards('price', priceSortAsc);
+                    this.textContent = priceSortAsc ? 'Giá ↑' : 'Giá ↓';
+                    priceSortAsc = !priceSortAsc;
+                } else if (this.id === 'sortRating') {
+                    // Sort rating highest first, "0" (new) goes last
+                    const cards = Array.from(grid.querySelectorAll('.fac-card'));
+                    cards.sort((a, b) => parseFloat(b.dataset.rating) - parseFloat(a.dataset.rating));
+                    cards.forEach(c => grid.appendChild(c));
+                } else {
+                    // Default — reload to original server order
+                    window.location.href = window.location.pathname;
+                }
             });
         });
     </script>

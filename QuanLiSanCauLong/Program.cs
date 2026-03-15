@@ -9,12 +9,12 @@ using QuanLiSanCauLong.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // ===================================
-// 1. DATABASE CONFIGURATION
+// 1. DATABASE
 // ===================================
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions => sqlOptions.EnableRetryOnFailure()
+        sql => sql.EnableRetryOnFailure()
     ));
 
 // ===================================
@@ -35,20 +35,25 @@ builder.Services.AddAuthorization(options =>
 });
 
 // ===================================
-// 3. SERVICES REGISTRATION
+// 3. SERVICES
 // ===================================
 builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options => {
+builder.Services.AddSession(options =>
+{
     options.IdleTimeout = TimeSpan.FromHours(2);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
 
-// Đăng ký các Interface và Service
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IVoucherService, VoucherService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
+
+// ── FIX: AdminInventoryController inject InventoryService (concrete)
+// thay vì IInventoryService → đăng ký thêm concrete để DI resolve được cả hai
+builder.Services.AddScoped<InventoryService>();
+
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -60,25 +65,30 @@ builder.Services.AddSingleton<IExcelHelper, ExcelHelper>();
 builder.Services.AddSingleton<IPdfHelper, PdfHelper>();
 builder.Services.AddSingleton<IQRCodeHelper, QRCodeHelper>();
 
-// CẤU HÌNH VIEW ENGINE ĐỂ TÌM TRONG THƯ MỤC VIEWS/ADMIN/
+// ===================================
+// 4. MVC + RAZOR
+// ===================================
 builder.Services.AddControllersWithViews()
     .AddRazorOptions(options =>
     {
-        // {1} là Controller Name, {0} là Action Name
         options.ViewLocationFormats.Add("/Views/Admin/{1}/{0}.cshtml");
         options.ViewLocationFormats.Add("/Views/{1}/{0}.cshtml");
         options.ViewLocationFormats.Add("/Views/Shared/{0}.cshtml");
     })
-    .AddJsonOptions(options => {
+    .AddJsonOptions(options =>
+    {
         options.JsonSerializerOptions.PropertyNamingPolicy = null;
     });
 
 builder.Services.AddRazorPages();
 
+// ===================================
+// 5. BUILD
+// ===================================
 var app = builder.Build();
 
 // ===================================
-// 4. MIDDLEWARE PIPELINE
+// 6. MIDDLEWARE PIPELINE
 // ===================================
 if (app.Environment.IsDevelopment())
 {
@@ -92,16 +102,12 @@ else
 
 app.UseHttpsRedirection();
 
-// ✅ Static files với cache headers cho ảnh avatar WebP
 app.UseStaticFiles(new StaticFileOptions
 {
     OnPrepareResponse = ctx =>
     {
         if (ctx.File.Name.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
-        {
-            ctx.Context.Response.Headers.Append(
-                "Cache-Control", "public, max-age=31536000, immutable");
-        }
+            ctx.Context.Response.Headers.Append("Cache-Control", "public, max-age=31536000, immutable");
     }
 });
 
@@ -110,7 +116,6 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Routing mặc định
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
@@ -118,7 +123,7 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 // ===================================
-// 5. DATABASE INITIALIZATION & SEEDING
+// 7. DATABASE INIT & SEED
 // ===================================
 using (var scope = app.Services.CreateScope())
 {
@@ -127,62 +132,16 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
         await context.Database.MigrateAsync();
-        await DbInitializer.Initialize(context);
+        await DbInitializer.InitializeAsync(context);
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Lỗi khi khởi tạo dữ liệu Database.");
+        logger.LogError(ex, "Lỗi khi khởi tạo Database.");
     }
 }
 
-// ✅ Tạo thư mục lưu ảnh avatar nếu chưa tồn tại
 var avatarDir = Path.Combine(builder.Environment.WebRootPath, "uploads", "avatars");
 Directory.CreateDirectory(avatarDir);
 
 app.Run();
-
-// ===================================
-// 6. DB INITIALIZER
-// ===================================
-public static class DbInitializer
-{
-    public static async Task Initialize(ApplicationDbContext context)
-    {
-        if (!await context.SystemSettings.AnyAsync())
-        {
-            context.SystemSettings.AddRange(
-                new SystemSetting { SettingKey = "SiteName", SettingValue = "Hệ thống cầu lông", Category = "General", IsActive = true, UpdatedAt = DateTime.Now },
-                new SystemSetting { SettingKey = "SupportEmail", SettingValue = "admin@badminton.com", Category = "General", IsActive = true, UpdatedAt = DateTime.Now }
-            );
-            await context.SaveChangesAsync();
-        }
-
-        if (!await context.Users.AnyAsync(u => u.Email == "admin@badminton.com"))
-        {
-            var admin = new User
-            {
-                FullName = "Administrator",
-                Email = "admin@badminton.com",
-                Phone = "0123456789",
-                PasswordHash = PasswordHelper.HashPassword("Admin@123"),
-                Role = "Admin",
-                IsActive = true,
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now
-            };
-            context.Users.Add(admin);
-            await context.SaveChangesAsync();
-        }
-
-        if (!await context.ProductCategories.AnyAsync())
-        {
-            context.ProductCategories.AddRange(
-                new ProductCategory { CategoryName = "Đồ ăn", CategoryType = "Food" },
-                new ProductCategory { CategoryName = "Nước uống", CategoryType = "Beverage" },
-                new ProductCategory { CategoryName = "Dụng cụ", CategoryType = "Equipment" }
-            );
-            await context.SaveChangesAsync();
-        }
-    }
-}

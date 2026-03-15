@@ -32,12 +32,13 @@ namespace QuanLiSanCauLong.ViewModels
         public string Phone { get; set; }
         public string Email { get; set; }
         public string ImageUrl { get; set; }
+
         public TimeSpan? OpenTime { get; set; }
         public TimeSpan? CloseTime { get; set; }
         public int TotalCourts { get; set; }
         public decimal MinPrice { get; set; }
         public decimal MaxPrice { get; set; }
-        public double? Rating { get; set; }
+        public double? AverageRating { get; set; }
         public int ReviewCount { get; set; }
         public bool IsOpen { get; set; }
         public string OpenStatus => IsOpen ? "Đang mở cửa" : "Đã đóng cửa";
@@ -71,6 +72,8 @@ namespace QuanLiSanCauLong.ViewModels
         // Giá & dịch vụ
         public decimal MinPrice { get; set; }
         public decimal MaxPrice { get; set; }
+        public ReviewSectionViewModel ReviewSection { get; set; } = new();
+
         public List<FacilityServiceViewModel> Services { get; set; } = new List<FacilityServiceViewModel>();
         public List<FacilityAmenityViewModel> Amenities { get; set; } = new List<FacilityAmenityViewModel>();
 
@@ -133,12 +136,7 @@ namespace QuanLiSanCauLong.ViewModels
         // Danh sách khung giờ
         public List<TimeSlotViewModel> Slots { get; set; } = new List<TimeSlotViewModel>();
     }
-    public class CourtImageViewModel
-    {
-        public string ImagePath { get; set; }
-        public bool IsPrimary { get; set; }
-        public int DisplayOrder { get; set; }
-    }
+
     /// <summary>
     /// ViewModel cho lịch đặt của user
     /// </summary>

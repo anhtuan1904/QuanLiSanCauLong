@@ -1,0 +1,645 @@
+﻿@model QuanLiSanCauLong.ViewModels.WalkInBookingViewModel
+@{
+    Layout = "~/Views/Shared/_LayoutStaff.cshtml";
+    ViewData["Title"] = "Đặt sân tại chỗ";
+}
+
+<style>
+    :root {
+        --D: #1a1209;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --G3: rgba(212,160,23,.1);
+        --G4: rgba(212,160,23,.22);
+        --C: #fdf8f0;
+        --W: #f5ede0;
+        --S: #e8ddd0;
+        --M: #8a7560;
+        --GN: #10b981;
+        --BL: #3b82f6;
+        --RD: #ef4444;
+        --OR: #f97316;
+        --r: 14px;
+        --r2: 10px;
+    }
+
+    /* ── LAYOUT ── */
+    .wi-wrap {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 1.3rem;
+        align-items: start;
+    }
+    @@media(max - width:860px) {
+        .wi-wrap {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ── CARD ── */
+    .wc {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        overflow: hidden;
+    }
+
+    .wc-head {
+        padding: 1.1rem 1.5rem;
+        border-bottom: 1px solid var(--S);
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .wc-head-ico {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--G3);
+        color: var(--G);
+        flex-shrink: 0;
+    }
+
+    .wc-title {
+        font-family: 'Syne',sans-serif;
+        font-size: .95rem;
+        font-weight: 800;
+        color: var(--D);
+    }
+
+    .wc-sub {
+        font-size: .7rem;
+        color: var(--M);
+        margin-top: .08rem;
+    }
+
+    .wc-body {
+        padding: 1.4rem 1.5rem;
+    }
+
+    /* ── FORM ELEMENTS ── */
+    .f-group {
+        margin-bottom: 1.1rem;
+    }
+
+    .f-label {
+        display: flex;
+        align-items: center;
+        gap: .38rem;
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        color: var(--M);
+        margin-bottom: .45rem;
+    }
+
+    .f-req {
+        color: var(--RD);
+        font-size: .65rem;
+    }
+
+    .f-input, .f-select, .f-textarea {
+        width: 100%;
+        padding: .55rem .9rem;
+        border: 1.5px solid var(--S);
+        border-radius: 9px;
+        font-size: .85rem;
+        color: var(--D);
+        font-family: 'Space Grotesk',sans-serif;
+        background: #fff;
+        outline: none;
+        transition: border-color .18s,box-shadow .18s;
+    }
+
+        .f-input:focus, .f-select:focus, .f-textarea:focus {
+            border-color: var(--G);
+            box-shadow: 0 0 0 3px rgba(212,160,23,.12);
+        }
+
+    .f-textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .f-hint {
+        font-size: .68rem;
+        color: var(--M);
+        margin-top: .3rem;
+    }
+
+    .f-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .9rem;
+    }
+
+    .f-row3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: .9rem;
+    }
+    @@media(max - width:540px) {
+        .f-row, .f-row3 {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ── COURT SELECT GRID ── */
+    .court-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill,minmax(100px,1fr));
+        gap: .55rem;
+        margin-top: .35rem;
+    }
+
+    .court-opt {
+        position: relative;
+    }
+
+        .court-opt input[type=radio] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .court-opt label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .3rem;
+            padding: .65rem .5rem;
+            border-radius: 10px;
+            border: 1.5px solid var(--S);
+            cursor: pointer;
+            transition: all .18s;
+            background: #fff;
+            font-family: 'Space Grotesk',sans-serif;
+        }
+
+            .court-opt label:hover {
+                border-color: var(--G);
+                background: var(--G3);
+            }
+
+        .court-opt input:checked + label {
+            border-color: var(--G);
+            background: var(--G3);
+            box-shadow: 0 0 0 3px rgba(212,160,23,.15);
+        }
+
+    .court-num {
+        font-family: 'Syne',sans-serif;
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--D);
+    }
+
+    .court-type {
+        font-size: .62rem;
+        color: var(--M);
+    }
+
+    .court-opt input:checked + label .court-num {
+        color: var(--G);
+    }
+
+    /* ── PAYMENT OPTIONS ── */
+    .pay-opts {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .55rem;
+        margin-top: .35rem;
+    }
+
+    .pay-opt input[type=radio] {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .pay-opt {
+        position: relative;
+    }
+
+        .pay-opt label {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            padding: .7rem 1rem;
+            border-radius: 10px;
+            border: 1.5px solid var(--S);
+            cursor: pointer;
+            transition: all .18s;
+            background: #fff;
+            font-size: .82rem;
+            font-weight: 600;
+            color: var(--D);
+            font-family: 'Space Grotesk',sans-serif;
+        }
+
+            .pay-opt label:hover {
+                border-color: var(--G);
+            }
+
+        .pay-opt input:checked + label {
+            border-color: var(--G);
+            background: var(--G3);
+        }
+
+    .pay-ico {
+        width: 32px;
+        height: 32px;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    /* ── PRICE PREVIEW (right panel) ── */
+    .pp {
+        background: var(--D);
+        border-radius: var(--r);
+        padding: 1.5rem;
+        color: #fff;
+        margin-bottom: 1rem;
+    }
+
+    .pp-title {
+        font-size: .62rem;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        color: var(--G);
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .pp-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: .45rem 0;
+        border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+
+        .pp-row:last-child {
+            border-bottom: none;
+        }
+
+    .pp-lbl {
+        font-size: .78rem;
+        color: rgba(255,255,255,.5);
+    }
+
+    .pp-val {
+        font-size: .82rem;
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .pp-total {
+        margin-top: .8rem;
+        padding-top: .8rem;
+        border-top: 1px solid rgba(255,255,255,.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+    }
+
+    .pp-total-lbl {
+        font-size: .78rem;
+        color: rgba(255,255,255,.5);
+    }
+
+    .pp-total-val {
+        font-family: 'Syne',sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--G2);
+    }
+
+    /* ── SUBMIT BUTTON ── */
+    .sub-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        padding: .75rem 1.5rem;
+        border-radius: 10px;
+        background: var(--G);
+        border: none;
+        color: var(--D);
+        font-family: 'Syne',sans-serif;
+        font-size: 1rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .sub-btn:hover {
+            background: var(--G2);
+        }
+
+    .cancel-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        padding: .6rem 1rem;
+        border-radius: 10px;
+        margin-top: .55rem;
+        background: transparent;
+        border: 1px solid var(--S);
+        color: var(--M);
+        font-size: .8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .18s;
+        text-decoration: none;
+        font-family: 'Space Grotesk',sans-serif;
+    }
+
+        .cancel-btn:hover {
+            border-color: var(--RD);
+            color: var(--RD);
+        }
+
+    /* ── VALIDATION ── */
+    .val-err {
+        background: rgba(239,68,68,.06);
+        border: 1px solid rgba(239,68,68,.2);
+        border-radius: 9px;
+        padding: .75rem 1rem;
+        margin-bottom: 1rem;
+        font-size: .8rem;
+        color: var(--RD);
+        display: flex;
+        gap: .5rem;
+        align-items: flex-start;
+    }
+</style>
+
+<form asp-action="WalkIn" method="post" id="wiForm">
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="All" class="val-err" style="display:none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:.1rem;"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+        <div></div>
+    </div>
+
+    <div class="wi-wrap">
+        <!-- LEFT: Form -->
+        <div>
+            <!-- Chọn sân -->
+            <div class="wc mb-3">
+                <div class="wc-head">
+                    <div class="wc-head-ico">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6z" /><line x1="9" y1="3" x2="9" y2="21" /><line x1="15" y1="3" x2="15" y2="21" /></svg>
+                    </div>
+                    <div>
+                        <div class="wc-title">Chọn Sân</div>
+                        <div class="wc-sub">Chỉ hiển thị sân đang trống</div>
+                    </div>
+                </div>
+                <div class="wc-body">
+                    <div class="court-grid">
+                        @foreach (var court in (IEnumerable<dynamic>)ViewBag.Courts)
+                        {
+                            <div class="court-opt">
+                                <input type="radio" asp-for="CourtId" value="@court.CourtId" id="ct-@court.CourtId" onchange="onCourtChange()" />
+                                <label for="ct-@court.CourtId">
+                                    <div class="court-num">@court.CourtNumber</div>
+                                    <div class="court-type">@court.CourtType</div>
+                                </label>
+                            </div>
+                        }
+                    </div>
+                    <span asp-validation-for="CourtId" class="f-hint" style="color:var(--RD)"></span>
+                </div>
+            </div>
+
+            <!-- Thời gian -->
+            <div class="wc mb-3">
+                <div class="wc-head">
+                    <div class="wc-head-ico">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                    </div>
+                    <div>
+                        <div class="wc-title">Thời Gian</div>
+                        <div class="wc-sub">Ngày và khung giờ chơi</div>
+                    </div>
+                </div>
+                <div class="wc-body">
+                    <div class="f-row3">
+                        <div class="f-group" style="margin-bottom:0;">
+                            <div class="f-label">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+                                Ngày chơi <span class="f-req">*</span>
+                            </div>
+                            <input asp-for="BookingDate" type="date" class="f-input" />
+                        </div>
+                        <div class="f-group" style="margin-bottom:0;">
+                            <div class="f-label">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                                Giờ bắt đầu <span class="f-req">*</span>
+                            </div>
+                            <input asp-for="StartTime" type="time" class="f-input" step="1800" onchange="calcPrice()" />
+                        </div>
+                        <div class="f-group" style="margin-bottom:0;">
+                            <div class="f-label">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                                Giờ kết thúc <span class="f-req">*</span>
+                            </div>
+                            <input asp-for="EndTime" type="time" class="f-input" step="1800" onchange="calcPrice()" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thông tin khách -->
+            <div class="wc mb-3">
+                <div class="wc-head">
+                    <div class="wc-head-ico">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                    </div>
+                    <div>
+                        <div class="wc-title">Thông Tin Khách</div>
+                        <div class="wc-sub">Khách vãng lai hoặc thành viên</div>
+                    </div>
+                </div>
+                <div class="wc-body">
+                    <div class="f-row">
+                        <div class="f-group" style="margin-bottom:0;">
+                            <div class="f-label">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                                Họ tên <span class="f-req">*</span>
+                            </div>
+                            <input asp-for="CustomerName" class="f-input" placeholder="Nguyễn Văn A" />
+                        </div>
+                        <div class="f-group" style="margin-bottom:0;">
+                            <div class="f-label">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.77 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 17z" /></svg>
+                                Số điện thoại <span class="f-req">*</span>
+                            </div>
+                            <input asp-for="CustomerPhone" class="f-input" placeholder="0901 234 567" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thanh toán -->
+            <div class="wc">
+                <div class="wc-head">
+                    <div class="wc-head-ico">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>
+                    </div>
+                    <div>
+                        <div class="wc-title">Thanh Toán</div>
+                        <div class="wc-sub">Phương thức và ghi chú</div>
+                    </div>
+                </div>
+                <div class="wc-body">
+                    <div class="f-group">
+                        <div class="f-label">Hình thức thanh toán</div>
+                        <div class="pay-opts">
+                            <div class="pay-opt">
+                                <input type="radio" asp-for="PaymentMethod" value="Cash" id="pay-cash" checked />
+                                <label for="pay-cash">
+                                    <div class="pay-ico" style="background:rgba(16,185,129,.1);">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--GN)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+                                    </div>
+                                    Tiền mặt
+                                </label>
+                            </div>
+                            <div class="pay-opt">
+                                <input type="radio" asp-for="PaymentMethod" value="Transfer" id="pay-tf" />
+                                <label for="pay-tf">
+                                    <div class="pay-ico" style="background:rgba(59,130,246,.1);">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--BL)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>
+                                    </div>
+                                    Chuyển khoản
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="f-group" style="margin-bottom:0;">
+                        <div class="f-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><line x1="12" y1="13" x2="12" y2="17" /><line x1="10" y1="15" x2="14" y2="15" /></svg>
+                            Ghi chú
+                        </div>
+                        <input asp-for="Note" class="f-input" placeholder="Ghi chú thêm (nếu có)..." />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Summary + Submit -->
+        <div style="position:sticky;top:72px;">
+            <!-- Price preview -->
+            <div class="pp">
+                <div class="pp-title">Tóm Tắt Đặt Sân</div>
+                <div class="pp-row">
+                    <span class="pp-lbl">Sân</span>
+                    <span class="pp-val" id="pp-court">—</span>
+                </div>
+                <div class="pp-row">
+                    <span class="pp-lbl">Khung giờ</span>
+                    <span class="pp-val" id="pp-time">—</span>
+                </div>
+                <div class="pp-row">
+                    <span class="pp-lbl">Thời lượng</span>
+                    <span class="pp-val" id="pp-dur">—</span>
+                </div>
+                <div class="pp-row">
+                    <span class="pp-lbl">Đơn giá</span>
+                    <span class="pp-val">~100,000đ/h</span>
+                </div>
+                <div class="pp-total">
+                    <span class="pp-total-lbl">Tổng tiền</span>
+                    <span class="pp-total-val" id="pp-total">—</span>
+                </div>
+            </div>
+
+            <!-- Hidden price field -->
+            <input asp-for="Price" type="hidden" id="priceInput" />
+
+            <!-- Submit -->
+            <button type="submit" class="sub-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                Xác nhận đặt sân
+            </button>
+            <a asp-action="BookingManagement" class="cancel-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                Hủy bỏ
+            </a>
+
+            <!-- Note box -->
+            <div style="margin-top:1rem;padding:1rem;background:var(--G3);border:1px solid var(--G4);border-radius:var(--r2);">
+                <div style="font-size:.68rem;font-weight:700;color:var(--G);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem;">Lưu ý</div>
+                <ul style="margin:0;padding-left:1.1rem;font-size:.75rem;color:var(--M);line-height:1.7;">
+                    <li>Đơn walk-in sẽ được xác nhận ngay</li>
+                    <li>Nhớ check-in khi khách ra sân</li>
+                    <li>Check-out khi khách kết thúc chơi</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        const courts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                    ((IEnumerable<dynamic>)ViewBag.Courts).Select(c => new { id = (int)c.CourtId, num = (string)c.CourtNumber.ToString(), type = (string)c.CourtType }),
+                    new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }
+            ));
+
+    function onCourtChange(){
+        const sel = document.querySelector('input[name="CourtId"]:checked');
+        if(!sel) return;
+        const c = courts.find(x=>x.id==sel.value);
+        document.getElementById('pp-court').textContent = c ? `Sân ${c.num} (${c.type})` : '—';
+        calcPrice();
+    }
+
+        function calcPrice(){
+            const s = document.querySelector('[name="StartTime"]').value;
+            const e = document.querySelector('[name="EndTime"]').value;
+            if(!s||!e){ document.getElementById('pp-time').textContent='—'; document.getElementById('pp-dur').textContent='—'; document.getElementById('pp-total').textContent='—'; return; }
+            const diffMin = (new Date('2000-01-01T'+e) - new Date('2000-01-01T'+s)) / 60000;
+            document.getElementById('pp-time').textContent = s+' – '+e;
+            if(diffMin<=0){ document.getElementById('pp-dur').textContent='⚠ Giờ không hợp lệ'; document.getElementById('pp-total').textContent='—'; return; }
+            const h = diffMin/60;
+            document.getElementById('pp-dur').textContent = h===Math.floor(h) ? h+' giờ' : `${Math.floor(h)}h ${diffMin%60}p`;
+            const price = Math.round(diffMin * 1667);
+            document.getElementById('pp-total').textContent = price.toLocaleString('vi-VN')+'đ';
+            document.getElementById('priceInput').value = price;
+        }
+
+        // Validate form
+        document.getElementById('wiForm').addEventListener('submit',function(e){
+            const errs=[];
+            if(!document.querySelector('input[name="CourtId"]:checked')) errs.push('Vui lòng chọn sân');
+            if(!document.querySelector('[name="BookingDate"]').value) errs.push('Vui lòng chọn ngày');
+            if(!document.querySelector('[name="StartTime"]').value) errs.push('Vui lòng nhập giờ bắt đầu');
+            if(!document.querySelector('[name="EndTime"]').value) errs.push('Vui lòng nhập giờ kết thúc');
+            if(!document.querySelector('[name="CustomerName"]').value.trim()) errs.push('Vui lòng nhập tên khách');
+            if(!document.querySelector('[name="CustomerPhone"]').value.trim()) errs.push('Vui lòng nhập số điện thoại');
+            if(errs.length){
+                const el=document.querySelector('.val-err');
+                el.style.display='flex';
+                el.querySelector('div').innerHTML=errs.map(s=>`<div>• ${s}</div>`).join('');
+                el.scrollIntoView({behavior:'smooth',block:'center'});
+                e.preventDefault();
+            }
+        });
+    </script>
+}

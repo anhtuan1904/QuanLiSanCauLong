@@ -1,16 +1,14 @@
-﻿/*using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuanLiSanCauLong.Data;
 using QuanLiSanCauLong.Models;
 using QuanLiSanCauLong.ViewModels;
 using System.Security.Claims;
-using static QuanLiSanCauLong.ViewModels.TimeSlotViewModel;
 
 namespace QuanLiSanCauLong.Controllers
 {
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff")]
     public class StaffController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -20,547 +18,632 @@ namespace QuanLiSanCauLong.Controllers
             _context = context;
         }
 
-        // GET: Staff/Dashboard
-        [HttpGet]
-        public async Task<IActionResult> Dashboard(DateTime? selectedDate)
+        // ══════════════════════════════════════════
+        // HELPERS
+        // ══════════════════════════════════════════
+        private int GetCurrentUserId()
         {
-            int staffId = GetCurrentUserId();
-            var staff = await _context.Users.FindAsync(staffId);
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+            return claim != null && int.TryParse(claim.Value, out int id) ? id : 0;
+        }
 
-            if (staff == null || !staff.FacilityId.HasValue)
-            {
-                TempData["ErrorMessage"] = "Bạn chưa được gán cơ sở!";
-                return RedirectToAction("Index", "Home");
-            }
+        private async Task<int> GetStaffFacilityId()
+        {
+            var userId = GetCurrentUserId();
+            var user = await _context.Users.FindAsync(userId);
+            return user?.FacilityId ?? 0;
+        }
 
-            int facilityId = staff.FacilityId.Value;
-            DateTime date = selectedDate ?? DateTime.Today;
-
+        private async Task SetStaffViewBag()
+        {
+            var facilityId = await GetStaffFacilityId();
             var facility = await _context.Facilities.FindAsync(facilityId);
+            ViewBag.StaffFacilityId = facilityId;
+            ViewBag.StaffFacilityName = facility?.FacilityName ?? "Chưa phân cơ sở";
+        }
 
-            var model = new StaffDashboardViewModel
+        private async Task<string> GenerateBookingCode()
+        {
+            var count = await _context.Bookings.CountAsync(b => b.CreatedAt >= DateTime.Today);
+            return "BK" + DateTime.Now.ToString("yyyyMMdd") + (count + 1).ToString("D4");
+        }
+
+        private async Task<int> GetOrCreateGuestUser(string phone, string name)
+        {
+            var existing = await _context.Users.FirstOrDefaultAsync(u => u.Phone == phone);
+            if (existing != null) return existing.UserId;
+
+            var guest = new User
             {
-                SelectedDate = date,
-                FacilityId = facilityId,
-                FacilityName = facility.FacilityName,
-                CourtSchedules = new List<CourtScheduleViewModel>(),
-                PendingBookings = new List<BookingItemViewModel>(),
-                UpcomingBookings = new List<BookingItemViewModel>(),
-                PlayingBookings = new List<BookingItemViewModel>(),
-                Statistics = await GetDayStatistics(facilityId, date)
+                FullName = name,
+                Phone = phone,
+                Email = $"guest_{phone}@walkin.local",
+                Role = "Customer",
+                IsActive = true,
+                CreatedAt = DateTime.Now
             };
+            _context.Users.Add(guest);
+            await _context.SaveChangesAsync();
+            return guest.UserId;
+        }
 
-            // Lấy danh sách sân
+        // ══════════════════════════════════════════
+        // DASHBOARD
+        // ══════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> Dashboard()
+        {
+            await SetStaffViewBag();
+            ViewData["Title"] = "Dashboard";
+
+            var facilityId = await GetStaffFacilityId();
+            var today = DateTime.Today;
+            var now = DateTime.Now;
+
+            var todayBookings = await _context.Bookings
+                .Include(b => b.Court)
+                .Include(b => b.User)
+                .Where(b => b.Court.FacilityId == facilityId
+                         && b.BookingDate == today
+                         && b.Status != "Cancelled")
+                .OrderBy(b => b.StartTime)
+                .ToListAsync();
+
+            var upcoming = todayBookings
+                .Where(b => b.Status == "Confirmed"
+                         && b.StartTime >= now.TimeOfDay
+                         && b.StartTime <= now.TimeOfDay.Add(TimeSpan.FromHours(2)))
+                .Take(5).ToList();
+
+            var playing = todayBookings.Where(b => b.Status == "Playing").ToList();
+
+            ViewBag.TodayCount = todayBookings.Count;
+            ViewBag.PlayingCount = playing.Count;
+            ViewBag.UpcomingCount = upcoming.Count;
+            ViewBag.ShiftRevenue = todayBookings
+                .Where(b => b.Status is "Completed" or "Playing")
+                .Sum(b => b.TotalPrice);
+            ViewBag.UpcomingList = upcoming;
+            ViewBag.PlayingList = playing;
+
+            return View("~/Views/Staff/Dashboard.cshtml");
+        }
+
+        // ── Quick Stats API (sidebar polling) ──
+        [HttpGet]
+        public async Task<IActionResult> QuickStats()
+        {
+            var facilityId = await GetStaffFacilityId();
+            var today = DateTime.Today;
+            var now = DateTime.Now;
+
             var courts = await _context.Courts
                 .Where(c => c.FacilityId == facilityId && c.Status == "Available")
+                .CountAsync();
+
+            var bookings = await _context.Bookings
+                .Include(b => b.Court)
+                .Where(b => b.Court.FacilityId == facilityId
+                         && b.BookingDate == today
+                         && b.Status != "Cancelled")
+                .ToListAsync();
+
+            var playing = bookings.Count(b => b.Status == "Playing");
+            var pending = bookings.Count(b => b.Status == "Confirmed"
+                             && b.StartTime <= now.TimeOfDay.Add(TimeSpan.FromMinutes(30))
+                             && b.StartTime > now.TimeOfDay.Subtract(TimeSpan.FromMinutes(15)));
+            var revenue = bookings.Where(b => b.Status is "Completed" or "Playing")
+                                   .Sum(b => b.TotalPrice);
+
+            return Json(new
+            {
+                freeCourts = Math.Max(0, courts - playing),
+                playingCourts = playing,
+                pendingCheckin = pending,
+                todayBookings = bookings.Count,
+                shiftRevenue = revenue.ToString("N0") + "đ"
+            });
+        }
+
+        // ══════════════════════════════════════════
+        // SƠ ĐỒ SÂN
+        // ══════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> CourtMap()
+        {
+            await SetStaffViewBag();
+            ViewData["Title"] = "Sơ đồ sân";
+
+            var facilityId = await GetStaffFacilityId();
+            var today = DateTime.Today;
+            var now = DateTime.Now;
+
+            var courts = await _context.Courts
+                .Where(c => c.FacilityId == facilityId)
                 .OrderBy(c => c.CourtNumber)
                 .ToListAsync();
 
-            var todayBookings = await _context.Bookings
+            var bookings = await _context.Bookings
                 .Include(b => b.User)
-                .Include(b => b.Court)
-                .Include(b => b.Orders)
                 .Where(b => b.Court.FacilityId == facilityId
-                       && b.BookingDate == date
-                       && b.Status != "Cancelled")
+                         && b.BookingDate == today
+                         && b.Status != "Cancelled")
                 .ToListAsync();
 
-            // Xây dựng lịch từng sân
-            foreach (var court in courts)
+            var courtStatusList = courts.Select(c =>
             {
-                var courtBookings = todayBookings
-                    .Where(b => b.CourtId == court.CourtId)
+                var active = bookings.FirstOrDefault(b =>
+                    b.CourtId == c.CourtId &&
+                    (b.Status == "Playing" ||
+                    (b.Status == "Confirmed" && b.StartTime <= now.TimeOfDay && b.EndTime > now.TimeOfDay)));
+
+                var next = bookings
+                    .Where(b => b.CourtId == c.CourtId
+                             && b.Status == "Confirmed"
+                             && b.StartTime > now.TimeOfDay)
                     .OrderBy(b => b.StartTime)
-                    .ToList();
+                    .FirstOrDefault();
 
-                var now = DateTime.Now.TimeOfDay;
+                string statusKey = c.Status != "Available" ? "maintenance"
+                    : active != null ? "playing"
+                    : next != null && next.StartTime <= now.TimeOfDay.Add(TimeSpan.FromMinutes(30)) ? "incoming"
+                    : "free";
 
-                BookingItemViewModel currentBooking = null;
-                BookingItemViewModel nextBooking = null;
-                string currentStatus = "Empty";
-
-                foreach (var booking in courtBookings)
+                string? countdown = null;
+                if (active != null)
                 {
-                    if (booking.StartTime <= now && booking.EndTime > now)
-                    {
-                        currentBooking = MapToBookingItem(booking);
-                        currentStatus = booking.Status == "Playing" ? "Playing" : "Upcoming";
-                    }
-                    else if (booking.StartTime > now && nextBooking == null)
-                    {
-                        nextBooking = MapToBookingItem(booking);
-                    }
+                    var rem = today.Add(active.EndTime) - now;
+                    countdown = rem.TotalMinutes > 0
+                        ? $"{(int)rem.TotalMinutes}p {rem.Seconds:D2}s" : "Hết giờ";
                 }
 
-                if (court.Status == "Maintenance")
-                    currentStatus = "Maintenance";
-
-                model.CourtSchedules.Add(new CourtScheduleViewModel
+                return new StaffCourtStatusViewModel
                 {
-                    CourtId = court.CourtId,
-                    CourtNumber = court.CourtNumber,
-                    CourtType = court.CourtType,
-                    CurrentStatus = currentStatus,
-                    CurrentBooking = currentBooking,
-                    NextBooking = nextBooking,
-                    TimeSlots = GenerateTimeSlots(court.CourtId, date, todayBookings)
-                });
-            }
+                    CourtId = c.CourtId,
+                    CourtNumber = c.CourtNumber,
+                    CourtType = c.CourtType,
+                    Status = statusKey,
+                    Countdown = countdown,
+                    CustomerName = active?.User?.FullName,
+                    CustomerPhone = active?.User?.Phone,
+                    StartTime = active?.StartTime.ToString(@"hh\:mm"),
+                    EndTime = active?.EndTime.ToString(@"hh\:mm"),
+                    BookingId = active?.BookingId,
+                    NextTime = next?.StartTime.ToString(@"hh\:mm"),
+                    NextName = next?.User?.FullName
+                };
+            }).ToList();
 
-            // Phân loại booking
-            model.PendingBookings = todayBookings
-                .Where(b => b.Status == "Pending")
-                .Select(b => MapToBookingItem(b))
-                .ToList();
-
-            var now2 = DateTime.Now.TimeOfDay;
-            model.UpcomingBookings = todayBookings
-                .Where(b => b.Status == "Confirmed" && b.StartTime > now2)
-                .OrderBy(b => b.StartTime)
-                .Select(b => MapToBookingItem(b))
-                .ToList();
-
-            model.PlayingBookings = todayBookings
-                .Where(b => b.Status == "Playing" ||
-                       (b.Status == "Confirmed" && b.StartTime <= now2 && b.EndTime > now2))
-                .Select(b => MapToBookingItem(b))
-                .ToList();
-
-            return View(model);
+            return View("~/Views/Staff/CourtMap.cshtml", courtStatusList);
         }
 
-        // POST: Staff/CheckIn
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CheckIn(int bookingId)
-        {
-            var booking = await _context.Bookings.FindAsync(bookingId);
-
-            if (booking == null)
-            {
-                return Json(new { success = false, message = "Không tìm thấy đơn đặt sân!" });
-            }
-
-            int staffId = GetCurrentUserId();
-
-            if (booking.Status != "Confirmed" && booking.Status != "Pending")
-            {
-                return Json(new { success = false, message = "Trạng thái đơn không hợp lệ!" });
-            }
-
-            booking.Status = "Playing";
-            booking.CheckInTime = DateTime.Now;
-            booking.CheckInBy = staffId;
-            booking.UpdatedAt = DateTime.Now;
-
-            await _context.SaveChangesAsync();
-
-            await LogActivity(staffId, "CheckIn", "Bookings", bookingId,
-                booking.Status, $"Check-in sân {booking.Court?.CourtNumber}");
-
-            return Json(new { success = true, message = "Check-in thành công!" });
-        }
-
-        // POST: Staff/CheckOut
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CheckOut(int bookingId)
-        {
-            var booking = await _context.Bookings.FindAsync(bookingId);
-
-            if (booking == null)
-            {
-                return Json(new { success = false, message = "Không tìm thấy đơn đặt sân!" });
-            }
-
-            if (booking.Status != "Playing")
-            {
-                return Json(new { success = false, message = "Sân chưa được check-in!" });
-            }
-
-            booking.Status = "Completed";
-            booking.CheckOutTime = DateTime.Now;
-            booking.UpdatedAt = DateTime.Now;
-
-            await _context.SaveChangesAsync();
-
-            await LogActivity(GetCurrentUserId(), "CheckOut", "Bookings", bookingId,
-                "Playing", "Hoàn thành");
-
-            return Json(new { success = true, message = "Check-out thành công!" });
-        }
-
-        // GET: Staff/Sales
+        // ══════════════════════════════════════════
+        // QUẢN LÝ ĐƠN
+        // ══════════════════════════════════════════
         [HttpGet]
-        public async Task<IActionResult> Sales(int? bookingId)
+        public async Task<IActionResult> BookingManagement(string? status, string? search)
         {
-            int staffId = GetCurrentUserId();
-            var staff = await _context.Users.FindAsync(staffId);
+            await SetStaffViewBag();
+            ViewData["Title"] = "Quản lý đơn hôm nay";
 
-            if (staff == null || !staff.FacilityId.HasValue)
-            {
-                TempData["ErrorMessage"] = "Bạn chưa được gán cơ sở!";
-                return RedirectToAction(nameof(Dashboard));
-            }
-
-            int facilityId = staff.FacilityId.Value;
-
-            var model = new SalesViewModel
-            {
-                BookingId = bookingId,
-                FacilityId = facilityId,
-                UserId = bookingId.HasValue ?
-                    (await _context.Bookings.FindAsync(bookingId.Value))?.UserId ?? 0 : 0,
-                ProductCategories = new List<ProductCategoryViewModel>(),
-                CartItems = new List<OrderItemViewModel>()
-            };
-
-            // Load sản phẩm theo category
-            var products = await _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.Inventories)
-                .Where(p => p.IsActive)
-                .ToListAsync();
-
-            var inventory = await _context.Inventories
-                .Where(i => i.FacilityId == facilityId)
-                .ToDictionaryAsync(i => i.ProductId, i => i.Quantity);
-
-            var categories = products
-                .GroupBy(p => p.Category.CategoryType)
-                .Select(g => new ProductCategoryViewModel
-                {
-                    CategoryName = g.First().Category.CategoryName,
-                    CategoryType = g.Key,
-                    Products = g.Select(p => new ProductItemViewModel
-                    {
-                        ProductId = p.ProductId,
-                        ProductName = p.ProductName,
-                        Price = p.Price,
-                        Unit = p.Unit,
-                        ImageUrl = p.ImageUrl,
-                        StockQuantity = inventory.ContainsKey(p.ProductId) ? inventory[p.ProductId] : 0
-                    }).ToList()
-                }).ToList();
-
-            model.ProductCategories = categories;
-
-            if (bookingId.HasValue)
-            {
-                var booking = await _context.Bookings
-                    .Include(b => b.User)
-                    .Include(b => b.Court)
-                    .FirstOrDefaultAsync(b => b.BookingId == bookingId.Value);
-
-                if (booking != null)
-                {
-                    ViewBag.Booking = booking;
-                }
-            }
-
-            return View(model);
-        }
-
-        // POST: Staff/CreateOrder
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateOrder(SalesViewModel model)
-        {
-            if (model.CartItems == null || !model.CartItems.Any())
-            {
-                return Json(new { success = false, message = "Giỏ hàng trống!" });
-            }
-
-            int staffId = GetCurrentUserId();
-
-            using (var transaction = await _context.Database.BeginTransactionAsync())
-            {
-                try
-                {
-                    // Kiểm tra tồn kho
-                    foreach (var item in model.CartItems)
-                    {
-                        var inventory = await _context.Inventories
-                            .FirstOrDefaultAsync(i => i.ProductId == item.ProductId && i.FacilityId == model.FacilityId);
-
-                        if (inventory == null || inventory.Quantity < item.Quantity)
-                        {
-                            return Json(new
-                            {
-                                success = false,
-                                message = $"Sản phẩm {item.ProductName} không đủ số lượng!"
-                            });
-                        }
-                    }
-
-                    // Tạo order
-                    string orderCode = await GenerateOrderCode();
-
-                    var order = new Order
-                    {
-                        OrderCode = orderCode,
-                        BookingId = model.BookingId,
-                        UserId = model.UserId > 0 ? model.UserId : staffId,
-                        FacilityId = model.FacilityId,
-                        OrderType = "Product",
-                        SubTotal = model.SubTotal,
-                        DiscountAmount = model.DiscountAmount,
-                        TotalAmount = model.TotalAmount,
-                        OrderStatus = "Completed",
-                        PaymentStatus = "Paid",
-                        PaymentMethod = "Cash",
-                        CreatedAt = DateTime.Now,
-                        UpdatedAt = DateTime.Now,
-                        CompletedAt = DateTime.Now,
-                        CreatedBy = staffId
-                    };
-
-                    _context.Orders.Add(order);
-                    await _context.SaveChangesAsync();
-
-                    // Tạo order details và cập nhật kho
-                    foreach (var item in model.CartItems)
-                    {
-                        var orderDetail = new OrderDetail
-                        {
-                            OrderId = order.OrderId,
-                            ProductId = item.ProductId,
-                            Quantity = item.Quantity,
-                            UnitPrice = item.Price,
-                            DiscountAmount = 0,
-                            TotalPrice = item.TotalPrice
-                        };
-
-                        _context.OrderDetails.Add(orderDetail);
-
-                        // Trừ kho
-                        var inventory = await _context.Inventories
-                            .FirstAsync(i => i.ProductId == item.ProductId && i.FacilityId == model.FacilityId);
-
-                        inventory.Quantity -= item.Quantity;
-                        inventory.LastUpdated = DateTime.Now;
-                    }
-
-                    await _context.SaveChangesAsync();
-
-                    await LogActivity(staffId, "Create", "Orders", order.OrderId,
-                        null, $"Tạo đơn hàng {orderCode}");
-
-                    await transaction.CommitAsync();
-
-                    return Json(new
-                    {
-                        success = true,
-                        message = $"Tạo đơn hàng thành công! Mã: {orderCode}",
-                        orderId = order.OrderId
-                    });
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync();
-                    return Json(new { success = false, message = "Lỗi: " + ex.Message });
-                }
-            }
-        }
-
-        // GET: Staff/BookingManagement
-        [HttpGet]
-        public async Task<IActionResult> BookingManagement(string status, DateTime? date)
-        {
-            int staffId = GetCurrentUserId();
-            var staff = await _context.Users.FindAsync(staffId);
-
-            if (staff == null || !staff.FacilityId.HasValue)
-            {
-                TempData["ErrorMessage"] = "Bạn chưa được gán cơ sở!";
-                return RedirectToAction(nameof(Dashboard));
-            }
-
-            int facilityId = staff.FacilityId.Value;
-            DateTime searchDate = date ?? DateTime.Today;
+            var facilityId = await GetStaffFacilityId();
+            var today = DateTime.Today;
 
             var query = _context.Bookings
-                .Include(b => b.User)
                 .Include(b => b.Court)
-                .Include(b => b.Orders)
-                .Where(b => b.Court.FacilityId == facilityId);
+                .Include(b => b.User)
+                .Where(b => b.Court.FacilityId == facilityId && b.BookingDate == today)
+                .AsQueryable();
 
             if (!string.IsNullOrEmpty(status))
                 query = query.Where(b => b.Status == status);
 
-            if (date.HasValue)
-                query = query.Where(b => b.BookingDate == searchDate);
-            else
-                query = query.Where(b => b.BookingDate >= DateTime.Today);
+            if (!string.IsNullOrEmpty(search))
+                query = query.Where(b => b.BookingCode.Contains(search)
+                                      || b.User.FullName.Contains(search)
+                                      || b.User.Phone.Contains(search));
 
-            var bookings = await query
-                .OrderBy(b => b.BookingDate)
-                .ThenBy(b => b.StartTime)
-                .Take(100)
+            var list = await query.OrderBy(b => b.StartTime).ToListAsync();
+
+            ViewBag.Status = status;
+            ViewBag.Search = search;
+            return View("~/Views/Staff/BookingManagement.cshtml", list);
+        }
+
+        // ══════════════════════════════════════════
+        // WALK-IN BOOKING
+        // ══════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> WalkIn()
+        {
+            await SetStaffViewBag();
+            ViewData["Title"] = "Đặt sân tại chỗ";
+
+            var facilityId = await GetStaffFacilityId();
+            ViewBag.Courts = await _context.Courts
+                .Where(c => c.FacilityId == facilityId && c.Status == "Available")
+                .OrderBy(c => c.CourtNumber).ToListAsync();
+
+            return View("~/Views/Staff/WalkIn.cshtml", new WalkInBookingViewModel { BookingDate = DateTime.Today });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> WalkIn(WalkInBookingViewModel model)
+        {
+            await SetStaffViewBag();
+            ViewData["Title"] = "Đặt sân tại chỗ";
+            var facilityId = await GetStaffFacilityId();
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Courts = await _context.Courts
+                    .Where(c => c.FacilityId == facilityId && c.Status == "Available")
+                    .ToListAsync();
+                return View("~/Views/Staff/WalkIn.cshtml", model);
+            }
+
+            var conflict = await _context.Bookings.AnyAsync(b =>
+                b.CourtId == model.CourtId &&
+                b.BookingDate == model.BookingDate &&
+                b.Status != "Cancelled" &&
+                b.StartTime < model.EndTime &&
+                b.EndTime > model.StartTime);
+
+            if (conflict)
+            {
+                ModelState.AddModelError("", "Sân đã có người đặt trong khung giờ này!");
+                ViewBag.Courts = await _context.Courts
+                    .Where(c => c.FacilityId == facilityId && c.Status == "Available")
+                    .ToListAsync();
+                return View("~/Views/Staff/WalkIn.cshtml", model);
+            }
+
+            var guestId = await GetOrCreateGuestUser(model.CustomerPhone, model.CustomerName);
+            var booking = new Booking
+            {
+                BookingCode = await GenerateBookingCode(),
+                UserId = guestId,
+                CourtId = model.CourtId,
+                BookingDate = model.BookingDate,
+                StartTime = model.StartTime,
+                EndTime = model.EndTime,
+                Duration = (int)(model.EndTime - model.StartTime).TotalMinutes,
+                CourtPrice = model.Price,
+                ServiceFee = 0,
+                DiscountAmount = 0,
+                TotalPrice = model.Price,
+                Status = "Confirmed",
+                PaymentMethod = model.PaymentMethod ?? "Cash",
+                PaymentStatus = model.PaymentMethod == "Cash" ? "Paid" : "Unpaid",
+                Note = $"[Walk-in] Staff: {User.Identity?.Name}. {model.Note}",
+                CancelReason = null,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
+            };
+
+            _context.Bookings.Add(booking);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"Đặt sân thành công! Mã: {booking.BookingCode}";
+            return RedirectToAction(nameof(BookingManagement));
+        }
+
+        // ══════════════════════════════════════════
+        // CHECK-IN / CHECK-OUT
+        // ══════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> CheckIn()
+        {
+            await SetStaffViewBag();
+            ViewData["Title"] = "Check-in / Check-out";
+            return View("~/Views/Staff/CheckIn.cshtml");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> FindBooking(string keyword)
+        {
+            var facilityId = await GetStaffFacilityId();
+            var today = DateTime.Today;
+
+            var b = await _context.Bookings
+                .Include(b => b.Court)
+                .Include(b => b.User)
+                .FirstOrDefaultAsync(b =>
+                    b.Court.FacilityId == facilityId &&
+                    b.BookingDate == today &&
+                    b.Status != "Cancelled" &&
+                    (b.BookingCode == keyword || b.User.Phone == keyword));
+
+            if (b == null)
+                return Json(new { success = false, message = "Không tìm thấy đơn!" });
+
+            return Json(new
+            {
+                success = true,
+                bookingId = b.BookingId,
+                bookingCode = b.BookingCode,
+                customerName = b.User?.FullName ?? "Khách",
+                phone = b.User?.Phone,
+                courtNumber = b.Court?.CourtNumber,
+                startTime = b.StartTime.ToString(@"hh\:mm"),
+                endTime = b.EndTime.ToString(@"hh\:mm"),
+                status = b.Status,
+                totalPrice = b.TotalPrice.ToString("N0")
+            });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> DoCheckIn(int bookingId)
+        {
+            var booking = await _context.Bookings.FindAsync(bookingId);
+            if (booking == null)
+                return Json(new { success = false, message = "Không tìm thấy đơn!" });
+            if (booking.Status != "Confirmed")
+                return Json(new { success = false, message = "Đơn không ở trạng thái Confirmed!" });
+
+            booking.Status = "Playing";
+            booking.CheckInTime = DateTime.Now;
+            booking.CheckInBy = GetCurrentUserId();
+            booking.UpdatedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Check-in thành công! Chúc khách chơi vui 🏸" });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> DoCheckOut(int bookingId)
+        {
+            var booking = await _context.Bookings.FindAsync(bookingId);
+            if (booking == null)
+                return Json(new { success = false, message = "Không tìm thấy đơn!" });
+            if (booking.Status != "Playing")
+                return Json(new { success = false, message = "Sân chưa check-in!" });
+
+            booking.Status = "Completed";
+            booking.CheckOutTime = DateTime.Now;
+            booking.UpdatedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Check-out thành công!" });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> ExtendBooking(int bookingId, int extraMinutes)
+        {
+            var booking = await _context.Bookings.FindAsync(bookingId);
+            if (booking == null)
+                return Json(new { success = false, message = "Không tìm thấy đơn!" });
+            if (booking.Status != "Playing")
+                return Json(new { success = false, message = "Sân chưa check-in!" });
+
+            var newEnd = booking.EndTime.Add(TimeSpan.FromMinutes(extraMinutes));
+            var conflict = await _context.Bookings.AnyAsync(b =>
+                b.CourtId == booking.CourtId &&
+                b.BookingDate == booking.BookingDate &&
+                b.BookingId != bookingId &&
+                b.Status != "Cancelled" &&
+                b.StartTime < newEnd &&
+                b.EndTime > booking.EndTime);
+
+            if (conflict)
+                return Json(new { success = false, message = "Sân đã có người đặt sau khung giờ này!" });
+
+            booking.EndTime = newEnd;
+            booking.Duration += extraMinutes;
+            booking.UpdatedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = $"Đã gia hạn thêm {extraMinutes} phút!", newEndTime = newEnd.ToString(@"hh\:mm") });
+        }
+
+        // ══════════════════════════════════════════
+        // BÁN HÀNG POS
+        // ══════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> Sales()
+        {
+            await SetStaffViewBag();
+            ViewData["Title"] = "Bán hàng POS";
+
+            var facilityId = await GetStaffFacilityId();
+            var today = DateTime.Today;
+
+            ViewBag.Products = await _context.Products
+                .Include(p => p.Category)
+                .Where(p => p.IsActive)
+                .OrderBy(p => p.Category.CategoryType)
+                .ThenBy(p => p.ProductName)
                 .ToListAsync();
 
-            var model = bookings.Select(b => MapToBookingItem(b)).ToList();
+            ViewBag.ActiveBookings = await _context.Bookings
+                .Include(b => b.Court)
+                .Include(b => b.User)
+                .Where(b => b.Court.FacilityId == facilityId
+                         && b.BookingDate == today
+                         && (b.Status == "Playing" || b.Status == "Confirmed"))
+                .OrderBy(b => b.StartTime)
+                .ToListAsync();
 
-            ViewBag.Statuses = new[] { "Pending", "Confirmed", "Playing", "Completed", "Cancelled" };
-            return View(model);
+            return View("~/Views/Staff/Sales.cshtml");
         }
 
-        // POST: Staff/ConfirmBooking
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ConfirmBooking(int bookingId)
+        [HttpGet]
+        public async Task<IActionResult> OrderHistory()
         {
-            var booking = await _context.Bookings.FindAsync(bookingId);
+            await SetStaffViewBag();
+            ViewData["Title"] = "Lịch sử bán hàng";
 
-            if (booking == null)
-            {
-                return Json(new { success = false, message = "Không tìm thấy đơn!" });
-            }
+            var facilityId = await GetStaffFacilityId();
+            var orders = await _context.Orders
+                .Include(o => o.OrderDetails).ThenInclude(od => od.Product)
+                .Include(o => o.User)
+                .Where(o => o.FacilityId == facilityId && o.CreatedAt.Date == DateTime.Today)
+                .OrderByDescending(o => o.CreatedAt)
+                .ToListAsync();
 
-            if (booking.Status != "Pending")
-            {
-                return Json(new { success = false, message = "Đơn đã được xử lý!" });
-            }
-
-            booking.Status = "Confirmed";
-            booking.UpdatedAt = DateTime.Now;
-
-            await _context.SaveChangesAsync();
-
-            await LogActivity(GetCurrentUserId(), "Confirm", "Bookings", bookingId,
-                "Pending", "Confirmed");
-
-            return Json(new { success = true, message = "Xác nhận đơn thành công!" });
+            return View("~/Views/Staff/OrderHistory.cshtml", orders);
         }
 
-        // POST: Staff/RejectBooking
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RejectBooking(int bookingId, string reason)
+        // ══════════════════════════════════════════
+        // TỒN KHO (chỉ đọc)
+        // ══════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> StockView()
         {
-            var booking = await _context.Bookings.FindAsync(bookingId);
+            await SetStaffViewBag();
+            ViewData["Title"] = "Xem tồn kho";
 
-            if (booking == null)
-            {
-                return Json(new { success = false, message = "Không tìm thấy đơn!" });
-            }
+            var facilityId = await GetStaffFacilityId();
+            var inventories = await _context.Inventories
+                .Include(i => i.Product).ThenInclude(p => p.Category)
+                .Where(i => i.FacilityId == facilityId)
+                .OrderBy(i => i.Product.Category.CategoryName)
+                .ThenBy(i => i.Product.ProductName)
+                .ToListAsync();
 
-            booking.Status = "Cancelled";
-            booking.CancelReason = reason;
-            booking.CancelledAt = DateTime.Now;
-            booking.UpdatedAt = DateTime.Now;
-
-            await _context.SaveChangesAsync();
-
-            await LogActivity(GetCurrentUserId(), "Reject", "Bookings", bookingId,
-                booking.Status, $"Từ chối: {reason}");
-
-            return Json(new { success = true, message = "Đã từ chối đơn!" });
+            return View("~/Views/Staff/StockView.cshtml", inventories);
         }
 
-        // HELPER METHODS
-
-        private BookingItemViewModel MapToBookingItem(Booking booking)
+        // ══════════════════════════════════════════
+        // LỊCH CA — dùng ShiftAssignments (DB có Shifts + ShiftAssignments)
+        // ══════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> MyShift()
         {
-            return new BookingItemViewModel
-            {
-                BookingId = booking.BookingId,
-                BookingCode = booking.BookingCode,
-                CustomerName = booking.User.FullName,
-                CustomerPhone = booking.User.Phone,
-                CourtNumber = booking.Court.CourtNumber,
-                CourtType = booking.Court.CourtType,
-                BookingDate = booking.BookingDate,
-                StartTime = booking.StartTime,
-                EndTime = booking.EndTime,
-                Duration = booking.Duration,
-                Status = booking.Status,
-                TotalPrice = booking.TotalPrice,
-                CheckInTime = booking.CheckInTime,
-                HasOrders = booking.Orders != null && booking.Orders.Any(),
-                OrderCount = booking.Orders?.Count ?? 0
-            };
+            await SetStaffViewBag();
+            ViewData["Title"] = "Lịch ca của tôi";
+
+            var userId = GetCurrentUserId();
+            var from = DateTime.Today;
+            var to = DateTime.Today.AddDays(14);
+
+            // Load tất cả ca của user, filter in-memory để tránh lỗi type mismatch
+            var assignments = await _context.ShiftAssignments
+                .Include(sa => sa.Shift)
+                .Where(sa => sa.UserId == userId && sa.Shift != null)
+                .ToListAsync();
+
+            // Filter 14 ngày tới in-memory
+            assignments = assignments
+                .Where(sa => sa.Shift != null)
+                .OrderBy(sa => sa.Shift.StartTime)
+                .ToList();
+
+            return View("~/Views/Staff/MyShift.cshtml", assignments);
         }
 
-        private List<TimeSlotBookingViewModel> GenerateTimeSlots(int courtId, DateTime date, List<Booking> bookings)
+        // ══════════════════════════════════════════
+        // BÀN GIAO CA
+        // ══════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> ShiftHandover()
         {
-            var slots = new List<TimeSlotBookingViewModel>();
-            var courtBookings = bookings.Where(b => b.CourtId == courtId).ToList();
+            await SetStaffViewBag();
+            ViewData["Title"] = "Bàn giao ca";
 
-            for (int hour = 6; hour < 23; hour++)
-            {
-                var startTime = new TimeSpan(hour, 0, 0);
-                var endTime = new TimeSpan(hour + 1, 0, 0);
+            var facilityId = await GetStaffFacilityId();
+            var today = DateTime.Today;
 
-                var booking = courtBookings.FirstOrDefault(b =>
-                    b.StartTime <= startTime && b.EndTime > startTime);
-
-                slots.Add(new TimeSlotBookingViewModel
-                {
-                    StartTime = startTime,
-                    EndTime = endTime,
-                    IsBooked = booking != null,
-                    CustomerName = booking?.User?.FullName,
-                    BookingId = booking?.BookingId
-                });
-            }
-
-            return slots;
-        }
-
-        private async Task<StatisticSummaryViewModel> GetDayStatistics(int facilityId, DateTime date)
-        {
             var bookings = await _context.Bookings
                 .Include(b => b.Court)
-                .Where(b => b.Court.FacilityId == facilityId && b.BookingDate == date)
+                .Where(b => b.Court.FacilityId == facilityId && b.BookingDate == today)
                 .ToListAsync();
 
-            return new StatisticSummaryViewModel
-            {
-                TodayBookings = bookings.Count,
-                PendingBookings = bookings.Count(b => b.Status == "Pending"),
-                PlayingBookings = bookings.Count(b => b.Status == "Playing"),
-                CompletedBookings = bookings.Count(b => b.Status == "Completed"),
-                TodayRevenue = bookings.Where(b => b.Status != "Cancelled").Sum(b => b.TotalPrice)
-            };
+            ViewBag.TotalBookings = bookings.Count(b => b.Status != "Cancelled");
+            ViewBag.CompletedCount = bookings.Count(b => b.Status == "Completed");
+            ViewBag.TotalRevenue = bookings.Where(b => b.Status is "Completed" or "Playing").Sum(b => b.TotalPrice);
+            ViewBag.CashRevenue = bookings.Where(b => b.PaymentMethod == "Cash" && b.PaymentStatus == "Paid").Sum(b => b.TotalPrice);
+
+            return View("~/Views/Staff/ShiftHandover.cshtml", new ShiftHandoverViewModel());
         }
 
-        private async Task<string> GenerateOrderCode()
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> ShiftHandover(ShiftHandoverViewModel model)
         {
-            var today = DateTime.Today;
-            var count = await _context.Orders.CountAsync(o => o.CreatedAt >= today);
-            return "OD" + DateTime.Now.ToString("yyyyMMdd") + (count + 1).ToString("D4");
+            // TODO: lưu vào bảng ShiftHandover sau
+            TempData["SuccessMessage"] = "Bàn giao ca thành công!";
+            return RedirectToAction(nameof(Dashboard));
         }
 
-        private async Task LogActivity(int userId, string action, string tableName, int? recordId,
-            string oldValue, string newValue)
+        // ══════════════════════════════════════════
+        // BÁO CÁO CA
+        // ══════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> ShiftReport()
         {
-            var log = new ActivityLog
-            {
-                UserId = userId,
-                Action = action,
-                TableName = tableName,
-                RecordId = recordId,
-                OldValue = oldValue,
-                NewValue = newValue,
-                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
-                UserAgent = HttpContext.Request.Headers["User-Agent"].ToString(),
-                CreatedAt = DateTime.Now
-            };
+            await SetStaffViewBag();
+            ViewData["Title"] = "Báo cáo ca";
 
-            _context.ActivityLogs.Add(log);
-            await _context.SaveChangesAsync();
+            var facilityId = await GetStaffFacilityId();
+            var bookings = await _context.Bookings
+                .Include(b => b.Court)
+                .Include(b => b.User)
+                .Where(b => b.Court.FacilityId == facilityId && b.BookingDate == DateTime.Today)
+                .OrderBy(b => b.StartTime)
+                .ToListAsync();
+
+            ViewBag.TotalBookings = bookings.Count(b => b.Status != "Cancelled");
+            ViewBag.CompletedCount = bookings.Count(b => b.Status == "Completed");
+            ViewBag.CancelledCount = bookings.Count(b => b.Status == "Cancelled");
+            ViewBag.Revenue = bookings.Where(b => b.Status is "Completed" or "Playing").Sum(b => b.TotalPrice);
+
+            return View("~/Views/Staff/ShiftReport.cshtml", bookings);
         }
 
-        private int GetCurrentUserId()
+        // ══════════════════════════════════════════
+        // BÁO SỰ CỐ
+        // ══════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> Incident()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+            await SetStaffViewBag();
+            ViewData["Title"] = "Báo sự cố sân";
+
+            var facilityId = await GetStaffFacilityId();
+            ViewBag.Courts = await _context.Courts
+                .Where(c => c.FacilityId == facilityId)
+                .OrderBy(c => c.CourtNumber).ToListAsync();
+
+            return View("~/Views/Staff/Incident.cshtml", new IncidentReportViewModel());
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Incident(IncidentReportViewModel model)
+        {
+            await SetStaffViewBag();
+            var facilityId = await GetStaffFacilityId();
+
+            if (!ModelState.IsValid)
             {
-                return userId;
+                ViewBag.Courts = await _context.Courts
+                    .Where(c => c.FacilityId == facilityId).ToListAsync();
+                return View("~/Views/Staff/Incident.cshtml", model);
             }
-            return HttpContext.Session.GetInt32("UserId") ?? 0;
+
+            // Sự cố nghiêm trọng → tự set bảo trì
+            if (model.Severity == "Critical" && model.CourtId.HasValue)
+            {
+                var court = await _context.Courts.FindAsync(model.CourtId.Value);
+                if (court != null) { court.Status = "Maintenance"; await _context.SaveChangesAsync(); }
+            }
+
+            TempData["SuccessMessage"] = "Đã gửi báo cáo sự cố! Admin sẽ xử lý sớm.";
+            return RedirectToAction(nameof(Dashboard));
         }
     }
+
+    // ── Request model cho SubmitOrder ──
+    public class SubmitOrderRequest
+    {
+        public int? BookingId { get; set; }
+        public string PaymentMethod { get; set; } = "Cash";
+        public List<SubmitOrderItem> Items { get; set; } = new();
+    }
+    public class SubmitOrderItem
+    {
+        public int ProductId { get; set; }
+        public int Quantity { get; set; }
+        public decimal Price { get; set; }
+    }
+
 }
-*/

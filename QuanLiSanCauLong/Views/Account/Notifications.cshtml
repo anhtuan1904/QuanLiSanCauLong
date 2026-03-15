@@ -1,0 +1,562 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Thông báo";
+}
+
+<style>
+    .notif-page-wrap {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2.5rem 1.5rem 4rem;
+    }
+
+    /* Header */
+    .np-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: .75rem;
+    }
+
+    .np-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.6rem;
+        font-weight: 700;
+        font-style: italic;
+        color: #1a1209;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+
+        .np-title i {
+            color: #d4a017;
+        }
+
+    .np-unread-badge {
+        background: #c94b2a;
+        color: #fff;
+        font-size: .65rem;
+        font-weight: 800;
+        padding: .15rem .55rem;
+        border-radius: 10px;
+        font-family: 'Outfit', sans-serif;
+        letter-spacing: .04em;
+    }
+
+    .np-actions {
+        display: flex;
+        gap: .5rem;
+    }
+
+    .np-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .45rem 1rem;
+        border-radius: 7px;
+        font-size: .78rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all .2s;
+        text-decoration: none;
+        border: none;
+        font-family: 'Outfit', sans-serif;
+    }
+
+        .np-btn.outline {
+            border: 1.5px solid rgba(212,160,23,.4);
+            background: transparent;
+            color: #92660a;
+        }
+
+            .np-btn.outline:hover {
+                border-color: #d4a017;
+                background: rgba(212,160,23,.08);
+                color: #5a3e00;
+            }
+
+        .np-btn.danger {
+            border: 1.5px solid rgba(201,75,42,.3);
+            background: transparent;
+            color: #c94b2a;
+        }
+
+            .np-btn.danger:hover {
+                background: rgba(201,75,42,.08);
+                border-color: #c94b2a;
+            }
+
+    /* Filter tabs */
+    .np-tabs {
+        display: flex;
+        gap: .35rem;
+        margin-bottom: 1.25rem;
+        border-bottom: 2px solid rgba(212,160,23,.12);
+        padding-bottom: 0;
+    }
+
+    .np-tab {
+        padding: .5rem 1.1rem;
+        font-size: .8rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: #8c7a68;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: all .2s;
+        font-family: 'Outfit', sans-serif;
+        border-radius: 4px 4px 0 0;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+        .np-tab:hover {
+            color: #5a3e00;
+        }
+
+        .np-tab.active {
+            color: #d4a017;
+            border-bottom-color: #d4a017;
+            background: rgba(212,160,23,.05);
+        }
+
+        .np-tab .tab-count {
+            background: rgba(212,160,23,.18);
+            color: #92660a;
+            font-size: .6rem;
+            padding: .1rem .45rem;
+            border-radius: 8px;
+            font-weight: 800;
+        }
+
+        .np-tab.active .tab-count {
+            background: #d4a017;
+            color: #fff;
+        }
+
+    /* List */
+    .np-list {
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+    }
+
+    /* Item */
+    .np-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem 1.2rem;
+        border-radius: 12px;
+        border: 1px solid #ede5d8;
+        background: #fff;
+        transition: all .2s;
+        position: relative;
+        text-decoration: none;
+        color: inherit;
+    }
+
+        .np-item:hover {
+            border-color: rgba(212,160,23,.4);
+            box-shadow: 0 4px 16px rgba(212,160,23,.1);
+            transform: translateY(-1px);
+        }
+
+        .np-item.unread {
+            background: linear-gradient(135deg, #fffdf7 0%, #fff9ee 100%);
+            border-color: rgba(212,160,23,.3);
+        }
+
+            .np-item.unread::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                background: linear-gradient(to bottom, #d4a017, #f5c842);
+                border-radius: 12px 0 0 12px;
+            }
+
+    .np-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+        .np-icon.booking {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .np-icon.payment {
+            background: #fef9c3;
+            color: #92400e;
+        }
+
+        .np-icon.cancel {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .np-icon.system {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .np-icon.voucher {
+            background: #ede9fe;
+            color: #5b21b6;
+        }
+
+        .np-icon.promo {
+            background: #fce7f3;
+            color: #9d174d;
+        }
+
+    .np-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .np-msg {
+        font-size: .88rem;
+        color: #2a1f10;
+        line-height: 1.5;
+        margin-bottom: .3rem;
+        font-weight: 400;
+    }
+
+    .np-item.unread .np-msg {
+        font-weight: 600;
+    }
+
+    .np-meta {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        flex-wrap: wrap;
+    }
+
+    .np-time {
+        font-size: .73rem;
+        color: #a0907e;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+    .np-type-tag {
+        font-size: .62rem;
+        font-weight: 700;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        padding: .12rem .5rem;
+        border-radius: 4px;
+    }
+
+    .tag-booking {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .tag-payment {
+        background: #fef9c3;
+        color: #92400e;
+    }
+
+    .tag-cancel {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .tag-system {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .tag-voucher {
+        background: #ede9fe;
+        color: #5b21b6;
+    }
+
+    .tag-promo {
+        background: #fce7f3;
+        color: #9d174d;
+    }
+
+    .np-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: .5rem;
+        flex-shrink: 0;
+    }
+
+    .np-unread-dot {
+        width: 9px;
+        height: 9px;
+        background: #d4a017;
+        border-radius: 50%;
+    }
+
+    .np-delete-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #c9a88a;
+        font-size: .85rem;
+        padding: 2px 4px;
+        border-radius: 4px;
+        opacity: 0;
+        transition: all .15s;
+    }
+
+    .np-item:hover .np-delete-btn {
+        opacity: 1;
+    }
+
+    .np-delete-btn:hover {
+        color: #c94b2a;
+        background: #fee2e2;
+    }
+
+    /* Empty state */
+    .np-empty {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #a0907e;
+    }
+
+    .np-empty-icon {
+        font-size: 3.5rem;
+        color: rgba(212,160,23,.25);
+        display: block;
+        margin-bottom: 1rem;
+    }
+
+    .np-empty-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #5a4a3a;
+        margin-bottom: .4rem;
+    }
+
+    /* Loading skeleton */
+    .np-skeleton {
+        height: 80px;
+        background: linear-gradient(90deg, #f5ede0 25%, #fff9ee 50%, #f5ede0 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.4s infinite;
+        border-radius: 12px;
+    }
+
+    @@keyframes shimmer {
+        to {
+            background-position: -200% 0;
+        }
+    }
+</style>
+
+<div class="notif-page-wrap">
+
+    <!-- Header -->
+    <div class="np-header">
+        <div class="np-title">
+            <i class="bi bi-bell-fill"></i>
+            Thông báo
+            <span class="np-unread-badge" id="pageUnreadBadge" style="display:none">0 mới</span>
+        </div>
+        <div class="np-actions">
+            <button class="np-btn outline" onclick="markAllReadPage()">
+                <i class="bi bi-check2-all"></i> Đọc tất cả
+            </button>
+            <button class="np-btn danger" onclick="clearAll()">
+                <i class="bi bi-trash3"></i> Xóa tất cả
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="np-tabs">
+        <button class="np-tab active" onclick="filterTab('all', this)">
+            <i class="bi bi-grid-3x3-gap-fill"></i> Tất cả
+            <span class="tab-count" id="tab-all-count">0</span>
+        </button>
+        <button class="np-tab" onclick="filterTab('unread', this)">
+            <i class="bi bi-circle-fill" style="font-size:.5rem"></i> Chưa đọc
+            <span class="tab-count" id="tab-unread-count">0</span>
+        </button>
+        <button class="np-tab" onclick="filterTab('booking', this)">
+            <i class="bi bi-calendar-check"></i> Đặt sân
+            <span class="tab-count" id="tab-booking-count">0</span>
+        </button>
+        <button class="np-tab" onclick="filterTab('payment', this)">
+            <i class="bi bi-cash-stack"></i> Thanh toán
+            <span class="tab-count" id="tab-payment-count">0</span>
+        </button>
+        <button class="np-tab" onclick="filterTab('system', this)">
+            <i class="bi bi-info-circle"></i> Hệ thống
+            <span class="tab-count" id="tab-system-count">0</span>
+        </button>
+    </div>
+
+    <!-- List -->
+    <div id="npList" class="np-list">
+        <!-- Loading skeletons -->
+        <div class="np-skeleton"></div>
+        <div class="np-skeleton" style="height:70px;opacity:.7"></div>
+        <div class="np-skeleton" style="height:60px;opacity:.4"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let allNotifs = [];
+        let currentFilter = 'all';
+
+        const iconMap = {
+            booking : 'bi-calendar-check',
+            payment : 'bi-cash-stack',
+            cancel  : 'bi-x-circle-fill',
+            system  : 'bi-info-circle-fill',
+            voucher : 'bi-ticket-perforated-fill',
+            promo   : 'bi-megaphone-fill'
+        };
+        const labelMap = {
+            booking : 'Đặt sân',
+            payment : 'Thanh toán',
+            cancel  : 'Hủy đơn',
+            system  : 'Hệ thống',
+            voucher : 'Voucher',
+            promo   : 'Khuyến mãi'
+        };
+
+        async function loadPage() {
+            try {
+                const r = await fetch('/Account/GetNotifications');
+                if (r.ok) {
+                    const data = await r.json();
+                    allNotifs = data.notifications || [];
+                } else {
+                    allNotifs = [];
+                }
+            } catch {
+                allNotifs = [];
+            }
+            updateCounts();
+            renderList(currentFilter);
+        }
+
+        function updateCounts() {
+            const unread = allNotifs.filter(n => !n.isRead).length;
+
+            document.getElementById('tab-all-count').textContent     = allNotifs.length;
+            document.getElementById('tab-unread-count').textContent  = unread;
+            document.getElementById('tab-booking-count').textContent = allNotifs.filter(n => n.type === 'booking').length;
+            document.getElementById('tab-payment-count').textContent = allNotifs.filter(n => n.type === 'payment').length;
+            document.getElementById('tab-system-count').textContent  = allNotifs.filter(n => n.type === 'system').length;
+
+            const badge = document.getElementById('pageUnreadBadge');
+            if (unread > 0) { badge.textContent = unread + ' mới'; badge.style.display = ''; }
+            else badge.style.display = 'none';
+        }
+
+        function renderList(filter) {
+            const list = document.getElementById('npList');
+            let items = allNotifs;
+
+            if (filter === 'unread')  items = items.filter(n => !n.isRead);
+            else if (filter !== 'all') items = items.filter(n => n.type === filter);
+
+            if (!items.length) {
+                list.innerHTML = `
+                    <div class="np-empty">
+                        <i class="bi bi-bell-slash np-empty-icon"></i>
+                        <div class="np-empty-title">Không có thông báo nào</div>
+                        <div style="font-size:.84rem">Bạn đã cập nhật hết thông tin rồi!</div>
+                    </div>`;
+                return;
+            }
+
+            list.innerHTML = items.map(n => `
+                <a href="${n.link || '#'}" class="np-item ${n.isRead ? '' : 'unread'}"
+                   onclick="markReadPage(${n.id}, event)">
+                    <div class="np-icon ${n.type}">
+                        <i class="bi ${iconMap[n.type] || 'bi-bell'}"></i>
+                    </div>
+                    <div class="np-body">
+                        <div class="np-msg">${n.message}</div>
+                        <div class="np-meta">
+                            <span class="np-time"><i class="bi bi-clock"></i>${n.time}</span>
+                            <span class="np-type-tag tag-${n.type}">${labelMap[n.type] || n.type}</span>
+                        </div>
+                    </div>
+                    <div class="np-right">
+                        ${!n.isRead ? '<div class="np-unread-dot"></div>' : ''}
+                        <button class="np-delete-btn" onclick="deleteNotif(${n.id}, event)" title="Xóa">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        function filterTab(filter, btn) {
+            currentFilter = filter;
+            document.querySelectorAll('.np-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            renderList(filter);
+        }
+
+        async function markReadPage(id, e) {
+            const item = e.currentTarget;
+            if (item.classList.contains('unread')) {
+                item.classList.remove('unread');
+                const dot = item.querySelector('.np-unread-dot');
+                if (dot) dot.remove();
+                const n = allNotifs.find(x => x.id == id);
+                if (n) n.isRead = true;
+                updateCounts();
+                try { await fetch('/Account/MarkNotificationRead/' + id, { method: 'POST' }); } catch {}
+            }
+        }
+
+        async function markAllReadPage() {
+            allNotifs.forEach(n => n.isRead = true);
+            updateCounts();
+            renderList(currentFilter);
+            try { await fetch('/Account/MarkAllNotificationsRead', { method: 'POST' }); } catch {}
+        }
+
+        function deleteNotif(id, e) {
+            e.preventDefault(); e.stopPropagation();
+            allNotifs = allNotifs.filter(n => n.id != id);
+            updateCounts();
+            renderList(currentFilter);
+        }
+
+        function clearAll() {
+            if (!confirm('Xóa tất cả thông báo?')) return;
+            allNotifs = [];
+            updateCounts();
+            renderList(currentFilter);
+        }
+
+
+
+        loadPage();
+    </script>
+}

@@ -22,7 +22,7 @@ namespace QuanLiSanCauLong.Models
         [Column(TypeName = "decimal(10,2)")]
         public decimal DiscountAmount { get; set; }
 
-        public DateTime UsedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         [ForeignKey("VoucherId")]
         public virtual Voucher Voucher { get; set; }

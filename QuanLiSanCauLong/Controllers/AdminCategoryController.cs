@@ -1,5 +1,5 @@
 ﻿// ===================================================================
-// FILE: Controllers/AdminCategoryController.cs  (CẬP NHẬT v2)
+// FILE: Controllers/AdminCategoryController.cs  (HOÀN CHỈNH v3)
 // ===================================================================
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,9 +29,9 @@ namespace QuanLiSanCauLong.Controllers
             _env = env;
         }
 
-        // ─────────────────────────────────────────────
-        // INDEX
-        // ─────────────────────────────────────────────
+        // ═══════════════════════════════════════════════════════
+        //  INDEX
+        // ═══════════════════════════════════════════════════════
         [HttpGet("")]
         [HttpGet("Index")]
         public async Task<IActionResult> Index()
@@ -41,21 +41,22 @@ namespace QuanLiSanCauLong.Controllers
                 .OrderBy(c => c.DisplayOrder)
                 .ThenBy(c => c.CategoryName)
                 .ToListAsync();
+
             return View("~/Views/Admin/AdminCategory/Index.cshtml", categories);
         }
 
-        // ─────────────────────────────────────────────
-        // CREATE – GET
-        // ─────────────────────────────────────────────
+        // ═══════════════════════════════════════════════════════
+        //  CREATE — GET  (trả partial view, không layout, dùng trong modal)
+        // ═══════════════════════════════════════════════════════
         [HttpGet("Create")]
         public IActionResult Create()
         {
             return View("~/Views/Admin/AdminCategory/Create.cshtml");
         }
 
-        // ─────────────────────────────────────────────
-        // CREATE – POST
-        // ─────────────────────────────────────────────
+        // ═══════════════════════════════════════════════════════
+        //  CREATE — POST thường (fallback nếu không dùng modal)
+        // ═══════════════════════════════════════════════════════
         [HttpPost("Create")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ProductCategory model, IFormFile? CategoryImage)
@@ -102,6 +103,7 @@ namespace QuanLiSanCauLong.Controllers
 
                 _logger.LogInformation("Tạo danh mục: ID={Id}, Name={Name}, Behavior={B}",
                     category.CategoryId, category.CategoryName, category.BehaviorType);
+
                 TempData["SuccessMessage"] = $"Tạo danh mục \"{category.CategoryName}\" thành công!";
                 return RedirectToAction(nameof(Index));
             }
@@ -124,9 +126,65 @@ namespace QuanLiSanCauLong.Controllers
             }
         }
 
-        // ─────────────────────────────────────────────
-        // EDIT – GET
-        // ─────────────────────────────────────────────
+        // ═══════════════════════════════════════════════════════
+        //  CREATE AJAX — POST từ modal (trả JSON, không redirect)
+        // ═══════════════════════════════════════════════════════
+        [HttpPost("CreateAjax")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateAjax(ProductCategory model, IFormFile? CategoryImage)
+        {
+            if (string.IsNullOrWhiteSpace(model.CategoryName))
+                return Json(new { success = false, message = "Tên danh mục không được để trống!" });
+
+            if (string.IsNullOrWhiteSpace(model.CategoryType))
+                return Json(new { success = false, message = "Vui lòng chọn loại hàng hóa!" });
+
+            if (string.IsNullOrWhiteSpace(model.BehaviorType))
+                return Json(new { success = false, message = "Vui lòng chọn loại nghiệp vụ!" });
+
+            var exists = await _context.ProductCategories
+                .AnyAsync(c => c.CategoryName.ToLower().Trim() == model.CategoryName.ToLower().Trim());
+
+            if (exists)
+                return Json(new { success = false, message = $"Tên \"{model.CategoryName}\" đã tồn tại!" });
+
+            try
+            {
+                var category = MapFromModel(model);
+                category.CreatedAt = DateTime.Now;
+                category.UpdatedAt = DateTime.Now;
+                category.ImageUrl = "";
+
+                if (CategoryImage != null && CategoryImage.Length > 0)
+                    category.ImageUrl = await SaveImageAsync(CategoryImage);
+
+                _context.ProductCategories.Add(category);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Tạo danh mục (AJAX): ID={Id}, Name={Name}",
+                    category.CategoryId, category.CategoryName);
+
+                return Json(new
+                {
+                    success = true,
+                    message = $"Tạo danh mục \"{category.CategoryName}\" thành công!",
+                    categoryId = category.CategoryId
+                });
+            }
+            catch (InvalidOperationException ioEx)
+            {
+                return Json(new { success = false, message = ioEx.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi CreateAjax");
+                return Json(new { success = false, message = $"Có lỗi xảy ra: {ex.Message}" });
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════
+        //  EDIT — GET  (trả partial view, không layout, dùng trong modal)
+        // ═══════════════════════════════════════════════════════
         [HttpGet("Edit/{id}")]
         public async Task<IActionResult> Edit(int id)
         {
@@ -136,12 +194,13 @@ namespace QuanLiSanCauLong.Controllers
                 TempData["ErrorMessage"] = "Không tìm thấy danh mục!";
                 return RedirectToAction(nameof(Index));
             }
+
             return View("~/Views/Admin/AdminCategory/Edit.cshtml", category);
         }
 
-        // ─────────────────────────────────────────────
-        // EDIT – POST
-        // ─────────────────────────────────────────────
+        // ═══════════════════════════════════════════════════════
+        //  EDIT — POST thường (fallback)
+        // ═══════════════════════════════════════════════════════
         [HttpPost("Edit/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, ProductCategory model, IFormFile? CategoryImage)
@@ -182,33 +241,7 @@ namespace QuanLiSanCauLong.Controllers
 
             try
             {
-                // Map all fields
-                category.CategoryName = model.CategoryName.Trim();
-                category.CategoryType = model.CategoryType.Trim();
-                category.BehaviorType = model.BehaviorType?.Trim() ?? "Retail";
-                category.Description = string.IsNullOrWhiteSpace(model.Description) ? "" : model.Description.Trim();
-                category.DefaultUnit = model.DefaultUnit;
-                category.RequiresExpiry = model.RequiresExpiry;
-                category.UseFIFO = model.UseFIFO;
-                category.RequiresBatch = model.RequiresBatch;
-                category.HasVariants = model.HasVariants;
-                category.RequiresSize = model.RequiresSize;
-                category.DefaultMinStock = model.DefaultMinStock;
-                // Rental
-                category.AllowPartialReturn = model.AllowPartialReturn;
-                category.DepositRequired = model.DepositRequired;
-                category.DefaultDepositAmount = model.DefaultDepositAmount;
-                category.DefaultCleaningFee = model.DefaultCleaningFee;
-                category.MaxRentalHours = model.MaxRentalHours;
-                category.ChargeOvertime = model.ChargeOvertime;
-                // Service
-                category.PricingModel = model.PricingModel ?? "Fixed";
-                category.SeparateLaborAndMaterial = model.SeparateLaborAndMaterial;
-                category.MaterialUnit = model.MaterialUnit;
-                category.AllowCustomerMaterial = model.AllowCustomerMaterial;
-                // Meta
-                category.DisplayOrder = model.DisplayOrder;
-                category.IsActive = model.IsActive;
+                UpdateCategoryFields(category, model);
                 category.UpdatedAt = DateTime.Now;
 
                 if (CategoryImage != null && CategoryImage.Length > 0)
@@ -219,7 +252,7 @@ namespace QuanLiSanCauLong.Controllers
 
                 await _context.SaveChangesAsync();
                 _logger.LogInformation("Cập nhật danh mục: ID={Id}", category.CategoryId);
-                TempData["SuccessMessage"] = $"Cập nhật danh mục \"{category.CategoryName}\" thành công!";
+                TempData["SuccessMessage"] = $"Cập nhật \"{category.CategoryName}\" thành công!";
                 return RedirectToAction(nameof(Index));
             }
             catch (InvalidOperationException ioEx)
@@ -235,9 +268,55 @@ namespace QuanLiSanCauLong.Controllers
             }
         }
 
-        // ─────────────────────────────────────────────
-        // DETAILS
-        // ─────────────────────────────────────────────
+        // ═══════════════════════════════════════════════════════
+        //  EDIT AJAX — POST từ modal (trả JSON)
+        // ═══════════════════════════════════════════════════════
+        [HttpPost("EditAjax/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditAjax(int id, ProductCategory model, IFormFile? CategoryImage)
+        {
+            if (string.IsNullOrWhiteSpace(model.CategoryName))
+                return Json(new { success = false, message = "Tên danh mục không được để trống!" });
+
+            if (string.IsNullOrWhiteSpace(model.CategoryType))
+                return Json(new { success = false, message = "Vui lòng chọn loại hàng hóa!" });
+
+            var category = await _context.ProductCategories.FindAsync(id);
+            if (category == null)
+                return Json(new { success = false, message = "Không tìm thấy danh mục!" });
+
+            var exists = await _context.ProductCategories
+                .AnyAsync(c => c.CategoryName.ToLower().Trim() == model.CategoryName.ToLower().Trim()
+                            && c.CategoryId != id);
+            if (exists)
+                return Json(new { success = false, message = $"Tên \"{model.CategoryName}\" đã tồn tại!" });
+
+            try
+            {
+                UpdateCategoryFields(category, model);
+                category.UpdatedAt = DateTime.Now;
+
+                if (CategoryImage != null && CategoryImage.Length > 0)
+                {
+                    DeleteImageIfExists(category.ImageUrl);
+                    category.ImageUrl = await SaveImageAsync(CategoryImage);
+                }
+
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Cập nhật danh mục (AJAX): ID={Id}", id);
+
+                return Json(new { success = true, message = $"Cập nhật \"{category.CategoryName}\" thành công!" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi EditAjax ID={Id}", id);
+                return Json(new { success = false, message = $"Có lỗi xảy ra: {ex.Message}" });
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════
+        //  DETAILS
+        // ═══════════════════════════════════════════════════════
         [HttpGet("Details/{id}")]
         public async Task<IActionResult> Details(int id)
         {
@@ -255,9 +334,9 @@ namespace QuanLiSanCauLong.Controllers
             return View("~/Views/Admin/AdminCategory/Details.cshtml", category);
         }
 
-        // ─────────────────────────────────────────────
-        // DELETE
-        // ─────────────────────────────────────────────
+        // ═══════════════════════════════════════════════════════
+        //  DELETE
+        // ═══════════════════════════════════════════════════════
         [HttpPost("Delete/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
@@ -282,7 +361,7 @@ namespace QuanLiSanCauLong.Controllers
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Xóa danh mục: ID={Id}, Name={Name}", id, category.CategoryName);
-                return Json(new { success = true, message = $"Đã xóa danh mục \"{category.CategoryName}\" thành công!" });
+                return Json(new { success = true, message = $"Đã xóa \"{category.CategoryName}\" thành công!" });
             }
             catch (Exception ex)
             {
@@ -291,9 +370,9 @@ namespace QuanLiSanCauLong.Controllers
             }
         }
 
-        // ─────────────────────────────────────────────
-        // TOGGLE ACTIVE (AJAX)
-        // ─────────────────────────────────────────────
+        // ═══════════════════════════════════════════════════════
+        //  TOGGLE ACTIVE (AJAX)
+        // ═══════════════════════════════════════════════════════
         [HttpPost("ToggleActive/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleActive(int id)
@@ -314,35 +393,73 @@ namespace QuanLiSanCauLong.Controllers
             });
         }
 
-        // ─────────────────────────────────────────────
-        // HELPERS
-        // ─────────────────────────────────────────────
-        private ProductCategory MapFromModel(ProductCategory model) => new ProductCategory
+        // ═══════════════════════════════════════════════════════
+        //  PRIVATE HELPERS
+        // ═══════════════════════════════════════════════════════
+
+        /// <summary>Map từ form model → entity mới (dùng cho Create)</summary>
+        private static ProductCategory MapFromModel(ProductCategory model) => new ProductCategory
         {
             CategoryName = model.CategoryName.Trim(),
-            CategoryType = model.CategoryType.Trim(),
+            CategoryType = model.CategoryType?.Trim() ?? "",
             BehaviorType = model.BehaviorType?.Trim() ?? "Retail",
             Description = string.IsNullOrWhiteSpace(model.Description) ? "" : model.Description.Trim(),
             DefaultUnit = model.DefaultUnit,
+            // Retail
             RequiresExpiry = model.RequiresExpiry,
             UseFIFO = model.UseFIFO,
             RequiresBatch = model.RequiresBatch,
             HasVariants = model.HasVariants,
             RequiresSize = model.RequiresSize,
             DefaultMinStock = model.DefaultMinStock,
+            // Rental
             AllowPartialReturn = model.AllowPartialReturn,
             DepositRequired = model.DepositRequired,
             DefaultDepositAmount = model.DefaultDepositAmount,
             DefaultCleaningFee = model.DefaultCleaningFee,
             MaxRentalHours = model.MaxRentalHours,
             ChargeOvertime = model.ChargeOvertime,
+            // Service
             PricingModel = model.PricingModel ?? "Fixed",
             SeparateLaborAndMaterial = model.SeparateLaborAndMaterial,
             MaterialUnit = model.MaterialUnit,
             AllowCustomerMaterial = model.AllowCustomerMaterial,
+            // Meta
             DisplayOrder = model.DisplayOrder,
             IsActive = model.IsActive,
         };
+
+        /// <summary>Cập nhật fields của entity hiện có từ model (dùng cho Edit)</summary>
+        private static void UpdateCategoryFields(ProductCategory category, ProductCategory model)
+        {
+            category.CategoryName = model.CategoryName.Trim();
+            category.CategoryType = model.CategoryType?.Trim() ?? "";
+            category.BehaviorType = model.BehaviorType?.Trim() ?? "Retail";
+            category.Description = string.IsNullOrWhiteSpace(model.Description) ? "" : model.Description.Trim();
+            category.DefaultUnit = model.DefaultUnit;
+            // Retail
+            category.RequiresExpiry = model.RequiresExpiry;
+            category.UseFIFO = model.UseFIFO;
+            category.RequiresBatch = model.RequiresBatch;
+            category.HasVariants = model.HasVariants;
+            category.RequiresSize = model.RequiresSize;
+            category.DefaultMinStock = model.DefaultMinStock;
+            // Rental
+            category.AllowPartialReturn = model.AllowPartialReturn;
+            category.DepositRequired = model.DepositRequired;
+            category.DefaultDepositAmount = model.DefaultDepositAmount;
+            category.DefaultCleaningFee = model.DefaultCleaningFee;
+            category.MaxRentalHours = model.MaxRentalHours;
+            category.ChargeOvertime = model.ChargeOvertime;
+            // Service
+            category.PricingModel = model.PricingModel ?? "Fixed";
+            category.SeparateLaborAndMaterial = model.SeparateLaborAndMaterial;
+            category.MaterialUnit = model.MaterialUnit;
+            category.AllowCustomerMaterial = model.AllowCustomerMaterial;
+            // Meta
+            category.DisplayOrder = model.DisplayOrder;
+            category.IsActive = model.IsActive;
+        }
 
         private async Task<string> SaveImageAsync(IFormFile file)
         {

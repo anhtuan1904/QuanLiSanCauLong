@@ -694,6 +694,9 @@ namespace QuanLiSanCauLong.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ImageId"));
 
+                    b.Property<string>("Caption")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("CourtId")
                         .HasColumnType("int");
 
@@ -718,6 +721,86 @@ namespace QuanLiSanCauLong.Migrations
                     b.ToTable("CourtImages");
                 });
 
+            modelBuilder.Entity("QuanLiSanCauLong.Models.CourtReview", b =>
+                {
+                    b.Property<int>("ReviewId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReviewId"));
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ApprovedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("BookingId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("CourtId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CourtReviewReviewId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsFeatured")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsVerifiedBooking")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RatingCleanliness")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RatingCourtQuality")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RatingService")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RatingValue")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ReviewId");
+
+                    b.HasIndex("BookingId");
+
+                    b.HasIndex("CourtReviewReviewId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("CourtId", "UserId", "BookingId")
+                        .IsUnique()
+                        .HasFilter("[BookingId] IS NOT NULL");
+
+                    b.ToTable("CourtReviews");
+                });
+
             modelBuilder.Entity("QuanLiSanCauLong.Models.Facility", b =>
                 {
                     b.Property<int>("FacilityId")
@@ -733,6 +816,9 @@ namespace QuanLiSanCauLong.Migrations
                     b.Property<string>("Amenities")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<double?>("AverageRating")
+                        .HasColumnType("float");
 
                     b.Property<string>("City")
                         .HasMaxLength(100)
@@ -779,6 +865,9 @@ namespace QuanLiSanCauLong.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TotalReviews")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -1900,6 +1989,117 @@ namespace QuanLiSanCauLong.Migrations
                     b.ToTable("RentalItems");
                 });
 
+            modelBuilder.Entity("QuanLiSanCauLong.Models.ReviewImage", b =>
+                {
+                    b.Property<int>("ImageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ImageId"));
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ReviewId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ImageId");
+
+                    b.HasIndex("ReviewId");
+
+                    b.ToTable("ReviewImages");
+                });
+
+            modelBuilder.Entity("QuanLiSanCauLong.Models.ReviewLike", b =>
+                {
+                    b.Property<int>("LikeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LikeId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LikeType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("ReviewId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("LikeId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ReviewId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("ReviewLikes");
+                });
+
+            modelBuilder.Entity("QuanLiSanCauLong.Models.ReviewReply", b =>
+                {
+                    b.Property<int>("ReplyId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReplyId"));
+
+                    b.Property<string>("AuthorRole")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsAdminReply")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsEdited")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("ParentReplyId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReviewId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ReplyId");
+
+                    b.HasIndex("ParentReplyId");
+
+                    b.HasIndex("ReviewId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ReviewReplies");
+                });
+
             modelBuilder.Entity("QuanLiSanCauLong.Models.Service", b =>
                 {
                     b.Property<int>("ServiceId")
@@ -2064,6 +2264,118 @@ namespace QuanLiSanCauLong.Migrations
                     b.HasIndex("ServiceId");
 
                     b.ToTable("ServiceInquiries");
+                });
+
+            modelBuilder.Entity("QuanLiSanCauLong.Models.Shift", b =>
+                {
+                    b.Property<int>("ShiftId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ShiftId"));
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)")
+                        .HasDefaultValue("#d4a017");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("ShiftName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.HasKey("ShiftId");
+
+                    b.ToTable("Shifts");
+                });
+
+            modelBuilder.Entity("QuanLiSanCauLong.Models.ShiftAssignment", b =>
+                {
+                    b.Property<int>("AssignmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AssignmentId"));
+
+                    b.Property<DateTime?>("CheckInTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CheckOutTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("FacilityId")
+                        .IsRequired()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ShiftId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Scheduled");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("WorkDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("AssignmentId");
+
+                    b.HasIndex("ShiftId");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_ShiftAssignments_Status");
+
+                    b.HasIndex("FacilityId", "WorkDate")
+                        .HasDatabaseName("IX_ShiftAssignments_FacilityId_WorkDate");
+
+                    b.HasIndex("UserId", "WorkDate")
+                        .HasDatabaseName("IX_ShiftAssignments_UserId_WorkDate");
+
+                    b.ToTable("ShiftAssignments");
                 });
 
             modelBuilder.Entity("QuanLiSanCauLong.Models.StockTransaction", b =>
@@ -2437,7 +2749,9 @@ namespace QuanLiSanCauLong.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -2453,7 +2767,9 @@ namespace QuanLiSanCauLong.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -2474,10 +2790,14 @@ namespace QuanLiSanCauLong.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("Active");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
 
                     b.HasKey("UserId");
 
@@ -2705,6 +3025,35 @@ namespace QuanLiSanCauLong.Migrations
                     b.Navigation("Court");
                 });
 
+            modelBuilder.Entity("QuanLiSanCauLong.Models.CourtReview", b =>
+                {
+                    b.HasOne("QuanLiSanCauLong.Models.Booking", "Booking")
+                        .WithMany()
+                        .HasForeignKey("BookingId");
+
+                    b.HasOne("QuanLiSanCauLong.Models.Court", "Court")
+                        .WithMany("CourtReviews")
+                        .HasForeignKey("CourtId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("QuanLiSanCauLong.Models.CourtReview", null)
+                        .WithMany("CourtReviews")
+                        .HasForeignKey("CourtReviewReviewId");
+
+                    b.HasOne("QuanLiSanCauLong.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Booking");
+
+                    b.Navigation("Court");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("QuanLiSanCauLong.Models.FacilityImage", b =>
                 {
                     b.HasOne("QuanLiSanCauLong.Models.Facility", "Facility")
@@ -2896,6 +3245,61 @@ namespace QuanLiSanCauLong.Migrations
                     b.Navigation("Inventory");
                 });
 
+            modelBuilder.Entity("QuanLiSanCauLong.Models.ReviewImage", b =>
+                {
+                    b.HasOne("QuanLiSanCauLong.Models.CourtReview", "Review")
+                        .WithMany("Images")
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Review");
+                });
+
+            modelBuilder.Entity("QuanLiSanCauLong.Models.ReviewLike", b =>
+                {
+                    b.HasOne("QuanLiSanCauLong.Models.CourtReview", "Review")
+                        .WithMany("Likes")
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("QuanLiSanCauLong.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Review");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("QuanLiSanCauLong.Models.ReviewReply", b =>
+                {
+                    b.HasOne("QuanLiSanCauLong.Models.ReviewReply", "ParentReply")
+                        .WithMany("ChildReplies")
+                        .HasForeignKey("ParentReplyId");
+
+                    b.HasOne("QuanLiSanCauLong.Models.CourtReview", "Review")
+                        .WithMany("Replies")
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("QuanLiSanCauLong.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ParentReply");
+
+                    b.Navigation("Review");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("QuanLiSanCauLong.Models.ServiceImage", b =>
                 {
                     b.HasOne("QuanLiSanCauLong.Models.Service", "Service")
@@ -2916,6 +3320,33 @@ namespace QuanLiSanCauLong.Migrations
                         .IsRequired();
 
                     b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("QuanLiSanCauLong.Models.ShiftAssignment", b =>
+                {
+                    b.HasOne("QuanLiSanCauLong.Models.Facility", "Facility")
+                        .WithMany()
+                        .HasForeignKey("FacilityId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("QuanLiSanCauLong.Models.Shift", "Shift")
+                        .WithMany("Assignments")
+                        .HasForeignKey("ShiftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("QuanLiSanCauLong.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Facility");
+
+                    b.Navigation("Shift");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("QuanLiSanCauLong.Models.StockTransaction", b =>
@@ -3058,7 +3489,20 @@ namespace QuanLiSanCauLong.Migrations
 
                     b.Navigation("CourtImages");
 
+                    b.Navigation("CourtReviews");
+
                     b.Navigation("PriceSlots");
+                });
+
+            modelBuilder.Entity("QuanLiSanCauLong.Models.CourtReview", b =>
+                {
+                    b.Navigation("CourtReviews");
+
+                    b.Navigation("Images");
+
+                    b.Navigation("Likes");
+
+                    b.Navigation("Replies");
                 });
 
             modelBuilder.Entity("QuanLiSanCauLong.Models.Facility", b =>
@@ -3110,11 +3554,21 @@ namespace QuanLiSanCauLong.Migrations
                     b.Navigation("OrderDetails");
                 });
 
+            modelBuilder.Entity("QuanLiSanCauLong.Models.ReviewReply", b =>
+                {
+                    b.Navigation("ChildReplies");
+                });
+
             modelBuilder.Entity("QuanLiSanCauLong.Models.Service", b =>
                 {
                     b.Navigation("Inquiries");
 
                     b.Navigation("ServiceImages");
+                });
+
+            modelBuilder.Entity("QuanLiSanCauLong.Models.Shift", b =>
+                {
+                    b.Navigation("Assignments");
                 });
 
             modelBuilder.Entity("QuanLiSanCauLong.Models.StockTransaction", b =>

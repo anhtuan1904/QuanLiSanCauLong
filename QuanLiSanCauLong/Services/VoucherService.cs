@@ -107,7 +107,7 @@ namespace QuanLiSanCauLong.Services
                         BookingId = bookingId,
                         OrderId = orderId,
                         DiscountAmount = discountAmount,
-                        UsedAt = DateTime.Now
+                        CreatedAt = DateTime.Now
                     };
 
                     _context.VoucherUsages.Add(usage);

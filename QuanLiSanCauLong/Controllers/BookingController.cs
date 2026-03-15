@@ -13,7 +13,7 @@ namespace QuanLiSanCauLong.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        // ── Cấu hình ngân hàng ──
+        // ── Cấu hình thanh toán ──
         private const string BankCode = "MB";
         private const string BankAccount = "0123456789";
         private const string BankAccountName = "CONG TY QUAN LI SAN CAU LONG";
@@ -24,7 +24,9 @@ namespace QuanLiSanCauLong.Controllers
             _context = context;
         }
 
-        // ── HELPER: ViewBag thông tin ngân hàng + VietQR ──
+        // ─────────────────────────────────────────────────────────────────────
+        // HELPER: ViewBag ngân hàng + QR
+        // ─────────────────────────────────────────────────────────────────────
         private void SetBankViewBag(string? bookingCode = null)
         {
             ViewBag.BankCode = BankCode;
@@ -37,18 +39,19 @@ namespace QuanLiSanCauLong.Controllers
                 string content = Uri.EscapeDataString(bookingCode);
                 string name = Uri.EscapeDataString(BankAccountName);
                 ViewBag.QrUrl = $"https://img.vietqr.io/image/{BankCode}-{BankAccount}-compact2.png" +
-                                 $"?addInfo={content}&accountName={name}";
+                                  $"?addInfo={content}&accountName={name}";
             }
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // GET: Booking/Search
-        // ─────────────────────────────────────────────────────────────────────
+        // ═════════════════════════════════════════════════════════════════════
+        // SEARCH — tìm sân theo cơ sở
+        // ═════════════════════════════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> Search(int facilityId)
         {
             var facility = await _context.Facilities
-                .FirstOrDefaultAsync(f => f.FacilityId == facilityId);
+                .Include(f => f.FacilityImages)
+                .FirstOrDefaultAsync(f => f.FacilityId == facilityId && f.IsActive);
 
             if (facility == null)
             {
@@ -56,13 +59,36 @@ namespace QuanLiSanCauLong.Controllers
                 return RedirectToAction("Index", "Facility");
             }
 
+            // Lấy rating thật từ CourtReviews
+            var ratingData = await _context.CourtReviews
+                .Where(r => r.Court != null && r.Court.FacilityId == facilityId && r.Status == "Approved")
+                .GroupBy(r => r.Court!.FacilityId)
+                .Select(g => new { Avg = g.Average(r => (double)r.Rating), Count = g.Count() })
+                .FirstOrDefaultAsync();
+
+            // Amenities list
+            var amenities = string.IsNullOrEmpty(facility.Amenities)
+                ? new List<string>()
+                : facility.Amenities.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(a => a.Trim()).ToList();
+
+            // Gallery images
+            var images = facility.FacilityImages.Any()
+                ? facility.FacilityImages.OrderBy(i => i.DisplayOrder).Select(i => i.ImagePath).ToList()
+                : new List<string> { facility.ImageUrl ?? "/images/default-facility.jpg" };
+
             ViewBag.FacilityId = facility.FacilityId;
             ViewBag.FacilityName = facility.FacilityName;
-            ViewBag.FacilityAddress = facility.Address + ", " + facility.District + ", " + facility.City;
+            ViewBag.FacilityAddress = $"{facility.Address}, {facility.District}, {facility.City}";
             ViewBag.FacilityPhone = facility.Phone;
-            ViewBag.FacilityImage = facility.ImageUrl ?? "/images/default-facility.jpg";
+            ViewBag.FacilityImages = images;
+            ViewBag.FacilityImage = images.FirstOrDefault() ?? "/images/default-facility.jpg";
             ViewBag.OpenTime = facility.OpenTime?.ToString(@"hh\:mm") ?? "06:00";
             ViewBag.CloseTime = facility.CloseTime?.ToString(@"hh\:mm") ?? "23:00";
+            ViewBag.Description = facility.Description;
+            ViewBag.Amenities = amenities;
+            ViewBag.AverageRating = ratingData?.Avg ?? 0;
+            ViewBag.ReviewCount = ratingData?.Count ?? 0;
             ViewBag.TotalCourts = await _context.Courts
                 .CountAsync(c => c.FacilityId == facilityId && c.Status == "Available");
 
@@ -70,7 +96,7 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         // ─────────────────────────────────────────────────────────────────────
-        // POST: API tìm sân trống (Ajax)
+        // API: Tìm sân trống (Ajax POST)
         // ─────────────────────────────────────────────────────────────────────
         [HttpPost]
         public async Task<IActionResult> SearchAvailableCourts([FromBody] SearchCourtRequest request)
@@ -84,6 +110,7 @@ namespace QuanLiSanCauLong.Controllers
                     return Json(new { success = false, message = "Khung giờ không hợp lệ!" });
 
                 var courts = await _context.Courts
+                    .Include(c => c.CourtImages)
                     .Where(c => c.FacilityId == request.FacilityId && c.Status == "Available")
                     .ToListAsync();
 
@@ -96,17 +123,28 @@ namespace QuanLiSanCauLong.Controllers
 
                     if (matchingSlot != null)
                     {
+                        // Lấy ảnh sân
+                        var courtImg = court.CourtImages?.OrderBy(i => i.IsPrimary ? 0 : 1)
+                                           .FirstOrDefault()?.ImagePath
+                                    ?? court.ImagePath;
+
                         availableCourts.Add(new
                         {
                             courtId = court.CourtId,
                             courtNumber = court.CourtNumber,
                             courtType = court.CourtType,
+                            courtTypeLabel = court.CourtTypeLabel,
                             startTime = matchingSlot.StartTime.ToString(@"hh\:mm"),
                             endTime = matchingSlot.EndTime.ToString(@"hh\:mm"),
                             price = matchingSlot.Price,
                             isPeakHour = matchingSlot.IsPeakHour,
                             hasLighting = court.HasLighting,
-                            hasAC = court.HasAC
+                            hasAC = court.HasAC,
+                            floorNumber = court.FloorNumber,
+                            description = court.Description,
+                            imageUrl = courtImg,
+                            // Đếm số slot trống còn lại trong ngày
+                            availableSlots = timeSlots.Count(t => t.IsAvailable)
                         });
                     }
                 }
@@ -125,13 +163,41 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         // ─────────────────────────────────────────────────────────────────────
-        // GET: Booking/Create
+        // API: Lấy tất cả khung giờ của 1 sân trong 1 ngày (Ajax GET)
+        // NEW — dùng cho calendar picker và hiển thị slot trên Search
         // ─────────────────────────────────────────────────────────────────────
+        [HttpGet]
+        public async Task<IActionResult> GetTimeSlots(int courtId, DateTime date)
+        {
+            var court = await _context.Courts.FindAsync(courtId);
+            if (court == null)
+                return Json(new { success = false, message = "Không tìm thấy sân!" });
+
+            var slots = await GetAvailableTimeSlots(court, date);
+
+            return Json(new
+            {
+                success = true,
+                slots = slots.Select(s => new
+                {
+                    startTime = s.StartTime.ToString(@"hh\:mm"),
+                    endTime = s.EndTime.ToString(@"hh\:mm"),
+                    price = s.Price,
+                    isPeakHour = s.IsPeakHour,
+                    isAvailable = s.IsAvailable
+                })
+            });
+        }
+
+        // ═════════════════════════════════════════════════════════════════════
+        // CREATE — xác nhận & tạo booking
+        // ═════════════════════════════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> Create(int courtId, DateTime bookingDate, string startTime, string endTime)
         {
             var court = await _context.Courts
                 .Include(c => c.Facility)
+                .Include(c => c.CourtImages)
                 .FirstOrDefaultAsync(c => c.CourtId == courtId);
 
             if (court == null)
@@ -143,9 +209,15 @@ namespace QuanLiSanCauLong.Controllers
             var start = TimeSpan.Parse(startTime);
             var end = TimeSpan.Parse(endTime);
             var duration = (int)(end - start).TotalMinutes;
+
             var courtPrice = await CalculateCourtPrice(court.FacilityId, court.CourtType, start, end);
             var serviceFee = await GetSystemSetting("DefaultServiceFee", 0);
             var serviceFeeAmt = courtPrice * serviceFee / 100;
+
+            // Ảnh sân: ưu tiên CourtImages, fallback ImagePath
+            var courtImg = court.CourtImages?.OrderBy(i => i.IsPrimary ? 0 : 1)
+                               .FirstOrDefault()?.ImagePath
+                         ?? court.ImagePath;
 
             var model = new CreateBookingViewModel
             {
@@ -159,8 +231,7 @@ namespace QuanLiSanCauLong.Controllers
                 CourtNumber = court.CourtNumber,
                 CourtType = court.CourtType,
                 CourtDescription = court.Description,
-                // FIX: map Court.ImagePath (alias ImageUrl) → ViewModel.CourtImageUrl
-                CourtImageUrl = court.ImagePath,
+                CourtImageUrl = courtImg,
                 CourtPrice = courtPrice,
                 ServiceFee = serviceFeeAmt,
                 DiscountAmount = 0,
@@ -173,9 +244,6 @@ namespace QuanLiSanCauLong.Controllers
             return View(model);
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // POST: Booking/Create
-        // ─────────────────────────────────────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateBookingViewModel model)
@@ -208,8 +276,6 @@ namespace QuanLiSanCauLong.Controllers
             decimal serverServiceFee = serverCourtPrice * (await GetSystemSetting("DefaultServiceFee", 0)) / 100;
             decimal baseTotal = serverCourtPrice + serverServiceFee;
 
-            // FIX: dùng CreateExecutionStrategy thay vì BeginTransactionAsync trực tiếp
-            // SqlServerRetryingExecutionStrategy không cho phép mở transaction thủ công
             var strategy = _context.Database.CreateExecutionStrategy();
             IActionResult actionResult = RedirectToAction(nameof(MyBookings));
 
@@ -227,6 +293,10 @@ namespace QuanLiSanCauLong.Controllers
                         {
                             voucherDiscount = vRes.DiscountAmount;
                             voucherId = vRes.VoucherId;
+                        }
+                        else
+                        {
+                            TempData["WarnMessage"] = "Mã voucher không hợp lệ hoặc không áp dụng được, đơn vẫn được tạo.";
                         }
                     }
 
@@ -268,7 +338,7 @@ namespace QuanLiSanCauLong.Controllers
                     await transaction.CommitAsync();
 
                     TempData["SuccessMessage"] = paymentMethod == "Transfer"
-                        ? $"Đặt sân thành công! Vui lòng chuyển khoản với nội dung: {booking.BookingCode}"
+                        ? $"Đặt sân thành công! Vui lòng chuyển khoản nội dung: <strong>{booking.BookingCode}</strong>"
                         : "Đặt sân thành công!";
 
                     actionResult = RedirectToAction(nameof(Details), new { id = booking.BookingId });
@@ -276,8 +346,7 @@ namespace QuanLiSanCauLong.Controllers
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
-                    var innerMsg = ex.InnerException?.Message ?? ex.Message;
-                    TempData["ErrorMessage"] = "Lỗi khi lưu đặt sân: " + innerMsg;
+                    TempData["ErrorMessage"] = "Lỗi khi tạo đặt sân: " + (ex.InnerException?.Message ?? ex.Message);
                     actionResult = RedirectToAction(nameof(MyBookings));
                 }
             });
@@ -285,93 +354,135 @@ namespace QuanLiSanCauLong.Controllers
             return actionResult;
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // GET: Booking/MyBookings
-        // ─────────────────────────────────────────────────────────────────────
+        // ═════════════════════════════════════════════════════════════════════
+        // MY BOOKINGS — lịch sử đặt sân
+        // ═════════════════════════════════════════════════════════════════════
         [HttpGet]
-        public async Task<IActionResult> MyBookings(string? status, DateTime? fromDate, DateTime? toDate)
+        public async Task<IActionResult> MyBookings(string? status, DateTime? fromDate, DateTime? toDate, int page = 1)
         {
             int userId = GetCurrentUserId();
-            var cancelHoursSetting = await GetSystemSetting("BookingCancellationHours", 2);
+            int pageSize = 8;
+            var cancelHours = await GetSystemSetting("BookingCancellationHours", 2);
 
             var query = _context.Bookings
-                .Include(b => b.Court.Facility)
-                .Include(b => b.Orders)
-                    .ThenInclude(o => o.OrderDetails)
-                        .ThenInclude(od => od.Product)
+                .Include(b => b.Court).ThenInclude(c => c.Facility)
+                .Include(b => b.Orders).ThenInclude(o => o.OrderDetails).ThenInclude(od => od.Product)
                 .Where(b => b.UserId == userId);
 
-            if (!string.IsNullOrEmpty(status))
-                query = query.Where(b => b.Status == status);
-            if (fromDate.HasValue)
-                query = query.Where(b => b.BookingDate >= fromDate.Value);
-            if (toDate.HasValue)
-                query = query.Where(b => b.BookingDate <= toDate.Value);
+            if (!string.IsNullOrEmpty(status)) query = query.Where(b => b.Status == status);
+            if (fromDate.HasValue) query = query.Where(b => b.BookingDate >= fromDate.Value);
+            if (toDate.HasValue) query = query.Where(b => b.BookingDate <= toDate.Value);
 
-            var bookings = await query.OrderByDescending(b => b.CreatedAt).ToListAsync();
-            var model = bookings.Select(b => MapToHistoryViewModel(b, cancelHoursSetting)).ToList();
+            var total = await query.CountAsync();
+            var bookings = await query.OrderByDescending(b => b.CreatedAt)
+                                      .Skip((page - 1) * pageSize)
+                                      .Take(pageSize)
+                                      .ToListAsync();
 
-            ViewBag.Statuses = new[] { "Pending", "Confirmed", "Playing", "Completed", "Cancelled" };
+            var model = bookings.Select(b => MapToHistoryViewModel(b, cancelHours)).ToList();
+
+            // ── Stats tổng hợp ──
+            var allUserBookings = await _context.Bookings
+                .Where(b => b.UserId == userId)
+                .Select(b => new { b.Status, b.TotalPrice })
+                .ToListAsync();
+
+            ViewBag.TotalCount = allUserBookings.Count;
+            ViewBag.CompletedCount = allUserBookings.Count(b => b.Status == "Completed");
+            ViewBag.PendingCount = allUserBookings.Count(b => b.Status is "Pending" or "Confirmed");
+            ViewBag.TotalSpent = allUserBookings.Where(b => b.Status != "Cancelled").Sum(b => b.TotalPrice);
+
+            ViewBag.Page = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalPage = (int)Math.Ceiling((double)total / pageSize);
+            ViewBag.Status = status;
+            ViewBag.FromDate = fromDate?.ToString("yyyy-MM-dd");
+            ViewBag.ToDate = toDate?.ToString("yyyy-MM-dd");
+
             return View(model);
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // GET: Booking/Details
-        // ─────────────────────────────────────────────────────────────────────
+        // ═════════════════════════════════════════════════════════════════════
+        // DETAILS
+        // ═════════════════════════════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
             var booking = await _context.Bookings
-                .Include(b => b.Court.Facility)
+                .Include(b => b.Court).ThenInclude(c => c.Facility)
                 .Include(b => b.User)
-                .Include(b => b.Orders)
-                    .ThenInclude(o => o.OrderDetails)
-                        .ThenInclude(od => od.Product)
-                .Include(b => b.VoucherUsages)
-                    .ThenInclude(v => v.Voucher)
+                .Include(b => b.Orders).ThenInclude(o => o.OrderDetails).ThenInclude(od => od.Product)
+                .Include(b => b.VoucherUsages).ThenInclude(v => v.Voucher)
                 .FirstOrDefaultAsync(b => b.BookingId == id);
 
             if (booking == null) return NotFound();
 
             int userId = GetCurrentUserId();
-            string userRole = GetCurrentUserRole();
+            string role = GetCurrentUserRole();
+            if (role != "Admin" && role != "Staff" && booking.UserId != userId) return Forbid();
 
-            if (userRole != "Admin" && userRole != "Staff" && booking.UserId != userId)
-                return Forbid();
+            // Kiểm tra xem đã đánh giá chưa
+            var existingReview = await _context.CourtReviews
+                .FirstOrDefaultAsync(r => r.CourtId == booking.CourtId && r.UserId == userId);
 
             var cancelHours = await GetSystemSetting("BookingCancellationHours", 2);
-            return View(MapToHistoryViewModel(booking, cancelHours));
+            SetBankViewBag(booking.BookingCode);
+
+            var vm = MapToHistoryViewModel(booking, cancelHours);
+            ViewBag.HasReview = existingReview != null;
+            ViewBag.ReviewId = existingReview?.ReviewId;
+            ViewBag.CanReview = booking.Status == "Completed" && existingReview == null;
+
+            return View(vm);
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // GET: Booking/Invoice
-        // ─────────────────────────────────────────────────────────────────────
+        // ═════════════════════════════════════════════════════════════════════
+        // INVOICE
+        // ═════════════════════════════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> Invoice(int id)
         {
             var booking = await _context.Bookings
-                .Include(b => b.Court.Facility)
-                .Include(b => b.Orders)
-                    .ThenInclude(o => o.OrderDetails)
-                        .ThenInclude(od => od.Product)
+                .Include(b => b.Court).ThenInclude(c => c.Facility)
+                .Include(b => b.User)
+                .Include(b => b.Orders).ThenInclude(o => o.OrderDetails).ThenInclude(od => od.Product)
+                .Include(b => b.VoucherUsages).ThenInclude(v => v.Voucher)
                 .FirstOrDefaultAsync(b => b.BookingId == id);
 
             if (booking == null) return NotFound();
 
             int userId = GetCurrentUserId();
-            string userRole = GetCurrentUserRole();
-
-            if (userRole != "Admin" && userRole != "Staff" && booking.UserId != userId)
-                return Forbid();
+            string role = GetCurrentUserRole();
+            if (role != "Admin" && role != "Staff" && booking.UserId != userId) return Forbid();
 
             var cancelHours = await GetSystemSetting("BookingCancellationHours", 2);
             SetBankViewBag(booking.BookingCode);
             return View(MapToHistoryViewModel(booking, cancelHours));
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // POST: Booking/Cancel
-        // ─────────────────────────────────────────────────────────────────────
+        // ═════════════════════════════════════════════════════════════════════
+        // CANCEL
+        // ═════════════════════════════════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.Court).ThenInclude(c => c.Facility)
+                .FirstOrDefaultAsync(b => b.BookingId == id);
+
+            if (booking == null) return NotFound();
+            if (booking.UserId != GetCurrentUserId()) return Forbid();
+
+            var cancelHours = await GetSystemSetting("BookingCancellationHours", 2);
+            if (!CanCancelBooking(booking, cancelHours))
+            {
+                TempData["ErrorMessage"] = "Không thể hủy đơn này do đã quá thời hạn!";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            return View(MapToHistoryViewModel(booking, cancelHours));
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id, string cancelReason)
@@ -383,7 +494,7 @@ namespace QuanLiSanCauLong.Controllers
             var cancelHours = await GetSystemSetting("BookingCancellationHours", 2);
             if (!CanCancelBooking(booking, cancelHours))
             {
-                TempData["ErrorMessage"] = "Không thể hủy đơn này do đã quá thời gian quy định!";
+                TempData["ErrorMessage"] = "Không thể hủy đơn này!";
                 return RedirectToAction(nameof(MyBookings));
             }
 
@@ -394,15 +505,240 @@ namespace QuanLiSanCauLong.Controllers
 
             await _context.SaveChangesAsync();
             await LogActivity(GetCurrentUserId(), "Cancel", "Bookings", booking.BookingId,
-                "Confirmed", $"Hủy đơn {booking.BookingCode}: {cancelReason}");
+                booking.Status, $"Hủy: {cancelReason}");
 
-            TempData["SuccessMessage"] = "Hủy đặt sân thành công!";
+            TempData["SuccessMessage"] = "Đã hủy đặt sân thành công!";
             return RedirectToAction(nameof(MyBookings));
         }
 
+        // ═════════════════════════════════════════════════════════════════════
+        // CONFIRM PAYMENT — NEW
+        // Khách xác nhận đã chuyển khoản → booking chuyển sang Processing
+        // ═════════════════════════════════════════════════════════════════════
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmPayment(int id)
+        {
+            var booking = await _context.Bookings.FindAsync(id);
+            if (booking == null) return NotFound();
+            if (booking.UserId != GetCurrentUserId()) return Forbid();
+
+            if (booking.PaymentStatus != "Unpaid")
+                return Json(new { success = false, message = "Đơn đã được xử lý!" });
+
+            booking.PaymentStatus = "Processing"; // Admin xác nhận sau
+            booking.UpdatedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            await LogActivity(GetCurrentUserId(), "ConfirmPayment", "Bookings", booking.BookingId,
+                "Unpaid", "Processing");
+
+            TempData["SuccessMessage"] = "Đã xác nhận chuyển khoản! Chúng tôi sẽ xác nhận đơn trong thời gian sớm nhất.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // ═════════════════════════════════════════════════════════════════════
+        // RESCHEDULE — NEW
+        // Cho phép đổi lịch nếu booking còn trong trạng thái Pending/Confirmed
+        // ═════════════════════════════════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> Reschedule(int id)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.Court).ThenInclude(c => c.Facility)
+                .FirstOrDefaultAsync(b => b.BookingId == id);
+
+            if (booking == null) return NotFound();
+            if (booking.UserId != GetCurrentUserId()) return Forbid();
+
+            if (booking.Status != "Pending" && booking.Status != "Confirmed")
+            {
+                TempData["ErrorMessage"] = "Chỉ có thể đổi lịch đơn đang Chờ xác nhận hoặc Đã xác nhận!";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            var cancelHours = await GetSystemSetting("BookingCancellationHours", 2);
+            var bookingVM = MapToHistoryViewModel(booking, cancelHours);
+
+            ViewBag.OpenTime = booking.Court?.Facility?.OpenTime?.ToString(@"hh\:mm") ?? "06:00";
+            ViewBag.CloseTime = booking.Court?.Facility?.CloseTime?.ToString(@"hh\:mm") ?? "23:00";
+
+            return View(bookingVM);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reschedule(int id, DateTime newDate, string newStartTime, string newEndTime)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.Court)
+                .FirstOrDefaultAsync(b => b.BookingId == id);
+
+            if (booking == null) return NotFound();
+            if (booking.UserId != GetCurrentUserId()) return Forbid();
+
+            if (!TimeSpan.TryParse(newStartTime, out TimeSpan start) ||
+                !TimeSpan.TryParse(newEndTime, out TimeSpan end))
+            {
+                TempData["ErrorMessage"] = "Khung giờ không hợp lệ!";
+                return RedirectToAction(nameof(Reschedule), new { id });
+            }
+
+            // Kiểm tra ngày mới phải trong tương lai
+            var newDateTime = newDate.Date.Add(start);
+            if (newDateTime <= DateTime.Now.AddHours(2))
+            {
+                TempData["ErrorMessage"] = "Phải đổi lịch ít nhất 2 giờ trước giờ chơi!";
+                return RedirectToAction(nameof(Reschedule), new { id });
+            }
+
+            // Kiểm tra sân trống ở lịch mới (bỏ qua booking hiện tại)
+            var conflict = await _context.Bookings.AnyAsync(b =>
+                b.CourtId == booking.CourtId
+                && b.BookingId != booking.BookingId
+                && b.BookingDate.Date == newDate.Date
+                && b.Status != "Cancelled"
+                && b.StartTime < end
+                && b.EndTime > start);
+
+            if (conflict)
+            {
+                TempData["ErrorMessage"] = "Khung giờ mới đã có người đặt, vui lòng chọn lại!";
+                return RedirectToAction(nameof(Reschedule), new { id });
+            }
+
+            // Tính lại giá theo lịch mới
+            var newPrice = await CalculateCourtPrice(booking.Court!.FacilityId, booking.Court.CourtType, start, end);
+            var svcFee = await GetSystemSetting("DefaultServiceFee", 0);
+
+            string oldInfo = $"{booking.BookingDate:dd/MM/yyyy} {booking.StartTime:hh\\:mm}-{booking.EndTime:hh\\:mm}";
+
+            booking.BookingDate = newDate;
+            booking.StartTime = start;
+            booking.EndTime = end;
+            booking.Duration = (int)(end - start).TotalMinutes;
+            booking.CourtPrice = newPrice;
+            booking.ServiceFee = newPrice * svcFee / 100;
+            booking.TotalPrice = booking.CourtPrice + booking.ServiceFee - booking.DiscountAmount;
+            booking.Status = "Pending"; // reset về Pending để admin xác nhận lại
+            booking.UpdatedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            await LogActivity(GetCurrentUserId(), "Reschedule", "Bookings", booking.BookingId,
+                oldInfo, $"{newDate:dd/MM/yyyy} {start:hh\\:mm}-{end:hh\\:mm}");
+
+            TempData["SuccessMessage"] = $"Đã đổi lịch thành công sang {newDate:dd/MM/yyyy} {start:hh\\:mm}-{end:hh\\:mm}!";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // ═════════════════════════════════════════════════════════════════════
+        // RATE — NEW
+        // Đánh giá sau khi hoàn thành
+        // ═════════════════════════════════════════════════════════════════════
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Rate(int bookingId, int rating, string comment)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.Court)
+                .FirstOrDefaultAsync(b => b.BookingId == bookingId);
+
+            if (booking == null) return NotFound();
+
+            int userId = GetCurrentUserId();
+            if (booking.UserId != userId) return Forbid();
+
+            if (booking.Status != "Completed")
+            {
+                TempData["ErrorMessage"] = "Chỉ có thể đánh giá sau khi hoàn thành buổi chơi!";
+                return RedirectToAction(nameof(Details), new { id = bookingId });
+            }
+
+            // Kiểm tra đã đánh giá chưa
+            var exists = await _context.CourtReviews
+                .AnyAsync(r => r.CourtId == booking.CourtId && r.UserId == userId);
+
+            if (exists)
+            {
+                TempData["ErrorMessage"] = "Bạn đã đánh giá sân này rồi!";
+                return RedirectToAction(nameof(Details), new { id = bookingId });
+            }
+
+            if (rating < 1 || rating > 5)
+            {
+                TempData["ErrorMessage"] = "Điểm đánh giá phải từ 1 đến 5!";
+                return RedirectToAction(nameof(Details), new { id = bookingId });
+            }
+
+            _context.CourtReviews.Add(new CourtReview
+            {
+                CourtId = booking.CourtId,
+                UserId = userId,
+                Rating = rating,
+                Content = comment?.Trim(),
+                Status = "Approved", // Auto-approve hoặc "Pending" nếu cần duyệt
+                CreatedAt = DateTime.Now
+            });
+
+            await _context.SaveChangesAsync();
+            await LogActivity(userId, "Rate", "CourtReviews", booking.CourtId, null,
+                $"Rating {rating}★ cho sân bookingId={bookingId}");
+
+            TempData["SuccessMessage"] = $"Cảm ơn bạn đã đánh giá {rating}★!";
+            return RedirectToAction(nameof(Details), new { id = bookingId });
+        }
+
+        // ═════════════════════════════════════════════════════════════════════
+        // GET BOOKING STATS — NEW (Ajax)
+        // Trả về stats tổng hợp cho dashboard khách hàng
+        // ═════════════════════════════════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> GetStats()
+        {
+            int userId = GetCurrentUserId();
+
+            var bookings = await _context.Bookings
+                .Where(b => b.UserId == userId)
+                .Select(b => new { b.Status, b.TotalPrice, b.BookingDate, b.CourtId })
+                .ToListAsync();
+
+            // Favourite court
+            var favCourtId = bookings
+                .Where(b => b.Status != "Cancelled")
+                .GroupBy(b => b.CourtId)
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault()?.Key;
+
+            string? favCourt = null;
+            if (favCourtId.HasValue)
+            {
+                var court = await _context.Courts
+                    .Include(c => c.Facility)
+                    .FirstOrDefaultAsync(c => c.CourtId == favCourtId.Value);
+                favCourt = court != null ? $"{court.Facility?.FacilityName} – {court.CourtNumber}" : null;
+            }
+
+            return Json(new
+            {
+                total = bookings.Count,
+                completed = bookings.Count(b => b.Status == "Completed"),
+                pending = bookings.Count(b => b.Status is "Pending" or "Confirmed"),
+                cancelled = bookings.Count(b => b.Status == "Cancelled"),
+                totalSpent = bookings.Where(b => b.Status != "Cancelled").Sum(b => b.TotalPrice),
+                favCourt
+            });
+        }
+
+        // ═════════════════════════════════════════════════════════════════════
+        // INDEX — redirect về MyBookings
+        // ═════════════════════════════════════════════════════════════════════
+        [HttpGet]
+        public IActionResult Index() => RedirectToAction(nameof(MyBookings));
+
         // ─────────────────────────────────────────────────────────────────────
-        // HELPER: Map Booking → BookingHistoryViewModel
+        // PRIVATE HELPERS
         // ─────────────────────────────────────────────────────────────────────
+
         private BookingHistoryViewModel MapToHistoryViewModel(Booking b, decimal cancelHours)
         {
             return new BookingHistoryViewModel
@@ -413,22 +749,28 @@ namespace QuanLiSanCauLong.Controllers
                 Phone = b.User?.Phone ?? "N/A",
                 Email = b.User?.Email ?? "N/A",
                 FacilityName = b.Court?.Facility?.FacilityName ?? "N/A",
+                FacilityAddress = $"{b.Court?.Facility?.Address}, {b.Court?.Facility?.District}, {b.Court?.Facility?.City}",
                 CourtNumber = b.Court?.CourtNumber ?? "N/A",
                 CourtType = b.Court?.CourtType ?? "N/A",
-                // FIX: map Court.ImagePath → CourtImageUrl
+                CourtTypeLabel = b.Court?.CourtTypeLabel,
                 CourtImageUrl = b.Court?.ImagePath,
                 BookingDate = b.BookingDate,
                 StartTime = b.StartTime,
                 EndTime = b.EndTime,
                 Duration = b.Duration,
+                CourtPrice = b.CourtPrice,
+                ServiceFee = b.ServiceFee,
+                DiscountAmount = b.DiscountAmount,
                 TotalPrice = b.TotalPrice,
                 Status = b.Status,
                 PaymentStatus = b.PaymentStatus,
                 PaymentMethod = b.PaymentMethod,
-                CreatedAt = b.CreatedAt,
                 Note = b.Note,
+                CancelReason = b.CancelReason,
+                CreatedAt = b.CreatedAt,
+                CancelledAt = b.CancelledAt,
                 CanCancel = CanCancelBooking(b, cancelHours),
-                // FIX: use OrderViewModel (has OrderCode, OrderType, OrderStatus)
+                VoucherCode = b.VoucherUsages?.FirstOrDefault()?.Voucher?.VoucherCode,
                 RelatedOrders = b.Orders?.Select(o => new OrderViewModel
                 {
                     OrderId = o.OrderId,
@@ -448,9 +790,6 @@ namespace QuanLiSanCauLong.Controllers
             };
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // PRIVATE HELPERS
-        // ─────────────────────────────────────────────────────────────────────
         private async Task<List<TimeSlotViewModel>> GetAvailableTimeSlots(Court court, DateTime bookingDate)
         {
             var timeSlots = new List<TimeSlotViewModel>();
@@ -525,9 +864,7 @@ namespace QuanLiSanCauLong.Controllers
 
         private bool CanCancelBooking(Booking booking, decimal cancelHours)
         {
-            if (booking.Status != "Confirmed" && booking.Status != "Pending")
-                return false;
-
+            if (booking.Status != "Confirmed" && booking.Status != "Pending") return false;
             var bookingDateTime = booking.BookingDate.Date.Add(booking.StartTime);
             return bookingDateTime > DateTime.Now.AddHours((double)cancelHours);
         }
@@ -572,34 +909,26 @@ namespace QuanLiSanCauLong.Controllers
             await _context.SaveChangesAsync();
         }
 
-        // FIX: project Product → BookingProductItemViewModel
-        // View dùng dynamic (item.ImageUrl, item.ProductName, item.Price, item.Unit, item.Description)
-        // Nếu truyền List<Product> thì item.ImageUrl sẽ ném RuntimeBinderException
         private async Task LoadProductsForBooking(int facilityId)
         {
-            // FIX: project sang BookingProductItemViewModel
-            // View dùng dynamic binding (item.ImageUrl, item.Price...) — truyền List<Product> thô
-            // sẽ ném RuntimeBinderException vì Product model không có các property này.
             var allProds = await _context.Products
                 .Include(p => p.Category)
                 .Where(p => p.IsActive)
                 .ToListAsync();
 
-            var mapped = allProds
-                .Select(p => new
+            var mapped = allProds.Select(p => new
+            {
+                vm = new BookingProductItemViewModel
                 {
-                    vm = new BookingProductItemViewModel
-                    {
-                        ProductId = p.ProductId,
-                        ProductName = p.ProductName,
-                        Price = p.SalePrice > 0 ? p.SalePrice : p.CostPrice,
-                        ImageUrl = p.ImageUrl,
-                        Unit = p.Unit,
-                        Description = p.Description
-                    },
-                    catType = p.Category?.CategoryType
-                })
-                .ToList();
+                    ProductId = p.ProductId,
+                    ProductName = p.ProductName,
+                    Price = p.SalePrice > 0 ? p.SalePrice : p.CostPrice,
+                    ImageUrl = p.ImageUrl,
+                    Unit = p.Unit,
+                    Description = p.Description
+                },
+                catType = p.Category?.CategoryType
+            }).ToList();
 
             ViewBag.FoodItems = mapped.Where(x => x.catType == "Food").Select(x => x.vm).ToList();
             ViewBag.BeverageItems = mapped.Where(x => x.catType == "Beverage").Select(x => x.vm).ToList();
@@ -624,10 +953,8 @@ namespace QuanLiSanCauLong.Controllers
         {
             var setting = await _context.SystemSettings
                 .FirstOrDefaultAsync(s => s.SettingKey == key && s.IsActive);
-
             if (setting != null && decimal.TryParse(setting.SettingValue, out decimal value))
                 return value;
-
             return defaultValue;
         }
 
@@ -635,7 +962,7 @@ namespace QuanLiSanCauLong.Controllers
             string code, int userId, decimal orderAmount, string applicableFor)
         {
             var voucher = await _context.Vouchers
-                .FirstOrDefaultAsync(v => v.VoucherCode == code && v.IsActive);
+                .FirstOrDefaultAsync(v => v.VoucherCode == code.ToUpper().Trim() && v.IsActive);
 
             if (voucher == null || voucher.EndDate < DateTime.Now || voucher.StartDate > DateTime.Now)
                 return (false, null, 0);
@@ -646,11 +973,15 @@ namespace QuanLiSanCauLong.Controllers
             if (voucher.MinOrderAmount.HasValue && orderAmount < voucher.MinOrderAmount.Value)
                 return (false, null, 0);
 
-            var usageCount = await _context.VoucherUsages
-                .CountAsync(v => v.VoucherId == voucher.VoucherId && v.UserId == userId);
-
-            if (usageCount >= voucher.UsageLimitPerUser)
+            if (voucher.UsageLimit.HasValue && voucher.UsedCount >= voucher.UsageLimit.Value)
                 return (false, null, 0);
+
+            if (voucher.UsageLimitPerUser > 0)
+            {
+                var used = await _context.VoucherUsages
+                    .CountAsync(v => v.VoucherId == voucher.VoucherId && v.UserId == userId);
+                if (used >= voucher.UsageLimitPerUser) return (false, null, 0);
+            }
 
             decimal discount = voucher.DiscountType == "Percentage"
                 ? orderAmount * voucher.DiscountValue / 100
@@ -670,8 +1001,7 @@ namespace QuanLiSanCauLong.Controllers
                 UserId = userId,
                 BookingId = bookingId,
                 OrderId = orderId,
-                DiscountAmount = discountAmount,
-                UsedAt = DateTime.Now
+                DiscountAmount = discountAmount
             });
 
             var voucher = await _context.Vouchers.FindAsync(voucherId);
@@ -680,8 +1010,8 @@ namespace QuanLiSanCauLong.Controllers
             await _context.SaveChangesAsync();
         }
 
-        private async Task LogActivity(int userId, string action, string tableName, int? recordId,
-            string? oldValue, string newValue)
+        private async Task LogActivity(int userId, string action, string tableName,
+            int? recordId, string? oldValue, string newValue)
         {
             _context.ActivityLogs.Add(new ActivityLog
             {
@@ -692,7 +1022,7 @@ namespace QuanLiSanCauLong.Controllers
                 OldValue = oldValue ?? "",
                 NewValue = newValue ?? "",
                 IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "",
-                UserAgent = HttpContext.Request.Headers["User-Agent"].ToString() ?? "",
+                UserAgent = HttpContext.Request.Headers["User-Agent"].ToString(),
                 CreatedAt = DateTime.Now
             });
 
@@ -702,18 +1032,15 @@ namespace QuanLiSanCauLong.Controllers
         private int GetCurrentUserId()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (claim != null && int.TryParse(claim.Value, out int userId))
-                return userId;
+            if (claim != null && int.TryParse(claim.Value, out int userId)) return userId;
             return HttpContext.Session.GetInt32("UserId") ?? 0;
         }
 
-        private string GetCurrentUserRole()
-        {
-            return User.FindFirst(ClaimTypes.Role)?.Value ?? "Customer";
-        }
+        private string GetCurrentUserRole() =>
+            User.FindFirst(ClaimTypes.Role)?.Value ?? "Customer";
     }
 
-    // ── Request model dùng chung ──
+    // ── Request model ──
     public class SearchCourtRequest
     {
         public int FacilityId { get; set; }

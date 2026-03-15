@@ -1,0 +1,492 @@
+﻿@model QuanLiSanCauLong.ViewModels.ShiftScheduleViewModel
+@{
+    ViewData["Title"] = "Lịch Phân Ca";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    string[] dayNames = { "T2","T3","T4","T5","T6","T7","CN" };
+    var today = DateOnly.FromDateTime(DateTime.Today);
+    var mFirst = new DateOnly(Model.CurrentYear, Model.CurrentMonth, 1);
+    var mLast  = mFirst.AddMonths(1).AddDays(-1);
+    int dow = (int)mFirst.DayOfWeek;
+    int offset = dow == 0 ? 6 : dow - 1;
+    var gridStart = mFirst.AddDays(-offset);
+    int totalCells = (int)Math.Ceiling((offset + mLast.Day) / 7.0) * 7;
+}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root{--deep:#1a1209;--gold:#d4a017;--gold2:#f5c842;--warm:#f5ede0;--border:#e8ddd0;--muted:#8a7560;}
+    *{font-family:'Outfit',sans-serif;box-sizing:border-box;}
+    .pg-title{font-family:'Playfair Display',serif;font-size:1.75rem;font-weight:700;color:var(--deep);}
+    .pg-title em{font-style:italic;color:var(--gold);}
+    .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--deep)!important;border:none;padding:.62rem 1.25rem;font-size:.84rem;font-weight:700;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;text-decoration:none;transition:all .25s;}
+    .btn-gold:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(212,160,23,.35);}
+    .btn-ov{padding:.58rem 1.05rem;border:1.5px solid var(--border);border-radius:8px;background:#fff;color:var(--muted);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:.35rem;}
+    .btn-ov:hover{border-color:var(--deep);color:var(--deep)!important;}
+    .vtg{display:flex;background:var(--warm);border-radius:8px;padding:3px;border:1px solid var(--border);}
+    .vt{padding:.42rem .85rem;border-radius:6px;font-size:.78rem;font-weight:700;cursor:pointer;border:none;background:none;font-family:'Outfit',sans-serif;color:var(--muted);transition:all .2s;display:flex;align-items:center;gap:.35rem;}
+    .vt.on{background:#fff;color:var(--deep);box-shadow:0 1px 4px rgba(26,18,9,.1);}
+    .fac-tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem;}
+    .fac-tab{padding:.45rem .9rem;border-radius:6px;border:1.5px solid var(--border);background:#fff;font-size:.78rem;font-weight:600;cursor:pointer;color:var(--muted);text-decoration:none;transition:all .18s;}
+    .fac-tab:hover,.fac-tab.on{border-color:var(--gold);background:rgba(212,160,23,.07);color:#92660a;}
+    .wnav{display:flex;align-items:center;gap:.75rem;margin-bottom:.9rem;flex-wrap:wrap;}
+    .nav-btn{width:34px;height:34px;border-radius:7px;border:1.5px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:.82rem;text-decoration:none;transition:all .18s;}
+    .nav-btn:hover{border-color:var(--gold);color:var(--gold);}
+    .nav-now{padding:.42rem .85rem;border-radius:7px;border:1.5px solid var(--gold);background:rgba(212,160,23,.07);color:#92660a;font-size:.75rem;font-weight:700;text-decoration:none;}
+    .wrange{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--deep);}
+    .wrange em{font-style:italic;color:var(--gold);}
+    .legend{display:flex;gap:.85rem;flex-wrap:wrap;margin-bottom:.85rem;align-items:center;}
+    .leg-i{display:flex;align-items:center;gap:.35rem;font-size:.72rem;color:var(--muted);}
+    .leg-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
+    .sw{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:auto;}
+    .sg{min-width:860px;}
+    .sh{display:grid;grid-template-columns:190px repeat(7,1fr);border-bottom:2px solid var(--border);}
+    .sh-s{padding:.7rem .9rem;background:var(--warm);font-size:.63rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-right:1px solid var(--border);}
+    .sh-d{padding:.7rem .4rem;text-align:center;background:var(--warm);border-right:1px solid var(--border);}
+    .sh-d:last-child{border-right:none;}
+    .sh-dn{font-size:.63rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
+    .sh-num{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--deep);line-height:1.1;}
+    .sh-num.td{color:var(--gold);}
+    .td-pip{width:5px;height:5px;border-radius:50%;background:var(--gold);margin:.1rem auto 0;}
+    .sr{display:grid;grid-template-columns:190px repeat(7,1fr);border-bottom:1px solid var(--border);}
+    .sr:last-child{border-bottom:none;}
+    .sc{padding:.6rem .75rem;border-right:1px solid var(--border);display:flex;align-items:center;gap:.55rem;}
+    .sa{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.7rem;font-weight:700;color:var(--deep);flex-shrink:0;}
+    .sa-img{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid var(--border);}
+    .sn{font-size:.78rem;font-weight:700;color:var(--deep);line-height:1.2;}
+    .sf{font-size:.65rem;color:var(--muted);}
+    .dc{padding:.35rem;border-right:1px solid var(--border);min-height:64px;cursor:pointer;transition:background .12s;}
+    .dc:last-child{border-right:none;}
+    .dc.tc{background:rgba(212,160,23,.035);}
+    .dc:hover{background:rgba(212,160,23,.07);}
+    .shc{border-radius:4px;padding:.18rem .45rem;margin-bottom:.18rem;font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:.2rem;transition:filter .12s;}
+    .shc:hover{filter:brightness(.9);}
+    .shc-n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px;}
+    .shc-x{opacity:0;width:13px;height:13px;border-radius:50%;background:rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;font-size:.52rem;color:#fff;transition:opacity .12s;flex-shrink:0;cursor:pointer;}
+    .shc:hover .shc-x{opacity:1;}
+    .add-b{width:100%;height:20px;border-radius:3px;border:1.5px dashed var(--border);background:none;cursor:pointer;font-size:.6rem;color:var(--muted);transition:all .12s;display:flex;align-items:center;justify-content:center;gap:.2rem;margin-top:.15rem;}
+    .add-b:hover{border-color:var(--gold);color:var(--gold);}
+    .mv{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+    .mh{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:2px solid var(--border);}
+    .mhc{padding:.65rem;text-align:center;background:var(--warm);border-right:1px solid var(--border);font-size:.63rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+    .mhc:last-child{border-right:none;}
+    .mg{display:grid;grid-template-columns:repeat(7,1fr);}
+    .md{border-right:1px solid var(--border);border-bottom:1px solid var(--border);min-height:90px;padding:.4rem;cursor:pointer;transition:background .12s;position:relative;}
+    .md:nth-child(7n){border-right:none;}
+    .md:hover{background:rgba(212,160,23,.045);}
+    .md.td-day{background:rgba(212,160,23,.07);}
+    .md.om{background:#fafaf9;opacity:.5;pointer-events:none;}
+    .mdn{font-size:.82rem;font-weight:700;color:var(--deep);margin-bottom:.35rem;display:flex;align-items:center;justify-content:space-between;}
+    .mdn.td-n{color:var(--gold);}
+    .mc{font-size:.6rem;background:var(--gold);color:var(--deep);border-radius:10px;padding:.05rem .35rem;font-weight:700;}
+    .mdc{display:flex;flex-direction:column;gap:.15rem;}
+    .mdchip{border-radius:3px;padding:.1rem .35rem;font-size:.6rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .mdmore{font-size:.6rem;color:var(--muted);margin-top:.1rem;font-weight:600;}
+    .sdb{background:#fff;border:1px solid var(--border);border-radius:12px;padding:1rem;}
+    .sdb-t{font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.8rem;}
+    .sli{display:flex;align-items:center;gap:.55rem;padding:.5rem .65rem;border-radius:7px;border:1.5px solid var(--border);margin-bottom:.45rem;cursor:pointer;transition:all .18s;}
+    .sli:hover{border-color:var(--gold);}
+    .sl-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+    .sl-n{font-size:.8rem;font-weight:700;color:var(--deep);flex:1;}
+    .sl-t{font-size:.67rem;color:var(--muted);}
+    .act-btn{width:26px;height:26px;border-radius:5px;border:1.5px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem;color:var(--muted);transition:all .15s;padding:0;}
+    .act-btn:hover{border-color:var(--gold);color:var(--gold);}
+    .qs{display:flex;justify-content:space-between;padding:.3rem 0;font-size:.78rem;border-bottom:1px solid var(--border);}
+    .qs:last-child{border-bottom:none;}
+    .v-modal .modal-content{border-radius:14px;border:none;box-shadow:0 20px 60px rgba(26,18,9,.18);}
+    .v-mh{padding:1.1rem 1.4rem .85rem;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;}
+    .v-mlabel{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:.2rem;}
+    .v-mtitle{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--deep);}
+    .v-mb{padding:1rem 1.4rem;}
+    .v-mf{padding:.85rem 1.4rem 1rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.5rem;}
+    .v-mc{width:30px;height:30px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);}
+    .fg{margin-bottom:.8rem;}.fg:last-child{margin-bottom:0;}
+    .fg label{display:block;font-size:.67rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.32rem;}
+    .fi{width:100%;padding:.6rem .8rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Outfit',sans-serif;font-size:.84rem;color:var(--deep);background:#fff;outline:none;transition:border-color .2s;}
+    .fi:focus{border-color:var(--gold);}
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;}
+</style>
+
+@Html.AntiForgeryToken()
+
+<div style="display:grid;grid-template-columns:1fr 210px;gap:1.1rem;align-items:start;">
+    <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.65rem;">
+            <div>
+                <div style="font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:.2rem;">PHÂN CA</div>
+                <h1 class="pg-title">Lịch <em>Nhân Viên</em></h1>
+            </div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+                <div class="vtg">
+                    <button class="vt on" id="btnW" onclick="sv('week')"><i class="bi bi-table"></i> Tuần</button>
+                    <button class="vt" id="btnM" onclick="sv('month')"><i class="bi bi-calendar-month"></i> Tháng</button>
+                </div>
+                <a asp-controller="AdminStaff" asp-action="Index" class="btn-ov"><i class="bi bi-people"></i> Nhân viên</a>
+                <a asp-controller="AdminShift" asp-action="Report" class="btn-ov" style="border-color:#16a34a;color:#16a34a;"><i class="bi bi-bar-chart"></i> Báo cáo</a>
+            </div>
+        </div>
+
+        <div class="fac-tabs">
+            @foreach (var f in Model.Facilities)
+            {
+                <a href="?facilityId=@f.FacilityId&weekOffset=@Model.WeekOffset"
+                   class="fac-tab @(Model.FacilityId == f.FacilityId ? "on" : "")">
+                    <i class="bi bi-building me-1"></i>@f.FacilityName
+                </a>
+            }
+        </div>
+
+        <div class="wnav">
+            <a href="?facilityId=@Model.FacilityId&weekOffset=@(Model.WeekOffset-1)" class="nav-btn"><i class="bi bi-chevron-left"></i></a>
+            <a href="?facilityId=@Model.FacilityId&weekOffset=0" class="nav-now">Hôm nay</a>
+            <a href="?facilityId=@Model.FacilityId&weekOffset=@(Model.WeekOffset+1)" class="nav-btn"><i class="bi bi-chevron-right"></i></a>
+            <div class="wrange" id="rangeLabel"><em>@Model.WeekStart.ToString("dd/MM")</em> — <em>@Model.WeekEnd.ToString("dd/MM/yyyy")</em></div>
+        </div>
+
+        <div class="legend">
+            @foreach (var sh in Model.Shifts)
+            {
+                <div class="leg-i"><span class="leg-dot" style="background:@sh.Color;"></span><span>@sh.ShiftName</span></div>
+            }
+        </div>
+
+        @* WEEK VIEW *@
+        <div id="wv">
+            <div class="sw"><div class="sg">
+                <div class="sh">
+                    <div class="sh-s">Nhân viên</div>
+                    @for (int d = 0; d < 7; d++)
+                    {
+                        var dt = Model.WeekStart.AddDays(d);
+                        <div class="sh-d">
+                            <div class="sh-dn">@dayNames[d]</div>
+                            <div class="sh-num @(dt==today?"td":"")">@dt.Day</div>
+                            @if (dt == today) { <div class="td-pip"></div> }
+                        </div>
+                    }
+                </div>
+                @if (!Model.StaffList.Any())
+                {
+                    <div style="text-align:center;padding:2.5rem;color:var(--muted);">
+                        <i class="bi bi-people" style="font-size:1.6rem;display:block;margin-bottom:.5rem;opacity:.25;"></i>Không có nhân viên
+                    </div>
+                }
+                @foreach (var s in Model.StaffList)
+                {
+                    var ini = string.Join("", s.FullName.Split(' ').TakeLast(2).Select(x => x[0]));
+                    <div class="sr">
+                        <div class="sc">
+                            @if (!string.IsNullOrEmpty(s.AvatarUrl)) { <img src="@s.AvatarUrl" alt="@s.FullName" class="sa-img" /> }
+                            else { <div class="sa">@ini</div> }
+                            <div><div class="sn">@s.FullName</div><div class="sf">@(s.Facility?.FacilityName??"")</div></div>
+                        </div>
+                        @for (int d = 0; d < 7; d++)
+                        {
+                            var dt = Model.WeekStart.AddDays(d);
+                            var dayA = Model.GetAssignments(s.UserId, dt);
+                            <div class="dc @(dt==today?"tc":"")"
+                                 id="cell_@(s.UserId)_@dt.ToString("yyyyMMdd")"
+                                 onclick="openAssign(@s.UserId,'@dt.ToString("yyyy-MM-dd")','@Html.Raw(s.FullName.Replace("'","\\'"))')">
+                                @foreach (var a in dayA)
+                                {
+                                    <div class="shc" id="shc_@a.AssignmentId"
+                                         style="background:@a.Shift?.Color;color:@(IsDark(a.Shift?.Color)?"#fff":"#1a1209");"
+                                         onclick="event.stopPropagation()">
+                                        <span class="shc-n">@a.Shift?.ShiftName</span>
+                                        <span class="shc-x" onclick="rmAssign(@a.AssignmentId,event)"><i class="bi bi-x"></i></span>
+                                    </div>
+                                }
+                                <button class="add-b" onclick="event.stopPropagation();openAssign(@s.UserId,'@dt.ToString("yyyy-MM-dd")','@Html.Raw(s.FullName.Replace("'","\\'"))')">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
+                        }
+                    </div>
+                }
+            </div></div>
+        </div>
+
+        @* MONTH VIEW *@
+        <div id="mv" style="display:none;">
+            <div class="mv">
+                <div class="mh">@foreach(var dn in dayNames){<div class="mhc">@dn</div>}</div>
+                <div class="mg">
+                    @for (int c = 0; c < totalCells; c++)
+                    {
+                        var dt = gridStart.AddDays(c);
+                        var isOm = dt.Month != Model.CurrentMonth;
+                        var isTd = dt == today;
+                        var dayA = Model.Assignments.Where(a => a.WorkDate == dt).ToList();
+                        <div class="md @(isOm?"om":"") @(isTd?"td-day":"")"
+                             onclick="openDay('@dt.ToString("yyyy-MM-dd")','@dt.ToString("dd/MM/yyyy")')">
+                            <div class="mdn @(isTd?"td-n":"")">
+                                <span>@dt.Day</span>
+                                @if (dayA.Count > 0) { <span class="mc">@dayA.Count</span> }
+                            </div>
+                            <div class="mdc">
+                                @foreach (var a in dayA.Take(3))
+                                {
+                                    <div class="mdchip"
+                                         style="background:@a.Shift?.Color;color:@(IsDark(a.Shift?.Color)?"#fff":"#1a1209");"
+                                         title="@a.User?.FullName — @a.Shift?.ShiftName">
+                                        @a.User?.FullName?.Split(' ').Last()
+                                    </div>
+                                }
+                                @if (dayA.Count > 3) { <div class="mdmore">+@(dayA.Count-3) ca khác</div> }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Sidebar *@
+    <div>
+        <div class="sdb">
+            <div class="sdb-t"><i class="bi bi-clock me-1" style="color:var(--gold);"></i> Danh Sách Ca</div>
+            @foreach (var sh in Model.Shifts)
+            {
+                // ✅ FIX: Tách data-* attributes ra khỏi onclick để tránh lỗi CS1012/RZ1000
+                // khi ShiftName hoặc Description có dấu nháy đơn
+                <div class="sli" id="sli_@sh.ShiftId"
+                     data-id="@sh.ShiftId"
+                     data-name="@sh.ShiftName"
+                     data-start="@sh.StartTime.ToString("hh\\:mm")"
+                     data-end="@sh.EndTime.ToString("hh\\:mm")"
+                     data-color="@sh.Color"
+                     data-desc="@(sh.Description ?? "")">
+                    <span class="sl-dot" style="background:@sh.Color;"></span>
+                    <div style="flex:1;min-width:0;">
+                        <div class="sl-n">@sh.ShiftName</div>
+                        <div class="sl-t">@sh.TimeRange · @sh.HoursPerShift.ToString("0.0")h</div>
+                    </div>
+                    <button class="act-btn" onclick="editShiftFromEl(this.closest('.sli'))">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                </div>
+            }
+            <button class="btn-gold" style="width:100%;justify-content:center;margin-top:.4rem;font-size:.78rem;" onclick="newShift()">
+                <i class="bi bi-plus-circle"></i> Tạo ca mới
+            </button>
+        </div>
+        <div class="sdb" style="margin-top:.8rem;">
+            <div class="sdb-t"><i class="bi bi-bar-chart me-1" style="color:var(--gold);"></i> Tuần Này</div>
+            <div class="qs"><span style="color:var(--muted);">Tổng ca</span><strong>@Model.TotalAssignments</strong></div>
+            <div class="qs"><span style="color:var(--muted);">Nhân viên</span><strong>@Model.StaffList.Count</strong></div>
+            <div class="qs" style="color:#16a34a;"><span>Hoàn thành</span><strong>@Model.CheckedOutCount</strong></div>
+            <div class="qs" style="color:#c94b2a;"><span>Vắng mặt</span><strong>@Model.AbsentCount</strong></div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade v-modal" id="assignModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="v-mh">
+                <div><div class="v-mlabel"><i class="bi bi-calendar-plus"></i> PHÂN CA</div>
+                <div class="v-mtitle" id="amTitle">Phân ca</div></div>
+                <button class="v-mc" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="v-mb"><div class="fg"><label>Chọn ca làm việc</label><div id="sPicker"></div></div></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade v-modal" id="dayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="v-mh">
+                <div><div class="v-mlabel"><i class="bi bi-calendar-day"></i> CHI TIẾT NGÀY</div>
+                <div class="v-mtitle" id="dmTitle">—</div></div>
+                <button class="v-mc" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="v-mb" id="dmBody" style="max-height:380px;overflow-y:auto;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade v-modal" id="shiftModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="v-mh">
+                <div><div class="v-mlabel"><i class="bi bi-clock"></i> CA LÀM VIỆC</div>
+                <div class="v-mtitle" id="smTitle">Tạo Ca Mới</div></div>
+                <button class="v-mc" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="v-mb">
+                <input type="hidden" id="esId" value="0" />
+                <div class="fg"><label>Tên ca</label><input type="text" id="esName" class="fi" placeholder="VD: Ca Sáng" /></div>
+                <div class="g2">
+                    <div class="fg"><label>Giờ bắt đầu</label><input type="time" id="esStart" class="fi" value="06:00" /></div>
+                    <div class="fg"><label>Giờ kết thúc</label><input type="time" id="esEnd" class="fi" value="12:00" /></div>
+                </div>
+                <div class="fg">
+                    <label>Màu sắc</label>
+                    <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+                        <input type="color" id="esColor" value="#d4a017" style="width:42px;height:34px;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;" />
+                        @foreach (var c in new[]{"#d4a017","#4f46e5","#16a34a","#dc2626","#0891b2","#d97706","#9333ea","#374151"})
+                        {
+                            <span style="width:18px;height:18px;border-radius:50%;background:@c;cursor:pointer;border:2px solid transparent;"
+                                  onclick="document.getElementById('esColor').value='@c'"></span>
+                        }
+                    </div>
+                </div>
+                <div class="fg"><label>Ghi chú</label><input type="text" id="esDesc" class="fi" placeholder="Mô tả ca…" /></div>
+            </div>
+            <div class="v-mf">
+                <button class="btn-ov" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Hủy</button>
+                <button class="btn-gold" onclick="saveShift()"><i class="bi bi-check-circle"></i> Lưu Ca</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+var _tok = document.querySelector('[name=__RequestVerificationToken]').value;
+var _uid=0, _date='', _fid=@(Model.FacilityId ?? 0);
+
+var SHIFTS = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+    Model.Shifts.Select(s => new { id=s.ShiftId, name=s.ShiftName, tr=s.TimeRange, color=s.Color })));
+
+var ASSIGNS = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+    Model.Assignments.Select(a => new {
+        id=a.AssignmentId, uid=a.UserId,
+        date=a.WorkDate.ToString("yyyy-MM-dd"),
+        sn=a.Shift?.ShiftName, color=a.Shift?.Color,
+        staff=a.User?.FullName
+    })));
+
+function sv(v) {
+    document.getElementById('wv').style.display = v==='week' ? 'block' : 'none';
+    document.getElementById('mv').style.display  = v==='month' ? 'block' : 'none';
+    document.getElementById('btnW').classList.toggle('on', v==='week');
+    document.getElementById('btnM').classList.toggle('on', v==='month');
+}
+
+function openAssign(uid, date, name) {
+    _uid=uid; _date=date;
+    document.getElementById('amTitle').textContent = 'Phân ca — ' + name;
+    var p = document.getElementById('sPicker'); p.innerHTML='';
+    SHIFTS.forEach(function(sh) {
+        var b = document.createElement('button'); b.type='button';
+        b.style.cssText='display:flex;align-items:center;gap:.6rem;padding:.6rem .85rem;border-radius:8px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:Outfit,sans-serif;width:100%;margin-bottom:.4rem;';
+        b.innerHTML='<span style="width:11px;height:11px;border-radius:50%;background:'+sh.color+';flex-shrink:0;"></span>'
+            +'<span style="font-weight:700;font-size:.84rem;color:#1a1209;flex:1;">'+sh.name+'</span>'
+            +'<span style="font-size:.72rem;color:#8a7560;">'+sh.tr+'</span>';
+        b.onmouseover=function(){this.style.borderColor=sh.color;};
+        b.onmouseout=function(){this.style.borderColor='var(--border)';};
+        b.onclick=function(){doAssign(sh.id);};
+        p.appendChild(b);
+    });
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('assignModal')).show();
+}
+
+function doAssign(sid) {
+    var fd=new FormData();
+    fd.append('userId',_uid); fd.append('shiftId',sid);
+    fd.append('facilityId',_fid); fd.append('workDate',_date);
+    fd.append('__RequestVerificationToken',_tok);
+    fetch('/AdminShift/Assign',{method:'POST',body:fd}).then(r=>r.json()).then(function(d){
+        if (d.success) {
+            bootstrap.Modal.getInstance(document.getElementById('assignModal')).hide();
+            var cellId='cell_'+_uid+'_'+_date.replace(/-/g,'');
+            var cell=document.getElementById(cellId);
+            if (cell) {
+                var chip=document.createElement('div');
+                chip.className='shc'; chip.id='shc_'+d.assignmentId;
+                chip.style.background=d.color; chip.style.color=isDark(d.color)?'#fff':'#1a1209';
+                chip.onclick=function(e){e.stopPropagation();};
+                chip.innerHTML='<span class="shc-n">'+d.shiftName+'</span>'
+                    +'<span class="shc-x" onclick="rmAssign('+d.assignmentId+',event)"><i class="bi bi-x"></i></span>';
+                var ab=cell.querySelector('.add-b'); if(ab) cell.insertBefore(chip,ab); else cell.appendChild(chip);
+            }
+            Swal.fire({icon:'success',title:d.message,timer:1200,showConfirmButton:false,toast:true,position:'top-end'});
+        } else Swal.fire({icon:'warning',title:d.message,confirmButtonColor:'#d4a017'});
+    });
+}
+
+function rmAssign(id, ev) {
+    if(ev) ev.stopPropagation();
+    Swal.fire({title:'Xóa ca này?',icon:'question',showCancelButton:true,
+        confirmButtonColor:'#c94b2a',cancelButtonColor:'#8a7560',confirmButtonText:'Xóa',cancelButtonText:'Hủy',reverseButtons:true
+    }).then(function(r){
+        if(!r.isConfirmed) return;
+        var fd=new FormData(); fd.append('assignmentId',id); fd.append('__RequestVerificationToken',_tok);
+        fetch('/AdminShift/RemoveAssignment',{method:'POST',body:fd}).then(r=>r.json()).then(function(d){
+            if(d.success){var el=document.getElementById('shc_'+id);if(el)el.remove();
+                Swal.fire({icon:'success',title:d.message,timer:1200,showConfirmButton:false,toast:true,position:'top-end'});}
+            else Swal.fire('Lỗi!',d.message,'error');
+        });
+    });
+}
+
+function openDay(date,label) {
+    document.getElementById('dmTitle').textContent=label;
+    var da=ASSIGNS.filter(function(a){return a.date===date;});
+    var body=document.getElementById('dmBody');
+    if(!da.length){body.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--muted);font-size:.82rem;"><i class="bi bi-calendar-x" style="font-size:1.5rem;display:block;margin-bottom:.5rem;opacity:.3;"></i>Không có ca</div>';}
+    else{body.innerHTML=da.map(function(a){var dk=isDark(a.color);
+        return '<div style="display:flex;align-items:center;gap:.75rem;padding:.65rem;border-radius:8px;border:1.5px solid var(--border);margin-bottom:.4rem;">'
+            +'<span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .55rem;border-radius:5px;font-size:.72rem;font-weight:700;background:'+a.color+';color:'+(dk?'#fff':'#1a1209')+';">'+a.sn+'</span>'
+            +'<span style="font-size:.84rem;font-weight:700;color:var(--deep);flex:1;">'+a.staff+'</span>'
+            +'</div>';}).join('');}
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('dayModal')).show();
+}
+
+function newShift(){
+    document.getElementById('esId').value='0';
+    document.getElementById('smTitle').textContent='Tạo Ca Mới';
+    ['esName','esDesc'].forEach(function(id){document.getElementById(id).value='';});
+    document.getElementById('esStart').value='06:00';
+    document.getElementById('esEnd').value='12:00';
+    document.getElementById('esColor').value='#d4a017';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('shiftModal')).show();
+}
+
+// ✅ FIX: Đọc dữ liệu từ data-* thay vì inline string trong onclick
+function editShiftFromEl(el) {
+    document.getElementById('esId').value    = el.dataset.id;
+    document.getElementById('smTitle').textContent = 'Sửa Ca';
+    document.getElementById('esName').value  = el.dataset.name;
+    document.getElementById('esStart').value = el.dataset.start;
+    document.getElementById('esEnd').value   = el.dataset.end;
+    document.getElementById('esColor').value = el.dataset.color;
+    document.getElementById('esDesc').value  = el.dataset.desc || '';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('shiftModal')).show();
+}
+
+function saveShift(){
+    var id=document.getElementById('esId').value;
+    var fd=new FormData();
+    if(id!=='0') fd.append('shiftId',id);
+    fd.append('shiftName',document.getElementById('esName').value.trim());
+    fd.append('startTime',document.getElementById('esStart').value);
+    fd.append('endTime',document.getElementById('esEnd').value);
+    fd.append('color',document.getElementById('esColor').value);
+    fd.append('description',document.getElementById('esDesc').value.trim());
+    fd.append('__RequestVerificationToken',_tok);
+    var url=id==='0'?'/AdminShift/CreateShift':'/AdminShift/UpdateShift';
+    fetch(url,{method:'POST',body:fd}).then(r=>r.json()).then(function(d){
+        if(d.success){bootstrap.Modal.getInstance(document.getElementById('shiftModal')).hide();
+            Swal.fire({icon:'success',title:d.message,timer:1500,showConfirmButton:false,toast:true,position:'top-end'})
+            .then(function(){location.reload();});}
+        else Swal.fire('Lỗi!',d.message,'error');
+    });
+}
+function isDark(hex){
+    if(!hex) return false; hex=hex.replace('#','');
+    return (parseInt(hex.substr(0,2),16)*299+parseInt(hex.substr(2,2),16)*587+parseInt(hex.substr(4,2),16)*114)/1000<128;
+}
+</script>
+}
+
+@functions {
+    bool IsDark(string? hex) {
+        if (string.IsNullOrEmpty(hex)) return false;
+        hex = hex.TrimStart('#');
+        if (hex.Length < 6) return false;
+        return (Convert.ToInt32(hex[..2],16)*299 + Convert.ToInt32(hex[2..4],16)*587 + Convert.ToInt32(hex[4..6],16)*114)/1000 < 128;
+    }
+}

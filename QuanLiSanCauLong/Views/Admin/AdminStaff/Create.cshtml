@@ -1,0 +1,555 @@
+﻿@model QuanLiSanCauLong.ViewModels.StaffCreateViewModel
+@{
+    ViewData["Title"] = "Thêm Nhân Viên";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+    }
+
+    * {
+        font-family: 'Outfit',sans-serif;
+        box-sizing: border-box;
+    }
+
+    .pg-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+        .pg-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    .btn-gold {
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep) !important;
+        border: none;
+        padding: .72rem 1.5rem;
+        font-size: .86rem;
+        font-weight: 700;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        text-decoration: none;
+        transition: all .25s;
+    }
+
+        .btn-gold:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(212,160,23,.35);
+        }
+
+    .btn-ov {
+        padding: .65rem 1.25rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--muted);
+        font-size: .84rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+        .btn-ov:hover {
+            border-color: var(--deep);
+            color: var(--deep) !important;
+        }
+
+    .btn-back {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: 1.5px solid var(--border);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        text-decoration: none;
+        transition: all .2s;
+        flex-shrink: 0;
+    }
+
+        .btn-back:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+    .crumb {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .78rem;
+        color: var(--muted);
+        margin-bottom: 1.5rem;
+    }
+
+        .crumb a {
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+            .crumb a:hover {
+                color: var(--gold);
+            }
+
+    .pg-head {
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 210px 1fr;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    .card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    .card-h {
+        padding: .8rem 1.25rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--warm);
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+        .card-h i {
+            color: var(--gold);
+            font-size: .88rem;
+        }
+
+    .card-ht {
+        font-size: .65rem;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: var(--muted);
+    }
+
+    .card-b {
+        padding: 1.25rem;
+    }
+
+    .fg {
+        margin-bottom: 1rem;
+    }
+
+        .fg:last-child {
+            margin-bottom: 0;
+        }
+
+        .fg label {
+            display: block;
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: .4rem;
+        }
+
+    .req {
+        color: #c94b2a;
+        margin-left: .2rem;
+    }
+
+    .fi {
+        width: 100%;
+        padding: .68rem .9rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .88rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
+        transition: border-color .2s;
+    }
+
+        .fi:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(212,160,23,.08);
+        }
+
+    .hint {
+        font-size: .72rem;
+        margin-top: .3rem;
+        color: var(--muted);
+    }
+
+        .hint.err {
+            color: #c94b2a;
+        }
+
+    .g2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .85rem;
+    }
+
+    .pwd-bar {
+        height: 4px;
+        border-radius: 2px;
+        background: var(--border);
+        margin-top: .4rem;
+        transition: all .3s;
+    }
+
+        .pwd-bar.w {
+            background: #c94b2a;
+            width: 33%;
+        }
+
+        .pwd-bar.m {
+            background: #d97706;
+            width: 66%;
+        }
+
+        .pwd-bar.s {
+            background: #16a34a;
+            width: 100%;
+        }
+
+    .footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.25rem;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        margin-top: 1rem;
+    }
+
+    .sys-err {
+        padding: .85rem 1.1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-size: .84rem;
+        background: rgba(201,75,42,.07);
+        border: 1px solid rgba(201,75,42,.2);
+        color: #c94b2a;
+    }
+    /* avatar sidebar */
+    .av-side {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.25rem;
+        text-align: center;
+    }
+
+    .av-side-t {
+        font-size: .65rem;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 1rem;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+        .av-side-t i {
+            color: var(--gold);
+        }
+
+    .av-hint {
+        font-size: .72rem;
+        color: var(--muted);
+        margin-top: .65rem;
+        line-height: 1.6;
+    }
+    /* modal support (AvatarCropper partial) */
+    .v-modal .modal-content {
+        border-radius: 14px;
+        overflow: hidden;
+        border: none;
+        box-shadow: 0 20px 60px rgba(26,18,9,.18);
+        display: flex;
+        flex-direction: column;
+        max-height: 92vh;
+    }
+
+    .v-mh {
+        padding: 1.4rem 1.75rem 1rem;
+        border-bottom: 1px solid var(--border);
+        background: #fff;
+        flex-shrink: 0;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+    }
+
+    .v-mlabel {
+        font-size: .64rem;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: var(--gold);
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+        margin-bottom: .3rem;
+    }
+
+    .v-mtitle {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+        .v-mtitle em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    .v-mclose {
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        transition: all .2s;
+        flex-shrink: 0;
+    }
+
+        .v-mclose:hover {
+            border-color: var(--deep);
+            color: var(--deep);
+        }
+
+    .v-mb {
+        padding: 1.25rem 1.75rem 1rem;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .v-mf {
+        padding: 1rem 1.75rem 1.25rem;
+        border-top: 1px solid var(--border);
+        background: #fff;
+        flex-shrink: 0;
+        display: flex;
+        justify-content: flex-end;
+        gap: .65rem;
+    }
+
+    .btn-ov2 {
+        padding: .65rem 1.25rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--muted);
+        font-size: .84rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+    }
+</style>
+
+@Html.AntiForgeryToken()
+
+<div>
+    <div class="crumb">
+        <a asp-action="Index"><i class="bi bi-people"></i> Nhân viên</a>
+        <i class="bi bi-chevron-right" style="font-size:.65rem;"></i>
+        <span>Thêm mới</span>
+    </div>
+
+    <div class="pg-head">
+        <a asp-action="Index" class="btn-back"><i class="bi bi-arrow-left" style="font-size:.85rem;"></i></a>
+        <div>
+            <div style="font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:.2rem;">NHÂN VIÊN</div>
+            <h1 class="pg-title">Thêm <em>Nhân Viên Mới</em></h1>
+        </div>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+    {
+        <div class="sys-err">
+            <i class="bi bi-exclamation-triangle-fill" style="flex-shrink:0;"></i>
+            <div asp-validation-summary="ModelOnly"></div>
+        </div>
+    }
+
+    <form asp-action="Create" method="post" id="cForm">
+        <div class="layout">
+            @* Sidebar avatar *@
+            <div>
+                <div class="av-side">
+                    <div class="av-side-t"><i class="bi bi-person-circle"></i> Ảnh Đại Diện</div>
+                    <div style="display:flex;justify-content:center;">
+                        <div class="av-widget lg" id="avWidget_0">
+                            <div class="av-display" onclick="openAvatarCropper(0)" title="Thêm ảnh">
+                                <div id="avInitials_0" class="av-initials">?</div>
+                                <img id="avImg_0" src="" alt="" class="av-photo" style="display:none;" />
+                                <div class="av-overlay"><i class="bi bi-camera-fill"></i><span>Chọn ảnh</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="av-hint"><i class="bi bi-info-circle me-1"></i>Ảnh lưu sau khi tạo. Có thể bỏ qua.</div>
+                </div>
+                <div class="card" style="margin-top:.85rem;">
+                    <div class="card-h"><i class="bi bi-info-circle"></i><span class="card-ht">Lưu ý</span></div>
+                    <div class="card-b" style="font-size:.78rem;color:var(--muted);line-height:1.7;">
+                        <div><i class="bi bi-shield-check me-1" style="color:var(--gold);"></i>Role: <strong style="color:var(--deep);">Staff</strong></div>
+                        <div><i class="bi bi-building me-1" style="color:var(--gold);"></i>Phải chọn cơ sở</div>
+                        <div><i class="bi bi-key me-1" style="color:var(--gold);"></i>Mật khẩu ≥ 6 ký tự</div>
+                    </div>
+                </div>
+            </div>
+
+            @* Main form *@
+            <div>
+                <div class="card">
+                    <div class="card-h"><i class="bi bi-person"></i><span class="card-ht">Thông Tin Cá Nhân</span></div>
+                    <div class="card-b">
+                        <div class="fg">
+                            <label asp-for="FullName">Họ và Tên <span class="req">*</span></label>
+                            <input asp-for="FullName" class="fi" placeholder="Nguyễn Văn A"
+                                   oninput="updateIni(this.value)" />
+                            <span asp-validation-for="FullName" class="hint err"></span>
+                        </div>
+                        <div class="g2">
+                            <div class="fg">
+                                <label asp-for="Email">Email <span class="req">*</span></label>
+                                <input asp-for="Email" class="fi" type="email" placeholder="nhanvien@email.com" />
+                                <span asp-validation-for="Email" class="hint err"></span>
+                            </div>
+                            <div class="fg">
+                                <label asp-for="Phone">Số điện thoại</label>
+                                <input asp-for="Phone" class="fi" placeholder="0912 345 678" />
+                                <span asp-validation-for="Phone" class="hint err"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-h"><i class="bi bi-diagram-3"></i><span class="card-ht">Phân Công & Tài Khoản</span></div>
+                    <div class="card-b">
+                        <div class="g2">
+                            <div class="fg">
+                                <label asp-for="FacilityId">Cơ sở <span class="req">*</span></label>
+                                <select asp-for="FacilityId" class="fi" required
+                                        asp-items="@(new SelectList(Model.Facilities, "FacilityId", "FacilityName"))">
+                                    <option value="">— Chọn cơ sở —</option>
+                                </select>
+                                <span asp-validation-for="FacilityId" class="hint err"></span>
+                            </div>
+                            <div class="fg">
+                                <label asp-for="Status">Trạng thái</label>
+                                <select asp-for="Status" class="fi">
+                                    <option value="Active">Hoạt động</option>
+                                    <option value="Locked">Khóa tạm</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="g2">
+                            <div class="fg">
+                                <label asp-for="Password">Mật khẩu <span class="req">*</span></label>
+                                <input asp-for="Password" class="fi" type="password" placeholder="Tối thiểu 6 ký tự"
+                                       oninput="checkPwd(this.value)" autocomplete="new-password" />
+                                <div class="pwd-bar" id="pwdBar"></div>
+                                <div class="hint" id="pwdHint">Chưa nhập mật khẩu</div>
+                                <span asp-validation-for="Password" class="hint err"></span>
+                            </div>
+                            <div class="fg">
+                                <label asp-for="ConfirmPassword">Xác nhận mật khẩu <span class="req">*</span></label>
+                                <input asp-for="ConfirmPassword" class="fi" type="password" placeholder="Nhập lại"
+                                       oninput="checkConfirm()" autocomplete="new-password" />
+                                <div class="hint err" id="cfmHint" style="display:none;">
+                                    <i class="bi bi-x-circle me-1"></i>Không khớp
+                                </div>
+                                <span asp-validation-for="ConfirmPassword" class="hint err"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <a asp-action="Index" class="btn-ov"><i class="bi bi-x-circle"></i> Hủy</a>
+                    <button type="submit" class="btn-gold"><i class="bi bi-person-plus"></i> Tạo Nhân Viên</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@await Html.PartialAsync("_AvatarCropper", new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(ViewData)
+{
+["UserId"] = 0, ["AvatarUrl"] = null, ["FullName"] = "Nhân viên mới"
+})
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/avatar-cropper.js"></script>
+    <script>
+        function updateIni(name) {
+            var p = name.trim().split(/\s+/).filter(Boolean);
+            var ini = p.slice(-2).map(function(w){ return w[0].toUpperCase(); }).join('');
+            var el = document.getElementById('avInitials_0');
+            if (el) el.textContent = ini || '?';
+        }
+        function checkPwd(v) {
+            var bar = document.getElementById('pwdBar');
+            var hint = document.getElementById('pwdHint');
+            if (!v) { bar.className='pwd-bar'; hint.textContent='Chưa nhập'; hint.style.color='var(--muted)'; return; }
+            if (v.length < 6) { bar.className='pwd-bar w'; hint.textContent='Quá ngắn'; hint.style.color='#c94b2a'; }
+            else if (v.length < 10 || !/[0-9]/.test(v) || !/[A-Za-z]/.test(v)) { bar.className='pwd-bar m'; hint.textContent='Trung bình'; hint.style.color='#d97706'; }
+            else { bar.className='pwd-bar s'; hint.textContent='Mạnh ✓'; hint.style.color='#16a34a'; }
+            checkConfirm();
+        }
+        function checkConfirm() {
+            var pw = document.getElementById('Password').value;
+            var cpw = document.getElementById('ConfirmPassword').value;
+            document.getElementById('cfmHint').style.display = (cpw && pw !== cpw) ? 'block' : 'none';
+        }
+        document.getElementById('cForm').addEventListener('submit', function(e) {
+            var pw = document.getElementById('Password').value;
+            var cpw = document.getElementById('ConfirmPassword').value;
+            if (pw !== cpw) { document.getElementById('cfmHint').style.display='block'; e.preventDefault(); }
+        });
+    </script>
+}

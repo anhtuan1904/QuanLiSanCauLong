@@ -1,0 +1,330 @@
+﻿@* ===== ShiftReport.cshtml ===== *@
+@model IEnumerable<QuanLiSanCauLong.Models.Booking>
+@{
+    Layout = "~/Views/Shared/_LayoutStaff.cshtml";
+    ViewData["Title"] = "Báo cáo ca hôm nay";
+    var today = DateTime.Today.ToString("dd/MM/yyyy");
+}
+
+<style>
+    :root {
+        --D: #1a1209;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --G3: rgba(212,160,23,.1);
+        --G4: rgba(212,160,23,.22);
+        --C: #fdf8f0;
+        --W: #f5ede0;
+        --S: #e8ddd0;
+        --M: #8a7560;
+        --GN: #10b981;
+        --BL: #3b82f6;
+        --RD: #ef4444;
+        --OR: #f97316;
+        --PU: #8b5cf6;
+        --r: 14px;
+        --r2: 10px;
+    }
+
+    .sr-kpi {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: .8rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .srk {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        padding: 1rem 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+        transition: transform .18s,box-shadow .18s;
+    }
+
+        .srk:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26,18,9,.1);
+        }
+
+    .srk-ico {
+        width: 40px;
+        height: 40px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .srk-val {
+        font-family: 'Syne',sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .srk-lbl {
+        font-size: .68rem;
+        color: var(--M);
+        margin-top: .15rem;
+    }
+    @@media(max - width:640px) {
+        .sr-kpi {
+            grid-template-columns: repeat(2,1fr);
+        }
+    }
+
+    .srt {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        overflow: hidden;
+    }
+
+    .srt-head {
+        padding: .9rem 1.3rem;
+        border-bottom: 1px solid var(--S);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .srt-title {
+        font-family: 'Syne',sans-serif;
+        font-size: .93rem;
+        font-weight: 800;
+        color: var(--D);
+    }
+
+    .sr-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .sr-table th {
+            background: var(--W);
+            padding: .62rem 1rem;
+            font-size: .61rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--M);
+            border-bottom: 1px solid var(--S);
+            text-align: left;
+        }
+
+        .sr-table td {
+            padding: .78rem 1rem;
+            border-bottom: 1px solid var(--S);
+            font-size: .8rem;
+            vertical-align: middle;
+            color: var(--D);
+        }
+
+        .sr-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .sr-table tr:hover td {
+            background: var(--C);
+        }
+
+    .bm-code {
+        font-family: 'Syne',sans-serif;
+        font-size: .8rem;
+        font-weight: 800;
+        color: var(--G);
+    }
+
+    .ct-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        font-family: 'Syne',sans-serif;
+        font-size: .82rem;
+        font-weight: 800;
+        background: var(--G3);
+        color: var(--G);
+    }
+
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .24rem;
+        font-size: .58rem;
+        font-weight: 700;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        padding: .2rem .55rem;
+        border-radius: 4px;
+    }
+
+        .pill::before {
+            content: '●';
+            font-size: .47em;
+        }
+
+    .p-ok {
+        background: rgba(16,185,129,.1);
+        color: var(--GN);
+    }
+
+    .p-pe {
+        background: rgba(212,160,23,.13);
+        color: #92660a;
+    }
+
+    .p-pr {
+        background: rgba(59,130,246,.1);
+        color: var(--BL);
+    }
+
+    .p-pl {
+        background: rgba(139,92,246,.1);
+        color: var(--PU);
+    }
+
+    .p-ca {
+        background: rgba(239,68,68,.1);
+        color: var(--RD);
+    }
+
+    .p-paid {
+        background: rgba(16,185,129,.1);
+        color: var(--GN);
+    }
+
+    .p-unp {
+        background: rgba(239,68,68,.1);
+        color: var(--RD);
+    }
+
+    .sr-empty {
+        text-align: center;
+        padding: 3rem;
+        color: var(--M);
+    }
+
+    .srt-foot {
+        padding: .85rem 1.3rem;
+        background: var(--W);
+        border-top: 1px solid var(--S);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .srt-foot-lbl {
+        font-size: .78rem;
+        font-weight: 600;
+        color: var(--M);
+    }
+
+    .srt-foot-val {
+        font-family: 'Syne',sans-serif;
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--G);
+    }
+</style>
+
+<!-- KPI -->
+<div class="sr-kpi">
+    <div class="srk">
+        <div class="srk-ico" style="background:var(--G3);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--G)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+        </div>
+        <div><div class="srk-val" style="color:var(--G)">@(ViewBag.TotalBookings ?? 0)</div><div class="srk-lbl">Tổng đơn</div></div>
+    </div>
+    <div class="srk">
+        <div class="srk-ico" style="background:rgba(16,185,129,.1);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--GN)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+        </div>
+        <div><div class="srk-val" style="color:var(--GN)">@(ViewBag.CompletedCount ?? 0)</div><div class="srk-lbl">Hoàn thành</div></div>
+    </div>
+    <div class="srk">
+        <div class="srk-ico" style="background:rgba(239,68,68,.1);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--RD)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+        </div>
+        <div><div class="srk-val" style="color:var(--RD)">@(ViewBag.CancelledCount ?? 0)</div><div class="srk-lbl">Đã hủy</div></div>
+    </div>
+    <div class="srk">
+        <div class="srk-ico" style="background:var(--G3);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--G)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+        </div>
+        <div>
+            <div class="srk-val" style="color:var(--G)">@(ViewBag.Revenue != null ? ((decimal)ViewBag.Revenue).ToString("N0") : "0")đ</div>
+            <div class="srk-lbl">Doanh thu ca</div>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="srt">
+    <div class="srt-head">
+        <div class="srt-title">Chi Tiết Đơn — @today</div>
+        <span style="font-size:.72rem;color:var(--M)">@Model.Count() đơn</span>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="sr-table">
+            <thead>
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Sân</th>
+                    <th>Khách hàng</th>
+                    <th>Khung giờ</th>
+                    <th style="text-align:right">Tiền sân</th>
+                    <th>Thanh toán</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var b in Model)
+                {
+                    var (sc, st) = b.Status switch
+                    {
+                                "Confirmed" => ("p-pr", "Xác nhận"),
+                                "Playing" => ("p-pl", "Đang chơi"),
+                                "Completed" => ("p-ok", "Hoàn thành"),
+                                "Cancelled" => ("p-ca", "Đã hủy"),
+                        _ => ("p-pe", "Chờ")
+                    };
+                    <tr>
+                        <td><span class="bm-code">@b.BookingCode</span></td>
+                        <td><span class="ct-badge">@b.Court?.CourtNumber</span></td>
+                        <td style="font-weight:600;">@(b.User?.FullName ?? "Khách")</td>
+                        <td style="font-weight:600;">@b.StartTime.ToString(@"HH\:mm")–@b.EndTime.ToString(@"HH\:mm")</td>
+                        <td style="text-align:right;font-family:'Syne',sans-serif;font-weight:700;">@b.TotalPrice.ToString("N0")đ</td>
+                        <td><span class="pill @(b.PaymentStatus == "Paid" ? "p-paid" : "p-unp")">@(b.PaymentStatus == "Paid" ? "Đã TT" : "Chưa TT")</span></td>
+                        <td><span class="pill @sc">@st</span></td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7">
+                            <div class="sr-empty">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.22;margin-bottom:.5rem;"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+                                <div>Chưa có đơn nào hôm nay</div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Any())
+    {
+        <div class="srt-foot">
+            <span class="srt-foot-lbl">Tổng doanh thu ca</span>
+            <span class="srt-foot-val">@Model.Sum(b => b.TotalPrice).ToString("N0")đ</span>
+        </div>
+    }
+</div>

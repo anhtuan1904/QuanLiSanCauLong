@@ -486,17 +486,17 @@
             @{
                 var sc = Model.Status switch
                 {
-                                            "Confirmed" => "confirmed",
-                                            "Completed" => "completed",
-                                            "Cancelled" => "cancelled",
+                                                    "Confirmed" => "confirmed",
+                                                    "Completed" => "completed",
+                                                    "Cancelled" => "cancelled",
                     _ => "pending"
                 };
                 var sl = Model.Status switch
                 {
-                                            "Confirmed" => "Đã xác nhận",
-                                            "Completed" => "Hoàn thành",
-                                            "Cancelled" => "Đã huỷ",
-                                            "Pending" => "Chờ xác nhận",
+                                                    "Confirmed" => "Đã xác nhận",
+                                                    "Completed" => "Hoàn thành",
+                                                    "Cancelled" => "Đã huỷ",
+                                                    "Pending" => "Chờ xác nhận",
                     _ => Model.Status
                 };
             }
@@ -559,9 +559,32 @@
                             <div class="td-sub">@Model.FacilityName · @Model.StartTime.ToString(@"hh\:mm")–@Model.EndTime.ToString(@"hh\:mm")</div>
                         </td>
                         <td style="text-align:center">1</td>
-                        <td style="text-align:right">@Model.TotalPrice.ToString("N0")đ</td>
-                        <td style="color:var(--GN)">@Model.TotalPrice.ToString("N0")đ</td>
+                        <td style="text-align:right">@Model.CourtPrice.ToString("N0")đ</td>
+                        <td style="color:var(--GN)">@Model.CourtPrice.ToString("N0")đ</td>
                     </tr>
+                    @if (Model.ServiceFee > 0)
+                    {
+                        <tr>
+                            <td>
+                                <div class="td-name">Phí dịch vụ</div>
+                                <div class="td-sub">Phụ phí cơ sở</div>
+                            </td>
+                            <td style="text-align:center">1</td>
+                            <td style="text-align:right">@Model.ServiceFee.ToString("N0")đ</td>
+                            <td>@Model.ServiceFee.ToString("N0")đ</td>
+                        </tr>
+                    }
+                    @if (Model.DiscountAmount > 0)
+                    {
+                        <tr>
+                            <td>
+                                <div class="td-name" style="color:#dc2626;">Giảm giá voucher @(string.IsNullOrEmpty(Model.VoucherCode) ? "" : $"({Model.VoucherCode})")</div>
+                            </td>
+                            <td></td>
+                            <td></td>
+                            <td style="color:#dc2626;">−@Model.DiscountAmount.ToString("N0")đ</td>
+                        </tr>
+                    }
 
                     <!-- Products -->
                     @if (Model.RelatedOrders != null)
@@ -587,7 +610,15 @@
 
             <!-- Summary -->
             <div class="sum-rows">
-                <div class="sum-row"><span class="lbl">Tiền sân</span><span class="val gn">@Model.TotalPrice.ToString("N0")đ</span></div>
+                <div class="sum-row"><span class="lbl">Tiền sân (@Model.Duration phút)</span><span class="val gn">@Model.CourtPrice.ToString("N0")đ</span></div>
+                @if (Model.ServiceFee > 0)
+                {
+                    <div class="sum-row"><span class="lbl">Phí dịch vụ</span><span class="val">@Model.ServiceFee.ToString("N0")đ</span></div>
+                }
+                @if (Model.DiscountAmount > 0)
+                {
+                    <div class="sum-row"><span class="lbl">Giảm giá @(!string.IsNullOrEmpty(Model.VoucherCode) ? $"({Model.VoucherCode})" : "")</span><span class="val rd">−@Model.DiscountAmount.ToString("N0")đ</span></div>
+                }
                 @if (Model.RelatedOrders != null && Model.RelatedOrders.Any())
                 {
                     <div class="sum-row">

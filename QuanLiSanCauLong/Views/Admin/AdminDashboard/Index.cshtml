@@ -1410,7 +1410,7 @@
             </div>
             <div class="hero-divider"></div>
             <div class="hero-kpi">
-                <div class="hero-kpi-val">87%</div>
+                <div class="hero-kpi-val">@Model.OccupancyRate.ToString("0")%</div>
                 <div class="hero-kpi-lbl">Lấp đầy sân</div>
             </div>
         </div>
@@ -1427,11 +1427,20 @@
 
     <!-- ══════════ AI ALERT ══════════ -->
     <div class="ai-bar">
-        <span class="ai-bar-tag">🤖 AI</span>
+        <span class="ai-bar-tag">📊 Tổng quan</span>
         <div class="ai-bar-msg">
-            <strong>Dự báo thông minh:</strong> Khung 18h–20h tối nay dự kiến tăng <strong>+34%</strong> so với trung bình tuần —
-            đề xuất mở thêm 2 sân dự phòng tại cơ sở Tam Phước. Nhiệt độ ngoài <strong>32°C</strong>, ưu tiên sân Indoor.
-            5 voucher sắp hết hạn hôm nay — cần gửi nhắc nhở ngay.
+            <strong>Hôm nay:</strong>
+            @Model.TotalBookings đơn đặt sân ·
+            Doanh thu <strong>₫@Model.TotalRevenue.ToString("N0")</strong> ·
+            @Model.CourtsOccupied/@(Model.LiveCourtStatuses?.Count ?? 0) sân đang có khách ·
+            @if (Model.LowStockCount > 0)
+            {
+                <span style="color:var(--RD)"><strong>⚠ @Model.LowStockCount sản phẩm tồn kho thấp</strong> — cần bổ sung.</span>
+            }
+            @if (Model.VouchersUsed > 0)
+            {
+                <span>· @Model.VouchersUsed voucher đã dùng (tiết kiệm ₫@Model.VoucherDiscount.ToString("N0") cho khách).</span>
+            }
         </div>
         <a class="ai-bar-link" asp-controller="AdminDashboard" asp-action="Analytics">Xem chi tiết →</a>
     </div>
@@ -1453,50 +1462,65 @@
             <div class="kspk-wrap"><canvas id="sp2"></canvas></div>
         </div>
         <div class="kc cbl">
-            <div class="kc-top"><div class="kc-ico ibl"><i class="bi bi-people-fill"></i></div><span class="kbadge up"><i class="bi bi-arrow-up-short"></i>+15.3%</span></div>
+            <div class="kc-top">
+                <div class="kc-ico ibl"><i class="bi bi-people-fill"></i></div>
+                <span class="kbadge up"><i class="bi bi-arrow-up-short"></i>+@Model.NewCustomers mới</span>
+            </div>
             <div class="kval">@Model.TotalCustomers</div>
-            <div class="klbl">Khách Hàng Mới</div>
-            <div class="ksub">Tổng: @(Model.TotalCustomers * 12) thành viên</div>
+            <div class="klbl">Tổng Khách Hàng</div>
+            <div class="ksub">@Model.NewCustomers khách mới trong kỳ</div>
             <div class="kspk-wrap"><canvas id="sp3"></canvas></div>
         </div>
         <div class="kc crd">
-            <div class="kc-top"><div class="kc-ico ird"><i class="bi bi-speedometer2"></i></div><span class="kbadge up"><i class="bi bi-arrow-up-short"></i>+4.1%</span></div>
-            <div class="kval">87%</div>
+            <div class="kc-top">
+                <div class="kc-ico ird"><i class="bi bi-speedometer2"></i></div>
+                <span class="kbadge @(Model.OccupancyRate >= 70 ? "up" : Model.OccupancyRate >= 40 ? "fl" : "dn")">
+                    @Model.OccupancyRate.ToString("0")%
+                </span>
+            </div>
+            <div class="kval">@Model.OccupancyRate.ToString("0")%</div>
             <div class="klbl">Tỷ Lệ Lấp Đầy Sân</div>
-            <div class="ksub">6/12 sân đang có khách</div>
+            <div class="ksub">@Model.CourtsOccupied đang có khách / @(Model.LiveCourtStatuses?.Count ?? Model.TotalCourts) sân</div>
             <div class="kspk-wrap"><canvas id="sp4"></canvas></div>
         </div>
         <div class="kc cpu">
-            <div class="kc-top"><div class="kc-ico ipu"><i class="bi bi-bag-check-fill"></i></div><span class="kbadge up"><i class="bi bi-arrow-up-short"></i>+22%</span></div>
+            <div class="kc-top">
+                <div class="kc-ico ipu"><i class="bi bi-bag-check-fill"></i></div>
+                <span class="kbadge fl">@Model.TotalOrders đơn</span>
+            </div>
             <div class="kval">₫@((Model.ProductRevenue / 1000000m).ToString("0.0"))tr</div>
             <div class="klbl">Doanh Thu Sản Phẩm</div>
-            <div class="ksub">@Model.TotalOrders đơn hàng</div>
+            <div class="ksub">@Model.TotalOrders đơn hàng trong kỳ</div>
             <div class="kspk-wrap"><canvas id="sp5"></canvas></div>
         </div>
         <div class="kc cte">
-            <div class="kc-top"><div class="kc-ico ite"><i class="bi bi-star-fill"></i></div><span class="kbadge fl">~0%</span></div>
-            <div class="kval">4.8<span style="font-size:1rem;opacity:.45">★</span></div>
+            <div class="kc-top">
+                <div class="kc-ico ite"><i class="bi bi-star-fill"></i></div>
+                <span class="kbadge fl">@Model.OverallReviewCount đánh giá</span>
+            </div>
+            <div class="kval">@Model.OverallAverageRating.ToString("0.0")<span style="font-size:1rem;opacity:.45">★</span></div>
             <div class="klbl">Đánh Giá Trung Bình</div>
-            <div class="ksub">248 đánh giá tháng này</div>
+            <div class="ksub">@Model.OverallReviewCount đánh giá đã duyệt</div>
             <div class="kspk-wrap"><canvas id="sp6"></canvas></div>
         </div>
         <div class="kc cor">
             <div class="kc-top">
                 <div class="kc-ico ior"><i class="bi bi-clock-history"></i></div>
-                <span class="kbadge dn"><i class="bi bi-arrow-down-short"></i>-3.2%</span>
+                <span class="kbadge @(Model.PendingBookings > 10 ? "dn" : "fl")">@Model.PendingBookings</span>
             </div>
-
-            <div class="kval">@(ViewBag.PendingCount ?? 0)</div>
-
+            <div class="kval">@Model.PendingBookings</div>
             <div class="klbl">Chờ Xác Nhận</div>
-            <div class="ksub">Cần xử lý trong 2h tới</div>
+            <div class="ksub">@Model.CancelledBookings đơn đã hủy trong kỳ</div>
             <div class="kspk-wrap"><canvas id="sp7"></canvas></div>
         </div>
         <div class="kc cpi">
-            <div class="kc-top"><div class="kc-ico ipi"><i class="bi bi-ticket-perforated-fill"></i></div><span class="kbadge up"><i class="bi bi-arrow-up-short"></i>+5%</span></div>
-            <div class="kval">18</div>
+            <div class="kc-top">
+                <div class="kc-ico ipi"><i class="bi bi-ticket-perforated-fill"></i></div>
+                <span class="kbadge up"><i class="bi bi-arrow-up-short"></i>@Model.VouchersUsed</span>
+            </div>
+            <div class="kval">@Model.VouchersUsed</div>
             <div class="klbl">Voucher Đã Dùng</div>
-            <div class="ksub">Tiết kiệm ₫540k cho khách</div>
+            <div class="ksub">Giảm giá ₫@((Model.VoucherDiscount / 1000m).ToString("0"))k cho khách</div>
             <div class="kspk-wrap"><canvas id="sp8"></canvas></div>
         </div>
     </div>
@@ -1534,39 +1558,61 @@
                 </div>
                 <div class="pnl-b">
                     <div class="ct-grid">
-                        <div class="ct ct-oc">
-                            <div class="ct-num">A1</div><div class="ct-lbl">Đang có khách</div>
-                            <div class="ct-person"><i class="bi bi-person-fill"></i> Nguyễn Văn An</div>
-                            <div class="ct-sub"><i class="bi bi-clock"></i> Còn 28 phút</div>
-                        </div>
-                        <div class="ct ct-av">
-                            <div class="ct-num">A2</div><div class="ct-lbl">Trống</div>
-                            <div class="ct-sub">Sẵn sàng nhận đặt</div>
-                        </div>
-                        <div class="ct ct-re">
-                            <div class="ct-num">B1</div><div class="ct-lbl">Đã đặt trước</div>
-                            <div class="ct-person"><i class="bi bi-person-fill"></i> Trần Thị Bình</div>
-                            <div class="ct-sub">18:00 – 19:00</div>
-                        </div>
-                        <div class="ct ct-oc">
-                            <div class="ct-num">B2</div><div class="ct-lbl">Đang có khách</div>
-                            <div class="ct-person"><i class="bi bi-people-fill"></i> 4 người</div>
-                            <div class="ct-sub"><i class="bi bi-clock"></i> Còn 45 phút</div>
-                        </div>
-                        <div class="ct ct-ma">
-                            <div class="ct-num">C1</div><div class="ct-lbl">Bảo trì</div>
-                            <div class="ct-sub">Dự kiến xong 19h</div>
-                        </div>
-                        <div class="ct ct-av">
-                            <div class="ct-num">C2</div><div class="ct-lbl">Trống</div>
-                            <div class="ct-sub">Mở 6h – 23h</div>
-                        </div>
+                        @if (Model.LiveCourtStatuses != null && Model.LiveCourtStatuses.Any())
+                        {
+                            @foreach (var cs in Model.LiveCourtStatuses.Take(6))
+                            {
+                                var tileClass = cs.LiveStatus switch
+                                {
+                                                "Occupied" => "ct-oc",
+                                                "Reserved" => "ct-re",
+                                                "Maintenance" => "ct-ma",
+                                    _ => "ct-av"
+                                };
+                                var lbl = cs.LiveStatus switch
+                                {
+                                                "Occupied" => "Đang có khách",
+                                                "Reserved" => "Đã đặt trước",
+                                                "Maintenance" => "Bảo trì",
+                                    _ => "Trống"
+                                };
+                                <div class="ct @tileClass">
+                                    <div class="ct-num">@cs.CourtNumber</div>
+                                    <div class="ct-lbl">@lbl</div>
+                                    @if (!string.IsNullOrEmpty(cs.CurrentPlayer))
+                                    {
+                                        <div class="ct-person"><i class="bi bi-person-fill"></i> @cs.CurrentPlayer</div>
+                                        <div class="ct-sub"><i class="bi bi-clock"></i> Còn @cs.RemainingMinutes phút</div>
+                                    }
+                                    else if (!string.IsNullOrEmpty(cs.NextPlayer))
+                                    {
+                                        <div class="ct-person"><i class="bi bi-person-fill"></i> @cs.NextPlayer</div>
+                                        <div class="ct-sub">@cs.NextBookingTime</div>
+                                    }
+                                    else if (cs.LiveStatus == "Available")
+                                    {
+                                        <div class="ct-sub">Sẵn sàng nhận đặt</div>
+                                    }
+                                    else if (cs.LiveStatus == "Maintenance")
+                                    {
+                                        <div class="ct-sub">Đang bảo trì</div>
+                                    }
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div style="grid-column:span 3;text-align:center;padding:1.5rem;color:var(--M);font-size:.82rem;">
+                                <i class="bi bi-building-x" style="font-size:1.5rem;display:block;margin-bottom:.5rem;"></i>
+                                Chưa có dữ liệu sân
+                            </div>
+                        }
                     </div>
                     <div class="ct-mini-bar">
-                        <div class="ct-mini" style="background:rgba(16,185,129,.07);"><div class="ct-mini-n" style="color:var(--GN)">2</div><div class="ct-mini-l">Trống</div></div>
-                        <div class="ct-mini" style="background:rgba(212,160,23,.07);"><div class="ct-mini-n" style="color:var(--G)">2</div><div class="ct-mini-l">Có khách</div></div>
-                        <div class="ct-mini" style="background:rgba(59,130,246,.07);"><div class="ct-mini-n" style="color:var(--BL)">1</div><div class="ct-mini-l">Đặt trước</div></div>
-                        <div class="ct-mini" style="background:rgba(239,68,68,.07);"><div class="ct-mini-n" style="color:var(--RD)">1</div><div class="ct-mini-l">Bảo trì</div></div>
+                        <div class="ct-mini" style="background:rgba(16,185,129,.07);"><div class="ct-mini-n" style="color:var(--GN)">@Model.CourtsAvailable</div><div class="ct-mini-l">Trống</div></div>
+                        <div class="ct-mini" style="background:rgba(212,160,23,.07);"><div class="ct-mini-n" style="color:var(--G)">@Model.CourtsOccupied</div><div class="ct-mini-l">Có khách</div></div>
+                        <div class="ct-mini" style="background:rgba(59,130,246,.07);"><div class="ct-mini-n" style="color:var(--BL)">@Model.CourtsReserved</div><div class="ct-mini-l">Đặt trước</div></div>
+                        <div class="ct-mini" style="background:rgba(239,68,68,.07);"><div class="ct-mini-n" style="color:var(--RD)">@Model.CourtsOnMaintenance</div><div class="ct-mini-l">Bảo trì</div></div>
                     </div>
                 </div>
             </div>
@@ -1706,10 +1752,10 @@
                                         @{
                                             var (pc, pl) = b.Status switch
                                             {
-                                                "Completed" => ("p-ok", "Hoàn thành"),
-                                                "Pending" => ("p-pe", "Chờ"),
-                                                "Confirmed" => ("p-pr", "Xác nhận"),
-                                                "Playing" => ("p-pl", "Đang chơi"),
+                                                                "Completed" => ("p-ok", "Hoàn thành"),
+                                                                "Pending" => ("p-pe", "Chờ"),
+                                                                "Confirmed" => ("p-pr", "Xác nhận"),
+                                                                "Playing" => ("p-pl", "Đang chơi"),
                                                 _ => ("p-ca", "Hủy")
                                             };
                                         }
@@ -1735,30 +1781,33 @@
                 </div>
                 <div class="pnl-b" style="padding:.5rem 1.3rem;">
                     @{
-                        var vips = new[]{
-                                        ("Nguyễn Văn An","HCM",48,12400000m,"#d4a017"),
-                                        ("Trần Thị Bình","HN",36,9800000m,"#10b981"),
-                                        ("Lê Minh Cường","ĐN",32,8200000m,"#3b82f6"),
-                                        ("Phạm Quốc Dũng","HCM",28,7100000m,"#8b5cf6"),
-                                        ("Hoàng Thu Em","HCM",24,6300000m,"#f97316"),
-                                        };
-                        var vi = 0;
+                        var colors = new[] { "#d4a017", "#10b981", "#3b82f6", "#8b5cf6", "#f97316" };
+                        var vi2 = 0;
                     }
-                    @foreach (var (nm, cy, ss, sp, clr) in vips)
+                    @if (Model.TopCustomers != null && Model.TopCustomers.Any())
                     {
-                        vi++;
-                        <div class="tc-row">
-                            <div class="tc-rank">@vi</div>
-                            <div class="tc-av" style="background:@clr">@nm[0]</div>
-                            <div class="tc-info">
-                                <div class="tc-nm">@nm</div>
-                                <div class="tc-meta">@cy · @ss buổi</div>
+                        @foreach (var c in Model.TopCustomers.Take(5))
+                        {
+                            var clr2 = colors[vi2 % colors.Length];
+                            var initials = string.IsNullOrEmpty(c.CustomerName) ? "?" : c.CustomerName[0].ToString().ToUpper();
+                            <div class="tc-row">
+                                <div class="tc-rank">@(vi2 + 1)</div>
+                                <div class="tc-av" style="background:@clr2">@initials</div>
+                                <div class="tc-info">
+                                    <div class="tc-nm">@c.CustomerName</div>
+                                    <div class="tc-meta">@c.BookingCount buổi</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div class="tc-val">₫@((c.TotalSpent / 1000000m).ToString("0.0"))tr</div>
+                                    <div class="tc-badge">VIP</div>
+                                </div>
                             </div>
-                            <div style="text-align:right;">
-                                <div class="tc-val">₫@((sp / 1000000m).ToString("0.0"))tr</div>
-                                <div class="tc-badge">VIP</div>
-                            </div>
-                        </div>
+                            vi2++;
+                        }
+                    }
+                    else
+                    {
+                        <div style="text-align:center;padding:2rem;color:var(--M);font-size:.82rem;">Chưa có dữ liệu</div>
                     }
                 </div>
             </div>
@@ -1769,26 +1818,42 @@
                 <div class="pnl-h">
                     <div class="pnl-hl"><div class="pnl-tag">Chỉ số hoạt động</div><div class="pnl-title">Performance Score</div></div>
                     <div style="text-align:right;">
-                        <div style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--G);line-height:1;">92</div>
+                        @{
+                            var perfScore = (int)Math.Round(
+                            Model.OccupancyRate * 0.35 +
+                            (Model.OverallAverageRating / 5.0 * 100) * 0.35 +
+                            (Model.CompletedBookings > 0 ? (double)Model.CompletedBookings / Math.Max(Model.TotalBookings, 1) * 100 : 0) * 0.30
+                            );
+                        }
+                        <div style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--G);line-height:1;">@perfScore</div>
                         <div style="font-size:.62rem;color:var(--M);">/ 100 điểm</div>
                     </div>
                 </div>
                 <div class="pnl-b">
                     <div class="perf-list">
-                        <div class="prow"><div class="plbl">Tỷ lệ lấp đầy</div><div class="ptrack"><div class="pfill" style="width:87%;background:var(--G);"></div></div><div class="pscore">87</div></div>
-                        <div class="prow"><div class="plbl">Đúng giờ</div><div class="ptrack"><div class="pfill" style="width:94%;background:var(--GN);"></div></div><div class="pscore">94</div></div>
-                        <div class="prow"><div class="plbl">Độ hài lòng</div><div class="ptrack"><div class="pfill" style="width:96%;background:var(--BL);"></div></div><div class="pscore">96</div></div>
-                        <div class="prow"><div class="plbl">Chuyển đổi</div><div class="ptrack"><div class="pfill" style="width:78%;background:var(--PU);"></div></div><div class="pscore">78</div></div>
-                        <div class="prow"><div class="plbl">Giữ khách</div><div class="ptrack"><div class="pfill" style="width:82%;background:var(--OR);"></div></div><div class="pscore">82</div></div>
-                        <div class="prow"><div class="plbl">Phản hồi</div><div class="ptrack"><div class="pfill" style="width:91%;background:var(--GN);"></div></div><div class="pscore">91</div></div>
-                        <div class="prow"><div class="plbl">Thiết bị IoT</div><div class="ptrack"><div class="pfill" style="width:83%;background:var(--TE);"></div></div><div class="pscore">83</div></div>
+                        @{
+                            var occPct = (int)Model.OccupancyRate;
+                        }
+                        <div class="prow"><div class="plbl">Tỷ lệ lấp đầy</div><div class="ptrack"><div class="pfill" style="width:@occPct%;background:var(--G);"></div></div><div class="pscore">@occPct</div></div>
+                        @{
+                            var completionRate = Model.TotalBookings > 0 ? (int)Math.Round((double)Model.CompletedBookings / Model.TotalBookings * 100) : 0;
+                            var cancelRate = Model.TotalBookings > 0 ? (int)Math.Round((double)Model.CancelledBookings / Model.TotalBookings * 100) : 0;
+                            var satisfyScore = (int)Math.Round(Model.OverallAverageRating / 5.0 * 100);
+                        }
+                        <div class="prow"><div class="plbl">Hoàn thành</div><div class="ptrack"><div class="pfill" style="width:@completionRate%;background:var(--GN);"></div></div><div class="pscore">@completionRate</div></div>
+                        <div class="prow"><div class="plbl">Độ hài lòng</div><div class="ptrack"><div class="pfill" style="width:@satisfyScore%;background:var(--BL);"></div></div><div class="pscore">@satisfyScore</div></div>
+                        <div class="prow"><div class="plbl">Hủy đơn</div><div class="ptrack"><div class="pfill" style="width:@cancelRate%;background:var(--RD);"></div></div><div class="pscore">@cancelRate%</div></div>
+                        <div class="prow"><div class="plbl">Voucher dùng</div><div class="ptrack"><div class="pfill" style="width:@(Math.Min(Model.VouchersUsed * 5, 100))%;background:var(--PU);"></div></div><div class="pscore">@Model.VouchersUsed</div></div>
                     </div>
                     <div style="margin-top:1.3rem;">
                         <div style="font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--M);font-weight:600;margin-bottom:.7rem;">Cơ Cấu Doanh Thu</div>
                         <div class="rb-list">
-                            <div class="rb-row"><div class="rb-lbl">Đặt sân</div><div class="rb-track"><div class="rb-fill" style="width:68%;background:var(--G);"></div></div><div class="rb-pct">68%</div><div class="rb-val">₫8.2tr</div></div>
-                            <div class="rb-row"><div class="rb-lbl">Sản phẩm</div><div class="rb-track"><div class="rb-fill" style="width:22%;background:var(--GN);"></div></div><div class="rb-pct">22%</div><div class="rb-val">₫2.7tr</div></div>
-                            <div class="rb-row"><div class="rb-lbl">Dịch vụ</div><div class="rb-track"><div class="rb-fill" style="width:10%;background:var(--BL);"></div></div><div class="rb-pct">10%</div><div class="rb-val">₫1.2tr</div></div>
+                            @{
+                                var bkPct = (int)Model.BookingRevenuePercent;
+                                var prPct = (int)Model.ProductRevenuePercent;
+                            }
+                            <div class="rb-row"><div class="rb-lbl">Đặt sân</div><div class="rb-track"><div class="rb-fill" style="width:@bkPct%;background:var(--G);"></div></div><div class="rb-pct">@bkPct%</div><div class="rb-val">₫@((Model.BookingRevenue / 1000000m).ToString("0.0"))tr</div></div>
+                            <div class="rb-row"><div class="rb-lbl">Sản phẩm</div><div class="rb-track"><div class="rb-fill" style="width:@prPct%;background:var(--GN);"></div></div><div class="rb-pct">@prPct%</div><div class="rb-val">₫@((Model.ProductRevenue / 1000000m).ToString("0.0"))tr</div></div>
                         </div>
                     </div>
                 </div>
@@ -1804,25 +1869,34 @@
                 <div class="pnl-b" style="padding:.4rem 1.3rem;">
                     <div class="af">
                         @{
-                            var feeds = new[]{
-                                                ("#d4a017","NV","Nguyễn Văn An","Đặt sân A1 – 17:00 hôm nay","2 phút trước","p-pl","Booking"),
-                                                ("#10b981","TB","Trần Thị Bình","Hoàn thành thanh toán ₫350,000","8 phút trước","p-ok","Thanh toán"),
-                                                ("#3b82f6","LC","Lê Minh Cường","Hủy đặt sân B2","15 phút trước","p-ca","Hủy"),
-                                                ("#8b5cf6","AD","Admin","Cập nhật giá khung 18–20h","22 phút trước","p-pe","Hệ thống"),
-                                                ("#f97316","PD","Phạm Quốc Dũng","Mua vợt Yonex ₫1,200,000","35 phút trước","p-ok","Đơn hàng"),
-                                                ("#14b8a6","HE","Hoàng Thu Em","Đánh giá 5★ sân C2","1 giờ trước","p-ok","Review"),
-                                                };
+                            var feedColors = new[] { "#d4a017", "#10b981", "#3b82f6", "#8b5cf6", "#f97316", "#14b8a6" };
+                            var fi = 0;
                         }
-                        @foreach (var (clr, ini, nm, desc, time, pill, type) in feeds)
+                        @if (Model.ActivityFeed != null && Model.ActivityFeed.Any())
                         {
-                            <div class="af-i">
-                                <div class="af-av" style="background:@clr">@ini</div>
-                                <div class="af-cnt">
-                                    <div class="af-nm">@nm <span class="pill @pill" style="font-size:.56rem;padding:.1rem .38rem;margin-left:.2rem;">@type</span></div>
-                                    <div class="af-desc">@desc</div>
-                                    <div class="af-time"><i class="bi bi-clock"></i> @time</div>
+                            @foreach (var act in Model.ActivityFeed)
+                            {
+                                var fc2 = feedColors[fi % feedColors.Length];
+                                var ini2 = string.IsNullOrEmpty(act.ActorName) ? "?" : act.ActorName[0].ToString().ToUpper();
+                                var ago = (DateTime.Now - act.CreatedAt);
+                                var agoStr = ago.TotalMinutes < 1 ? "Vừa xong"
+                                : ago.TotalMinutes < 60 ? $"{(int)ago.TotalMinutes} phút trước"
+                                : ago.TotalHours < 24 ? $"{(int)ago.TotalHours} giờ trước"
+                                : $"{(int)ago.TotalDays} ngày trước";
+                                <div class="af-i">
+                                    <div class="af-av" style="background:@fc2">@ini2</div>
+                                    <div class="af-cnt">
+                                        <div class="af-nm">@act.ActorName <span class="pill @act.TypeClass" style="font-size:.56rem;padding:.1rem .38rem;margin-left:.2rem;">@act.Type</span></div>
+                                        <div class="af-desc">@act.Description</div>
+                                        <div class="af-time"><i class="bi bi-clock"></i> @agoStr</div>
+                                    </div>
                                 </div>
-                            </div>
+                                fi++;
+                            }
+                        }
+                        else
+                        {
+                            <div style="text-align:center;padding:2rem;color:var(--M);font-size:.82rem;">Chưa có hoạt động gần đây</div>
                         }
                     </div>
                 </div>
@@ -1899,127 +1973,163 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
-        const G='#d4a017',G2='#f5c842',D='#1a1209',GN='#10b981',BL='#3b82f6',PU='#8b5cf6',OR='#f97316',RD='#ef4444',TE='#14b8a6',PI='#f43f5e';
-        Chart.defaults.font.family="'Space Grotesk', sans-serif";
-        Chart.defaults.color='#8a7560';
+                const G='#d4a017',G2='#f5c842',D='#1a1209',GN='#10b981',BL='#3b82f6',PU='#8b5cf6',OR='#f97316',RD='#ef4444',TE='#14b8a6',PI='#f43f5e';
+                Chart.defaults.font.family="'Space Grotesk', sans-serif";
+                Chart.defaults.color='#8a7560';
 
-        /* ── CLOCK ── */
-        (function tick(){const n=new Date(),p=v=>String(v).padStart(2,'0');document.getElementById('clk').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;setTimeout(tick,1000);})();
+                /* ── CLOCK ── */
+                (function tick(){const n=new Date(),p=v=>String(v).padStart(2,'0');document.getElementById('clk').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;setTimeout(tick,1000);})();
 
-        /* ── SPARKLINES ── */
-        const spD=[[28,32,29,35,38,33,42,40],[42,56,49,63,72,58,88,75],[12,18,14,22,19,25,28,31],[72,68,75,80,77,83,87,85],[2.1,2.8,2.3,3.1,2.9,3.5,3.8,3.6],[4.5,4.6,4.7,4.7,4.8,4.8,4.9,4.8],[8,15,10,12,14,18,12,12],[10,14,12,16,18,20,18,18]];
-        const spC=[G,GN,BL,RD,PU,TE,OR,PI];
-        for(let i=1;i<=8;i++){const el=document.getElementById('sp'+i);if(!el)continue;new Chart(el,{type:'line',data:{labels:spD[i-1].map((_,j)=>j),datasets:[{data:spD[i-1],borderColor:spC[i-1],backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:.42}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}}}});}
+                /* ── SPARKLINES ── */
+                const spD=[[28,32,29,35,38,33,42,40],[42,56,49,63,72,58,88,75],[12,18,14,22,19,25,28,31],[72,68,75,80,77,83,87,85],[2.1,2.8,2.3,3.1,2.9,3.5,3.8,3.6],[4.5,4.6,4.7,4.7,4.8,4.8,4.9,4.8],[8,15,10,12,14,18,12,12],[10,14,12,16,18,20,18,18]];
+                const spC=[G,GN,BL,RD,PU,TE,OR,PI];
+                for(let i=1;i<=8;i++){const el=document.getElementById('sp'+i);if(!el)continue;new Chart(el,{type:'line',data:{labels:spD[i-1].map((_,j)=>j),datasets:[{data:spD[i-1],borderColor:spC[i-1],backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:.42}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}}}});}
 
-        /* ── REVENUE CHART — dữ liệu thật từ Model.RevenueByDate ── */
-        const dbLabels  = [@foreach(var r in Model.RevenueByDate){
-        <text>'@r.Date.ToString("dd/MM")',</text>
-    }
-];
-    const dbBooking = [@foreach(var r in Model.RevenueByDate){
-    <text>@r.BookingRevenue,</text>
+                /* ── REVENUE CHART — dữ liệu thật từ Model.RevenueByDate ── */
+                const dbLabels  = [@foreach(var r in Model.RevenueByDate){
+                <text>'@r.Date.ToString("dd/MM")',</text>
         }
-];
-    const dbProduct = [@foreach(var r in Model.RevenueByDate){
-    <text>@r.ProductRevenue,</text>
+    ];
+        const dbBooking = [@foreach(var r in Model.RevenueByDate){
+        <text>@r.BookingRevenue,</text>
+                        }
+    ];
+        const dbProduct = [@foreach(var r in Model.RevenueByDate){
+        <text>@r.ProductRevenue,</text>
+                        }
+    ];
+        const dbTotal   = [@foreach(var r in Model.RevenueByDate){
+        <text>@r.TotalRevenue,</text>
+                        }
+    ];
+        const dbAvg    = dbTotal.length ? dbTotal.reduce((a,b)=>a+b,0)/dbTotal.length : 0;
+        const dbTarget = dbTotal.map(()=>+(dbAvg*1.15).toFixed(0));
+        const rChart=new Chart(document.getElementById('revChart'),{
+          type:'bar',
+          data:{labels:dbLabels,datasets:[
+            {label:'Sân',data:dbBooking,backgroundColor:'rgba(212,160,23,.72)',borderRadius:{topLeft:4,topRight:4},borderSkipped:false,order:2},
+            {label:'Sản phẩm',data:dbProduct,backgroundColor:'rgba(16,185,129,.62)',borderRadius:{topLeft:4,topRight:4},borderSkipped:false,order:2},
+            {label:'Mục tiêu',data:dbTarget,type:'line',borderColor:'rgba(26,18,9,.28)',borderDash:[5,5],borderWidth:2,pointRadius:0,fill:false,order:1},
+          ]},
+          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>v>=1e6?'₫'+(v/1e6).toFixed(1)+'tr':'₫'+v.toLocaleString('vi-VN')}}}}
+        });
+        function swPeriod(p,btn){
+          document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('on'));
+          btn.classList.add('on');
         }
-];
-    const dbTotal   = [@foreach(var r in Model.RevenueByDate){
-    <text>@r.TotalRevenue,</text>
-        }
-];
-    const dbAvg    = dbTotal.length ? dbTotal.reduce((a,b)=>a+b,0)/dbTotal.length : 0;
-    const dbTarget = dbTotal.map(()=>+(dbAvg*1.15).toFixed(0));
-    const rChart=new Chart(document.getElementById('revChart'),{
-      type:'bar',
-      data:{labels:dbLabels,datasets:[
-        {label:'Sân',data:dbBooking,backgroundColor:'rgba(212,160,23,.72)',borderRadius:{topLeft:4,topRight:4},borderSkipped:false,order:2},
-        {label:'Sản phẩm',data:dbProduct,backgroundColor:'rgba(16,185,129,.62)',borderRadius:{topLeft:4,topRight:4},borderSkipped:false,order:2},
-        {label:'Mục tiêu',data:dbTarget,type:'line',borderColor:'rgba(26,18,9,.28)',borderDash:[5,5],borderWidth:2,pointRadius:0,fill:false,order:1},
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>v>=1e6?'₫'+(v/1e6).toFixed(1)+'tr':'₫'+v.toLocaleString('vi-VN')}}}}
-    });
-    function swPeriod(p,btn){
-      document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('on'));
-      btn.classList.add('on');
-    }
 
-    /* ── COURT CHART — dữ liệu thật từ Model.PopularTimeSlots ── */
-    @if (Model.PopularTimeSlots != null && Model.PopularTimeSlots.Any())
-    {
-            <text>
-            const crtLabels=[@foreach(var s in Model.PopularTimeSlots){
-            <text>'@s.TimeSlot',</text>
+        /* ── COURT CHART — dữ liệu thật từ Model.PopularTimeSlots ── */
+        @if (Model.PopularTimeSlots != null && Model.PopularTimeSlots.Any())
+        {
+                    <text>
+                    const crtLabels=[@foreach(var s in Model.PopularTimeSlots){
+                    <text>'@s.TimeSlot',</text>
+            }
+    ];
+            const crtData  =[@foreach(var s in Model.PopularTimeSlots){
+            <text>@s.BookingCount,</text>
+                                        }
+    ];
+            </text>
+                        }
+                        else
+        {
+                    <text>const crtLabels=['6h','8h','10h','12h','14h','16h','18h','20h'];const crtData=[0,0,0,0,0,0,0,0];</text>
         }
-];
-        const crtData  =[@foreach(var s in Model.PopularTimeSlots){
-        <text>@s.BookingCount,</text>
-                }
-];
-        </text>
+        new Chart(document.getElementById('crtChart'),{
+          type:'bar',data:{labels:crtLabels,datasets:[{label:'Lượt đặt',data:crtData,backgroundColor:ctx=>{const v=ctx.parsed.y,mx=Math.max(...crtData)||1;return v>=mx*.9?G:v>=mx*.6?'rgba(212,160,23,.55)':'rgba(212,160,23,.28)';},borderRadius:6}]},
+          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(0,0,0,.04)'},beginAtZero:true,ticks:{callback:v=>v+' đặt'}},x:{grid:{display:false}}}}
+        });
+
+        /* ── TIME CHART — tái dùng crtLabels/crtData ── */
+        new Chart(document.getElementById('tChart'),{
+          type:'bar',data:{labels:crtLabels,datasets:[{data:crtData,backgroundColor:ctx=>{const v=ctx.parsed.y,mx=Math.max(...crtData)||1;return v>=mx*.9?G:v>=mx*.6?'rgba(212,160,23,.65)':v>=mx*.4?'rgba(212,160,23,.42)':'rgba(212,160,23,.2)';},borderRadius:3}]},
+          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{display:false},x:{grid:{display:false},ticks:{font:{size:9}}}}}
+        });
+
+        /* ── CAT DONUT — dữ liệu thật từ Model.TopProducts ── */
+        @if (Model.TopProducts != null && Model.TopProducts.Any())
+        {
+                    <text>
+                    const catLabels=[@foreach(var p in Model.TopProducts.Take(5)){
+                    <text>'@Html.Raw(p.ProductName.Replace("'", ""))',</text>
+            }
+    ];
+            const catData  =[@foreach(var p in Model.TopProducts.Take(5)){
+            <text>@p.QuantitySold,</text>
+                                        }
+    ];
+            </text>
+                        }
+                        else
+        {
+                    <text>const catLabels=['Chưa có dữ liệu'];const catData=[1];</text>
         }
-        else
-    {
-            <text>const crtLabels=['6h','8h','10h','12h','14h','16h','18h','20h'];const crtData=[0,0,0,0,0,0,0,0];</text>
-    }
-    new Chart(document.getElementById('crtChart'),{
-      type:'bar',data:{labels:crtLabels,datasets:[{label:'Lượt đặt',data:crtData,backgroundColor:ctx=>{const v=ctx.parsed.y,mx=Math.max(...crtData)||1;return v>=mx*.9?G:v>=mx*.6?'rgba(212,160,23,.55)':'rgba(212,160,23,.28)';},borderRadius:6}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(0,0,0,.04)'},beginAtZero:true,ticks:{callback:v=>v+' đặt'}},x:{grid:{display:false}}}}
-    });
+        const catColors=[G,D,'#c94b2a','#8a7560',BL,'#14b8a6','#f97316'];
+        new Chart(document.getElementById('catChart'),{
+          type:'doughnut',data:{labels:catLabels,datasets:[{data:catData,backgroundColor:catColors.slice(0,catLabels.length),borderWidth:0,hoverOffset:5}]},
+          options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{padding:10,usePointStyle:true,pointStyleWidth:8,font:{size:10}}}}}
+        });
 
-    /* ── TIME CHART — tái dùng crtLabels/crtData ── */
-    new Chart(document.getElementById('tChart'),{
-      type:'bar',data:{labels:crtLabels,datasets:[{data:crtData,backgroundColor:ctx=>{const v=ctx.parsed.y,mx=Math.max(...crtData)||1;return v>=mx*.9?G:v>=mx*.6?'rgba(212,160,23,.65)':v>=mx*.4?'rgba(212,160,23,.42)':'rgba(212,160,23,.2)';},borderRadius:3}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{display:false},x:{grid:{display:false},ticks:{font:{size:9}}}}}
-    });
+        /* ── HEATMAP — dữ liệu thật từ Model.HeatmapData ── */
+        (function(){
+          const hours=['6h','7h','8h','9h','10h','11h','12h','13h','14h','15h','16h','17h','18h','19h','20h','21h','22h'];
+          const days=['T2','T3','T4','T5','T6','T7','CN'];
+          @{
+                  // Serialize HeatmapData[7,24] thành JS 2D array
+                  // Chỉ hiện giờ 6–22 (index 6..22)
+                  var hmHours = Enumerable.Range(6, 17).ToList();
+          }
+          const data=[
+              @for (int d = 0; d < 7; d++)
+            {
+                      <text>[</text>
+                      @for (int idx = 0; idx < hmHours.Count; idx++)
+                    {
+                              var h = hmHours[idx];
+                              <text>@(Model.HeatmapData != null ? Model.HeatmapData[d, h] : 0)@(idx < hmHours.Count - 1 ? "," : "")</text>
+                      }
+                      <text>]@(d < 6 ? "," : "")</text>
+              }
+          ];
+          var maxVal=Math.max(...data.flat())||1;
+          let h='<div class="hm-wrap"><div></div>';
+          days.forEach(d=>{h+=`<div class="hm-dlbl">${d}</div>`;});
+          hours.forEach((hr,hi)=>{
+            h+=`<div class="hm-hlbl">${hr}</div>`;
+            data.forEach((dd,di)=>{
+              var cnt=dd[hi]||0;
+              var lvl=cnt===0?0:cnt<=Math.round(maxVal*.2)?1:cnt<=Math.round(maxVal*.4)?2:cnt<=Math.round(maxVal*.7)?3:cnt<=Math.round(maxVal*.9)?4:5;
+              h+=`<div class="hm-cell l${lvl}" title="${days[di]} ${hr}: ${cnt} đặt sân"></div>`;
+            });
+          });
+          h+='</div>';document.getElementById('hmWrap').innerHTML=h;
+        })();
 
-    /* ── CAT DONUT — dữ liệu thật từ Model.TopProducts ── */
-    @if (Model.TopProducts != null && Model.TopProducts.Any())
-    {
-            <text>
-            const catLabels=[@foreach(var p in Model.TopProducts.Take(5)){
-            <text>'@Html.Raw(p.ProductName.Replace("'", ""))',</text>
-        }
-];
-        const catData  =[@foreach(var p in Model.TopProducts.Take(5)){
-        <text>@p.QuantitySold,</text>
-                }
-];
-        </text>
-        }
-        else
-    {
-            <text>const catLabels=['Chưa có dữ liệu'];const catData=[1];</text>
-    }
-    const catColors=[G,D,'#c94b2a','#8a7560',BL,'#14b8a6','#f97316'];
-    new Chart(document.getElementById('catChart'),{
-      type:'doughnut',data:{labels:catLabels,datasets:[{data:catData,backgroundColor:catColors.slice(0,catLabels.length),borderWidth:0,hoverOffset:5}]},
-      options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{padding:10,usePointStyle:true,pointStyleWidth:8,font:{size:10}}}}}
-    });
-
-    /* ── HEATMAP ── */
-    (function(){
-      const hours=['6h','8h','10h','12h','14h','16h','18h','20h','22h'];
-      const days=['T2','T3','T4','T5','T6','T7','CN'];
-      const data=[[2,3,1,0,2,4,5,3,1],[3,4,2,1,3,5,5,4,2],[1,2,1,0,1,3,4,2,1],[2,3,2,1,2,4,5,3,2],[3,5,3,2,4,5,5,5,3],[4,5,4,3,5,5,5,5,4],[5,5,5,4,5,5,5,5,5]];
-      let h='<div class="hm-wrap"><div></div>';
-      days.forEach(d=>{h+=`<div class="hm-dlbl">${d}</div>`;});
-      hours.forEach((hr,hi)=>{
-        h+=`<div class="hm-hlbl">${hr}</div>`;
-        data.forEach((dd,di)=>{const lvl=dd[hi];h+=`<div class="hm-cell l${lvl}" title="${days[di]} ${hr}: ${[0,5,15,30,50,70,95][lvl]} đặt sân"></div>`;});
-      });
-      h+='</div>';document.getElementById('hmWrap').innerHTML=h;
-    })();
-
-    /* ── FORECAST ── */
-    (function(){
-      const days=['T2','T3','T4','T5','T6','T7','CN'];
-      const revs=['₫12tr','₫9tr','₫11tr','₫15tr','₫18tr','₫22tr','₫20tr'];
-      const bars=[55,40,50,68,82,100,90];
-      const tod=(new Date().getDay()+6)%7;
-      let h='';
-      days.forEach((d,i)=>{h+=`<div class="fc-d${i===tod?' tod':''}"><div class="fc-dn">${d}</div><div class="fc-num">${14+i}</div><div class="fc-rev">${revs[i]}</div><div class="fc-bar" style="width:${bars[i]}%;"></div></div>`;});
-      document.getElementById('fcRow').innerHTML=h;
-    })();
+        /* ── FORECAST 7 ngày tới — dữ liệu thật từ Model.ForecastDays ── */
+        (function(){
+          @{
+                  var maxFcRev = Model.ForecastDays != null && Model.ForecastDays.Any()
+                          ? Model.ForecastDays.Max(f => f.Revenue) : 1m;
+                  if (maxFcRev == 0) maxFcRev = 1m;
+          }
+          const days=['T2','T3','T4','T5','T6','T7','CN'];
+          const tod=(new Date().getDay()+6)%7;
+          const fcData=[
+              @if (Model.ForecastDays != null)
+            {
+                      @foreach (var f in Model.ForecastDays)
+                    {
+                              <text>{date:'@f.Date.ToString("dd")',dow:@((int)f.Date.DayOfWeek == 0 ? 6 : (int)f.Date.DayOfWeek - 1),rev:@f.Revenue,cnt:@f.BookingCount,bar:@((int)Math.Round((double)(f.Revenue / maxFcRev) * 100))},</text>
+                      }
+              }
+          ];
+          let h='';
+          fcData.forEach((f,i)=>{
+            var revStr=f.rev>=1000000?(f.rev/1000000).toFixed(1)+'tr':(f.rev/1000).toFixed(0)+'k';
+            h+=`<div class="fc-d${f.dow===tod?' tod':''}"><div class="fc-dn">${days[f.dow]}</div><div class="fc-num">${f.date}</div><div class="fc-rev">₫${revStr}</div><div class="fc-bar" style="width:${f.bar}%;"></div></div>`;
+          });
+          document.getElementById('fcRow').innerHTML=h||'<div style="color:var(--M);font-size:.78rem;padding:.5rem">Chưa có lịch đặt trước</div>';
+        })();
 </script>
 }

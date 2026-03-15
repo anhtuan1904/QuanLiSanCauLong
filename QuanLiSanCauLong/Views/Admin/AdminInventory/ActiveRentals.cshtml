@@ -1,283 +1,281 @@
 ﻿@model QuanLiSanCauLong.ViewModels.ActiveRentalsViewModel
-
 @{
     ViewData["Title"] = "Hàng Đang Cho Thuê";
-    // Partial khi gọi qua AJAX, layout khi mở trang riêng
-    if (ViewContext.HttpContext.Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-    {
-        Layout = null;
-    }
-    else
-    {
-        Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
-    }
+    var isPartial = ViewContext.HttpContext.Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+    Layout = isPartial ? null : "~/Views/Shared/_LayoutAdmin.cshtml";
+    var facilities = ViewBag.Facilities as IEnumerable<QuanLiSanCauLong.Models.Facility> ?? Enumerable.Empty<QuanLiSanCauLong.Models.Facility>();
 }
 
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
     :root {
         --deep: #1a1209;
         --gold: #d4a017;
         --gold2: #f5c842;
-        --cream: #f5f4ec;
-        --warm: #f0ead8;
-        --card: #fff;
-        --border: #e4d9c8;
+        --warm: #f5ede0;
+        --cream: #fdf8f0;
+        --border: #e8ddd0;
         --muted: #8a7560;
+        --red: #c94b2a;
         --green: #15803d;
-        --green-soft: #dcfce7;
-        --red: #dc2626;
-        --red-soft: #fef2f2;
         --blue: #1d4ed8;
-        --blue-soft: #eff6ff;
         --orange: #c2410c;
-        --orange-soft: #fff7ed;
         --purple: #7c3aed;
-        --purple-soft: #f5f3ff;
     }
 
-    .ar-wrapper {
-        padding: 1.5rem;
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    * {
         font-family: 'Outfit',sans-serif;
-        background: var(--cream);
-        min-height: 100%;
     }
 
-    /* Stats strip */
-    .ar-stats {
-        display: grid;
-        grid-template-columns: repeat(4,1fr);
-        gap: .75rem;
-        margin-bottom: 1.5rem;
+    .pg {
+        background: var(--warm);
+        min-height: 100vh;
+        padding: 2rem;
     }
 
-    .ar-stat {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: .85rem 1.1rem;
-    }
-
-    .ar-stat-val {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--deep);
-        line-height: 1;
-    }
-
-    .ar-stat-lbl {
-        font-size: .68rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-        color: var(--muted);
-        margin-top: 3px;
-    }
-
-    .ar-stat.active .ar-stat-val {
-        color: var(--blue);
-    }
-
-    .ar-stat.overdue .ar-stat-val {
-        color: var(--red);
-    }
-
-    /* Toolbar */
-    .ar-toolbar {
+    .pg-hd {
         display: flex;
-        gap: .65rem;
-        margin-bottom: 1.1rem;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 1.75rem;
         flex-wrap: wrap;
-        align-items: center;
+        gap: 1rem;
     }
 
-    .ar-search {
+    .pg-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+        .pg-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    .pg-sub {
+        font-size: .82rem;
+        color: var(--muted);
+        margin-top: .2rem;
+    }
+
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: .38rem;
+        padding: .62rem 1.1rem;
+        border: 1.5px solid var(--border);
+        border-radius: 7px;
+        background: #fff;
+        font-size: .82rem;
+        font-weight: 600;
+        color: var(--muted);
+        text-decoration: none;
+        transition: all .18s;
+    }
+
+        .btn-back:hover {
+            border-color: var(--deep);
+            color: var(--deep);
+        }
+    /* Stats */
+    .stats {
+        display: flex;
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1.4rem;
+    }
+
+    .sb {
+        background: #fff;
+        padding: .82rem 1.1rem;
         flex: 1;
-        min-width: 180px;
-        max-width: 280px;
+        min-width: 0;
+        cursor: pointer;
+        transition: background .15s;
+    }
+
+        .sb:hover {
+            background: var(--cream);
+        }
+
+        .sb.on {
+            background: var(--deep);
+        }
+
+            .sb.on .sn {
+                color: var(--gold2);
+            }
+
+            .sb.on .sl {
+                color: rgba(255,255,255,.45);
+            }
+
+    .sn {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.6rem;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--deep);
+    }
+
+    .sl {
+        font-size: .62rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: .18rem;
+    }
+    /* Toolbar */
+    .toolbar {
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .srch {
+        flex: 1;
+        min-width: 220px;
         position: relative;
     }
 
-        .ar-search input {
-            padding: .45rem .75rem .45rem 2.1rem;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            font-size: .84rem;
-            width: 100%;
-            background: var(--card);
-        }
-
-        .ar-search i {
+        .srch i {
             position: absolute;
-            left: .65rem;
+            left: .75rem;
             top: 50%;
             transform: translateY(-50%);
             color: var(--muted);
             font-size: .8rem;
         }
 
-    .ar-filter {
-        padding: .45rem .9rem;
-        border: 1.5px solid var(--border);
-        border-radius: 8px;
-        font-size: .82rem;
-        background: var(--card);
+        .srch input {
+            width: 100%;
+            padding: .58rem .85rem .58rem 2.2rem;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            font-family: 'Outfit',sans-serif;
+            font-size: .83rem;
+            color: var(--deep);
+            background: #fff;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+            .srch input:focus {
+                border-color: var(--gold);
+            }
+
+    .sel {
+        padding: .58rem .85rem;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .83rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
         cursor: pointer;
     }
 
-    .filter-count {
-        font-size: .78rem;
-        color: var(--muted);
-        margin-left: auto;
-        white-space: nowrap;
-    }
-
-    /* Cards grid */
-    .ar-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill,minmax(320px,1fr));
-        gap: 1rem;
-    }
-
-    .rental-card {
-        background: var(--card);
-        border: 1.5px solid var(--border);
-        border-radius: 14px;
+        .sel:focus {
+            border-color: var(--gold);
+        }
+    /* Table */
+    .tbl-wrap {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
         overflow: hidden;
-        transition: .18s;
     }
 
-        .rental-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(26,18,9,.1);
+    .rtbl {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .rtbl th {
+            padding: .72rem 1rem;
+            background: var(--warm);
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
         }
 
-        .rental-card.overdue {
-            border-color: #fca5a5;
+        .rtbl td {
+            padding: .78rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: .83rem;
+            color: var(--deep);
+            vertical-align: middle;
         }
 
-        .rental-card.returned {
-            opacity: .5;
+        .rtbl tr:last-child td {
+            border-bottom: none;
         }
 
-    .rc-head {
-        padding: .75rem 1rem;
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: .5rem;
-    }
-
-    .rc-product {
-        font-weight: 800;
-        font-size: .92rem;
-        color: var(--deep);
-    }
-
-    .rc-category {
-        font-size: .72rem;
-        color: var(--gold);
-        font-weight: 700;
-        margin-top: 2px;
-    }
-
-    .rc-status-badge {
-        font-size: .68rem;
-        font-weight: 800;
-        padding: .2rem .65rem;
-        border-radius: 20px;
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-
-    .st-active {
-        background: var(--blue-soft);
-        color: var(--blue);
-    }
-
-    .st-overdue {
-        background: var(--red-soft);
-        color: var(--red);
-        animation: pulse 1.5s infinite;
-    }
-
-    .st-returned {
-        background: var(--green-soft);
-        color: var(--green);
-    }
-
-    .st-damaged {
-        background: var(--purple-soft);
-        color: var(--purple);
-    }
-
-    .st-lost {
-        background: #f1f5f9;
-        color: #64748b;
-    }
-    @@keyframes pulse {
-        0%, 100% {
-            opacity: 1;
+        .rtbl tr:hover td {
+            background: var(--cream);
         }
 
-        50% {
-            opacity: .6;
+        .rtbl tr.overdue-row td {
+            background: #fff7ed;
         }
-    }
-
-    .rc-divider {
-        height: 1px;
-        background: var(--border);
-        margin: 0;
-    }
-
-    .rc-body {
-        padding: .8rem 1rem;
+    /* Product cell */
+    .p-cell {
         display: flex;
         flex-direction: column;
-        gap: .4rem;
     }
 
-    .rc-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: .8rem;
-    }
-
-    .rc-key {
-        color: var(--muted);
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: .3rem;
-    }
-
-    .rc-val {
+    .p-name {
         font-weight: 700;
+        font-size: .84rem;
         color: var(--deep);
-        text-align: right;
     }
 
-        .rc-val.warn {
-            color: var(--red);
-        }
-
-        .rc-val.ok {
-            color: var(--green);
-        }
-
-    /* Progress bar for time */
-    .time-bar-wrap {
-        background: #f0ead8;
+    .p-meta {
+        font-size: .68rem;
+        color: var(--muted);
+        margin-top: .1rem;
+    }
+    /* Status badge */
+    .st-b {
+        display: inline-flex;
+        align-items: center;
+        gap: .22rem;
+        padding: .2rem .6rem;
         border-radius: 4px;
-        height: 5px;
-        margin-top: 2px;
+        font-size: .65rem;
+        font-weight: 700;
+    }
+    /* Time progress */
+    .time-bar-wrap {
+        height: 4px;
+        background: var(--border);
+        border-radius: 2px;
+        overflow: hidden;
+        width: 100px;
+        margin-top: .3rem;
     }
 
     .time-bar-fill {
-        height: 5px;
-        border-radius: 4px;
-        transition: .3s;
+        height: 100%;
+        border-radius: 2px;
+        transition: width .3s;
     }
 
     .tbf-ok {
@@ -292,624 +290,736 @@
         background: var(--red);
     }
 
-    /* Footer actions */
-    .rc-foot {
-        padding: .65rem 1rem;
-        border-top: 1px solid var(--border);
-        display: flex;
-        gap: .4rem;
+    .time-label {
+        font-size: .62rem;
+        color: var(--muted);
+        margin-top: .15rem;
     }
 
-    .rc-btn {
-        flex: 1;
-        padding: .38rem 0;
-        border-radius: 8px;
-        border: 1.5px solid var(--border);
-        background: transparent;
-        color: var(--deep);
-        font-size: .72rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: .15s;
+        .time-label.overdue {
+            color: var(--red);
+            font-weight: 700;
+        }
+    /* Customer */
+    .cust-name {
+        font-weight: 600;
+        font-size: .83rem;
+    }
+
+    .cust-phone {
+        font-size: .7rem;
+        color: var(--muted);
+    }
+    /* Actions */
+    .act-g {
         display: flex;
+        gap: .28rem;
+    }
+
+    .act-b {
+        min-width: 28px;
+        height: 28px;
+        padding: 0 .5rem;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: #fff;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
+        cursor: pointer;
+        font-size: .72rem;
+        font-weight: 600;
+        transition: all .15s;
+        white-space: nowrap;
         gap: .25rem;
-        font-family: 'Outfit',sans-serif;
     }
 
-        .rc-btn:hover {
-            background: var(--warm);
-        }
-
-        .rc-btn.ret {
-            border-color: #86efac;
+        .act-b.ret:hover {
+            border-color: var(--green);
             color: var(--green);
+            background: rgba(21,128,61,.07);
         }
 
-            .rc-btn.ret:hover {
-                background: var(--green);
-                color: #fff;
-            }
-
-        .rc-btn.lost {
-            border-color: #fca5a5;
+        .act-b.lost:hover {
+            border-color: var(--red);
             color: var(--red);
+            background: rgba(201,75,42,.07);
         }
-
-            .rc-btn.lost:hover {
-                background: var(--red);
-                color: #fff;
-            }
-
     /* Empty */
-    .ar-empty {
+    .empty-row td {
         text-align: center;
-        padding: 3rem 2rem;
+        padding: 4rem;
         color: var(--muted);
     }
 
-        .ar-empty i {
-            font-size: 2.5rem;
-            opacity: .35;
-            display: block;
-            margin-bottom: .75rem;
-        }
-
-    /* Return Modal */
-    .ret-modal-body {
-        padding: 1.25rem 1.5rem;
+    .empty-row i {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: .75rem;
+        opacity: .2;
+    }
+    /* Pager */
+    .pager {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: .85rem 1.2rem;
+        border-top: 1px solid var(--border);
+        font-size: .78rem;
+        color: var(--muted);
+    }
+    /* ── RETURN MODAL ── */
+    .ov {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.5);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        display: none;
     }
 
-    .ret-field {
+        .ov.show {
+            display: flex;
+        }
+
+    .ov-box {
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        max-width: 480px;
+        width: 100%;
+        box-shadow: 0 16px 48px rgba(0,0,0,.22);
+    }
+
+    .ov-hd {
+        background: var(--deep);
+        padding: 1rem 1.3rem;
         display: flex;
-        flex-direction: column;
-        gap: .3rem;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .ov-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .ov-close {
+        background: none;
+        border: none;
+        color: rgba(255,255,255,.4);
+        font-size: 1rem;
+        cursor: pointer;
+    }
+
+        .ov-close:hover {
+            color: #fff;
+        }
+
+    .ov-body {
+        padding: 1.2rem 1.3rem;
+    }
+
+    .ov-ft {
+        padding: .85rem 1.3rem;
+        background: var(--warm);
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: flex-end;
+        gap: .55rem;
+    }
+
+    .info-bar {
+        padding: .6rem .85rem;
+        border-radius: 7px;
+        font-size: .76rem;
+        line-height: 1.5;
+        display: flex;
+        align-items: flex-start;
+        gap: .45rem;
         margin-bottom: .85rem;
     }
 
-        .ret-field label {
-            font-size: .75rem;
+    .ib-blue {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: var(--blue);
+    }
+
+    .ib-red {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: var(--red);
+    }
+
+    .row2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .8rem;
+    }
+
+    .fg {
+        display: flex;
+        flex-direction: column;
+        gap: .25rem;
+        margin-bottom: .75rem;
+    }
+
+        .fg label {
+            font-size: .72rem;
             font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .5px;
+            color: var(--deep);
+        }
+
+        .fg .hint {
+            font-size: .66rem;
             color: var(--muted);
         }
 
-    .ret-fc {
-        border: 1.5px solid var(--border);
-        border-radius: 8px;
-        padding: .48rem .75rem;
-        font-size: .875rem;
+    .fi {
+        padding: .58rem .82rem;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .83rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
+        transition: border-color .2s;
         width: 100%;
-        background: var(--cream);
     }
 
-        .ret-fc:focus {
-            outline: none;
+        .fi:focus {
             border-color: var(--gold);
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(212,160,23,.15);
         }
 
-    .ret-two {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: .75rem;
-    }
-
-    .dmg-toggle {
+    .toggle-row {
         display: flex;
         align-items: center;
         gap: .6rem;
         cursor: pointer;
         user-select: none;
-        font-size: .85rem;
+        font-size: .84rem;
         font-weight: 600;
+        margin-bottom: .75rem;
     }
 
-        .dmg-toggle input {
+        .toggle-row input {
             width: 16px;
             height: 16px;
             accent-color: var(--red);
+            cursor: pointer;
         }
 
-    .ret-summary {
+    .summary-box {
         background: var(--warm);
         border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: .85rem 1rem;
-        font-size: .83rem;
+        border-radius: 7px;
+        padding: .65rem .9rem;
+        font-size: .8rem;
     }
 
-    .ret-sum-row {
+    .sum-row {
         display: flex;
         justify-content: space-between;
-        padding: .2rem 0;
+        padding: .25rem 0;
+        border-bottom: 1px solid var(--border);
     }
 
-        .ret-sum-row.total {
-            font-weight: 800;
-            font-size: .95rem;
-            border-top: 1px solid var(--border);
-            margin-top: .3rem;
-            padding-top: .5rem;
+        .sum-row:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: .86rem;
+            padding-top: .4rem;
         }
 
-    .ret-foot {
-        padding: 1rem 1.5rem;
-        background: var(--warm);
-        border-top: 1px solid var(--border);
-        display: flex;
-        gap: .6rem;
-        justify-content: flex-end;
+    .btn-p-green {
+        background: linear-gradient(135deg,#16a34a,#22c55e);
+        color: #fff;
+        border: none;
+        padding: .62rem 1.3rem;
+        font-size: .84rem;
+        font-weight: 700;
+        border-radius: 7px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: .38rem;
+        transition: all .2s;
     }
 
-    .btn-cancel-sm {
-        padding: .5rem 1.2rem;
+        .btn-p-green:hover {
+            box-shadow: 0 4px 14px rgba(21,128,61,.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-p-green:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    .btn-p-red {
+        background: linear-gradient(135deg,#dc2626,#ef4444);
+        color: #fff;
+        border: none;
+        padding: .62rem 1.3rem;
+        font-size: .84rem;
+        font-weight: 700;
+        border-radius: 7px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: .38rem;
+        transition: all .2s;
+    }
+
+        .btn-p-red:hover {
+            box-shadow: 0 4px 14px rgba(220,38,38,.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-p-red:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    .btn-s {
+        padding: .6rem 1.1rem;
         border: 1.5px solid var(--border);
-        border-radius: 9px;
-        background: transparent;
-        font-size: .84rem;
-        font-weight: 700;
-        cursor: pointer;
-    }
-
-    .btn-confirm {
-        padding: .5rem 1.5rem;
-        border: none;
-        border-radius: 9px;
-        background: var(--green);
-        color: #fff;
-        font-size: .84rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: .18s;
-        font-family: 'Outfit',sans-serif;
-    }
-
-        .btn-confirm:hover {
-            background: #166534;
-        }
-
-    .btn-confirm-red {
-        background: var(--red);
-    }
-
-        .btn-confirm-red:hover {
-            background: #b91c1c;
-        }
-
-    .toast-wrap {
-        position: fixed;
-        bottom: 1.5rem;
-        right: 1.5rem;
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        gap: .5rem;
-    }
-
-    .toast-msg {
-        background: var(--deep);
-        color: #fff;
-        padding: .7rem 1.1rem;
-        border-radius: 9px;
+        border-radius: 7px;
+        background: #fff;
         font-size: .82rem;
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-        animation: tsIn .25s ease;
-    }
-
-    .toast-ok {
-        background: var(--green);
-    }
-
-    .toast-err {
-        background: var(--red);
-    }
-    @@keyframes tsIn {
-        from {
-            opacity: 0;
-            transform: translateX(30px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    .inner-modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,.45);
-        z-index: 1060;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(3px);
-    }
-
-        .inner-modal-overlay.show {
-            display: flex;
-        }
-
-    .inner-modal-box {
-        background: var(--card);
-        border-radius: 14px;
-        width: 100%;
-        max-width: 460px;
-        overflow: hidden;
-        box-shadow: 0 16px 48px rgba(0,0,0,.22);
-    }
-
-    .inner-modal-hd {
-        background: var(--deep);
-        color: #fff;
-        padding: 1rem 1.25rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-        .inner-modal-hd h5 {
-            font-size: .95rem;
-            font-weight: 800;
-            margin: 0;
-        }
-
-    .inner-modal-close {
-        background: none;
-        border: none;
-        color: rgba(255,255,255,.6);
-        font-size: 1.3rem;
+        font-weight: 600;
         cursor: pointer;
+        color: var(--muted);
+        transition: all .18s;
     }
+
+        .btn-s:hover {
+            border-color: var(--deep);
+            color: var(--deep);
+        }
 </style>
 
-<div class="ar-wrapper">
+<div class="pg">
+    <!-- HEADER -->
+    <div class="pg-hd">
+        <div>
+            <h1 class="pg-title">Đang Cho <em>Thuê</em></h1>
+            <div class="pg-sub">Theo dõi trạng thái tất cả phiên thuê đang hoạt động</div>
+        </div>
+        <a href="@Url.Action("Index", "AdminInventory")" class="btn-back"><i class="bi bi-arrow-left"></i> Về kho</a>
+    </div>
 
-    <!-- Stats -->
-    <div class="ar-stats">
-        <div class="ar-stat active">
-            <div class="ar-stat-val">@Model.TotalActive</div>
-            <div class="ar-stat-lbl">🔄 Đang thuê</div>
+    <!-- STATS -->
+    <div class="stats">
+        <div class="sb on" id="sbAll" onclick="filterRental('all')">
+            <div class="sn">@Model.Items.Count</div>
+            <div class="sl">Tổng phiên</div>
         </div>
-        <div class="ar-stat overdue">
-            <div class="ar-stat-val">@Model.TotalOverdue</div>
-            <div class="ar-stat-lbl">⚠️ Quá hạn trả</div>
+        <div class="sb" id="sbActive" onclick="filterRental('Active')">
+            <div class="sn" style="color:var(--blue)">@Model.TotalActive</div>
+            <div class="sl">Đang thuê</div>
         </div>
-        <div class="ar-stat">
-            <div class="ar-stat-val" style="color:var(--green);">@Model.TotalReturned</div>
-            <div class="ar-stat-lbl">✅ Đã trả hôm nay</div>
+        <div class="sb" id="sbOverdue" onclick="filterRental('Overdue')">
+            <div class="sn" style="color:var(--red)">@Model.TotalOverdue</div>
+            <div class="sl">Quá hạn</div>
         </div>
-        <div class="ar-stat">
-            <div class="ar-stat-val" style="color:var(--purple);">@Model.TotalLost</div>
-            <div class="ar-stat-lbl">❌ Mất / không trả</div>
+        <div class="sb" id="sbReturned" onclick="filterRental('Returned')">
+            <div class="sn" style="color:var(--green)">@Model.TotalReturned</div>
+            <div class="sl">Đã trả hôm nay</div>
+        </div>
+        <div class="sb" id="sbLost" onclick="filterRental('Lost')">
+            <div class="sn" style="color:var(--purple)">@Model.TotalLost</div>
+            <div class="sl">Mất / không trả</div>
         </div>
     </div>
 
-    <!-- Toolbar -->
-    <div class="ar-toolbar">
-        <div class="ar-search">
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+        <div class="srch">
             <i class="bi bi-search"></i>
-            <input type="text" id="arSearch" placeholder="Tìm khách, sân, sản phẩm..." oninput="applyArFilter()" />
+            <input type="text" id="srchIn" placeholder="Tên khách, sân, sản phẩm..." oninput="applyFilter()" />
         </div>
-        <select class="ar-filter" id="arStatusFilter" onchange="applyArFilter()">
-            <option value="">Tất cả trạng thái</option>
-            <option value="Active">🔄 Đang thuê</option>
-            <option value="Overdue">⚠️ Quá hạn</option>
-            <option value="Returned">✅ Đã trả</option>
-            <option value="Damaged">💔 Hàng hỏng</option>
-            <option value="Lost">❌ Mất</option>
-        </select>
-        <select class="ar-filter" id="arFacilityFilter" onchange="applyArFilter()">
+        <select class="sel" id="fFac" onchange="applyFilter()">
             <option value="">Tất cả cơ sở</option>
-            @foreach (var f in (ViewBag.Facilities as List<QuanLiSanCauLong.Models.Facility>) ?? new())
+            @foreach (var f in facilities)
             {
                 <option value="@f.FacilityName">@f.FacilityName</option>
             }
         </select>
-        <span class="filter-count" id="arCount">@Model.Items.Count phiên thuê</span>
+        <span style="font-size:.78rem;color:var(--muted);white-space:nowrap;" id="rowCount">@Model.Items.Count phiên</span>
     </div>
 
-    <!-- Cards -->
-    @if (Model.Items.Any())
-    {
-        <div class="ar-grid" id="arGrid">
-            @foreach (var r in Model.Items)
-            {
-                var isOverdue = r.IsOverdue;
-                var statusCls = r.Status switch
+    <!-- TABLE -->
+    <div class="tbl-wrap">
+        <table class="rtbl">
+            <thead>
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th>Khách thuê</th>
+                    <th style="width:80px">Sân</th>
+                    <th style="width:80px;text-align:center">SL</th>
+                    <th style="width:110px">Thuê lúc</th>
+                    <th style="width:140px">Thời gian / Trả</th>
+                    <th style="width:110px">Trạng thái</th>
+                    <th style="width:110px;text-align:right">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody id="rentalTbody">
+                @if (!Model.Items.Any())
                 {
-                                "Active" when isOverdue => "overdue",
-                                "Active" => "active",
-                                "Returned" => "returned",
-                                "Damaged" => "damaged",
-                    _ => "lost"
-                };
-                var cardCls = isOverdue ? "overdue" : r.Status != "Active" ? "returned" : "";
-
-                // Time progress
-                double pct = 0;
-                string barCls = "tbf-ok";
-                if (r.ExpectedReturnAt.HasValue && r.Status == "Active")
-                {
-                    var total = (r.ExpectedReturnAt.Value - r.RentedAt).TotalMinutes;
-                    var elapsed = (DateTime.Now - r.RentedAt).TotalMinutes;
-                    pct = total > 0 ? Math.Min(100, elapsed / total * 100) : 100;
-                    barCls = pct >= 100 ? "tbf-overdue" : pct >= 75 ? "tbf-warn" : "tbf-ok";
+                    <tr class="empty-row">
+                        <td colspan="8">
+                            <i class="bi bi-arrow-repeat"></i>
+                            <div style="font-weight:700;margin-bottom:.3rem;">Không có phiên cho thuê nào</div>
+                            <div style="font-size:.8rem;">Khi khách thuê đồ, phiên thuê sẽ xuất hiện ở đây.</div>
+                        </td>
+                    </tr>
                 }
+                @foreach (var r in Model.Items)
+                {
+                    var isOverdue = r.IsOverdue;
+                    var statusKey = isOverdue ? "Overdue" : r.Status;
+                    double pct = 0;
+                    string barCls = "tbf-ok";
+                    string timeLabel = "";
+                    if (r.ExpectedReturnAt.HasValue && r.Status == "Active")
+                    {
+                        var total = (r.ExpectedReturnAt.Value - r.RentedAt).TotalMinutes;
+                        var elapsed = (DateTime.Now - r.RentedAt).TotalMinutes;
+                        pct = total > 0 ? Math.Min(100, elapsed / total * 100) : 100;
+                        barCls = pct >= 100 ? "tbf-overdue" : pct >= 75 ? "tbf-warn" : "tbf-ok";
+                        timeLabel = isOverdue
+                        ? $"Quá {(DateTime.Now - r.ExpectedReturnAt.Value).TotalMinutes:F0} phút"
+                        : $"Còn {(r.ExpectedReturnAt.Value - DateTime.Now).TotalMinutes:F0} phút";
+                    }
 
-                <div class="rental-card @cardCls"
-                     data-name="@r.CustomerName?.ToLower() @r.CustomerPhone @r.CourtCode?.ToLower() @r.ProductName?.ToLower()"
-                     data-status="@(isOverdue ? "Overdue" : r.Status)"
-                     data-facility="@r.FacilityName">
-                    <div class="rc-head">
-                        <div>
-                            <div class="rc-product">@r.ProductName @(!string.IsNullOrEmpty(r.Size) ? $"(Size {r.Size})" : "")</div>
-                            <div class="rc-category">@r.CategoryName · @r.FacilityName</div>
-                        </div>
-                        <span class="rc-status-badge st-@statusCls">
-                            @(r.Status switch { "Active" when isOverdue => "⚠️ Quá hạn", "Active" => "🔄 Đang thuê", "Returned" => "✅ Đã trả", "Damaged" => "💔 Hỏng", _ => "❌ Mất" })
-                        </span>
-                    </div>
-                    <div class="rc-divider"></div>
-                    <div class="rc-body">
-                        <div class="rc-row">
-                            <span class="rc-key"><i class="bi bi-person"></i>Khách thuê</span>
-                            <span class="rc-val">@(r.CustomerName ?? "—") @(!string.IsNullOrEmpty(r.CustomerPhone) ? $"· {r.CustomerPhone}" : "")</span>
-                        </div>
-                        <div class="rc-row">
-                            <span class="rc-key"><i class="bi bi-geo-alt"></i>Sân</span>
-                            <span class="rc-val">@(r.CourtCode ?? "—")</span>
-                        </div>
-                        <div class="rc-row">
-                            <span class="rc-key"><i class="bi bi-boxes"></i>Số lượng</span>
-                            <span class="rc-val">@r.Quantity @r.Unit</span>
-                        </div>
-                        <div class="rc-row">
-                            <span class="rc-key"><i class="bi bi-clock"></i>Từ lúc</span>
-                            <span class="rc-val">@r.RentedAt.ToString("HH:mm dd/MM")</span>
-                        </div>
-                        @if (r.ExpectedReturnAt.HasValue)
-                        {
-                            <div class="rc-row">
-                                <span class="rc-key"><i class="bi bi-alarm"></i>Trả trước</span>
-                                <span class="rc-val @(isOverdue ? "warn" : "")">@r.ExpectedReturnAt.Value.ToString("HH:mm dd/MM")</span>
+                    <tr id="rr-@r.RentalItemId"
+                        class="@(isOverdue ? "overdue-row" : "")"
+                        data-status="@statusKey"
+                        data-fac="@(r.FacilityName ?? "")"
+                        data-search="@(r.CustomerName?.ToLower()) @(r.CustomerPhone) @(r.CourtCode?.ToLower()) @(r.ProductName?.ToLower())">
+                        <td>
+                            <div class="p-cell">
+                                <div class="p-name">@r.ProductName @(!string.IsNullOrEmpty(r.Size) ? $"(Size {r.Size})" : "")</div>
+                                <div class="p-meta">@r.CategoryName · @r.FacilityName</div>
                             </div>
-                            if (r.Status == "Active")
+                        </td>
+                        <td>
+                            <div class="cust-name">@(r.CustomerName ?? "—")</div>
+                            @if (!string.IsNullOrEmpty(r.CustomerPhone))
                             {
-                                <div>
-                                    <div class="time-bar-wrap">
-                                        <div class="time-bar-fill @barCls" style="width:@pct.ToString("F0")%;"></div>
-                                    </div>
-                                    <div style="font-size:.65rem;color:var(--muted);margin-top:2px;text-align:right;">
-                                        @(isOverdue ? $"Quá {(DateTime.Now - r.ExpectedReturnAt.Value).TotalMinutes:F0} phút" : $"{r.DurationHours:F1}h / còn {(r.ExpectedReturnAt.Value - DateTime.Now).TotalMinutes:F0} phút")
-                                    </div>
+                                <div class="cust-phone"><i class="bi bi-telephone"></i> @r.CustomerPhone</div>
+                            }
+                        </td>
+                        <td style="font-size:.82rem;color:var(--muted);">@(r.CourtCode ?? "—")</td>
+                        <td style="text-align:center;font-weight:700;">@r.Quantity <span style="font-size:.7rem;color:var(--muted);font-weight:400">@r.Unit</span></td>
+                        <td style="font-size:.78rem;color:var(--muted);">@r.RentedAt.ToString("HH:mm")<br />@r.RentedAt.ToString("dd/MM")</td>
+                        <td>
+                            @if (r.ExpectedReturnAt.HasValue && r.Status == "Active")
+                            {
+                                <div style="font-size:.76rem;color:@(isOverdue ? "var(--red)" : "var(--deep)");font-weight:@(isOverdue ? "700" : "400");">
+                                    @r.ExpectedReturnAt.Value.ToString("HH:mm dd/MM")
                                 </div>
+                                <div class="time-bar-wrap">
+                                    <div class="time-bar-fill @barCls" style="width:@((int)pct)%"></div>
+                                </div>
+                                <div class="time-label @(isOverdue ? "overdue" : "")">@timeLabel</div>
                             }
-                        }
-                        else
-                        {
-                            <div class="rc-row">
-                                <span class="rc-key"><i class="bi bi-hourglass-split"></i>Thời gian</span>
-                                <span class="rc-val">@r.DurationHours.ToString("F1")h</span>
-                            </div>
-                        }
-                    </div>
-                    @if (r.Status == "Active")
-                    {
-                        <div class="rc-foot">
-                            <button class="rc-btn ret" onclick="openReturnModal(@r.RentalItemId, '@r.ProductName?.Replace("'", "\\'")', @r.Quantity, '@r.Unit', @r.InventoryId)">
-                                <i class="bi bi-box-arrow-in-left"></i> Trả đồ
-                            </button>
-                            <button class="rc-btn lost" onclick="openLostModal(@r.RentalItemId, '@r.ProductName?.Replace("'", "\\'")', @r.Quantity)">
-                                <i class="bi bi-x-circle"></i> Mất
-                            </button>
-                        </div>
-                    }
-                    else if (r.ReturnedAt.HasValue)
-                    {
-                        <div style="padding:.5rem 1rem; font-size:.72rem; color:var(--muted); border-top:1px solid var(--border);">
-                            <i class="bi bi-check-circle-fill text-success"></i>
-                            Trả lúc @r.ReturnedAt.Value.ToString("HH:mm dd/MM")
-                            @if (r.CleaningFeeCharged > 0)
+                            else if (r.ReturnedAt.HasValue)
                             {
-                                <span>· Phí VS: @r.CleaningFeeCharged.ToString("N0")₫</span>
+                                <div style="font-size:.76rem;">Trả: @r.ReturnedAt.Value.ToString("HH:mm dd/MM")</div>
+                                @if (r.CleaningFeeCharged > 0)
+                                {
+                                    <div style="font-size:.66rem;color:var(--muted);">Phí VS: @r.CleaningFeeCharged.ToString("N0")đ</div>
+                                }
                             }
-                        </div>
-                    }
-                </div>
-            }
+                            else
+                            {
+                                <div style="font-size:.76rem;color:var(--muted);">@r.DurationHours.ToString("F1")h</div>
+                            }
+                        </td>
+                        <td>
+                            @if (r.Status == "Active" && isOverdue)
+                            {
+                                <span class="st-b" style="background:#fff7ed;color:var(--orange);">
+                                    <i class="bi bi-exclamation-triangle-fill"></i> Quá hạn
+                                </span>
+                            }
+                            else if (r.Status == "Active")
+                            {
+                                <span class="st-b" style="background:#eff6ff;color:var(--blue);">
+                                    <i class="bi bi-arrow-repeat"></i> Đang thuê
+                                </span>
+                            }
+                            else if (r.Status == "Returned")
+                            {
+                                <span class="st-b" style="background:#f0fdf4;color:var(--green);">
+                                    <i class="bi bi-check-circle-fill"></i> Đã trả
+                                </span>
+                            }
+                            else if (r.Status == "Damaged")
+                            {
+                                <span class="st-b" style="background:#f5f3ff;color:var(--purple);">
+                                    <i class="bi bi-tools"></i> Hư hỏng
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="st-b" style="background:#fee2e2;color:var(--red);">
+                                    <i class="bi bi-x-circle-fill"></i> Mất
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            <div class="act-g" style="justify-content:flex-end;">
+                                @if (r.Status == "Active")
+                                {
+                                    <button class="act-b ret"
+                                            onclick="openReturn(@r.RentalItemId,'@Html.Raw(r.ProductName?.Replace("'", "\'"))',@r.Quantity,'@r.Unit',@r.InventoryId)"
+                                            title="Nhận lại đồ">
+                                        <i class="bi bi-box-arrow-in-left"></i> Trả
+                                    </button>
+                                    <button class="act-b lost"
+                                            onclick="openLost(@r.RentalItemId,'@Html.Raw(r.ProductName?.Replace("'", "\'"))',@r.Quantity)"
+                                            title="Báo mất">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="pager">
+            <span id="countLabel">@Model.Items.Count phiên thuê</span>
         </div>
-    }
-    else
-    {
-        <div class="ar-empty">
-            <i class="bi bi-arrow-repeat"></i>
-            <p style="font-weight:700;font-size:1rem;color:var(--deep);">Không có phiên cho thuê nào</p>
-            <p style="font-size:.82rem;">Khi khách thuê vợt, giày hoặc đồ dùng sẽ hiển thị ở đây</p>
-        </div>
-    }
+    </div>
 </div>
 
-<!-- Return Modal -->
-<div class="inner-modal-overlay" id="returnModal">
-    <div class="inner-modal-box">
-        <div class="inner-modal-hd">
-            <h5><i class="bi bi-box-arrow-in-left me-2"></i>Xác nhận trả đồ thuê</h5>
-            <button class="inner-modal-close" onclick="closeInnerModal('returnModal')">&times;</button>
+<!-- ═══ RETURN MODAL ═══ -->
+<div class="ov" id="returnOv">
+    <div class="ov-box">
+        <div class="ov-hd">
+            <span class="ov-title"><i class="bi bi-box-arrow-in-left me-1" style="color:#4ade80"></i> Nhận lại đồ thuê</span>
+            <button class="ov-close" onclick="closeOv('returnOv')"><i class="bi bi-x-lg"></i></button>
         </div>
-        <div class="ret-modal-body">
-            <div style="background:var(--blue-soft);border:1px solid #93c5fd;border-radius:9px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.83rem;color:var(--blue);">
-                <i class="bi bi-info-circle-fill me-1"></i>
-                Đang trả: <strong id="retProductName"></strong> · <strong id="retQuantityLabel"></strong>
+        <div class="ov-body">
+            <div class="info-bar ib-blue">
+                <i class="bi bi-info-circle-fill" style="flex-shrink:0;margin-top:1px"></i>
+                <span>Đang nhận lại: <strong id="retProdName"></strong> — <strong id="retQtyLabel"></strong></span>
             </div>
-            <div class="ret-two">
-                <div class="ret-field">
-                    <label>Số lượng trả</label>
-                    <input type="number" id="retQty" class="ret-fc" min="1" value="1" oninput="updateRetSummary()" />
+            <div class="row2">
+                <div class="fg">
+                    <label>Số lượng nhận về</label>
+                    <input type="number" id="retQty" class="fi" min="1" value="1" oninput="calcReturnTotal()" />
                 </div>
-                <div class="ret-field">
-                    <label>Phí vệ sinh / giặt ủi</label>
-                    <input type="number" id="retCleanFee" class="ret-fc" min="0" step="5000" value="0" placeholder="0₫" oninput="updateRetSummary()" />
+                <div class="fg">
+                    <label>Phí vệ sinh (đ)</label>
+                    <input type="number" id="retFee" class="fi" min="0" step="1000" value="0" placeholder="0" oninput="calcReturnTotal()" />
+                    <span class="hint">Thu thêm nếu đồ bẩn</span>
                 </div>
             </div>
-            <div class="ret-field">
-                <label class="dmg-toggle">
-                    <input type="checkbox" id="retDamaged" onchange="updateRetSummary()" />
-                    Hàng trả về bị hỏng (chuyển sang kho hỏng)
-                </label>
+            <label class="toggle-row">
+                <input type="checkbox" id="retDmg" onchange="toggleDmg(this.checked)" />
+                <i class="bi bi-tools" style="color:var(--purple)"></i>
+                Đồ bị hư hỏng khi trả về
+            </label>
+            <div class="fg" id="retDmgRow" style="display:none;">
+                <label>Mô tả hư hỏng</label>
+                <input type="text" id="retDmgNote" class="fi" placeholder="Mô tả tình trạng hư hỏng..." />
             </div>
-            <div class="ret-field">
+            <div class="fg">
                 <label>Ghi chú</label>
-                <textarea id="retNote" class="ret-fc" rows="2" placeholder="Tình trạng hàng khi trả..."></textarea>
+                <textarea id="retNote" class="fi" rows="2" placeholder="Ghi chú thêm..."></textarea>
             </div>
-            <div class="ret-summary">
-                <div class="ret-sum-row"><span>Số lượng trả</span><span id="sumQty">—</span></div>
-                <div class="ret-sum-row"><span>Tình trạng</span><span id="sumCondition">Bình thường</span></div>
-                <div class="ret-sum-row total"><span>Phí vệ sinh</span><span id="sumFee">0₫</span></div>
+            <div class="summary-box" id="retSummary" style="display:none;">
+                <div class="sum-row"><span>Số lượng trả</span><span id="retSumQty">—</span></div>
+                <div class="sum-row"><span>Phí vệ sinh</span><span id="retSumFee">—</span></div>
+                <div class="sum-row"><span>Tổng thu thêm</span><span id="retSumTotal">—</span></div>
             </div>
         </div>
-        <div class="ret-foot">
-            <button class="btn-cancel-sm" onclick="closeInnerModal('returnModal')">Huỷ</button>
-            <button class="btn-confirm" onclick="submitReturn()"><i class="bi bi-check-circle-fill me-1"></i>Xác nhận trả</button>
+        <div class="ov-ft">
+            <button class="btn-s" onclick="closeOv('returnOv')">Hủy</button>
+            <button class="btn-p-green" id="retBtnSave" onclick="submitReturn()">
+                <i class="bi bi-check-lg"></i> Xác nhận nhận lại
+            </button>
         </div>
     </div>
 </div>
 
-<!-- Lost Modal -->
-<div class="inner-modal-overlay" id="lostModal">
-    <div class="inner-modal-box">
-        <div class="inner-modal-hd" style="background:var(--red);">
-            <h5><i class="bi bi-x-circle-fill me-2"></i>Ghi nhận mất hàng</h5>
-            <button class="inner-modal-close" onclick="closeInnerModal('lostModal')">&times;</button>
+<!-- ═══ LOST MODAL ═══ -->
+<div class="ov" id="lostOv">
+    <div class="ov-box">
+        <div class="ov-hd" style="background:#7f1d1d;">
+            <span class="ov-title"><i class="bi bi-x-circle-fill me-1" style="color:#fca5a5"></i> Báo mất đồ thuê</span>
+            <button class="ov-close" onclick="closeOv('lostOv')"><i class="bi bi-x-lg"></i></button>
         </div>
-        <div class="ret-modal-body">
-            <div style="background:var(--red-soft);border:1px solid #fca5a5;border-radius:9px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.83rem;color:var(--red);">
-                <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                Xác nhận mất: <strong id="lostProductName"></strong>. Kho sẽ bị trừ vĩnh viễn.
+        <div class="ov-body">
+            <div class="info-bar ib-red">
+                <i class="bi bi-exclamation-triangle-fill" style="flex-shrink:0;margin-top:1px"></i>
+                <span>Báo mất: <strong id="lostProdName"></strong> — <strong id="lostQtyLabel"></strong></span>
             </div>
-            <div class="ret-field">
+            <div class="fg">
                 <label>Số lượng mất</label>
-                <input type="number" id="lostQty" class="ret-fc" min="1" value="1" />
+                <input type="number" id="lostQty" class="fi" min="1" value="1" />
             </div>
-            <div class="ret-field">
+            <div class="fg">
                 <label>Ghi chú / lý do</label>
-                <textarea id="lostNote" class="ret-fc" rows="2" placeholder="Khách không trả, không liên lạc được..."></textarea>
+                <textarea id="lostNote" class="fi" rows="2" placeholder="Khách mất, không tìm thấy..."></textarea>
+            </div>
+            <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:7px;padding:.6rem .85rem;font-size:.76rem;color:#c2410c;">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                Hành động này sẽ ghi nhận đồ là <strong>mất vĩnh viễn</strong> và trừ khỏi kho. Không thể hoàn tác.
             </div>
         </div>
-        <div class="ret-foot">
-            <button class="btn-cancel-sm" onclick="closeInnerModal('lostModal')">Huỷ</button>
-            <button class="btn-confirm btn-confirm-red" onclick="submitLost()"><i class="bi bi-x-circle-fill me-1"></i>Ghi nhận mất</button>
+        <div class="ov-ft">
+            <button class="btn-s" onclick="closeOv('lostOv')">Hủy</button>
+            <button class="btn-p-red" id="lostBtnSave" onclick="submitLost()">
+                <i class="bi bi-x-circle-fill"></i> Xác nhận mất
+            </button>
         </div>
     </div>
 </div>
 
-<div class="toast-wrap" id="toastWrapAR"></div>
+@section Scripts {
+    @Html.AntiForgeryToken()
+    <script>
+        const TOKEN = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+        let curRetId = 0, curLostId = 0, curMaxQty = 1;
 
-<script>
-    let _currentRentalId = 0;
-    let _currentMaxQty   = 1;
-    let _currentLostId   = 0;
+        /* ── FILTER ── */
+        let activeFilter = 'all';
+        function filterRental(mode) {
+            activeFilter = mode;
+            document.querySelectorAll('.sb').forEach(b => b.classList.remove('on'));
+            const map = { all:'sbAll', Active:'sbActive', Overdue:'sbOverdue', Returned:'sbReturned', Lost:'sbLost' };
+            document.getElementById(map[mode] || 'sbAll')?.classList.add('on');
+            applyFilter();
+        }
+        function applyFilter() {
+            const q   = document.getElementById('srchIn').value.toLowerCase();
+            const fac = document.getElementById('fFac').value;
+            let cnt = 0;
+            document.querySelectorAll('#rentalTbody tr[id^="rr-"]').forEach(r => {
+                const matchSearch = !q || r.dataset.search?.includes(q);
+                const matchFac    = !fac || r.dataset.fac === fac;
+                const matchMode   = activeFilter === 'all' || r.dataset.status === activeFilter;
+                const show = matchSearch && matchFac && matchMode;
+                r.style.display = show ? '' : 'none';
+                if(show) cnt++;
+            });
+            document.getElementById('rowCount').textContent = cnt + ' phiên';
+            document.getElementById('countLabel').textContent = cnt + ' phiên thuê';
+        }
 
-    // ── Filter ──
-    function applyArFilter() {
-        const q  = document.getElementById('arSearch').value.toLowerCase();
-        const st = document.getElementById('arStatusFilter').value;
-        const fc = document.getElementById('arFacilityFilter').value;
-        let cnt = 0;
-        document.querySelectorAll('#arGrid .rental-card').forEach(c => {
-            const ok = (!q  || c.dataset.name.includes(q))
-                    && (!st || c.dataset.status === st)
-                    && (!fc || c.dataset.facility === fc);
-            c.style.display = ok ? '' : 'none';
-            if (ok) cnt++;
-        });
-        document.getElementById('arCount').textContent = cnt + ' phiên thuê';
-    }
+        /* ── RETURN MODAL ── */
+        function openReturn(id, name, qty, unit, invId) {
+            curRetId = id; curMaxQty = qty;
+            document.getElementById('retProdName').textContent  = name;
+            document.getElementById('retQtyLabel').textContent  = qty + ' ' + unit;
+            document.getElementById('retQty').value             = qty;
+            document.getElementById('retQty').max               = qty;
+            document.getElementById('retFee').value             = '0';
+            document.getElementById('retDmg').checked           = false;
+            document.getElementById('retDmgRow').style.display  = 'none';
+            document.getElementById('retNote').value            = '';
+            calcReturnTotal();
+            document.getElementById('returnOv').classList.add('show');
+        }
+        function toggleDmg(on) { document.getElementById('retDmgRow').style.display = on ? 'block' : 'none'; }
+        function calcReturnTotal() {
+            const qty = parseInt(document.getElementById('retQty').value)||0;
+            const fee = parseFloat(document.getElementById('retFee').value)||0;
+            const box = document.getElementById('retSummary');
+            if(qty > 0 || fee > 0) {
+                box.style.display = 'block';
+                document.getElementById('retSumQty').textContent   = qty;
+                document.getElementById('retSumFee').textContent   = fee > 0 ? fee.toLocaleString('vi-VN')+'đ' : 'Không';
+                document.getElementById('retSumTotal').textContent = fee > 0 ? fee.toLocaleString('vi-VN')+'đ' : '0đ';
+            } else { box.style.display = 'none'; }
+        }
+        async function submitReturn() {
+            const qty     = parseInt(document.getElementById('retQty').value)||0;
+            const fee     = parseFloat(document.getElementById('retFee').value)||0;
+            const isDmg   = document.getElementById('retDmg').checked;
+            const note    = (isDmg ? ('[Hư hỏng] ' + (document.getElementById('retDmgNote').value||'')) : '') + document.getElementById('retNote').value;
+            if(qty<=0){ alert('Số lượng phải lớn hơn 0!'); return; }
+            const btn = document.getElementById('retBtnSave');
+            btn.disabled=true; btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span>...';
+            try {
+                const fd = new FormData();
+                fd.append('rentalItemId',   curRetId);
+                fd.append('returnQuantity', qty);
+                fd.append('isDamaged',      isDmg);
+                fd.append('cleaningFee',    fee);
+                fd.append('note',           note);
+                const res = await fetch('/AdminInventory/RentReturn', {
+                    method:'POST', headers:{'RequestVerificationToken':TOKEN}, body:fd
+                }).then(r=>r.json());
+                if(res.success) {
+                    closeOv('returnOv');
+                    toast(res.message, true);
+                    document.getElementById(`rr-${curRetId}`)?.remove();
+                } else { alert(res.message||'Lỗi!'); }
+            } catch(e){ alert('Lỗi kết nối!'); }
+            btn.disabled=false; btn.innerHTML='<i class="bi bi-check-lg"></i> Xác nhận nhận lại';
+        }
 
-    // ── Return Modal ──
-    function openReturnModal(rentalId, productName, maxQty, unit, invId) {
-        _currentRentalId = rentalId;
-        _currentMaxQty   = maxQty;
-        document.getElementById('retProductName').textContent   = productName;
-        document.getElementById('retQuantityLabel').textContent = maxQty + ' ' + unit;
-        document.getElementById('retQty').max   = maxQty;
-        document.getElementById('retQty').value = maxQty;
-        document.getElementById('retDamaged').checked = false;
-        document.getElementById('retNote').value     = '';
-        document.getElementById('retCleanFee').value = '0';
-        updateRetSummary();
-        document.getElementById('returnModal').classList.add('show');
-    }
+        /* ── LOST MODAL ── */
+        function openLost(id, name, qty) {
+            curLostId = id;
+            document.getElementById('lostProdName').textContent = name;
+            document.getElementById('lostQtyLabel').textContent = qty + ' cái';
+            document.getElementById('lostQty').value  = qty;
+            document.getElementById('lostQty').max    = qty;
+            document.getElementById('lostNote').value = '';
+            document.getElementById('lostOv').classList.add('show');
+        }
+        async function submitLost() {
+            const qty  = parseInt(document.getElementById('lostQty').value)||0;
+            const note = document.getElementById('lostNote').value;
+            if(qty<=0){ alert('Số lượng phải lớn hơn 0!'); return; }
+            const btn = document.getElementById('lostBtnSave');
+            btn.disabled=true; btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span>...';
+            try {
+                const fd = new FormData();
+                fd.append('rentalItemId', curLostId);
+                fd.append('lostQuantity', qty);
+                fd.append('note', note);
+                const res = await fetch('/AdminInventory/RentLost', {
+                    method:'POST', headers:{'RequestVerificationToken':TOKEN}, body:fd
+                }).then(r=>r.json());
+                if(res.success) {
+                    closeOv('lostOv');
+                    toast(res.message, true);
+                    document.getElementById(`rr-${curLostId}`)?.remove();
+                } else { alert(res.message||'Lỗi!'); }
+            } catch(e){ alert('Lỗi kết nối!'); }
+            btn.disabled=false; btn.innerHTML='<i class="bi bi-x-circle-fill"></i> Xác nhận mất';
+        }
 
-    function updateRetSummary() {
-        const qty  = parseInt(document.getElementById('retQty').value) || 0;
-        const fee  = parseInt(document.getElementById('retCleanFee').value) || 0;
-        const dmg  = document.getElementById('retDamaged').checked;
-        document.getElementById('sumQty').textContent       = qty;
-        document.getElementById('sumCondition').textContent = dmg ? '⚠️ Hàng hỏng' : '✅ Bình thường';
-        document.getElementById('sumCondition').style.color = dmg ? 'var(--red)' : 'var(--green)';
-        document.getElementById('sumFee').textContent       = fee.toLocaleString('vi-VN') + '₫';
-    }
+        function closeOv(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.ov').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('show'); }));
 
-    async function submitReturn() {
-        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
-        const body  = new FormData();
-        body.append('rentalItemId',  _currentRentalId);
-        body.append('returnQuantity', document.getElementById('retQty').value);
-        body.append('isDamaged',      document.getElementById('retDamaged').checked);
-        body.append('cleaningFee',    document.getElementById('retCleanFee').value);
-        body.append('note',           document.getElementById('retNote').value);
-        body.append('__RequestVerificationToken', token);
+        function toast(msg, ok) {
+            const t = document.createElement('div');
+            t.style.cssText=`position:fixed;bottom:1.5rem;right:1.5rem;background:${ok?'#15803d':'#c94b2a'};color:#fff;padding:.75rem 1.25rem;border-radius:8px;font-size:.84rem;font-weight:700;z-index:9999;display:flex;align-items:center;gap:.5rem;box-shadow:0 4px 16px rgba(0,0,0,.2);`;
+            t.innerHTML=`<i class="bi bi-${ok?'check-circle-fill':'exclamation-circle-fill'}"></i> ${msg}`;
+            document.body.appendChild(t);
+            setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(()=>t.remove(),400); },2000);
+        }
 
-        const res  = await fetch('/AdminInventory/RentReturn', { method:'POST', body });
-        const json = await res.json();
-        closeInnerModal('returnModal');
-        showARToast(json.success, json.message);
-        if (json.success) setTimeout(() => location.reload(), 1000);
-    }
-
-    // ── Lost Modal ──
-    function openLostModal(rentalId, productName, maxQty) {
-        _currentLostId = rentalId;
-        document.getElementById('lostProductName').textContent = productName;
-        document.getElementById('lostQty').max   = maxQty;
-        document.getElementById('lostQty').value = maxQty;
-        document.getElementById('lostNote').value = '';
-        document.getElementById('lostModal').classList.add('show');
-    }
-
-    async function submitLost() {
-        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
-        const body  = new FormData();
-        body.append('rentalItemId',  _currentLostId);
-        body.append('lostQuantity',  document.getElementById('lostQty').value);
-        body.append('note',          document.getElementById('lostNote').value);
-        body.append('__RequestVerificationToken', token);
-
-        const res  = await fetch('/AdminInventory/RentLost', { method:'POST', body });
-        const json = await res.json();
-        closeInnerModal('lostModal');
-        showARToast(json.success, json.message);
-        if (json.success) setTimeout(() => location.reload(), 1000);
-    }
-
-    function closeInnerModal(id) { document.getElementById(id).classList.remove('show'); }
-
-    function showARToast(ok, msg) {
-        const el = document.createElement('div');
-        el.className = 'toast-msg ' + (ok ? 'toast-ok' : 'toast-err');
-        el.innerHTML = (ok ? '<i class="bi bi-check-circle-fill"></i> ' : '<i class="bi bi-x-circle-fill"></i> ') + msg;
-        document.getElementById('toastWrapAR').appendChild(el);
-        setTimeout(() => el.remove(), 3500);
-    }
-
-    document.querySelectorAll('.inner-modal-overlay').forEach(o => {
-        o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); });
-    });
-</script>
+        // Init
+        document.addEventListener('DOMContentLoaded',()=> document.getElementById('sbAll')?.classList.add('on'));
+    </script>
+}

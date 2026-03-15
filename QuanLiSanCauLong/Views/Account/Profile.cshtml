@@ -17,6 +17,7 @@
         --muted: rgba(255,255,255,.38);
         --text: rgba(255,255,255,.82);
         --err: #ff6b6b;
+        --success: #20c997;
     }
 
     .profile-page {
@@ -61,22 +62,6 @@
             height: 3px;
             background: linear-gradient(90deg, var(--gold), var(--gold2));
         }
-
-    .profile-avatar-circle {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, var(--gold), var(--gold2));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1rem;
-        font-family: 'Playfair Display', serif;
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--deep);
-        box-shadow: 0 6px 20px rgba(212,160,23,.35);
-    }
 
     .profile-name {
         font-family: 'Playfair Display', serif;
@@ -342,7 +327,6 @@
             box-shadow: 0 6px 18px rgba(212,160,23,.35);
         }
 
-    /* Stats */
     .pf-stats-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -411,10 +395,22 @@
 
 <div class="profile-page">
     <div class="profile-inner">
-        <!-- SIDEBAR -->
+
+        <!-- ═══ SIDEBAR ═══ -->
         <div class="profile-sidebar">
             <div class="profile-card-avatar">
-                <div class="profile-avatar-circle">@Model.FullName?.Substring(0, 1).ToUpper()</div>
+
+                @{
+                    ViewData["UserId"] = Model.UserId;
+                    ViewData["AvatarUrl"] = Model.AvatarUrl;
+                    ViewData["FullName"] = Model.FullName;
+                }
+
+                @* ── AVATAR CROPPER WIDGET (partial) ── *@
+                <div style="display:flex;justify-content:center;margin-bottom:1rem;">
+                    <partial name="_AvatarCropper" />
+                </div>
+
                 <div class="profile-name">@Model.FullName</div>
                 <div class="profile-email-text">@Model.Email</div>
                 <span class="profile-role-badge">@Model.Role</span>
@@ -424,19 +420,19 @@
                 <a href="#profile" class="profile-nav-link active">
                     <i class="bi bi-person-lines-fill"></i> Thông tin cá nhân
                 </a>
-                <a asp-action="ChangePassword" class="profile-nav-link">
+                <a asp-controller="Account" asp-action="ChangePassword" class="profile-nav-link">
                     <i class="bi bi-key-fill"></i> Đổi mật khẩu
                 </a>
                 <a asp-controller="Booking" asp-action="MyBookings" class="profile-nav-link">
                     <i class="bi bi-calendar-event"></i> Lịch đặt sân
                 </a>
-                <a asp-action="Logout" class="profile-nav-link danger">
+                <a asp-controller="Account" asp-action="Logout" class="profile-nav-link danger">
                     <i class="bi bi-box-arrow-right"></i> Đăng xuất
                 </a>
             </nav>
         </div>
 
-        <!-- MAIN -->
+        <!-- ═══ MAIN ═══ -->
         <div class="profile-main">
             <div class="profile-section" id="profile">
                 <div class="profile-section-header">
@@ -445,7 +441,7 @@
                     </div>
                 </div>
                 <div class="profile-section-body">
-                    <form asp-action="Profile" method="post">
+                    <form asp-controller="Profile" asp-action="Index" method="post">
                         <div asp-validation-summary="ModelOnly" class="af-validation-summary"></div>
                         <input type="hidden" asp-for="UserId" />
 
@@ -533,13 +529,17 @@
     </div>
 </div>
 
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        // ── Phone input ──
         document.querySelectorAll('.phone-input').forEach(el => {
             el.addEventListener('input', () => {
                 el.value = el.value.replace(/\D/g, '').substring(0, 10);
             });
         });
+
+        // avatar-cropper.js xử lý toàn bộ logic upload/crop (đã load trong _LayoutAdmin.cshtml)
     </script>
 }

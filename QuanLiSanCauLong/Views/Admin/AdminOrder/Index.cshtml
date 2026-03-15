@@ -523,7 +523,7 @@
                         var typeKey = order.OrderType ?? "product";
                         <tr data-filter="@typeKey"
                             data-status="@order.OrderStatus"
-                            data-search="@(order.OrderCode + " " + order.OrderStatus)">
+                            data-search="@(order.OrderCode + " " + order.CustomerName + " " + order.OrderStatus)">
 
                             <!-- Mã đơn -->
                             <td>
@@ -547,10 +547,21 @@
 
                             <!-- Khách hàng -->
                             <td>
-                                <div style="font-weight:600;font-size:.86rem;">Khách hàng</div>
-                                <div style="font-size:.73rem;color:var(--muted);">
-                                    <i class="bi bi-telephone" style="color:var(--gold);margin-right:.25rem;"></i>0123 456 789
-                                </div>
+                                <div style="font-weight:600;font-size:.86rem;">@(order.CustomerName ?? "Khách vãng lai")</div>
+                                @if (!string.IsNullOrEmpty(order.CustomerPhone))
+                                {
+                                    <div style="font-size:.73rem;color:var(--muted);">
+                                        <i class="bi bi-telephone" style="color:var(--gold);margin-right:.25rem;"></i>@order.CustomerPhone
+                                    </div>
+                                }
+                                @if (order.OrderType == "booking" && order.BookingId.HasValue)
+                                {
+                                    <a asp-controller="AdminBooking" asp-action="Details"
+                                       asp-route-id="@order.BookingId"
+                                       style="font-size:.7rem;color:#92660a;text-decoration:none;">
+                                        <i class="bi bi-calendar-check"></i> @order.BookingCode
+                                    </a>
+                                }
                             </td>
 
                             <!-- Sản phẩm -->

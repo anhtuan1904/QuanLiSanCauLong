@@ -36,6 +36,9 @@ namespace QuanLiSanCauLong.Models
         public decimal? Latitude { get; set; }
         public decimal? Longitude { get; set; }
 
+        public double? AverageRating { get; set; }
+        public int TotalReviews { get; set; } = 0;
+
         // Tiện ích đi kèm: lưu dạng comma-separated, vd: "parking,wifi,canteen,shower,rental"
         [StringLength(500)]
         public string? Amenities { get; set; }

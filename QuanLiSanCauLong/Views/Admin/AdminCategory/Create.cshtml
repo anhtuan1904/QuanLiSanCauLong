@@ -1,1041 +1,1182 @@
 ﻿@model QuanLiSanCauLong.Models.ProductCategory
 @{
-    ViewData["Title"] = "Thêm danh mục mới";
-    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["Title"] = "Thêm Danh Mục";
+    // Không cần Layout khi load trong modal
+    Layout = null;
 }
 
 <style>
     :root {
-        --dark: #1a1a2e;
-        --gold: #e8c840;
-        --gold-h: #d4b320;
-        --bg: #f5f0e8;
-        --card: #ffffff;
-        --border: #e8e0d0;
-        --text: #2d2d2d;
-        --muted: #7a7060;
-        --retail-c: #166534;
-        --retail-bg: #f0fdf4;
-        --rental-c: #1d4ed8;
-        --rental-bg: #eff6ff;
-        --service-c: #7c3aed;
-        --service-bg: #f5f3ff;
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+        --red: #c94b2a;
+        --green: #15803d;
     }
 
-    .page-wrapper {
-        background: var(--bg);
-        min-height: 100vh;
-        padding: 2rem;
+    *, *::before, *::after {
+        box-sizing: border-box;
     }
 
-    .page-title {
-        font-size: 1.75rem;
-        font-weight: 800;
-        color: var(--dark);
+    * {
+        font-family: 'Outfit',sans-serif;
     }
 
-        .page-title span {
-            color: var(--gold);
-            font-style: italic;
-        }
-
-    .bc {
+    /* Modal shell */
+    .md-hd {
+        padding: 1.2rem 1.4rem;
+        border-bottom: 1px solid var(--border);
         display: flex;
         align-items: center;
-        gap: .4rem;
-        font-size: .82rem;
-        color: var(--muted);
+        justify-content: space-between;
+        background: var(--deep);
+    }
+
+    .md-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+        .md-title em {
+            font-style: italic;
+            color: var(--gold2);
+        }
+
+    .md-close {
+        background: none;
+        border: none;
+        color: rgba(255,255,255,.45);
+        font-size: 1rem;
+        cursor: pointer;
+    }
+
+        .md-close:hover {
+            color: #fff;
+        }
+
+    .md-body {
+        padding: 1.4rem;
+        overflow-y: auto;
+        max-height: 75vh;
+    }
+
+    .md-ft {
+        padding: 1rem 1.4rem;
+        border-top: 1px solid var(--border);
+        background: var(--warm);
+        display: flex;
+        justify-content: flex-end;
+        gap: .6rem;
+    }
+
+    /* Step indicator */
+    .steps {
+        display: flex;
+        align-items: center;
+        gap: 0;
         margin-bottom: 1.5rem;
     }
 
-        .bc a {
-            color: var(--muted);
-            text-decoration: none;
-        }
-
-            .bc a:hover {
-                color: var(--dark);
-            }
-
-    .bc-sep {
-        opacity: .4;
-    }
-
-    .bc-cur {
-        color: var(--dark);
+    .step {
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+        font-size: .75rem;
         font-weight: 700;
+        color: var(--muted);
     }
 
-    .form-layout {
-        display: grid;
-        grid-template-columns: 280px 1fr;
-        gap: 1.25rem;
-        align-items: start;
-    }
-    @@media(max - width:820px) {
-        .form-layout {
-            grid-template-columns: 1fr;
+        .step.on {
+            color: var(--deep);
         }
-    }
 
-    /* ── Sidebar Preview ── */
-    .preview-side {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        overflow: hidden;
-        position: sticky;
-        top: 1.25rem;
-    }
+        .step.done {
+            color: var(--green);
+        }
 
-    .prev-visual {
-        height: 170px;
+    .step-num {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--border);
         display: flex;
         align-items: center;
         justify-content: center;
-        position: relative;
-        overflow: hidden;
-        background: linear-gradient(135deg,#f1f5f9,#e2e8f0);
-        transition: background .35s;
-    }
-
-        .prev-visual img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-    .prev-big-icon {
-        font-size: 6rem;
-        opacity: .12;
-        position: absolute;
-    }
-
-    .prev-center-icon {
-        font-size: 3rem;
-        z-index: 1;
-        filter: drop-shadow(0 4px 12px rgba(0,0,0,.15));
-        transition: all .35s;
-    }
-
-    .prev-body {
-        padding: 1.1rem 1.2rem;
-    }
-
-    .prev-name {
-        font-size: 1rem;
-        font-weight: 800;
-        color: var(--dark);
-        margin-bottom: .3rem;
-        min-height: 1.5rem;
-    }
-
-    .prev-type {
-        display: inline-block;
-        padding: .2rem .75rem;
-        border-radius: 20px;
-        font-size: .72rem;
-        font-weight: 700;
-        margin-bottom: .5rem;
-    }
-
-    .prev-behavior {
-        display: inline-block;
-        padding: .2rem .65rem;
-        border-radius: 20px;
-        font-size: .68rem;
-        font-weight: 800;
-        letter-spacing: .5px;
-        margin-left: .3rem;
-        margin-bottom: .5rem;
-    }
-
-    .prev-meta-row {
-        font-size: .76rem;
+        font-size: .65rem;
+        font-weight: 900;
         color: var(--muted);
-        display: flex;
-        flex-direction: column;
-        gap: .25rem;
+        flex-shrink: 0;
     }
 
-    /* behavior badge colors */
-    .bh-retail {
-        background: var(--retail-bg);
-        color: var(--retail-c);
+    .step.on .step-num {
+        background: var(--deep);
+        color: var(--gold2);
     }
 
-    .bh-rental {
-        background: var(--rental-bg);
-        color: var(--rental-c);
+    .step.done .step-num {
+        background: var(--green);
+        color: #fff;
     }
 
-    .bh-service {
-        background: var(--service-bg);
-        color: var(--service-c);
+    .step-line {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+        margin: 0 .5rem;
+        min-width: 24px;
     }
 
-    .upload-zone {
-        border: 2px dashed var(--border);
-        border-radius: 10px;
-        padding: 1.1rem;
-        text-align: center;
-        cursor: pointer;
-        transition: .2s;
-        background: var(--bg);
-        margin: 0 1.2rem 1.2rem;
-    }
-
-        .upload-zone:hover {
-            border-color: var(--gold);
-            background: #faf8f0;
-        }
-
-        .upload-zone i {
-            font-size: 1.5rem;
-            color: var(--muted);
-            display: block;
-            margin-bottom: .3rem;
-        }
-
-        .upload-zone p {
-            font-size: .75rem;
-            color: var(--muted);
-            margin: 0;
-        }
-
-    .upload-preview {
-        margin-top: .6rem;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-        .upload-preview img {
-            width: 100%;
-            max-height: 110px;
-            object-fit: cover;
-        }
-
-    .prev-label {
-        font-size: .68rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: var(--muted);
-        padding: .6rem 1.2rem .3rem;
-        border-top: 1px solid var(--border);
-    }
-
-    /* ── Form Card ── */
-    .form-card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 1.75rem;
-    }
-
-    .form-card-title {
-        font-size: 1.2rem;
-        font-weight: 800;
-        color: var(--dark);
-        margin-bottom: .2rem;
-    }
-
-    .form-card-sub {
-        font-size: .82rem;
-        color: var(--muted);
+    /* ── PRESET CARDS ── */
+    .preset-grid {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: .85rem;
         margin-bottom: 1.5rem;
     }
 
-    .section-div {
-        font-size: .75rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1.2px;
-        color: var(--muted);
-        padding: .5rem 0;
-        border-bottom: 1px solid var(--border);
-        margin-bottom: 1rem;
+    .preset-card {
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 1.1rem;
+        cursor: pointer;
+        background: #fff;
+        transition: all .22s;
+        position: relative;
     }
+
+        .preset-card:hover {
+            border-color: var(--gold);
+            box-shadow: 0 4px 16px rgba(212,160,23,.15);
+        }
+
+        .preset-card.selected {
+            border-color: var(--deep);
+            background: rgba(26,18,9,.03);
+        }
+
+            .preset-card.selected::after {
+                content: '✓';
+                position: absolute;
+                top: 8px;
+                right: 10px;
+                font-size: .75rem;
+                font-weight: 900;
+                color: var(--gold2);
+                background: var(--deep);
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 20px;
+                text-align: center;
+            }
+
+    .pc-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        margin-bottom: .75rem;
+    }
+
+    .pc-name {
+        font-weight: 700;
+        font-size: .9rem;
+        color: var(--deep);
+        margin-bottom: .25rem;
+    }
+
+    .pc-desc {
+        font-size: .72rem;
+        color: var(--muted);
+        line-height: 1.5;
+    }
+
+    .pc-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .25rem;
+        margin-top: .6rem;
+    }
+
+    .pc-tag {
+        padding: .12rem .45rem;
+        border-radius: 3px;
+        font-size: .58rem;
+        font-weight: 700;
+        background: var(--warm);
+        border: 1px solid var(--border);
+        color: var(--muted);
+    }
+
+    /* ── FORM ── */
+    .section-hd {
+        font-size: .62rem;
+        font-weight: 700;
+        letter-spacing: .15em;
+        text-transform: uppercase;
+        color: var(--muted);
+        padding: .6rem 0;
+        margin-bottom: .75rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .85rem;
+    }
+
+        .form-grid.full {
+            grid-template-columns: 1fr;
+        }
 
     .fl {
         display: flex;
         flex-direction: column;
         gap: .3rem;
-        margin-bottom: 1rem;
     }
 
         .fl label {
-            font-size: .82rem;
+            font-size: .72rem;
             font-weight: 700;
-            color: var(--dark);
+            color: var(--deep);
         }
 
-    .req {
-        color: #dc2626;
-    }
+        .fl .req {
+            color: var(--red);
+        }
 
     .fc {
-        border: 1.5px solid var(--border);
-        border-radius: 8px;
-        padding: .55rem .85rem;
-        font-size: .875rem;
-        color: var(--text);
-        background: var(--bg);
+        padding: .62rem .85rem;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .84rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
+        transition: border-color .2s;
         width: 100%;
-        transition: .2s;
     }
 
         .fc:focus {
-            outline: none;
             border-color: var(--gold);
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(232,200,64,.15);
         }
 
-    textarea.fc {
-        min-height: 80px;
-        resize: vertical;
-    }
-
-    .err-msg {
-        font-size: .75rem;
-        color: #dc2626;
-    }
-
-    .two-col {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-    }
-    @@media(max - width:600px) {
-        .two-col {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    /* ── Behavior Type Tabs ── */
-    .behavior-tabs {
-        display: flex;
-        gap: .6rem;
-        margin-bottom: 1.25rem;
-    }
-
-    .bh-tab {
-        flex: 1;
-        padding: .7rem .5rem;
-        border-radius: 10px;
-        border: 2px solid var(--border);
-        cursor: pointer;
-        text-align: center;
-        transition: .2s;
-        background: var(--bg);
+    .fc-combo {
         position: relative;
     }
 
-        .bh-tab:hover {
-            border-color: #aaa;
+        .fc-combo input {
+            padding-right: 2.2rem;
         }
 
-        .bh-tab.active-retail {
-            border-color: var(--retail-c);
-            background: var(--retail-bg);
-        }
-
-        .bh-tab.active-rental {
-            border-color: var(--rental-c);
-            background: var(--rental-bg);
-        }
-
-        .bh-tab.active-service {
-            border-color: var(--service-c);
-            background: var(--service-bg);
-        }
-
-    .bh-tab-icon {
-        font-size: 1.4rem;
-        display: block;
-        margin-bottom: .2rem;
-    }
-
-    .bh-tab-label {
-        font-size: .78rem;
-        font-weight: 800;
-    }
-
-    .bh-tab-desc {
-        font-size: .67rem;
-        color: var(--muted);
-        margin-top: .1rem;
-    }
-
-    .bh-tab.active-retail .bh-tab-label {
-        color: var(--retail-c);
-    }
-
-    .bh-tab.active-rental .bh-tab-label {
-        color: var(--rental-c);
-    }
-
-    .bh-tab.active-service .bh-tab-label {
-        color: var(--service-c);
-    }
-
-    .bh-tab .check-badge {
-        display: none;
+    .fc-combo-arrow {
         position: absolute;
-        top: 6px;
-        right: 8px;
-        font-size: .85rem;
+        right: .65rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--muted);
+        font-size: .7rem;
+        pointer-events: none;
     }
 
-    .bh-tab.active-retail .check-badge,
-    .bh-tab.active-rental .check-badge,
-    .bh-tab.active-service .check-badge {
-        display: inline;
+    .hint {
+        font-size: .68rem;
+        color: var(--muted);
     }
 
-    /* ── Conditional Panels ── */
-    .cond-panel {
-        display: none;
-        border-radius: 10px;
-        padding: 1rem 1.1rem;
-        margin-bottom: 1rem;
-        border: 1.5px solid transparent;
+    .err {
+        font-size: .7rem;
+        color: var(--red);
+        margin-top: .2rem;
     }
 
-        .cond-panel.show {
-            display: block;
-            animation: fadeIn .2s ease;
-        }
-
-    .panel-retail {
-        background: var(--retail-bg);
-        border-color: #86efac;
-    }
-
-    .panel-rental {
-        background: var(--rental-bg);
-        border-color: #93c5fd;
-    }
-
-    .panel-service {
-        background: var(--service-bg);
-        border-color: #c4b5fd;
-    }
-
-    .panel-title {
-        font-size: .75rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: .75rem;
-    }
-
-    .panel-retail .panel-title {
-        color: var(--retail-c);
-    }
-
-    .panel-rental .panel-title {
-        color: var(--rental-c);
-    }
-
-    .panel-service .panel-title {
-        color: var(--service-c);
-    }
-    @@keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(-6px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* ── Rule Toggles ── */
-    .rule-grid {
+    /* Toggle group */
+    .toggle-group {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: .65rem;
-        margin-bottom: 1rem;
+        gap: .55rem;
     }
 
-    .rule-toggle {
+    .tg-item {
+        display: flex;
+        align-items: flex-start;
+        gap: .55rem;
+        padding: .65rem .8rem;
         border: 1.5px solid var(--border);
-        border-radius: 10px;
-        padding: .75rem .9rem;
+        border-radius: 8px;
         cursor: pointer;
-        transition: .2s;
-        background: var(--bg);
+        background: #fff;
+        transition: all .18s;
         user-select: none;
     }
 
-        .rule-toggle input {
+        .tg-item:hover {
+            border-color: var(--gold);
+        }
+
+        .tg-item.on {
+            border-color: var(--deep);
+            background: rgba(26,18,9,.03);
+        }
+
+        .tg-item input {
             display: none;
         }
 
-        .rule-toggle:hover {
-            border-color: #aaa;
-        }
-
-    .rt-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .rt-ico-label {
-        font-size: .8rem;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: .35rem;
-    }
-
-    .rt-desc {
-        font-size: .69rem;
-        color: var(--muted);
-        margin-top: .25rem;
-    }
-
-    .toggle-dot {
-        width: 30px;
+    .tg-dot {
+        width: 16px;
         height: 16px;
-        border-radius: 10px;
-        background: #d1d5db;
-        position: relative;
-        transition: .25s;
+        border-radius: 50%;
+        border: 2px solid var(--border);
         flex-shrink: 0;
+        margin-top: 1px;
+        transition: all .18s;
+        position: relative;
     }
 
-        .toggle-dot::after {
+    .tg-item.on .tg-dot {
+        background: var(--deep);
+        border-color: var(--deep);
+    }
+
+        .tg-item.on .tg-dot::after {
             content: '';
             position: absolute;
             top: 2px;
             left: 2px;
-            width: 12px;
-            height: 12px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background: #fff;
-            transition: .25s;
         }
 
-    .active-hsd {
-        border-color: #dc2626;
-        background: #fef2f2;
+    .tg-body {
     }
 
-        .active-hsd .toggle-dot {
-            background: #dc2626;
-        }
-
-    .active-fifo {
-        border-color: #3b82f6;
-        background: #eff6ff;
-    }
-
-        .active-fifo .toggle-dot {
-            background: #3b82f6;
-        }
-
-    .active-lot {
-        border-color: #6b7280;
-        background: #f9fafb;
-    }
-
-        .active-lot .toggle-dot {
-            background: #6b7280;
-        }
-
-    .active-var {
-        border-color: #f59e0b;
-        background: #fffbeb;
-    }
-
-        .active-var .toggle-dot {
-            background: #f59e0b;
-        }
-
-    .active-size {
-        border-color: #8b5cf6;
-        background: #f5f3ff;
-    }
-
-        .active-size .toggle-dot {
-            background: #8b5cf6;
-        }
-
-            .active-hsd .toggle-dot::after, .active-fifo .toggle-dot::after,
-            .active-lot .toggle-dot::after, .active-var .toggle-dot::after,
-            .active-size .toggle-dot::after {
-                left: 16px;
-            }
-
-    /* Money inputs */
-    .money-input-wrap {
-        position: relative;
-    }
-
-        .money-input-wrap .fc {
-            padding-right: 3rem;
-        }
-
-    .money-suffix {
-        position: absolute;
-        right: .75rem;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: .75rem;
+    .tg-label {
+        font-size: .78rem;
         font-weight: 700;
+        color: var(--deep);
+    }
+
+    .tg-hint {
+        font-size: .65rem;
         color: var(--muted);
+        margin-top: .1rem;
     }
 
-    .btn-row {
-        display: flex;
-        gap: .75rem;
-        justify-content: flex-end;
-        margin-top: 1.5rem;
-        padding-top: 1.25rem;
-        border-top: 1px solid var(--border);
+    /* Behavior selector */
+    .bh-row {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: .65rem;
+        margin-bottom: 1.2rem;
     }
 
-    .btn-cancel {
-        padding: .65rem 1.5rem;
-        border-radius: 10px;
+    .bh-opt {
         border: 2px solid var(--border);
-        background: transparent;
-        color: var(--dark);
-        font-weight: 700;
-        font-size: .88rem;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        transition: .2s;
-    }
-
-        .btn-cancel:hover {
-            border-color: #aaa;
-            color: var(--dark);
-        }
-
-    .btn-submit {
-        padding: .65rem 1.75rem;
         border-radius: 10px;
-        border: none;
-        background: var(--gold);
-        color: var(--dark);
-        font-weight: 800;
-        font-size: .88rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        transition: .2s;
+        padding: .85rem;
         cursor: pointer;
+        background: #fff;
+        transition: all .2s;
+        text-align: center;
     }
 
-        .btn-submit:hover {
-            background: var(--gold-h);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(232,200,64,.4);
+        .bh-opt:hover {
+            border-color: var(--gold);
         }
 
-    .info-hint {
-        font-size: .72rem;
-        color: var(--muted);
-        margin-top: 3px;
+        .bh-opt.on-retail {
+            border-color: #16a34a;
+            background: #f0fdf4;
+        }
+
+        .bh-opt.on-rental {
+            border-color: var(--blue);
+            background: #eff6ff;
+        }
+
+        .bh-opt.on-service {
+            border-color: var(--purple);
+            background: #f5f3ff;
+        }
+
+    .bh-ico {
+        font-size: 1.4rem;
+        display: block;
+        margin-bottom: .4rem;
     }
+
+    .bh-name {
+        font-size: .82rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+    .bh-desc {
+        font-size: .65rem;
+        color: var(--muted);
+        margin-top: .15rem;
+    }
+
+    /* Cond panels */
+    .cond-panel {
+        display: none;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-top: .85rem;
+    }
+
+        .cond-panel.show {
+            display: block;
+        }
+
+    .panel-retail {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+    }
+
+    .panel-rental {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+    }
+
+    .panel-service {
+        background: #f5f3ff;
+        border: 1px solid #ddd6fe;
+    }
+
+    /* File upload */
+    .upload-zone {
+        border: 2px dashed var(--border);
+        border-radius: 8px;
+        padding: 1.2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all .2s;
+        background: #fff;
+    }
+
+        .upload-zone:hover {
+            border-color: var(--gold);
+            background: rgba(212,160,23,.04);
+        }
+
+        .upload-zone i {
+            font-size: 1.4rem;
+            color: var(--muted);
+            display: block;
+            margin-bottom: .35rem;
+        }
+
+        .upload-zone p {
+            font-size: .76rem;
+            color: var(--muted);
+            margin: 0;
+        }
+
+    .upload-preview img {
+        max-height: 80px;
+        border-radius: 6px;
+        margin-top: .5rem;
+        border: 1px solid var(--border);
+    }
+
+    /* Buttons */
+    .btn-primary {
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        border: none;
+        padding: .68rem 1.5rem;
+        font-size: .86rem;
+        font-weight: 700;
+        border-radius: 7px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        transition: all .2s;
+    }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 14px rgba(212,160,23,.35);
+            transform: translateY(-1px);
+        }
+
+    .btn-secondary {
+        padding: .65rem 1.2rem;
+        border: 1.5px solid var(--border);
+        border-radius: 7px;
+        background: #fff;
+        font-size: .84rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--muted);
+        transition: all .18s;
+    }
+
+        .btn-secondary:hover {
+            border-color: var(--deep);
+            color: var(--deep);
+        }
+
+    .btn-back {
+        padding: .55rem .9rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #fff;
+        font-size: .78rem;
+        cursor: pointer;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+        transition: all .15s;
+    }
+
+        .btn-back:hover {
+            border-color: var(--deep);
+            color: var(--deep);
+        }
 </style>
 
-<div class="page-wrapper">
-    <!-- Breadcrumb -->
-    <div class="bc">
-        <a asp-action="Index"><i class="bi bi-house-door"></i> Danh mục</a>
-        <span class="bc-sep">›</span>
-        <span class="bc-cur">Thêm mới</span>
+<!-- MODAL HEADER -->
+<div class="md-hd">
+    <span class="md-title">Thêm <em>Danh Mục</em> Mới</span>
+    <button class="md-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+</div>
+
+<div class="md-body">
+    <!-- STEP INDICATOR -->
+    <div class="steps">
+        <div class="step on" id="stepInd1"><div class="step-num">1</div> Chọn template</div>
+        <div class="step-line"></div>
+        <div class="step" id="stepInd2"><div class="step-num">2</div> Thông tin</div>
+        <div class="step-line"></div>
+        <div class="step" id="stepInd3"><div class="step-num">3</div> Cấu hình</div>
     </div>
 
-    <div class="d-flex align-items-center mb-3 gap-3">
-        <div>
-            <h1 class="page-title mb-0">Thêm <span>Danh Mục</span> Mới</h1>
-            <p class="mb-0" style="color:var(--muted);font-size:.85rem;">Chọn hành vi nghiệp vụ để hệ thống tự cấu hình đúng logic kho và tính tiền</p>
+    <!-- ════ STEP 1: PRESET ════ -->
+    <div id="step1">
+        <div class="section-hd"><i class="bi bi-lightning-charge"></i> Chọn nhanh template phù hợp</div>
+        <div class="preset-grid">
+
+            <!-- Preset 1: Đồ uống bán lẻ -->
+            <div class="preset-card" onclick="applyPreset('beverage')" id="pc-beverage">
+                <div class="pc-icon" style="background:#f0f9ff;"><i class="bi bi-cup-straw" style="color:#0369a1"></i></div>
+                <div class="pc-name">Thức uống / Đồ ăn</div>
+                <div class="pc-desc">Nước, thức ăn nhanh, snack bán tại quầy. Quản lý hạn dùng, xuất kho FIFO.</div>
+                <div class="pc-tags">
+                    <span class="pc-tag">Bán lẻ</span>
+                    <span class="pc-tag">Theo dõi HSD</span>
+                    <span class="pc-tag">FIFO</span>
+                    <span class="pc-tag">Đơn vị: Chai/Lon/Hộp</span>
+                </div>
+            </div>
+
+            <!-- Preset 2: Dụng cụ cho thuê -->
+            <div class="preset-card" onclick="applyPreset('rental')" id="pc-rental">
+                <div class="pc-icon" style="background:#eff6ff;"><i class="bi bi-arrow-repeat" style="color:#1d4ed8"></i></div>
+                <div class="pc-name">Dụng cụ cho thuê</div>
+                <div class="pc-desc">Vợt, giày, quần áo cho thuê. Hoàn kho khi khách trả, hỗ trợ đặt cọc.</div>
+                <div class="pc-tags">
+                    <span class="pc-tag">Cho thuê</span>
+                    <span class="pc-tag">Theo size</span>
+                    <span class="pc-tag">Đặt cọc</span>
+                    <span class="pc-tag">Hoàn kho khi trả</span>
+                </div>
+            </div>
+
+            <!-- Preset 3: Dịch vụ -->
+            <div class="preset-card" onclick="applyPreset('service')" id="pc-service">
+                <div class="pc-icon" style="background:#f5f3ff;"><i class="bi bi-wrench-adjustable" style="color:#7c3aed"></i></div>
+                <div class="pc-name">Dịch vụ / Căng vợt</div>
+                <div class="pc-desc">Căng vợt, sửa chữa, huấn luyện. Tính phí công + vật tư, không quản lý kho vật lý.</div>
+                <div class="pc-tags">
+                    <span class="pc-tag">Dịch vụ</span>
+                    <span class="pc-tag">Tách công/vật tư</span>
+                    <span class="pc-tag">Không kho vật lý</span>
+                </div>
+            </div>
+
+            <!-- Preset 4: Phụ kiện bán -->
+            <div class="preset-card" onclick="applyPreset('accessory')" id="pc-accessory">
+                <div class="pc-icon" style="background:#fdf2f8;"><i class="bi bi-bag-heart" style="color:#be185d"></i></div>
+                <div class="pc-name">Phụ kiện / Quần áo bán</div>
+                <div class="pc-desc">Quần áo, băng quấn, phụ kiện bán ra. Có biến thể màu/size, quản lý kho theo lô.</div>
+                <div class="pc-tags">
+                    <span class="pc-tag">Bán lẻ</span>
+                    <span class="pc-tag">Biến thể màu/size</span>
+                    <span class="pc-tag">Theo lô</span>
+                </div>
+            </div>
+
+            <!-- Preset 5: Dụng cụ bán -->
+            <div class="preset-card" onclick="applyPreset('equipment')" id="pc-equipment">
+                <div class="pc-icon" style="background:#f0fdf4;"><i class="bi bi-gear" style="color:#166534"></i></div>
+                <div class="pc-name">Dụng cụ bán ra</div>
+                <div class="pc-desc">Vợt, túi, cầu bán đứt. Bán lẻ đơn giản, quản lý safety stock, nhập lô.</div>
+                <div class="pc-tags">
+                    <span class="pc-tag">Bán lẻ</span>
+                    <span class="pc-tag">Safety stock</span>
+                    <span class="pc-tag">Đơn vị: Cái/Bộ</span>
+                </div>
+            </div>
+
+            <!-- Preset 6: Tùy chỉnh -->
+            <div class="preset-card" onclick="applyPreset('custom')" id="pc-custom">
+                <div class="pc-icon" style="background:var(--warm);"><i class="bi bi-sliders" style="color:var(--muted)"></i></div>
+                <div class="pc-name">Tùy chỉnh</div>
+                <div class="pc-desc">Tự cấu hình từ đầu theo nhu cầu riêng của bạn.</div>
+                <div class="pc-tags">
+                    <span class="pc-tag">Tùy chỉnh hoàn toàn</span>
+                </div>
+            </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+            <button class="btn-primary" id="btnStep1Next" onclick="goStep(2)" disabled>
+                Tiếp theo <i class="bi bi-arrow-right"></i>
+            </button>
         </div>
     </div>
 
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" style="border-radius:10px;font-size:.875rem;">
-            <i class="bi bi-exclamation-circle-fill"></i> @TempData["ErrorMessage"]
-        </div>
-    }
+    <!-- ════ STEP 2: BASIC INFO ════ -->
+    <div id="step2" style="display:none;">
+        <button class="btn-back mb-3" onclick="goStep(1)"><i class="bi bi-arrow-left"></i> Quay lại</button>
 
-    <div class="form-layout">
-        <!-- ── Sidebar Preview ── -->
-        <div class="preview-side">
-            <div class="prev-visual" id="prevVisual">
-                <i class="bi bi-folder2-open prev-big-icon" id="prevBigIcon" style="color:#9ca3af;"></i>
-                <i class="bi bi-folder2-open prev-center-icon" id="prevCenterIcon" style="color:#9ca3af;"></i>
-            </div>
-            <div class="prev-body">
-                <div class="prev-name" id="prevName" style="color:#9ca3af;">Tên danh mục</div>
-                <span class="prev-type" id="prevType" style="background:#f3f4f6;color:#6b7280;">Chọn loại</span>
-                <span class="prev-behavior bh-retail" id="prevBehavior">🛒 Bán lẻ</span>
-                <div class="prev-meta-row" id="prevMeta">
-                    <span><i class="bi bi-box-seam me-1"></i>Đơn vị: <strong id="prevUnit">Cái</strong></span>
-                    <span><i class="bi bi-arrow-down-up me-1"></i>Safety Stock: <strong id="prevStock">—</strong></span>
+        <div class="section-hd"><i class="bi bi-info-circle"></i> Thông tin cơ bản</div>
+
+        <div class="form-grid full" style="gap:.85rem;">
+            <div class="fl">
+                <label>Tên danh mục <span class="req">*</span></label>
+                <div class="fc-combo">
+                    <input type="text" id="inp_name" class="fc" placeholder="VD: Nước uống, Vợt cho thuê..." maxlength="100" oninput="updatePreview()" />
+                    <i class="bi bi-chevron-down fc-combo-arrow" style="display:none" id="nameSugArrow"></i>
                 </div>
-            </div>
-            <div class="prev-label">Hình ảnh đại diện</div>
-            <div style="padding:0 1.2rem 1.2rem;">
-                <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
-                    <i class="bi bi-cloud-arrow-up"></i>
-                    <p>Click hoặc kéo thả để tải ảnh</p>
-                </div>
-                <input type="file" id="fileInput" name="CategoryImage" accept="image/*" class="d-none" onchange="onImageSelect(this)" />
-                <div id="uploadPreview" class="upload-preview"></div>
+                <!-- Quick name suggestions based on template -->
+                <div id="nameSuggestions" style="display:none;flex-wrap:wrap;gap:.3rem;margin-top:.35rem;"></div>
             </div>
         </div>
 
-        <!-- ── Form Card ── -->
-        <div class="form-card">
-            <div class="form-card-title">Tạo Danh Mục Mới</div>
-            <div class="form-card-sub">Tổ chức sản phẩm theo nhóm và cấu hình quy tắc tự động</div>
+        <div class="form-grid" style="margin-top:.85rem;">
+            <div class="fl">
+                <label>Loại hàng hóa <span class="req">*</span></label>
+                <select id="inp_type" class="fc">
+                    <option value="">-- Chọn loại --</option>
+                    <option value="Food">Đồ ăn</option>
+                    <option value="Beverage">Thức uống</option>
+                    <option value="Equipment">Dụng cụ thể thao</option>
+                    <option value="Clothing">Quần áo / Giày dép</option>
+                    <option value="Accessory">Phụ kiện</option>
+                    <option value="Other">Khác</option>
+                </select>
+            </div>
+            <div class="fl">
+                <label>Đơn vị tính</label>
+                <select id="inp_unit" class="fc">
+                    <option value="Cái">Cái</option>
+                    <option value="Bộ">Bộ</option>
+                    <option value="Chiếc">Chiếc</option>
+                    <option value="Đôi">Đôi</option>
+                    <option value="Hộp">Hộp</option>
+                    <option value="Thùng">Thùng</option>
+                    <option value="Chai">Chai</option>
+                    <option value="Lon">Lon</option>
+                    <option value="Túi">Túi</option>
+                    <option value="Kg">Kg</option>
+                    <option value="Gram">Gram</option>
+                    <option value="Lít">Lít</option>
+                </select>
+            </div>
+        </div>
 
-            <form asp-action="Create" method="post" enctype="multipart/form-data">
-                @Html.AntiForgeryToken()
+        <div class="form-grid full" style="margin-top:.85rem;">
+            <div class="fl">
+                <label>Mô tả</label>
+                <textarea id="inp_desc" class="fc" rows="2" placeholder="Mô tả ngắn về danh mục này..."></textarea>
+            </div>
+        </div>
 
-                <!-- ① Hành vi nghiệp vụ -->
-                <div class="section-div"><i class="bi bi-diagram-3 me-1"></i>Hành Vi Nghiệp Vụ <span class="req">*</span></div>
-                <input type="hidden" asp-for="BehaviorType" id="BehaviorTypeInput" value="Retail" />
+        <div class="form-grid" style="margin-top:.85rem;">
+            <div class="fl">
+                <label>Thứ tự hiển thị</label>
+                <input type="number" id="inp_order" class="fc" min="0" value="0" />
+                <span class="hint">Số nhỏ hơn hiển thị trước</span>
+            </div>
+            <div class="fl">
+                <label>Trạng thái</label>
+                <select id="inp_active" class="fc">
+                    <option value="true">Hoạt động</option>
+                    <option value="false">Ẩn</option>
+                </select>
+            </div>
+        </div>
 
-                <div class="behavior-tabs" id="behaviorTabs">
-                    <div class="bh-tab active-retail" data-val="Retail" onclick="selectBehavior('Retail')">
-                        <span class="bh-tab-icon">🛒</span>
-                        <div class="bh-tab-label">Bán Lẻ</div>
-                        <div class="bh-tab-desc">Trừ kho thẳng</div>
-                        <span class="check-badge" style="color:var(--retail-c);">✓</span>
+        <!-- Preview card -->
+        <div id="previewCard" style="margin-top:1rem;padding:.85rem 1rem;background:var(--warm);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:.75rem;">
+            <div id="pvIcon" style="width:36px;height:36px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:.9rem;border:1px solid var(--border);">
+                <i class="bi bi-folder2-open" style="color:var(--muted)"></i>
+            </div>
+            <div>
+                <div id="pvName" style="font-weight:700;font-size:.88rem;color:var(--deep);">Tên danh mục</div>
+                <div id="pvMeta" style="font-size:.7rem;color:var(--muted);margin-top:.1rem;">Chọn loại hàng hóa</div>
+            </div>
+            <div id="pvBadge" style="margin-left:auto;"></div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:1.25rem;">
+            <button class="btn-primary" onclick="goStep(3)">
+                Tiếp theo <i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ════ STEP 3: ADVANCED CONFIG ════ -->
+    <div id="step3" style="display:none;">
+        <button class="btn-back mb-3" onclick="goStep(2)"><i class="bi bi-arrow-left"></i> Quay lại</button>
+
+        <div class="section-hd"><i class="bi bi-diagram-3"></i> Loại nghiệp vụ <span class="req" style="color:var(--red)">*</span></div>
+        <div class="bh-row">
+            <div class="bh-opt" id="bhRetail" onclick="selectBh('Retail')">
+                <span class="bh-ico"><i class="bi bi-cart3" style="color:#16a34a"></i></span>
+                <div class="bh-name">Bán lẻ</div>
+                <div class="bh-desc">Trừ kho khi bán</div>
+            </div>
+            <div class="bh-opt" id="bhRental" onclick="selectBh('Rental')">
+                <span class="bh-ico"><i class="bi bi-arrow-repeat" style="color:#1d4ed8"></i></span>
+                <div class="bh-name">Cho thuê</div>
+                <div class="bh-desc">Hoàn kho khi trả</div>
+            </div>
+            <div class="bh-opt" id="bhService" onclick="selectBh('Service')">
+                <span class="bh-ico"><i class="bi bi-wrench-adjustable" style="color:#7c3aed"></i></span>
+                <div class="bh-name">Dịch vụ</div>
+                <div class="bh-desc">Không kho vật lý</div>
+            </div>
+        </div>
+
+        <!-- RETAIL options -->
+        <div class="cond-panel panel-retail" id="panelRetail">
+            <div style="font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#16a34a;margin-bottom:.75rem;display:flex;align-items:center;gap:.4rem;">
+                <i class="bi bi-boxes"></i> Quy tắc quản lý kho
+            </div>
+            <div class="toggle-group">
+                <label class="tg-item" id="tgHsd">
+                    <input type="checkbox" id="cb_expiry" />
+                    <div class="tg-dot"></div>
+                    <div class="tg-body">
+                        <div class="tg-label"><i class="bi bi-calendar-x me-1" style="color:#dc2626"></i>Theo dõi hạn sử dụng</div>
+                        <div class="tg-hint">Cảnh báo khi sản phẩm sắp hết hạn</div>
                     </div>
-                    <div class="bh-tab" data-val="Rental" onclick="selectBehavior('Rental')">
-                        <span class="bh-tab-icon">🔄</span>
-                        <div class="bh-tab-label">Cho Thuê</div>
-                        <div class="bh-tab-desc">Hoàn kho khi trả</div>
-                        <span class="check-badge" style="color:var(--rental-c);">✓</span>
+                </label>
+                <label class="tg-item" id="tgFifo">
+                    <input type="checkbox" id="cb_fifo" />
+                    <div class="tg-dot"></div>
+                    <div class="tg-body">
+                        <div class="tg-label"><i class="bi bi-arrow-left-right me-1" style="color:#2563eb"></i>Xuất kho theo FIFO</div>
+                        <div class="tg-hint">Nhập trước – xuất trước tự động</div>
                     </div>
-                    <div class="bh-tab" data-val="Service" onclick="selectBehavior('Service')">
-                        <span class="bh-tab-icon">🔧</span>
-                        <div class="bh-tab-label">Dịch Vụ</div>
-                        <div class="bh-tab-desc">Không kho vật lý</div>
-                        <span class="check-badge" style="color:var(--service-c);">✓</span>
+                </label>
+                <label class="tg-item" id="tgBatch">
+                    <input type="checkbox" id="cb_batch" />
+                    <div class="tg-dot"></div>
+                    <div class="tg-body">
+                        <div class="tg-label"><i class="bi bi-upc me-1" style="color:#6b7280"></i>Quản lý theo lô</div>
+                        <div class="tg-hint">Truy xuất nguồn gốc từng lô hàng</div>
                     </div>
-                </div>
-
-                <!-- ② Thông tin cơ bản -->
-                <div class="section-div"><i class="bi bi-info-circle me-1"></i>Thông Tin Cơ Bản</div>
-
+                </label>
+                <label class="tg-item" id="tgVariants">
+                    <input type="checkbox" id="cb_variants" />
+                    <div class="tg-dot"></div>
+                    <div class="tg-body">
+                        <div class="tg-label"><i class="bi bi-layers me-1" style="color:#f59e0b"></i>Có biến thể</div>
+                        <div class="tg-hint">Phân loại theo màu, size, kiểu dáng</div>
+                    </div>
+                </label>
+            </div>
+            <div style="margin-top:.85rem;display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
                 <div class="fl">
-                    <label>Tên danh mục <span class="req">*</span></label>
-                    <input asp-for="CategoryName" id="inputName" class="fc" placeholder="VD: Vợt cho thuê, Căng vợt, Nước uống..." />
-                    <span asp-validation-for="CategoryName" class="err-msg"></span>
+                    <label>Tồn kho tối thiểu</label>
+                    <input type="number" id="inp_minstock" class="fc" min="0" value="0" placeholder="VD: 10" />
+                    <span class="hint">Cảnh báo khi dưới mức này</span>
                 </div>
-
-                <div class="two-col">
-                    <div class="fl">
-                        <label>Loại hàng hoá <span class="req">*</span></label>
-                        <select asp-for="CategoryType" id="inputType" class="fc">
-                            <option value="">-- Chọn loại --</option>
-                            <option value="Food">🍱 Đồ ăn</option>
-                            <option value="Beverage">🥤 Thức uống</option>
-                            <option value="Clothing">👕 Quần áo</option>
-                            <option value="Equipment">🏸 Dụng cụ thể thao</option>
-                            <option value="Accessory">🧢 Phụ kiện</option>
-                            <option value="Other">📦 Khác</option>
-                        </select>
-                        <span asp-validation-for="CategoryType" class="err-msg"></span>
-                    </div>
-                    <div class="fl">
-                        <label>Đơn vị mặc định</label>
-                        <select asp-for="DefaultUnit" id="inputUnit" class="fc">
-                            <option value="Cái">Cái</option>
-                            <option value="Bộ">Bộ</option>
-                            <option value="Hộp">Hộp</option>
-                            <option value="Thùng">Thùng</option>
-                            <option value="Kg">Kg</option>
-                            <option value="Gram">Gram</option>
-                            <option value="Lít">Lít</option>
-                            <option value="Chai">Chai</option>
-                            <option value="Lon">Lon</option>
-                            <option value="Túi">Túi</option>
-                            <option value="Đôi">Đôi</option>
-                            <option value="Chiếc">Chiếc</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="fl">
-                    <label>Mô tả</label>
-                    <textarea asp-for="Description" class="fc" placeholder="Mô tả ngắn gọn về danh mục..."></textarea>
-                </div>
-
-                <!-- ③ Cấu hình theo hành vi -->
-                <!-- RETAIL panel -->
-                <div class="cond-panel panel-retail show" id="panelRetail">
-                    <div class="panel-title"><i class="bi bi-boxes me-1"></i>Quy Tắc Quản Lý Kho</div>
-                    <div class="rule-grid">
-                        <label class="rule-toggle" id="rtHsd" onclick="toggleRule('RequiresExpiry','rtHsd','active-hsd')">
-                            <input type="checkbox" asp-for="RequiresExpiry" id="RequiresExpiry" />
-                            <div class="rt-header">
-                                <div class="rt-ico-label" style="color:#dc2626;"><i class="bi bi-calendar-x"></i> HSD</div>
-                                <div class="toggle-dot" id="dotHsd"></div>
-                            </div>
-                            <div class="rt-desc">Theo dõi hạn sử dụng</div>
-                        </label>
-                        <label class="rule-toggle" id="rtFifo" onclick="toggleRule('UseFIFO','rtFifo','active-fifo')">
-                            <input type="checkbox" asp-for="UseFIFO" id="UseFIFO" />
-                            <div class="rt-header">
-                                <div class="rt-ico-label" style="color:#3b82f6;"><i class="bi bi-arrow-left-right"></i> FIFO</div>
-                                <div class="toggle-dot" id="dotFifo"></div>
-                            </div>
-                            <div class="rt-desc">Nhập trước – Xuất trước</div>
-                        </label>
-                        <label class="rule-toggle" id="rtLot" onclick="toggleRule('RequiresBatch','rtLot','active-lot')">
-                            <input type="checkbox" asp-for="RequiresBatch" id="RequiresBatch" />
-                            <div class="rt-header">
-                                <div class="rt-ico-label" style="color:#6b7280;"><i class="bi bi-upc"></i> Lô</div>
-                                <div class="toggle-dot" id="dotLot"></div>
-                            </div>
-                            <div class="rt-desc">Truy xuất nguồn gốc Batch</div>
-                        </label>
-                        <label class="rule-toggle" id="rtVar" onclick="toggleRule('HasVariants','rtVar','active-var')">
-                            <input type="checkbox" asp-for="HasVariants" id="HasVariants" />
-                            <div class="rt-header">
-                                <div class="rt-ico-label" style="color:#f59e0b;"><i class="bi bi-layers"></i> Biến thể</div>
-                                <div class="toggle-dot" id="dotVar"></div>
-                            </div>
-                            <div class="rt-desc">Nhiều màu/size</div>
-                        </label>
-                    </div>
-                    <div class="two-col">
-                        <div class="fl">
-                            <label>Safety Stock mặc định</label>
-                            <input asp-for="DefaultMinStock" id="DefaultMinStock" type="number" min="0" class="fc" placeholder="VD: 10" oninput="syncStock(this.value)" />
-                            <div class="info-hint">Ngưỡng tồn kho tối thiểu</div>
-                        </div>
-                        <div class="fl">
-                            <label>Thứ tự hiển thị</label>
-                            <input asp-for="DisplayOrder" type="number" min="0" class="fc" placeholder="0" />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- RENTAL panel -->
-                <div class="cond-panel panel-rental" id="panelRental">
-                    <div class="panel-title"><i class="bi bi-arrow-repeat me-1"></i>Cấu Hình Cho Thuê</div>
-                    <div class="rule-grid" style="margin-bottom:.85rem;">
-                        <label class="rule-toggle" id="rtSize" onclick="toggleRule('RequiresSize','rtSize','active-size')">
-                            <input type="checkbox" asp-for="RequiresSize" id="RequiresSize" />
-                            <div class="rt-header">
-                                <div class="rt-ico-label" style="color:#8b5cf6;"><i class="bi bi-rulers"></i> Theo Size</div>
-                                <div class="toggle-dot" id="dotSize"></div>
-                            </div>
-                            <div class="rt-desc">Giày, quần áo theo size</div>
-                        </label>
-                        <label class="rule-toggle" id="rtPart" onclick="toggleRule('AllowPartialReturn','rtPart','active-var')">
-                            <input type="checkbox" asp-for="AllowPartialReturn" id="AllowPartialReturn" />
-                            <div class="rt-header">
-                                <div class="rt-ico-label" style="color:#f59e0b;"><i class="bi bi-box-arrow-in-left"></i> Trả từng phần</div>
-                                <div class="toggle-dot" id="dotPart"></div>
-                            </div>
-                            <div class="rt-desc">Trả lại từng cái/bộ</div>
-                        </label>
-                        <label class="rule-toggle" id="rtDep" onclick="toggleRule('DepositRequired','rtDep','active-hsd')">
-                            <input type="checkbox" asp-for="DepositRequired" id="DepositRequired" onchange="toggleDepositAmt()" />
-                            <div class="rt-header">
-                                <div class="rt-ico-label" style="color:#dc2626;"><i class="bi bi-cash-coin"></i> Đặt cọc</div>
-                                <div class="toggle-dot" id="dotDep"></div>
-                            </div>
-                            <div class="rt-desc">Yêu cầu tiền đặt cọc</div>
-                        </label>
-                        <label class="rule-toggle" id="rtOt" onclick="toggleRule('ChargeOvertime','rtOt','active-fifo')">
-                            <input type="checkbox" asp-for="ChargeOvertime" id="ChargeOvertime" />
-                            <div class="rt-header">
-                                <div class="rt-ico-label" style="color:#3b82f6;"><i class="bi bi-clock-history"></i> Overtime</div>
-                                <div class="toggle-dot" id="dotOt"></div>
-                            </div>
-                            <div class="rt-desc">Phụ thu khi trả trễ</div>
-                        </label>
-                    </div>
-                    <div class="two-col" id="depositAmtRow" style="display:none;">
-                        <div class="fl">
-                            <label>Tiền đặt cọc mặc định</label>
-                            <div class="money-input-wrap">
-                                <input asp-for="DefaultDepositAmount" type="number" min="0" class="fc" placeholder="0" />
-                                <span class="money-suffix">₫</span>
-                            </div>
-                        </div>
-                        <div class="fl">
-                            <label>Phí vệ sinh/giặt ủi</label>
-                            <div class="money-input-wrap">
-                                <input asp-for="DefaultCleaningFee" type="number" min="0" class="fc" placeholder="0" />
-                                <span class="money-suffix">₫</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="two-col">
-                        <div class="fl">
-                            <label>Giờ thuê tối đa</label>
-                            <input asp-for="MaxRentalHours" type="number" min="0" class="fc" placeholder="0 = không giới hạn" />
-                            <div class="info-hint">0 = không giới hạn thời gian</div>
-                        </div>
-                        <div class="fl">
-                            <label>Safety Stock mặc định</label>
-                            <input asp-for="DefaultMinStock" type="number" min="0" class="fc" placeholder="VD: 5" />
-                        </div>
-                    </div>
-                    <div class="fl">
-                        <label>Thứ tự hiển thị</label>
-                        <input asp-for="DisplayOrder" type="number" min="0" class="fc" placeholder="0" />
-                    </div>
-                </div>
-
-                <!-- SERVICE panel -->
-                <div class="cond-panel panel-service" id="panelService">
-                    <div class="panel-title"><i class="bi bi-tools me-1"></i>Cấu Hình Dịch Vụ</div>
-                    <div class="fl">
-                        <label>Mô hình tính giá</label>
-                        <select asp-for="PricingModel" class="fc">
-                            <option value="Fixed">💰 Giá cố định (Fixed)</option>
-                            <option value="PerUnit">📦 Tính theo số lượng (Per Unit)</option>
-                            <option value="Labor+Material">🔧 Tiền công + Vật liệu (Labor+Material)</option>
-                            <option value="Bundle">🎁 Gói dịch vụ (Bundle)</option>
-                        </select>
-                    </div>
-                    <div class="rule-grid" style="margin-bottom:.85rem;">
-                        <label class="rule-toggle" id="rtLab" onclick="toggleRule('SeparateLaborAndMaterial','rtLab','active-lot'); toggleLaborFields()">
-                            <input type="checkbox" asp-for="SeparateLaborAndMaterial" id="SeparateLaborAndMaterial" />
-                            <div class="rt-header">
-                                <div class="rt-ico-label" style="color:#6b7280;"><i class="bi bi-scissors"></i> Tách công/vật liệu</div>
-                                <div class="toggle-dot" id="dotLab"></div>
-                            </div>
-                            <div class="rt-desc">Căng vợt: tách tiền công & cước</div>
-                        </label>
-                        <label class="rule-toggle" id="rtCustMat" onclick="toggleRule('AllowCustomerMaterial','rtCustMat','active-var')">
-                            <input type="checkbox" asp-for="AllowCustomerMaterial" id="AllowCustomerMaterial" />
-                            <div class="rt-header">
-                                <div class="rt-ico-label" style="color:#f59e0b;"><i class="bi bi-bag-check"></i> Vật liệu khách</div>
-                                <div class="toggle-dot" id="dotCustMat"></div>
-                            </div>
-                            <div class="rt-desc">Khách tự mang cước/vật liệu</div>
-                        </label>
-                    </div>
-                    <div class="fl" id="materialUnitRow" style="display:none;">
-                        <label>Đơn vị vật liệu</label>
-                        <input asp-for="MaterialUnit" class="fc" placeholder="VD: bộ cước, đôi đế, m cước..." />
-                        <div class="info-hint">Dùng cho việc tính giá vật liệu theo đơn vị</div>
-                    </div>
-                    <div class="fl">
-                        <label>Thứ tự hiển thị</label>
-                        <input asp-for="DisplayOrder" type="number" min="0" class="fc" placeholder="0" />
-                    </div>
-                </div>
-
-                <div class="btn-row">
-                    <a asp-action="Index" class="btn-cancel"><i class="bi bi-x-lg"></i> Hủy</a>
-                    <button type="submit" class="btn-submit"><i class="bi bi-plus-circle-fill"></i> Lưu Danh Mục</button>
-                </div>
-            </form>
+            </div>
         </div>
+
+        <!-- RENTAL options -->
+        <div class="cond-panel panel-rental" id="panelRental">
+            <div style="font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#1d4ed8;margin-bottom:.75rem;display:flex;align-items:center;gap:.4rem;">
+                <i class="bi bi-arrow-repeat"></i> Cấu hình cho thuê
+            </div>
+            <div class="toggle-group">
+                <label class="tg-item" id="tgSize">
+                    <input type="checkbox" id="cb_size" />
+                    <div class="tg-dot"></div>
+                    <div class="tg-body">
+                        <div class="tg-label"><i class="bi bi-rulers me-1" style="color:#8b5cf6"></i>Cho thuê theo size</div>
+                        <div class="tg-hint">Giày, quần áo cần chọn size</div>
+                    </div>
+                </label>
+                <label class="tg-item" id="tgDeposit">
+                    <input type="checkbox" id="cb_deposit" />
+                    <div class="tg-dot"></div>
+                    <div class="tg-body">
+                        <div class="tg-label"><i class="bi bi-cash-coin me-1" style="color:#16a34a"></i>Yêu cầu đặt cọc</div>
+                        <div class="tg-hint">Thu tiền cọc khi cho mượn</div>
+                    </div>
+                </label>
+                <label class="tg-item" id="tgPartial">
+                    <input type="checkbox" id="cb_partial" />
+                    <div class="tg-dot"></div>
+                    <div class="tg-body">
+                        <div class="tg-label"><i class="bi bi-box-arrow-in-left me-1" style="color:#f59e0b"></i>Trả hàng từng phần</div>
+                        <div class="tg-hint">Cho phép trả lại từng cái</div>
+                    </div>
+                </label>
+            </div>
+            <div id="depositAmountRow" style="display:none;margin-top:.85rem;display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+                <div class="fl">
+                    <label>Tiền đặt cọc mặc định (đ)</label>
+                    <input type="number" id="inp_deposit" class="fc" min="0" value="0" placeholder="VD: 50000" />
+                </div>
+                <div class="fl">
+                    <label>Giờ thuê tối đa</label>
+                    <input type="number" id="inp_maxhours" class="fc" min="1" value="24" />
+                </div>
+            </div>
+        </div>
+
+        <!-- SERVICE options -->
+        <div class="cond-panel panel-service" id="panelService">
+            <div style="font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7c3aed;margin-bottom:.75rem;display:flex;align-items:center;gap:.4rem;">
+                <i class="bi bi-wrench-adjustable"></i> Cấu hình dịch vụ
+            </div>
+            <div class="toggle-group" style="grid-template-columns:1fr;">
+                <label class="tg-item" id="tgSeparate">
+                    <input type="checkbox" id="cb_separate" />
+                    <div class="tg-dot"></div>
+                    <div class="tg-body">
+                        <div class="tg-label"><i class="bi bi-scissors me-1" style="color:#7c3aed"></i>Tách tiền công / vật tư</div>
+                        <div class="tg-hint">VD: Căng vợt = tiền công + dây cước riêng</div>
+                    </div>
+                </label>
+                <label class="tg-item" id="tgCustMaterial">
+                    <input type="checkbox" id="cb_custmat" />
+                    <div class="tg-dot"></div>
+                    <div class="tg-body">
+                        <div class="tg-label"><i class="bi bi-person-gear me-1" style="color:#0369a1"></i>Khách tự mang vật tư</div>
+                        <div class="tg-hint">Khách mang dây/phụ kiện, chỉ tính công</div>
+                    </div>
+                </label>
+            </div>
+            <div style="margin-top:.85rem;">
+                <div class="fl">
+                    <label>Mô hình tính giá</label>
+                    <select id="inp_pricing" class="fc">
+                        <option value="Fixed">Giá cố định</option>
+                        <option value="PerUnit">Theo số lượng</option>
+                        <option value="PerHour">Theo giờ</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ảnh đại diện -->
+        <div class="section-hd" style="margin-top:1.2rem;"><i class="bi bi-image"></i> Ảnh đại diện (tùy chọn)</div>
+        <div class="upload-zone" onclick="document.getElementById('catImgInput').click()">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <p>Nhấn để chọn ảnh · JPG, PNG · Tối đa 5MB</p>
+        </div>
+        <input type="file" id="catImgInput" accept="image/*" style="display:none" onchange="previewImg(this)" />
+        <div id="imgPreview"></div>
     </div>
 </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-    <script>
-        const ICONS  = { Food:'bi-egg-fried', Beverage:'bi-cup-straw', Equipment:'bi-gear-wide-connected', Clothing:'bi-bag-heart', Accessory:'bi-watch', Other:'bi-folder2-open', '':'bi-folder2-open' };
-        const COLORS = { Food:'#b45309', Beverage:'#0369a1', Equipment:'#166534', Clothing:'#7e22ce', Accessory:'#be185d', Other:'#4b5563', '':'#9ca3af' };
-        const BGS    = { Food:'linear-gradient(135deg,#fffbeb,#fef3c7)', Beverage:'linear-gradient(135deg,#f0f9ff,#dbeafe)', Equipment:'linear-gradient(135deg,#f0fdf4,#dcfce7)', Clothing:'linear-gradient(135deg,#faf5ff,#ede9fe)', Accessory:'linear-gradient(135deg,#fdf2f8,#fce7f3)', Other:'linear-gradient(135deg,#f9fafb,#f3f4f6)', '':'linear-gradient(135deg,#f1f5f9,#e2e8f0)' };
-        const LABELS = { Food:'🍱 Đồ ăn', Beverage:'🥤 Thức uống', Equipment:'🏸 Dụng cụ', Clothing:'👕 Quần áo', Accessory:'🧢 Phụ kiện', Other:'📦 Khác', '':'Chọn loại' };
-        const TC_BG  = { Food:'#fffbeb', Beverage:'#e0f2fe', Equipment:'#f0fdf4', Clothing:'#faf5ff', Accessory:'#fdf2f8', Other:'#f9fafb', '':'#f3f4f6' };
-        const BH_LABELS = { Retail:'🛒 Bán lẻ', Rental:'🔄 Cho thuê', Service:'🔧 Dịch vụ' };
-        const BH_CLS    = { Retail:'bh-retail', Rental:'bh-rental', Service:'bh-service' };
+<!-- MODAL FOOTER -->
+<div class="md-ft">
+    <button class="btn-secondary" data-bs-dismiss="modal">Hủy</button>
+    <button class="btn-primary" id="btnSubmit" style="display:none;" onclick="submitForm()">
+        <i class="bi bi-check-lg"></i> Tạo danh mục
+    </button>
+</div>
 
-        document.getElementById('inputName').addEventListener('input', e => {
-            const el = document.getElementById('prevName');
-            el.textContent = e.target.value || 'Tên danh mục';
-            el.style.color = e.target.value ? 'var(--dark)' : '#9ca3af';
+<script>
+    // ── State ──
+    let selectedPreset = null;
+    let selectedBh = 'Retail';
+
+    // ── PRESETS CONFIG ──
+    const PRESETS = {
+        beverage: {
+            bh: 'Retail', type: 'Beverage', unit: 'Chai',
+            names: ['Nước uống', 'Thức uống', 'Đồ ăn nhanh', 'Snack & Bánh'],
+            desc: 'Đồ ăn, thức uống bán tại quầy',
+            expiry: true, fifo: true, batch: false, variants: false, minstock: 20
+        },
+        rental: {
+            bh: 'Rental', type: 'Equipment', unit: 'Cái',
+            names: ['Vợt cho thuê', 'Giày cho thuê', 'Quần áo cho thuê', 'Túi cho thuê'],
+            desc: 'Dụng cụ thể thao cho thuê theo giờ',
+            size: true, deposit: true, partial: true, maxhours: 8, depositAmt: 50000
+        },
+        service: {
+            bh: 'Service', type: 'Equipment', unit: 'Lần',
+            names: ['Căng vợt', 'Sửa vợt', 'Huấn luyện cá nhân', 'Thuê HLV'],
+            desc: 'Dịch vụ sửa chữa và huấn luyện',
+            separate: true, custmat: true, pricing: 'Fixed'
+        },
+        accessory: {
+            bh: 'Retail', type: 'Clothing', unit: 'Cái',
+            names: ['Quần áo thể thao', 'Phụ kiện cầu lông', 'Băng quấn', 'Tất/Bao tay'],
+            desc: 'Quần áo và phụ kiện bán ra',
+            expiry: false, fifo: false, batch: true, variants: true, minstock: 5
+        },
+        equipment: {
+            bh: 'Retail', type: 'Equipment', unit: 'Cái',
+            names: ['Vợt cầu lông', 'Cầu lông', 'Túi đựng vợt', 'Phụ kiện vợt'],
+            desc: 'Dụng cụ thể thao bán ra',
+            expiry: false, fifo: true, batch: true, variants: false, minstock: 3
+        },
+        custom: {
+            bh: 'Retail', type: '', unit: 'Cái',
+            names: [], desc: '',
+            expiry: false, fifo: false, batch: false, variants: false, minstock: 0
+        }
+    };
+
+    // ── STEP NAVIGATION ──
+    function goStep(n) {
+        [1,2,3].forEach(i => {
+            document.getElementById('step'+i).style.display = i===n ? 'block' : 'none';
+            const ind = document.getElementById('stepInd'+i);
+            ind.classList.remove('on','done');
+            if(i < n) ind.classList.add('done');
+            else if(i === n) ind.classList.add('on');
         });
+        if(n===3){ applyBhPreset(); document.getElementById('btnSubmit').style.display='inline-flex'; }
+        else { document.getElementById('btnSubmit').style.display='none'; }
+    }
 
-        document.getElementById('inputType').addEventListener('change', function () {
-            const v = this.value;
-            document.getElementById('prevVisual').style.background = BGS[v] || BGS[''];
-            ['prevBigIcon','prevCenterIcon'].forEach(id => {
-                const el = document.getElementById(id);
-                el.className = `bi ${ICONS[v]||'bi-folder2-open'} ${id.includes('Big') ? 'prev-big-icon' : 'prev-center-icon'}`;
-                el.style.color = COLORS[v]||'#9ca3af';
+    // ── APPLY PRESET ──
+    function applyPreset(key) {
+        selectedPreset = key;
+        document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('selected'));
+        document.getElementById('pc-'+key).classList.add('selected');
+        document.getElementById('btnStep1Next').disabled = false;
+
+        const p = PRESETS[key];
+        if(!p) return;
+
+        // Pre-fill step 2
+        document.getElementById('inp_type').value    = p.type || '';
+        document.getElementById('inp_unit').value    = p.unit || 'Cái';
+        document.getElementById('inp_desc').value    = p.desc || '';
+        selectedBh = p.bh;
+
+        // Show name suggestions
+        const sugBox = document.getElementById('nameSuggestions');
+        if(p.names && p.names.length) {
+            sugBox.style.display = 'flex';
+            sugBox.innerHTML = p.names.map(n =>
+                `<button type="button" onclick="pickName('${n}')" style="padding:.22rem .65rem;border:1px solid var(--border);border-radius:5px;font-size:.72rem;cursor:pointer;background:#fff;color:var(--deep);transition:all .15s;"
+                onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">${n}</button>`
+            ).join('');
+        } else {
+            sugBox.style.display = 'none';
+            sugBox.innerHTML = '';
+        }
+
+        updatePreview();
+    }
+
+    function pickName(name) {
+        document.getElementById('inp_name').value = name;
+        updatePreview();
+    }
+
+    // ── APPLY BH TO STEP 3 ──
+    function applyBhPreset() {
+        selectBh(selectedBh);
+        const p = PRESETS[selectedPreset];
+        if(!p) return;
+
+        if(selectedBh === 'Retail') {
+            setToggle('tgHsd',    'cb_expiry',   p.expiry||false);
+            setToggle('tgFifo',   'cb_fifo',     p.fifo||false);
+            setToggle('tgBatch',  'cb_batch',    p.batch||false);
+            setToggle('tgVariants','cb_variants', p.variants||false);
+            document.getElementById('inp_minstock').value = p.minstock || 0;
+        } else if(selectedBh === 'Rental') {
+            setToggle('tgSize',    'cb_size',    p.size||false);
+            setToggle('tgDeposit', 'cb_deposit', p.deposit||false);
+            setToggle('tgPartial', 'cb_partial', p.partial||false);
+            if(p.depositAmt) document.getElementById('inp_deposit').value = p.depositAmt;
+            if(p.maxhours)   document.getElementById('inp_maxhours').value = p.maxhours;
+            if(p.deposit) document.getElementById('depositAmountRow').style.display = 'grid';
+        } else if(selectedBh === 'Service') {
+            setToggle('tgSeparate',   'cb_separate', p.separate||false);
+            setToggle('tgCustMaterial','cb_custmat',  p.custmat||false);
+            if(p.pricing) document.getElementById('inp_pricing').value = p.pricing;
+        }
+    }
+
+    function setToggle(itemId, cbId, on) {
+        const item = document.getElementById(itemId);
+        const cb   = document.getElementById(cbId);
+        if(!item || !cb) return;
+        cb.checked = on;
+        item.classList.toggle('on', on);
+    }
+
+    // ── BEHAVIOR SELECT ──
+    function selectBh(val) {
+        selectedBh = val;
+        ['Retail','Rental','Service'].forEach(b => {
+            document.getElementById('bh'+b)?.classList.remove('on-retail','on-rental','on-service');
+        });
+        document.getElementById('bh'+val)?.classList.add('on-'+val.toLowerCase());
+        document.getElementById('panelRetail').classList.toggle('show', val==='Retail');
+        document.getElementById('panelRental').classList.toggle('show', val==='Rental');
+        document.getElementById('panelService').classList.toggle('show', val==='Service');
+    }
+
+    // ── TOGGLE ITEMS ──
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.tg-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const cb = item.querySelector('input[type=checkbox]');
+                cb.checked = !cb.checked;
+                item.classList.toggle('on', cb.checked);
+                // Show deposit row if deposit toggle
+                if(cb.id === 'cb_deposit') {
+                    document.getElementById('depositAmountRow').style.display = cb.checked ? 'grid' : 'none';
+                }
             });
-            const pt = document.getElementById('prevType');
-            pt.textContent = LABELS[v]; pt.style.background = TC_BG[v]||'#f3f4f6'; pt.style.color = COLORS[v]||'#6b7280';
-            // Auto-suggest rules
-            if (v === 'Food' || v === 'Beverage') {
-                setRule('RequiresExpiry','rtHsd','active-hsd',true);
-                setRule('UseFIFO','rtFifo','active-fifo',true);
+        });
+    });
+
+    // ── PREVIEW ──
+    const TYPE_ICONS = { Food:'bi-egg-fried', Beverage:'bi-cup-straw', Equipment:'bi-gear', Clothing:'bi-bag-heart', Accessory:'bi-watch', Other:'bi-folder2-open' };
+    const TYPE_COLORS = { Food:'#b45309', Beverage:'#0369a1', Equipment:'#166534', Clothing:'#7e22ce', Accessory:'#be185d', Other:'var(--muted)' };
+    const TYPE_BG = { Food:'#fffbeb', Beverage:'#f0f9ff', Equipment:'#f0fdf4', Clothing:'#faf5ff', Accessory:'#fdf2f8', Other:'var(--warm)' };
+    const BH_LABELS = { Retail:'Bán lẻ', Rental:'Cho thuê', Service:'Dịch vụ' };
+    const BH_COLORS = { Retail:'#166534', Rental:'#1d4ed8', Service:'#7c3aed' };
+    const BH_BG     = { Retail:'#f0fdf4', Rental:'#eff6ff', Service:'#f5f3ff' };
+
+    function updatePreview() {
+        const name = document.getElementById('inp_name').value || 'Tên danh mục';
+        const type = document.getElementById('inp_type').value;
+        document.getElementById('pvName').textContent = name;
+        document.getElementById('pvMeta').textContent = type ? TYPE_ICONS[type]?.replace('bi-','') : 'Loại hàng hóa';
+        const icon = document.getElementById('pvIcon');
+        icon.style.background = TYPE_BG[type] || 'var(--warm)';
+        icon.innerHTML = `<i class="bi ${TYPE_ICONS[type]||'bi-folder2-open'}" style="color:${TYPE_COLORS[type]||'var(--muted)'}"></i>`;
+        const bh = selectedBh || 'Retail';
+        document.getElementById('pvBadge').innerHTML =
+            `<span style="display:inline-flex;align-items:center;gap:.28rem;padding:.2rem .6rem;border-radius:4px;font-size:.66rem;font-weight:700;background:${BH_BG[bh]};color:${BH_COLORS[bh]};">${BH_LABELS[bh]}</span>`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('inp_type').addEventListener('change', updatePreview);
+    });
+
+    // ── IMAGE PREVIEW ──
+    function previewImg(input) {
+        const file = input.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('imgPreview').innerHTML =
+                `<div style="position:relative;display:inline-block;margin-top:.5rem;">
+                    <img src="${e.target.result}" style="max-height:90px;border-radius:6px;border:1px solid var(--border);">
+                    <button type="button" onclick="clearImg()" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;border:none;cursor:pointer;font-size:.6rem;display:flex;align-items:center;justify-content:center;"><i class="bi bi-x"></i></button>
+                </div>`;
+        };
+        reader.readAsDataURL(file);
+    }
+    function clearImg() {
+        document.getElementById('catImgInput').value = '';
+        document.getElementById('imgPreview').innerHTML = '';
+    }
+
+    // ── SUBMIT ──
+    async function submitForm() {
+        const name = document.getElementById('inp_name').value.trim();
+        if(!name){ alert('Vui lòng nhập tên danh mục!'); return; }
+        const type = document.getElementById('inp_type').value;
+        if(!type){ alert('Vui lòng chọn loại hàng hóa!'); return; }
+
+        const btn = document.getElementById('btnSubmit');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang tạo...';
+
+        const fd = new FormData();
+        fd.append('CategoryName',    name);
+        fd.append('CategoryType',    type);
+        fd.append('BehaviorType',    selectedBh);
+        fd.append('DefaultUnit',     document.getElementById('inp_unit').value);
+        fd.append('Description',     document.getElementById('inp_desc').value);
+        fd.append('DisplayOrder',    document.getElementById('inp_order').value);
+        fd.append('IsActive',        document.getElementById('inp_active').value);
+
+        // Retail
+        fd.append('RequiresExpiry',  document.getElementById('cb_expiry')?.checked  ? 'true':'false');
+        fd.append('UseFIFO',         document.getElementById('cb_fifo')?.checked    ? 'true':'false');
+        fd.append('RequiresBatch',   document.getElementById('cb_batch')?.checked   ? 'true':'false');
+        fd.append('HasVariants',     document.getElementById('cb_variants')?.checked? 'true':'false');
+        fd.append('DefaultMinStock', document.getElementById('inp_minstock')?.value || '0');
+        // Rental
+        fd.append('RequiresSize',        document.getElementById('cb_size')?.checked    ? 'true':'false');
+        fd.append('DepositRequired',     document.getElementById('cb_deposit')?.checked  ? 'true':'false');
+        fd.append('AllowPartialReturn',  document.getElementById('cb_partial')?.checked  ? 'true':'false');
+        fd.append('DefaultDepositAmount',document.getElementById('inp_deposit')?.value   || '0');
+        fd.append('MaxRentalHours',      document.getElementById('inp_maxhours')?.value  || '24');
+        // Service
+        fd.append('SeparateLaborAndMaterial', document.getElementById('cb_separate')?.checked ? 'true':'false');
+        fd.append('AllowCustomerMaterial',    document.getElementById('cb_custmat')?.checked  ? 'true':'false');
+        fd.append('PricingModel',             document.getElementById('inp_pricing')?.value    || 'Fixed');
+
+        const imgFile = document.getElementById('catImgInput').files[0];
+        if(imgFile) fd.append('CategoryImage', imgFile);
+
+        const TOKEN_MODAL = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+
+        try {
+            const res = await fetch('/Admin/AdminCategory/CreateAjax', {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': TOKEN_MODAL },
+                body: fd
+            }).then(r => r.json());
+
+            if(res.success) {
+                // Close modal and reload
+                bootstrap.Modal.getInstance(document.getElementById('catModal'))?.hide();
+                location.reload();
+            } else {
+                alert(res.message || 'Có lỗi xảy ra!');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-lg"></i> Tạo danh mục';
             }
-            if (v === 'Clothing' || v === 'Accessory') setRule('HasVariants','rtVar','active-var',true);
-        });
-
-        document.getElementById('inputUnit').addEventListener('change', function () {
-            document.getElementById('prevUnit').textContent = this.value || '—';
-        });
-
-        function selectBehavior(val) {
-            document.getElementById('BehaviorTypeInput').value = val;
-            document.querySelectorAll('.bh-tab').forEach(t => {
-                t.classList.remove('active-retail','active-rental','active-service');
-                if (t.dataset.val === val) t.classList.add(`active-${val.toLowerCase()}`);
-            });
-            ['Retail','Rental','Service'].forEach(b => {
-                const p = document.getElementById(`panel${b}`);
-                p.classList.toggle('show', b === val);
-            });
-            const pb = document.getElementById('prevBehavior');
-            pb.textContent = BH_LABELS[val];
-            pb.className = `prev-behavior ${BH_CLS[val]}`;
+        } catch(e) {
+            alert('Lỗi kết nối!');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-lg"></i> Tạo danh mục';
         }
-
-        function toggleRule(cbId, divId, cls) {
-            const cb = document.getElementById(cbId);
-            cb.checked = !cb.checked;
-            document.getElementById(divId).classList.toggle(cls, cb.checked);
-            if (cbId === 'DepositRequired') toggleDepositAmt();
-        }
-
-        function setRule(cbId, divId, cls, val) {
-            const cb = document.getElementById(cbId);
-            if (!cb) return;
-            cb.checked = val;
-            document.getElementById(divId).classList.toggle(cls, val);
-        }
-
-        function toggleDepositAmt() {
-            const show = document.getElementById('DepositRequired')?.checked;
-            document.getElementById('depositAmtRow').style.display = show ? '' : 'none';
-        }
-
-        function toggleLaborFields() {
-            const show = document.getElementById('SeparateLaborAndMaterial')?.checked;
-            document.getElementById('materialUnitRow').style.display = show ? '' : 'none';
-        }
-
-        function syncStock(v) {
-            document.getElementById('prevStock').textContent = v || '—';
-        }
-
-        function onImageSelect(input) {
-            if (!input.files[0]) return;
-            const url = URL.createObjectURL(input.files[0]);
-            document.getElementById('uploadPreview').innerHTML = `<img src="${url}" />`;
-            document.getElementById('prevVisual').innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;" />`;
-        }
-    </script>
-}
+    }
+</script>

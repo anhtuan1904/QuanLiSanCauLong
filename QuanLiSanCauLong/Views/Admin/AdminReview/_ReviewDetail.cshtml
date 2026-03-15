@@ -1,0 +1,380 @@
+﻿@model QuanLiSanCauLong.ViewModels.ReviewDetailViewModel
+@{
+    var rv = Model.Review;
+}
+
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #fdf8f0;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+        --red: #c94b2a;
+        --green: #16a34a;
+    }
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    body, * {
+        font-family: 'Outfit',sans-serif;
+    }
+
+    .btn-g {
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        border: none;
+        padding: .6rem 1.2rem;
+        font-size: .82rem;
+        font-weight: 700;
+        border-radius: 7px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: .38rem;
+        transition: all .2s;
+    }
+
+        .btn-g:hover {
+            box-shadow: 0 4px 12px rgba(212,160,23,.35);
+        }
+
+    .btn-o {
+        padding: .58rem 1.1rem;
+        border: 1.5px solid var(--border);
+        border-radius: 7px;
+        background: #fff;
+        color: var(--muted);
+        font-size: .82rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        transition: all .18s;
+    }
+
+        .btn-o:hover {
+            border-color: var(--deep);
+            color: var(--deep);
+        }
+
+    .star-on {
+        color: var(--gold);
+    }
+
+    .star-off {
+        color: var(--border);
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .28rem;
+        padding: .22rem .7rem;
+        border-radius: 4px;
+        font-size: .64rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .sp-pending {
+        background: rgba(245,158,11,.08);
+        color: #b45309;
+    }
+
+    .sp-approved {
+        background: rgba(22,163,74,.08);
+        color: #15803d;
+    }
+
+    .sp-rejected {
+        background: rgba(201,75,42,.08);
+        color: #b91c1c;
+    }
+
+    .sp-hidden {
+        background: rgba(138,117,96,.08);
+        color: #57534e;
+    }
+</style>
+
+<!-- MODAL HEADER -->
+<div style="padding:1.2rem 1.4rem .9rem;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;">
+    <div style="display:flex;align-items:center;gap:.85rem;">
+        <img src="@rv.UserAvatar" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid var(--border);" onerror="this.src='/images/default-avatar.jpg'" />
+        <div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--deep);">@rv.UserName</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:.1rem;display:flex;align-items:center;gap:.5rem;">
+                <span><i class="bi bi-clock me-1"></i>@rv.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                @if (rv.IsVerifiedBooking)
+                {
+                    <span style="display:inline-flex;align-items:center;gap:.2rem;padding:.1rem .4rem;background:rgba(22,163,74,.1);color:#15803d;border-radius:4px;font-size:.62rem;font-weight:700;">
+                        <i class="bi bi-patch-check-fill"></i>Đã chơi thực tế
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.5rem;">
+        @{
+            var pillCls = rv.Status switch { "Approved" => "sp-approved", "Rejected" => "sp-rejected", "Hidden" => "sp-hidden", _ => "sp-pending" };
+        }
+        <span class="status-pill @pillCls">@rv.Status</span>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+</div>
+
+<!-- MODAL BODY -->
+<div style="max-height:70vh;overflow-y:auto;">
+
+    <!-- COURT + RATING HERO -->
+    <div style="padding:1rem 1.4rem;background:linear-gradient(135deg,var(--deep),#2e2010);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+        <div>
+            <div style="font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.35);font-weight:700;margin-bottom:.3rem;">Sân được đánh giá</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:#fff;">@rv.CourtName</div>
+            <div style="font-size:.72rem;color:rgba(255,255,255,.45);margin-top:.1rem;"><i class="bi bi-building me-1"></i>@rv.FacilityName</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:700;color:var(--gold2);line-height:1;">@rv.Rating</div>
+            <div style="display:flex;gap:.15rem;justify-content:flex-end;margin-top:.2rem;">
+                @for (int s = 1; s <= 5; s++)
+                {
+                    <i class="bi bi-star-fill @(s <= rv.Rating ? "star-on" : "star-off")" style="font-size:.9rem;"></i>
+                }
+            </div>
+            <div style="font-size:.65rem;color:rgba(255,255,255,.35);margin-top:.2rem;">/ 5 sao</div>
+        </div>
+    </div>
+
+    <!-- SUB-RATINGS (nếu có) -->
+    @if (rv.RatingCleanliness.HasValue || rv.RatingCourtQuality.HasValue || rv.RatingService.HasValue || rv.RatingValue.HasValue)
+    {
+        <div style="padding:.85rem 1.4rem;border-bottom:1px solid var(--border);display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;">
+            @{
+                void RatingRow(string label, int? val)
+                {
+                    if (!val.HasValue) return;
+                    <div style="background:var(--warm);border-radius:7px;padding:.5rem .75rem;">
+                        <div style="font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.3rem;">@label</div>
+                        <div style="display:flex;gap:.1rem;">
+                            @for (int s = 1; s <= 5; s++)
+                            {
+                                <i class="bi bi-star-fill @(s <= val.Value ? "star-on" : "star-off")" style="font-size:.72rem;"></i>
+                            }
+                        </div>
+                    </div>
+                }
+                RatingRow("Vệ sinh", rv.RatingCleanliness);
+                RatingRow("Chất lượng sân", rv.RatingCourtQuality);
+                RatingRow("Dịch vụ", rv.RatingService);
+                RatingRow("Giá trị", rv.RatingValue);
+            }
+        </div>
+    }
+
+    <!-- CONTENT -->
+    @if (!string.IsNullOrEmpty(rv.Content))
+    {
+        <div style="padding:1rem 1.4rem;border-bottom:1px solid var(--border);">
+            <div style="font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.55rem;">
+                <i class="bi bi-chat-quote me-1" style="color:var(--gold)"></i>Nội dung đánh giá
+            </div>
+            <div style="font-size:.9rem;line-height:1.75;color:var(--deep);border-left:2px solid var(--gold);padding-left:.85rem;">
+                @rv.Content
+            </div>
+        </div>
+    }
+
+    <!-- IMAGES -->
+    @if (Model.Images.Any())
+    {
+        <div style="padding:.85rem 1.4rem;border-bottom:1px solid var(--border);">
+            <div style="font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.55rem;">
+                <i class="bi bi-images me-1" style="color:var(--gold)"></i>Ảnh đính kèm (@Model.Images.Count)
+            </div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                @foreach (var img in Model.Images)
+                {
+                    <div style="position:relative;">
+                        <img src="@img.ImagePath" style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer;"
+                             onclick="window.open('@img.ImagePath','_blank')"
+                             onerror="this.style.display='none'" />
+                        <button onclick="deleteReviewImage(@img.ImageId,this)"
+                                style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.6rem;">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- LIKES -->
+    @if (Model.LikeCount > 0 || Model.HelpfulCount > 0)
+    {
+        <div style="padding:.7rem 1.4rem;border-bottom:1px solid var(--border);display:flex;gap:1.5rem;">
+            <span style="font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:.3rem;">
+                <i class="bi bi-hand-thumbs-up-fill" style="color:var(--blue)"></i>
+                <strong>@Model.LikeCount</strong> lượt thích
+            </span>
+            <span style="font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:.3rem;">
+                <i class="bi bi-check-circle-fill" style="color:var(--green)"></i>
+                <strong>@Model.HelpfulCount</strong> hữu ích
+            </span>
+        </div>
+    }
+
+    <!-- REPLIES -->
+    @if (Model.Replies.Any())
+    {
+        <div style="font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:.65rem 1.4rem;background:var(--warm);border-top:1px solid var(--border);border-bottom:1px solid var(--border);font-weight:700;display:flex;align-items:center;gap:.4rem;">
+            <i class="bi bi-chat-dots" style="color:var(--gold)"></i>
+            Phản hồi (@Model.Replies.Sum(r => 1 + r.ChildReplies.Count))
+        </div>
+        @foreach (var reply in Model.Replies)
+        {
+            <div style="padding:.8rem 1.4rem;border-bottom:1px solid var(--border);display:flex;gap:.75rem;@(reply.IsAdminReply ? "background:rgba(212,160,23,.03);" : "")">
+                <img src="@reply.UserAvatar" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0;" onerror="this.src='/images/default-avatar.jpg'" />
+                <div style="flex:1;">
+                    <div style="display:flex;align-items:center;gap:.45rem;margin-bottom:.28rem;">
+                        <span style="font-size:.8rem;font-weight:700;color:var(--deep);">@reply.UserName</span>
+                        @if (reply.IsAdminReply)
+                        {
+                            <span style="padding:.1rem .42rem;border-radius:4px;font-size:.6rem;font-weight:700;background:rgba(212,160,23,.15);color:#92660a;">Admin</span>
+                        }
+                        <span style="font-size:.68rem;color:var(--muted);margin-left:auto;">@reply.CreatedAt.ToString("dd/MM HH:mm")</span>
+                        <button onclick="deleteReply(@reply.ReplyId, this)" style="width:22px;height:22px;border-radius:4px;border:1px solid var(--border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.65rem;" title="Xóa">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </div>
+                    <div style="font-size:.82rem;color:var(--deep);line-height:1.6;">@reply.Content</div>
+
+                    <!-- Nested replies -->
+                    @foreach (var child in reply.ChildReplies)
+                    {
+                        <div style="margin-top:.55rem;padding:.55rem .7rem;background:var(--warm);border-radius:7px;border-left:2px solid var(--border);display:flex;gap:.5rem;">
+                            <img src="@child.UserAvatar" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid var(--border);flex-shrink:0;" onerror="this.src='/images/default-avatar.jpg'" />
+                            <div style="flex:1;">
+                                <div style="display:flex;align-items:center;gap:.35rem;margin-bottom:.2rem;">
+                                    <span style="font-size:.75rem;font-weight:700;color:var(--deep);">@child.UserName</span>
+                                    <span style="font-size:.65rem;color:var(--muted);margin-left:auto;">@child.CreatedAt.ToString("dd/MM HH:mm")</span>
+                                </div>
+                                <div style="font-size:.78rem;color:var(--deep);line-height:1.55;">@child.Content</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+
+    <!-- QUICK REPLY FROM DETAIL -->
+    <div style="padding:1rem 1.4rem;">
+        <div style="font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.45rem;">
+            <i class="bi bi-pencil me-1" style="color:var(--gold)"></i>Phản hồi nhanh (admin)
+        </div>
+        <textarea id="quickReplyTa" style="width:100%;padding:.6rem .8rem;border:1px solid var(--border);border-radius:7px;font-family:'Outfit',sans-serif;font-size:.82rem;outline:none;resize:vertical;min-height:68px;" placeholder="Nhập phản hồi..."></textarea>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.35rem;">
+            <button onclick="setQR('Cảm ơn quý khách đã tin dùng dịch vụ!')" style="padding:.24rem .62rem;border:1px solid var(--border);border-radius:5px;font-size:.7rem;cursor:pointer;background:#fff;transition:all .15s;">Cảm ơn</button>
+            <button onclick="setQR('Xin lỗi vì sự cố. Chúng tôi sẽ khắc phục ngay!')" style="padding:.24rem .62rem;border:1px solid var(--border);border-radius:5px;font-size:.7rem;cursor:pointer;background:#fff;transition:all .15s;">Xin lỗi</button>
+            <button onclick="setQR('Chúng tôi đã ghi nhận ý kiến. Cảm ơn bạn!')" style="padding:.24rem .62rem;border:1px solid var(--border);border-radius:5px;font-size:.7rem;cursor:pointer;background:#fff;transition:all .15s;">Ghi nhận</button>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:.55rem;">
+            <button class="btn-g" onclick="submitQuickReply(@rv.ReviewId)">
+                <i class="bi bi-send"></i> Gửi phản hồi
+            </button>
+        </div>
+    </div>
+
+    <!-- REJECTION REASON (nếu bị từ chối) -->
+    @if (rv.Status == "Rejected" && !string.IsNullOrEmpty(rv.RejectionReason))
+    {
+        <div style="padding:.75rem 1.4rem;background:rgba(201,75,42,.04);border-top:1px solid rgba(201,75,42,.15);">
+            <div style="font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#b91c1c;margin-bottom:.35rem;">
+                <i class="bi bi-exclamation-triangle me-1"></i>Lý do từ chối
+            </div>
+            <div style="font-size:.82rem;color:var(--deep);">@rv.RejectionReason</div>
+        </div>
+    }
+</div>
+
+<!-- MODAL FOOTER -->
+<div style="padding:.85rem 1.4rem;background:var(--warm);border-top:1px solid var(--border);display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+    @if (rv.Status != "Approved")
+    {
+        <button class="btn-g" onclick="moderate(@rv.ReviewId,'Approve')">
+            <i class="bi bi-check-circle-fill"></i> Duyệt
+        </button>
+    }
+    @if (rv.Status == "Approved" || rv.Status == "Pending")
+    {
+        <button class="btn-o" style="border-color:rgba(201,75,42,.3);color:var(--red);" onclick="openRejectFromDetail(@rv.ReviewId)">
+            <i class="bi bi-x-circle"></i> Từ chối
+        </button>
+    }
+    @if (rv.Status != "Hidden" && rv.Status != "Rejected")
+    {
+        <button class="btn-o" onclick="moderate(@rv.ReviewId,'Hide')">
+            <i class="bi bi-eye-slash"></i> Ẩn
+        </button>
+    }
+    <button class="btn-o" onclick="moderate(@rv.ReviewId, @(rv.IsFeatured ? "'Unfeature'" : "'Feature'"))">
+        <i class="bi @(rv.IsFeatured ? "bi-pin-fill" : "bi-pin-angle")"></i>
+        @(rv.IsFeatured ? "Bỏ ghim" : "Ghim nổi bật")
+    </button>
+    <button class="btn-o" style="border-color:rgba(239,68,68,.3);color:#ef4444;margin-left:auto;" onclick="deleteReview(@rv.ReviewId)">
+        <i class="bi bi-trash3"></i> Xóa
+    </button>
+</div>
+
+<script>
+    const TOKEN_D = document.querySelector('input[name="__RequestVerificationToken"]')?.value
+        ?? document.querySelectorAll('input[name="__RequestVerificationToken"]')[1]?.value ?? '';
+
+    function setQR(t){ document.getElementById('quickReplyTa').value = t; }
+
+    async function submitQuickReply(reviewId){
+        const content = document.getElementById('quickReplyTa').value.trim();
+        if(!content){ alert('Vui lòng nhập nội dung!'); return; }
+        const res = await fetch('/Admin/Review/Reply',{
+            method:'POST',
+            headers:{'Content-Type':'application/json','RequestVerificationToken': TOKEN_D || TOKEN},
+            body: JSON.stringify({reviewId, content})
+        }).then(r=>r.json());
+        if(res.success){
+            document.getElementById('quickReplyTa').value='';
+            // Reload detail
+            const r2 = await fetch(`/Admin/Review/Detail/${reviewId}`);
+            document.getElementById('detailModalBody').innerHTML = await r2.text();
+        } else { alert(res.message); }
+    }
+
+    async function deleteReply(replyId, btn){
+        if(!confirm('Xóa phản hồi này?')) return;
+        const res = await fetch(`/Admin/Review/DeleteReply/${replyId}`,{
+            method:'POST', headers:{'RequestVerificationToken': TOKEN_D || TOKEN}
+        }).then(r=>r.json());
+        if(res.success){ btn.closest('[style*="border-bottom"]')?.remove(); }
+        else alert(res.message);
+    }
+
+    async function deleteReviewImage(imgId, btn){
+        if(!confirm('Xóa ảnh này?')) return;
+        const res = await fetch(`/Admin/Review/DeleteImage/${imgId}`,{
+            method:'POST', headers:{'RequestVerificationToken': TOKEN_D || TOKEN}
+        }).then(r=>r.json());
+        if(res.success){ btn.closest('div')?.remove(); }
+    }
+
+    function openRejectFromDetail(id){
+        // Close detail modal and open reject modal
+        const dm = bootstrap.Modal.getInstance(document.getElementById('detailModal'));
+        if(dm) dm.hide();
+        setTimeout(()=>{ openRejectModal(id); }, 300);
+    }
+</script>

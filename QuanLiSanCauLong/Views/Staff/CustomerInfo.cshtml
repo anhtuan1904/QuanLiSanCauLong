@@ -1,5 +1,543 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@* CustomerInfo.cshtml — Tra cứu thông tin khách hàng (Staff) *@
 @{
+    Layout = "~/Views/Shared/_LayoutStaff.cshtml";
+    ViewData["Title"] = "Tra cứu khách hàng";
+}
+
+<style>
+    :root {
+        --D: #1a1209;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --G3: rgba(212,160,23,.1);
+        --G4: rgba(212,160,23,.22);
+        --C: #fdf8f0;
+        --W: #f5ede0;
+        --S: #e8ddd0;
+        --M: #8a7560;
+        --GN: #10b981;
+        --BL: #3b82f6;
+        --RD: #ef4444;
+        --OR: #f97316;
+        --PU: #8b5cf6;
+        --r: 14px;
+        --r2: 10px;
+    }
+
+    /* ── SEARCH ── */
+    .ci-search {
+        background: var(--D);
+        border-radius: var(--r);
+        padding: 1.5rem 1.8rem;
+        margin-bottom: 1.2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .ci-search::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,var(--G),var(--G2),transparent);
+        }
+
+    .ci-search-lbl {
+        font-size: .6rem;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        color: var(--G);
+        font-weight: 600;
+        margin-bottom: .4rem;
+    }
+
+    .ci-search-title {
+        font-family: 'Syne',sans-serif;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 1rem;
+    }
+
+    .ci-search-row {
+        display: flex;
+        gap: .6rem;
+    }
+
+    .ci-search-input {
+        flex: 1;
+        padding: .58rem 1rem;
+        border: 1.5px solid rgba(255,255,255,.12);
+        border-radius: 9px;
+        font-size: .85rem;
+        color: #fff;
+        font-family: 'Space Grotesk',sans-serif;
+        background: rgba(255,255,255,.08);
+        outline: none;
+        transition: border-color .18s;
+    }
+
+        .ci-search-input::placeholder {
+            color: rgba(255,255,255,.3);
+        }
+
+        .ci-search-input:focus {
+            border-color: var(--G);
+        }
+
+    .ci-search-btn {
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .58rem 1.2rem;
+        border-radius: 9px;
+        background: var(--G);
+        border: none;
+        color: var(--D);
+        font-family: 'Syne',sans-serif;
+        font-size: .85rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all .18s;
+    }
+
+        .ci-search-btn:hover {
+            background: var(--G2);
+        }
+
+    .ci-hint {
+        font-size: .67rem;
+        color: rgba(255,255,255,.3);
+        margin-top: .45rem;
+    }
+
+    /* ── RESULT LAYOUT ── */
+    .ci-result-wrap {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 1rem;
+    }
+    @@media(max - width:860px) {
+        .ci-result-wrap {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ── PROFILE CARD ── */
+    .ci-profile {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        overflow: hidden;
+    }
+
+    .ci-profile-hero {
+        background: var(--D);
+        padding: 1.5rem;
+        text-align: center;
+        position: relative;
+    }
+
+        .ci-profile-hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,var(--G),var(--G2),transparent);
+        }
+
+    .ci-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: linear-gradient(135deg,var(--G),var(--G2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Syne',sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--D);
+        margin: 0 auto .75rem;
+    }
+
+    .ci-name {
+        font-family: 'Syne',sans-serif;
+        font-size: 1rem;
+        font-weight: 800;
+        color: #fff;
+    }
+
+    .ci-member-type {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        padding: .2rem .65rem;
+        border-radius: 20px;
+        margin-top: .4rem;
+    }
+
+    .mt-gold {
+        background: var(--G3);
+        color: var(--G2);
+    }
+
+    .mt-silver {
+        background: rgba(192,192,192,.15);
+        color: #c0c0c0;
+    }
+
+    .mt-basic {
+        background: rgba(255,255,255,.1);
+        color: rgba(255,255,255,.5);
+    }
+
+    .ci-info-list {
+        padding: .5rem 0;
+    }
+
+    .ci-info-row {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        padding: .6rem 1.2rem;
+        border-bottom: 1px solid var(--S);
+        font-size: .8rem;
+    }
+
+        .ci-info-row:last-child {
+            border-bottom: none;
+        }
+
+    .ci-info-ico {
+        color: var(--G);
+        flex-shrink: 0;
+    }
+
+    .ci-info-lbl {
+        font-size: .63rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--M);
+        font-weight: 600;
+        width: 70px;
+        flex-shrink: 0;
+    }
+
+    .ci-info-val {
+        color: var(--D);
+        font-weight: 500;
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* ── STATS GRID ── */
+    .ci-stats {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: .6rem;
+        margin-bottom: 1rem;
+    }
+
+    .ci-stat {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r2);
+        padding: .85rem .9rem;
+        text-align: center;
+    }
+
+    .ci-stat-val {
+        font-family: 'Syne',sans-serif;
+        font-size: 1.3rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .ci-stat-lbl {
+        font-size: .62rem;
+        color: var(--M);
+        margin-top: .18rem;
+    }
+
+    /* ── BOOKINGS PANEL ── */
+    .ci-pnl {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        overflow: hidden;
+    }
+
+    .ci-pnl-head {
+        padding: .85rem 1.2rem;
+        border-bottom: 1px solid var(--S);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .ci-pnl-title {
+        font-family: 'Syne',sans-serif;
+        font-size: .88rem;
+        font-weight: 800;
+        color: var(--D);
+    }
+
+    .bk-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .bk-table th {
+            background: var(--W);
+            padding: .55rem .9rem;
+            font-size: .6rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--M);
+            border-bottom: 1px solid var(--S);
+            text-align: left;
+        }
+
+        .bk-table td {
+            padding: .72rem .9rem;
+            border-bottom: 1px solid var(--S);
+            font-size: .78rem;
+            vertical-align: middle;
+            color: var(--D);
+        }
+
+        .bk-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .bk-table tr:hover td {
+            background: var(--C);
+        }
+
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .24rem;
+        font-size: .58rem;
+        font-weight: 700;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        padding: .2rem .55rem;
+        border-radius: 4px;
+    }
+
+        .pill::before {
+            content: '●';
+            font-size: .47em;
+        }
+
+    .p-ok {
+        background: rgba(16,185,129,.1);
+        color: var(--GN);
+    }
+
+    .p-ca {
+        background: rgba(239,68,68,.1);
+        color: var(--RD);
+    }
+
+    .p-pe {
+        background: rgba(212,160,23,.12);
+        color: #92660a;
+    }
+
+    /* ── EMPTY / NOT FOUND ── */
+    .ci-empty {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--M);
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+    }
+</style>
+
+<!-- Search -->
+<div class="ci-search">
+    <div class="ci-search-lbl">CRM · Tra cứu nhanh</div>
+    <div class="ci-search-title">Tìm Thông Tin Khách Hàng</div>
+    <div class="ci-search-row">
+        <input type="text" id="ciKw" class="ci-search-input"
+               placeholder="Nhập số điện thoại, email hoặc tên khách..." />
+        <button class="ci-search-btn" onclick="findCustomer()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            Tìm kiếm
+        </button>
+    </div>
+    <div class="ci-hint">VD: 0901234567 · nguyenvana@gmail.com · Nguyễn Văn A</div>
+</div>
+
+<!-- Result -->
+<div id="ciResult" style="display:none;"></div>
+
+<!-- Default state -->
+<div id="ciDefault">
+    <div class="ci-empty">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+             style="opacity:.2;margin-bottom:.75rem;">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+        </svg>
+        <div style="font-size:.9rem;font-weight:600;color:var(--D);margin-bottom:.3rem;">Nhập thông tin để tìm khách hàng</div>
+        <div style="font-size:.78rem;">Tìm theo số điện thoại, email hoặc họ tên</div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        async function findCustomer() {
+            const kw = document.getElementById('ciKw').value.trim();
+            if (!kw) return;
+
+            const btn = document.querySelector('.ci-search-btn');
+            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                style="animation:spin .8s linear infinite">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg> Đang tìm...`;
+
+            try {
+                const r = await fetch('/Staff/FindCustomer?keyword=' + encodeURIComponent(kw));
+                const d = await r.json();
+
+                document.getElementById('ciDefault').style.display = 'none';
+
+                if (!d.success) {
+                    document.getElementById('ciResult').innerHTML = `
+                        <div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);
+                             border-radius:var(--r);padding:1.2rem 1.5rem;display:flex;align-items:center;gap:.75rem;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                 fill="none" stroke="var(--RD)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                            <div style="font-size:.85rem;font-weight:600;color:var(--RD);">${d.message || 'Không tìm thấy khách hàng'}</div>
+                        </div>`;
+                    document.getElementById('ciResult').style.display = 'block';
+                    return;
+                }
+
+                const c = d.customer;
+                const initials = (c.fullName || 'K').charAt(0).toUpperCase();
+                const memberCls = c.bookingCount >= 20 ? 'mt-gold' : c.bookingCount >= 10 ? 'mt-silver' : 'mt-basic';
+                const memberTxt = c.bookingCount >= 20 ? '🥇 VIP Gold' : c.bookingCount >= 10 ? '🥈 Silver' : 'Thành viên';
+
+                let bkRows = '';
+                if (d.recentBookings && d.recentBookings.length) {
+                    d.recentBookings.forEach(b => {
+                        const sc  = b.status === 'Completed' ? 'p-ok' : b.status === 'Cancelled' ? 'p-ca' : 'p-pe';
+                        const stx = b.status === 'Completed' ? 'Hoàn thành' : b.status === 'Cancelled' ? 'Đã hủy' : 'Chờ';
+                        bkRows += `<tr>
+                            <td style="font-family:'Syne',sans-serif;font-weight:800;color:var(--G);font-size:.78rem">${b.bookingCode}</td>
+                            <td style="font-weight:600">${b.courtNumber}</td>
+                            <td>${b.bookingDate}</td>
+                            <td>${b.startTime} – ${b.endTime}</td>
+                            <td style="font-family:'Syne',sans-serif;font-weight:700">${Number(b.totalPrice).toLocaleString('vi-VN')}đ</td>
+                            <td><span class="pill ${sc}">${stx}</span></td>
+                        </tr>`;
+                    });
+                } else {
+                    bkRows = '<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--M)">Chưa có lịch sử đặt sân</td></tr>';
+                }
+
+                document.getElementById('ciResult').innerHTML = `
+                <div class="ci-result-wrap">
+                    <div>
+                        <div class="ci-profile">
+                            <div class="ci-profile-hero">
+                                <div class="ci-avatar">${initials}</div>
+                                <div class="ci-name">${c.fullName || '—'}</div>
+                                <div><span class="ci-member-type ${memberCls}">${memberTxt}</span></div>
+                            </div>
+                            <div class="ci-info-list">
+                                <div class="ci-info-row">
+                                    <svg class="ci-info-ico" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.77 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 17z"/></svg>
+                                    <span class="ci-info-lbl">SĐT</span>
+                                    <span class="ci-info-val">${c.phone || '—'}</span>
+                                </div>
+                                <div class="ci-info-row">
+                                    <svg class="ci-info-ico" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                    <span class="ci-info-lbl">Email</span>
+                                    <span class="ci-info-val">${c.email || '—'}</span>
+                                </div>
+                                <div class="ci-info-row">
+                                    <svg class="ci-info-ico" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                    <span class="ci-info-lbl">Tham gia</span>
+                                    <span class="ci-info-val">${c.joinDate || '—'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="ci-stats">
+                            <div class="ci-stat">
+                                <div class="ci-stat-val" style="color:var(--G)">${c.bookingCount || 0}</div>
+                                <div class="ci-stat-lbl">Lượt đặt sân</div>
+                            </div>
+                            <div class="ci-stat">
+                                <div class="ci-stat-val" style="color:var(--GN)">${Number(c.totalSpent||0).toLocaleString('vi-VN')}đ</div>
+                                <div class="ci-stat-lbl">Tổng chi tiêu</div>
+                            </div>
+                            <div class="ci-stat">
+                                <div class="ci-stat-val" style="color:var(--BL)">${c.cancelCount || 0}</div>
+                                <div class="ci-stat-lbl">Đã hủy</div>
+                            </div>
+                        </div>
+                        <div class="ci-pnl">
+                            <div class="ci-pnl-head">
+                                <div class="ci-pnl-title">Lịch Sử Đặt Sân Gần Đây</div>
+                            </div>
+                            <div style="overflow-x:auto">
+                                <table class="bk-table">
+                                    <thead><tr>
+                                        <th>Mã đơn</th><th>Sân</th><th>Ngày</th>
+                                        <th>Giờ</th><th>Tổng tiền</th><th>Trạng thái</th>
+                                    </tr></thead>
+                                    <tbody>${bkRows}</tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+                document.getElementById('ciResult').style.display = 'block';
+            } catch(e) {
+                document.getElementById('ciResult').innerHTML = `<div style="color:var(--RD);padding:1rem">Lỗi kết nối. Vui lòng thử lại.</div>`;
+                document.getElementById('ciResult').style.display = 'block';
+            } finally {
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Tìm kiếm`;
+            }
+        }
+        document.getElementById('ciKw').addEventListener('keydown', e => { if (e.key==='Enter') findCustomer(); });
+    </script>
+    <style>
+        @@keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }</style>
 }

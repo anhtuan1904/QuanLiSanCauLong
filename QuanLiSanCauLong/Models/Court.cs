@@ -73,6 +73,7 @@ namespace QuanLiSanCauLong.Models
         public virtual ICollection<Booking>? Bookings { get; set; }
         public virtual ICollection<PriceSlot>? PriceSlots { get; set; }
         public virtual ICollection<CourtImage>? CourtImages { get; set; }
+        public virtual ICollection<CourtReview> CourtReviews { get; set; } = new List<CourtReview>();
 
         // ── Computed (NotMapped) ─────────────────────────────────
         [NotMapped]

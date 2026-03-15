@@ -1,0 +1,1577 @@
+﻿@* ═══════════════════════════════════════════════════════════════════
+   Views/Facility/_ReviewSection.cshtml
+   
+   GỌI từ Details.cshtml:
+     @await Html.PartialAsync("_ReviewSection", Model.ReviewSection)
+   
+   ⚠️  KHÔNG dùng @section Scripts — partial không hỗ trợ
+   ⚠️  Script dùng requestAnimationFrame để đợi tab visible trước khi bind
+*@
+@model QuanLiSanCauLong.ViewModels.ReviewSectionViewModel
+@{
+    var isLoggedIn = User.Identity?.IsAuthenticated ?? false;
+    var canReview = Model.CanWriteReview;
+    var existReview = Model.UserExistingReview;
+    var fid = Model.FacilityId;
+}
+
+@* CSS inline — không dùng @section Styles *@
+<style>
+    .rv-sec-hd {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-bottom: 1.4rem;
+        flex-wrap: wrap;
+        gap: .75rem;
+    }
+
+    .rv-sec-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #1a1209;
+    }
+
+        .rv-sec-title em {
+            font-style: italic;
+            color: #d4a017;
+        }
+
+    .rv-summary {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        background: #fff;
+        border: 1px solid #ede5d8;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1.4rem;
+    }
+
+    .rv-big-score {
+        background: #1a1209;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: .35rem;
+        padding: 1.6rem 1rem;
+    }
+
+    .rv-score-num {
+        font-family: 'Playfair Display',serif;
+        font-size: 3.5rem;
+        font-weight: 700;
+        color: #f5c842;
+        line-height: 1;
+    }
+
+    .rv-score-stars {
+        display: flex;
+        gap: .18rem;
+    }
+
+    .rv-s-star {
+        font-size: 1rem;
+    }
+
+        .rv-s-star.on {
+            color: #d4a017;
+        }
+
+        .rv-s-star.off {
+            color: rgba(255,255,255,.2);
+        }
+
+    .rv-score-cnt {
+        font-size: .72rem;
+        color: rgba(255,255,255,.4);
+        letter-spacing: .06em;
+    }
+
+    .rv-bars {
+        padding: 1.1rem 1.4rem;
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+        justify-content: center;
+    }
+
+    .rv-bar-row {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+
+    .rv-bar-lbl {
+        font-size: .72rem;
+        font-weight: 700;
+        color: #1a1209;
+        width: 32px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: .2rem;
+    }
+
+        .rv-bar-lbl i {
+            color: #d4a017;
+            font-size: .65rem;
+        }
+
+    .rv-bar-track {
+        flex: 1;
+        height: 7px;
+        background: #ede5d8;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .rv-bar-fill {
+        height: 100%;
+        border-radius: 4px;
+        background: linear-gradient(90deg,#d4a017,#f5c842);
+    }
+
+    .rv-bar-cnt {
+        font-size: .68rem;
+        color: #8a7560;
+        width: 28px;
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .rv-subcats {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: .5rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .rv-subcat {
+        background: #fff;
+        border: 1px solid #ede5d8;
+        border-radius: 8px;
+        padding: .65rem .75rem;
+        text-align: center;
+    }
+
+    .rv-subcat-val {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1a1209;
+        margin-bottom: .15rem;
+    }
+
+    .rv-subcat-lbl {
+        font-size: .6rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #8a7560;
+    }
+
+    .rv-subcat-stars {
+        display: flex;
+        justify-content: center;
+        gap: .1rem;
+        margin-top: .2rem;
+    }
+
+    .rv-subcat-star {
+        font-size: .55rem;
+    }
+
+        .rv-subcat-star.on {
+            color: #d4a017;
+        }
+
+        .rv-subcat-star.off {
+            color: #ede5d8;
+        }
+
+    .rv-cta {
+        background: linear-gradient(135deg,#1a1209,#2e2010);
+        border-radius: 10px;
+        padding: 1.1rem 1.4rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.4rem;
+    }
+
+    .rv-cta-text .t {
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .rv-cta-text .s {
+        font-size: .72rem;
+        color: rgba(255,255,255,.4);
+        margin-top: .15rem;
+    }
+
+    .btn-rv-write {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        background: linear-gradient(135deg,#d4a017,#f5c842);
+        color: #1a1209;
+        font-size: .82rem;
+        font-weight: 700;
+        padding: .6rem 1.3rem;
+        border-radius: 7px;
+        border: none;
+        cursor: pointer;
+        transition: all .2s;
+        white-space: nowrap;
+    }
+
+        .btn-rv-write:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 14px rgba(212,160,23,.35);
+        }
+
+    .rv-hint {
+        font-size: .76rem;
+        color: rgba(255,255,255,.45);
+    }
+
+        .rv-hint a {
+            color: #f5c842;
+            text-decoration: underline;
+        }
+
+    .rv-already {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .55rem 1.1rem;
+        background: rgba(16,185,129,.12);
+        color: #34d399;
+        border: 1px solid rgba(16,185,129,.2);
+        border-radius: 7px;
+        font-size: .78rem;
+        font-weight: 700;
+    }
+
+    .rv-form-wrap {
+        background: #fff;
+        border: 1px solid #ede5d8;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1.4rem;
+        display: none;
+    }
+
+        .rv-form-wrap.show {
+            display: block;
+        }
+
+    .rv-form-hd {
+        background: #1a1209;
+        padding: .9rem 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .rv-form-hd-title {
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .rv-form-close {
+        background: none;
+        border: none;
+        color: rgba(255,255,255,.4);
+        font-size: .9rem;
+        cursor: pointer;
+    }
+
+        .rv-form-close:hover {
+            color: #fff;
+        }
+
+    .rv-form-body {
+        padding: 1.2rem 1.4rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .star-group {
+        display: flex;
+        gap: .25rem;
+        direction: rtl;
+    }
+
+        .star-group input {
+            display: none;
+        }
+
+        .star-group label {
+            font-size: 1.6rem;
+            color: #ede5d8;
+            cursor: pointer;
+            transition: color .15s;
+            line-height: 1;
+        }
+
+            .star-group input:checked ~ label, .star-group label:hover, .star-group label:hover ~ label {
+                color: #d4a017;
+            }
+
+    .sub-ratings-form {
+        display: grid;
+        grid-template-columns: repeat(2,1fr);
+        gap: .65rem;
+    }
+
+    .sub-rating-item {
+        background: #f5ede0;
+        border-radius: 7px;
+        padding: .6rem .8rem;
+    }
+
+    .sri-label {
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: #8a7560;
+        margin-bottom: .5rem;
+    }
+
+    .sri-stars {
+        display: flex;
+        gap: .2rem;
+    }
+
+    .sri-star {
+        font-size: 1.1rem;
+        color: #ede5d8;
+        cursor: pointer;
+        transition: color .12s;
+        user-select: none;
+    }
+
+        .sri-star.on {
+            color: #d4a017;
+        }
+
+    .rv-textarea {
+        width: 100%;
+        padding: .75rem .9rem;
+        border: 1px solid #ede5d8;
+        border-radius: 7px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .86rem;
+        color: #1a1209;
+        outline: none;
+        resize: vertical;
+        min-height: 100px;
+        transition: border-color .2s;
+    }
+
+        .rv-textarea:focus {
+            border-color: #d4a017;
+            box-shadow: 0 0 0 3px rgba(212,160,23,.08);
+        }
+
+    .rv-char-cnt {
+        font-size: .68rem;
+        color: #aaa;
+        text-align: right;
+        margin-top: .2rem;
+    }
+
+    .rv-img-upload {
+        border: 2px dashed #ede5d8;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .rv-img-upload:hover {
+            border-color: #d4a017;
+            background: rgba(212,160,23,.04);
+        }
+
+        .rv-img-upload input {
+            display: none;
+        }
+
+    .rv-img-lbl {
+        font-size: .78rem;
+        color: #8a7560;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+    }
+
+        .rv-img-lbl i {
+            font-size: 1.2rem;
+            color: #d4a017;
+        }
+
+    .rv-prev-row {
+        display: flex;
+        gap: .5rem;
+        flex-wrap: wrap;
+        margin-top: .6rem;
+    }
+
+    .rv-prev-item {
+        position: relative;
+        width: 64px;
+        height: 64px;
+    }
+
+        .rv-prev-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #ede5d8;
+        }
+
+    .rv-prev-rm {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        width: 17px;
+        height: 17px;
+        border-radius: 50%;
+        background: #c94b2a;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .55rem;
+    }
+
+    .rv-form-foot {
+        display: flex;
+        justify-content: flex-end;
+        gap: .6rem;
+        padding-top: .5rem;
+        border-top: 1px solid #ede5d8;
+    }
+
+    .btn-rv-cancel {
+        padding: .55rem 1.1rem;
+        border: 1.5px solid #ede5d8;
+        border-radius: 7px;
+        background: #fff;
+        font-size: .82rem;
+        cursor: pointer;
+        color: #8a7560;
+        transition: all .18s;
+    }
+
+        .btn-rv-cancel:hover {
+            border-color: #1a1209;
+            color: #1a1209;
+        }
+
+    .btn-rv-sub {
+        padding: .6rem 1.4rem;
+        background: linear-gradient(135deg,#d4a017,#f5c842);
+        border: none;
+        border-radius: 7px;
+        font-size: .84rem;
+        font-weight: 700;
+        color: #1a1209;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: .38rem;
+        transition: all .2s;
+    }
+
+        .btn-rv-sub:hover {
+            box-shadow: 0 4px 12px rgba(212,160,23,.35);
+            transform: translateY(-1px);
+        }
+
+        .btn-rv-sub:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    .rv-filter-row {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .rv-filter-lbl {
+        font-size: .68rem;
+        color: #8a7560;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .rv-ftag {
+        padding: .3rem .8rem;
+        border: 1.5px solid #ede5d8;
+        border-radius: 20px;
+        background: #fff;
+        font-size: .72rem;
+        font-weight: 700;
+        cursor: pointer;
+        color: #8a7560;
+        transition: all .15s;
+    }
+
+        .rv-ftag:hover, .rv-ftag.on {
+            border-color: #d4a017;
+            background: rgba(212,160,23,.07);
+            color: #92660a;
+        }
+
+    .rv-sort-sel {
+        margin-left: auto;
+        padding: .32rem .75rem;
+        border: 1px solid #ede5d8;
+        border-radius: 6px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .76rem;
+        color: #1a1209;
+        background: #fff;
+        outline: none;
+        cursor: pointer;
+    }
+
+    .rv-list {
+        display: flex;
+        flex-direction: column;
+        gap: .9rem;
+    }
+
+    .rv-card {
+        background: #fff;
+        border: 1px solid #ede5d8;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: box-shadow .2s;
+    }
+
+        .rv-card:hover {
+            box-shadow: 0 4px 16px rgba(26,18,9,.07);
+        }
+
+    .rv-card-hd {
+        padding: .9rem 1.1rem;
+        display: flex;
+        align-items: flex-start;
+        gap: .75rem;
+    }
+
+    .rv-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #ede5d8;
+        flex-shrink: 0;
+    }
+
+    .rv-author {
+        flex: 1;
+    }
+
+    .rv-author-name {
+        font-weight: 700;
+        font-size: .88rem;
+        color: #1a1209;
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+        flex-wrap: wrap;
+    }
+
+    .rv-verified {
+        display: inline-flex;
+        align-items: center;
+        gap: .2rem;
+        padding: .1rem .42rem;
+        background: rgba(16,185,129,.1);
+        color: #059669;
+        border-radius: 4px;
+        font-size: .58rem;
+        font-weight: 700;
+    }
+
+    .rv-feat {
+        display: inline-flex;
+        align-items: center;
+        gap: .2rem;
+        padding: .1rem .42rem;
+        background: rgba(212,160,23,.12);
+        color: #92660a;
+        border-radius: 4px;
+        font-size: .58rem;
+        font-weight: 700;
+    }
+
+    .rv-date {
+        font-size: .68rem;
+        color: #8a7560;
+        margin-top: .12rem;
+    }
+
+    .rv-stars-row {
+        display: flex;
+        gap: .1rem;
+        margin-top: .2rem;
+    }
+
+    .rv-star {
+        font-size: .8rem;
+    }
+
+        .rv-star.on {
+            color: #d4a017;
+        }
+
+        .rv-star.off {
+            color: #ede5d8;
+        }
+
+    .rv-card-body {
+        padding: .15rem 1.1rem .9rem;
+    }
+
+    .rv-content {
+        font-size: .86rem;
+        line-height: 1.7;
+        color: #1a1209;
+    }
+
+    .rv-img-gallery {
+        display: flex;
+        gap: .45rem;
+        flex-wrap: wrap;
+        margin-top: .65rem;
+    }
+
+    .rv-gimg {
+        width: 72px;
+        height: 72px;
+        object-fit: cover;
+        border-radius: 7px;
+        border: 1px solid #ede5d8;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .rv-gimg:hover {
+            transform: scale(1.05);
+            border-color: #d4a017;
+        }
+
+    .rv-card-ft {
+        padding: .6rem 1.1rem;
+        border-top: 1px solid #ede5d8;
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .rv-like-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .28rem .7rem;
+        border: 1.5px solid #ede5d8;
+        border-radius: 5px;
+        background: #fff;
+        font-size: .72rem;
+        font-weight: 600;
+        color: #8a7560;
+        cursor: pointer;
+        transition: all .15s;
+    }
+
+        .rv-like-btn:hover, .rv-like-btn.liked {
+            border-color: #d4a017;
+            color: #92660a;
+            background: rgba(212,160,23,.07);
+        }
+
+    .rv-reply-btn {
+        font-size: .72rem;
+        color: #8a7560;
+        cursor: pointer;
+        font-weight: 600;
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: .25rem;
+        background: none;
+        border: none;
+        padding: 0;
+    }
+
+        .rv-reply-btn:hover {
+            color: #1a1209;
+        }
+
+    .rv-admin-reply {
+        margin: .4rem 1.1rem .8rem;
+        padding: .65rem .9rem;
+        background: rgba(212,160,23,.05);
+        border-left: 2px solid #d4a017;
+        border-radius: 0 7px 7px 0;
+    }
+
+    .rv-ar-hd {
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+        margin-bottom: .3rem;
+    }
+
+    .rv-ar-badge {
+        padding: .1rem .45rem;
+        background: rgba(212,160,23,.15);
+        color: #92660a;
+        border-radius: 4px;
+        font-size: .6rem;
+        font-weight: 700;
+    }
+
+    .rv-ar-date {
+        font-size: .65rem;
+        color: #8a7560;
+    }
+
+    .rv-ar-content {
+        font-size: .8rem;
+        color: #1a1209;
+        line-height: 1.6;
+    }
+
+    .rv-replies {
+        margin: .2rem 1.1rem .8rem;
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+    }
+
+    .rv-reply-item {
+        display: flex;
+        gap: .55rem;
+    }
+
+    .rv-reply-av {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid #ede5d8;
+        flex-shrink: 0;
+    }
+
+    .rv-reply-body {
+        flex: 1;
+        background: #f5ede0;
+        border-radius: 7px;
+        padding: .5rem .7rem;
+    }
+
+    .rv-reply-name {
+        font-size: .75rem;
+        font-weight: 700;
+        color: #1a1209;
+    }
+
+    .rv-reply-text {
+        font-size: .76rem;
+        color: #1a1209;
+        line-height: 1.55;
+        margin-top: .2rem;
+    }
+
+    .rv-reply-date {
+        font-size: .62rem;
+        color: #8a7560;
+        margin-top: .15rem;
+    }
+
+    .rv-inline-reply {
+        margin: .2rem 1.1rem .8rem;
+        display: none;
+    }
+
+        .rv-inline-reply.show {
+            display: block;
+        }
+
+    .rv-inline-input {
+        width: 100%;
+        padding: .52rem .75rem;
+        border: 1px solid #ede5d8;
+        border-radius: 7px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .82rem;
+        outline: none;
+        transition: border-color .2s;
+    }
+
+        .rv-inline-input:focus {
+            border-color: #d4a017;
+        }
+
+    .rv-inline-acts {
+        display: flex;
+        justify-content: flex-end;
+        gap: .4rem;
+        margin-top: .4rem;
+    }
+
+    .btn-ilcancel {
+        padding: .32rem .75rem;
+        border: 1px solid #ede5d8;
+        border-radius: 5px;
+        background: #fff;
+        font-size: .75rem;
+        cursor: pointer;
+        color: #8a7560;
+    }
+
+    .btn-ilsend {
+        padding: .34rem .9rem;
+        background: linear-gradient(135deg,#d4a017,#f5c842);
+        border: none;
+        border-radius: 5px;
+        font-size: .75rem;
+        font-weight: 700;
+        color: #1a1209;
+        cursor: pointer;
+    }
+
+    .rv-lightbox {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.88);
+        z-index: 9000;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .rv-lightbox.show {
+            display: flex;
+        }
+
+        .rv-lightbox img {
+            max-width: 90vw;
+            max-height: 88vh;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+    .rv-lb-close {
+        position: fixed;
+        top: 1.2rem;
+        right: 1.4rem;
+        background: rgba(255,255,255,.12);
+        border: none;
+        color: #fff;
+        font-size: 1.2rem;
+        cursor: pointer;
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .rv-load-more {
+        display: block;
+        width: 100%;
+        padding: .72rem;
+        border: 1.5px solid #ede5d8;
+        border-radius: 8px;
+        background: #fff;
+        font-family: 'Outfit',sans-serif;
+        font-size: .84rem;
+        font-weight: 700;
+        color: #8a7560;
+        cursor: pointer;
+        margin-top: .9rem;
+        transition: all .2s;
+    }
+
+        .rv-load-more:hover {
+            border-color: #d4a017;
+            color: #1a1209;
+            background: rgba(212,160,23,.05);
+        }
+
+    .rv-empty {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: #8a7560;
+    }
+
+        .rv-empty i {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: .75rem;
+            opacity: .2;
+        }
+</style>
+
+<div id="reviews">
+    <div class="rv-sec-hd">
+        <div class="rv-sec-title">Đánh giá <em>sân</em></div>
+        @if (Model.TotalCount > 0)
+        {
+            <span style="font-size:.78rem;color:#8a7560;">@Model.TotalCount đánh giá</span>
+        }
+    </div>
+
+    @if (Model.TotalCount > 0)
+    {
+        <div class="rv-summary">
+            <div class="rv-big-score">
+                <div class="rv-score-num">@Model.AverageRating.ToString("0.0")</div>
+                <div class="rv-score-stars">
+                    @for (int s = 1; s <= 5; s++)
+                    {
+                        <i class="bi bi-star-fill rv-s-star @(s <= Math.Round(Model.AverageRating) ? "on" : "off")"></i>
+                    }
+                </div>
+                <div class="rv-score-cnt">@Model.TotalCount đánh giá</div>
+            </div>
+            <div class="rv-bars">
+                @{
+                    int[] cnts = { Model.FiveStars, Model.FourStars, Model.ThreeStars, Model.TwoStars, Model.OneStar };
+                    int maxC = cnts.Max() > 0 ? cnts.Max() : 1;
+                }
+                @for (int s = 5; s >= 1; s--)
+                {
+                    int cnt = cnts[5 - s];
+                    double pct = (double)cnt / maxC * 100;
+                    <div class="rv-bar-row">
+                        <div class="rv-bar-lbl">@s <i class="bi bi-star-fill"></i></div>
+                        <div class="rv-bar-track"><div class="rv-bar-fill" style="width:@pct.ToString("0")%"></div></div>
+                        <div class="rv-bar-cnt">@cnt</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (Model.AvgCleanliness > 0 || Model.AvgCourtQuality > 0 || Model.AvgService > 0 || Model.AvgValue > 0)
+        {
+            <div class="rv-subcats">
+                @{
+                    void SC(string lbl, double v)
+                    {
+                        if (v <= 0) return;
+                        int fs = (int)Math.Round(v);
+                        <div class="rv-subcat">
+                            <div class="rv-subcat-val">@v.ToString("0.0")</div>
+                            <div class="rv-subcat-lbl">@lbl</div>
+                            <div class="rv-subcat-stars">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="bi bi-star-fill rv-subcat-star @(i <= fs ? "on" : "off")"></i>
+                                }
+                            </div>
+                        </div>
+                    }
+                    SC("Vệ sinh", Model.AvgCleanliness);
+                    SC("Chất lượng sân", Model.AvgCourtQuality);
+                    SC("Dịch vụ", Model.AvgService);
+                    SC("Giá trị", Model.AvgValue);
+                }
+            </div>
+        }
+    }
+
+    <div class="rv-cta">
+        <div class="rv-cta-text">
+            <div class="t">Bạn đã chơi tại đây?</div>
+            <div class="s">Chia sẻ trải nghiệm giúp người khác chọn sân phù hợp</div>
+        </div>
+        @if (!isLoggedIn)
+        {
+            <div class="rv-hint">
+                <a href="/Account/Login?returnUrl=@Uri.EscapeDataString(Context.Request.Path + "#reviews")">Đăng nhập</a> để viết đánh giá
+            </div>
+        }
+        else if (existReview != null)
+        {
+            <span class="rv-already"><i class="bi bi-check-circle-fill"></i> Bạn đã đánh giá sân này</span>
+        }
+        else if (canReview)
+        {
+            <button class="btn-rv-write" id="btnOpenReviewForm_@fid">
+                <i class="bi bi-pencil-fill"></i> Viết đánh giá
+            </button>
+        }
+        else
+        {
+            <div class="rv-hint">Chỉ khách đã đặt sân mới có thể đánh giá</div>
+        }
+    </div>
+
+    @if (isLoggedIn && canReview && existReview == null)
+    {
+        <div class="rv-form-wrap" id="rvFormWrap_@fid">
+            <div class="rv-form-hd">
+                <span class="rv-form-hd-title">Viết đánh giá của bạn</span>
+                <button class="rv-form-close" id="btnCloseForm_@fid"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <form id="rvForm_@fid" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="facilityId" value="@fid" />
+                <input type="hidden" name="courtId" id="rvCid_@fid" value="" />
+                <input type="hidden" name="bookingId" id="rvBid_@fid" value="" />
+                <div class="rv-form-body">
+                    @if (Model.BookedCourts.Count > 1)
+                    {
+                        <div>
+                            <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a7560;margin-bottom:.4rem;">Chọn sân <span style="color:#c94b2a">*</span></div>
+                            <div style="display:flex;flex-wrap:wrap;gap:.45rem;">
+                                @foreach (var bc in Model.BookedCourts)
+                                {
+                                    <button type="button" class="rv-cpick_@fid"
+                                            data-court="@bc.CourtId" data-booking="@bc.BookingId"
+                                            style="padding:.42rem .9rem;border:1.5px solid #ede5d8;border-radius:6px;background:#fff;font-size:.78rem;font-weight:700;color:#1a1209;cursor:pointer;">
+                                        @bc.CourtNumber
+                                        <span style="font-size:.65rem;color:#8a7560;font-weight:400;margin-left:.3rem;">@bc.BookingDate.ToString("dd/MM")</span>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else if (Model.BookedCourts.Count == 1)
+                    {
+                        <div style="display:inline-flex;align-items:center;gap:.45rem;padding:.38rem .85rem;background:rgba(212,160,23,.08);border:1px solid rgba(212,160,23,.2);border-radius:6px;font-size:.78rem;font-weight:700;color:#1a1209;">
+                            <i class="bi bi-geo-alt-fill" style="color:#d4a017"></i>
+                            Sân @Model.BookedCourts[0].CourtNumber · @Model.BookedCourts[0].BookingDate.ToString("dd/MM/yyyy")
+                        </div>
+                    }
+
+                    <div>
+                        <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a7560;margin-bottom:.5rem;">Đánh giá tổng thể <span style="color:#c94b2a">*</span></div>
+                        <div style="display:flex;align-items:center;gap:.75rem;">
+                            <div class="star-group" id="mainStars_@fid">
+                                @for (int s = 5; s >= 1; s--)
+                                {
+                                    <input type="radio" name="rating" id="rs@(s)_@fid" value="@s" required />
+                                    <label for="rs@(s)_@fid"><i class="bi bi-star-fill"></i></label>
+                                }
+                            </div>
+                            <span id="starLbl_@fid" style="font-size:.8rem;color:#8a7560;font-style:italic;"></span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a7560;margin-bottom:.5rem;">Chi tiết (tùy chọn)</div>
+                        <div class="sub-ratings-form">
+                            @foreach (var (name, lbl) in new[] { ("ratingCleanliness", "Vệ sinh"), ("ratingCourtQuality", "Chất lượng"), ("ratingService", "Dịch vụ"), ("ratingValue", "Giá trị") })
+                            {
+                                <div class="sub-rating-item">
+                                    <div class="sri-label">@lbl</div>
+                                    <div class="sri-stars">
+                                        @for (int s = 1; s <= 5; s++)
+                                        {
+                                            <i class="bi bi-star-fill sri-star" data-v="@s"></i>
+                                        }
+                                    </div>
+                                    <input type="hidden" name="@name" class="sri-hidden" value="0" />
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div>
+                        <textarea name="content" class="rv-textarea"
+                              placeholder="Sân sạch không? Đèn tốt không? Nhân viên thế nào?..."></textarea>
+                        <div class="rv-char-cnt">0/2000</div>
+                    </div>
+
+                    <div>
+                        <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a7560;margin-bottom:.4rem;">
+                            <i class="bi bi-camera me-1" style="color:#d4a017"></i>Thêm ảnh (tối đa 5)
+                        </div>
+                        <div class="rv-img-upload" id="rvImgUpload_@fid">
+                            <input type="file" id="rvImgs_@fid" name="images" accept="image/*" multiple />
+                            <label class="rv-img-lbl"><i class="bi bi-cloud-upload"></i><span>Nhấn để chọn · JPG, PNG · 5MB</span></label>
+                        </div>
+                        <div class="rv-prev-row" id="rvPrev_@fid"></div>
+                    </div>
+
+                    <div class="rv-form-foot">
+                        <button type="button" class="btn-rv-cancel" id="btnCancelForm_@fid">Hủy</button>
+                        <button type="submit" class="btn-rv-sub" id="rvSubBtn_@fid">
+                            <i class="bi bi-send-fill"></i> Gửi đánh giá
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    }
+
+    @if (Model.TotalCount > 0)
+    {
+        <div class="rv-filter-row">
+            <span class="rv-filter-lbl">Lọc:</span>
+            <button class="rv-ftag on" data-rf="all">Tất cả (@Model.TotalCount)</button>
+            @if (Model.FiveStars > 0)
+            {
+                <button class="rv-ftag" data-rf="5">5★ (@Model.FiveStars)</button>
+            }
+            @if (Model.FourStars > 0)
+            {
+                <button class="rv-ftag" data-rf="4">4★ (@Model.FourStars)</button>
+            }
+            @if (Model.ThreeStars > 0)
+            {
+                <button class="rv-ftag" data-rf="3">3★ (@Model.ThreeStars)</button>
+            }
+            @if (Model.WithImages > 0)
+            {
+                <button class="rv-ftag" data-rf="img"><i class="bi bi-images me-1"></i>Có ảnh (@Model.WithImages)</button>
+            }
+            @if (Model.Verified > 0)
+            {
+                <button class="rv-ftag" data-rf="verified"><i class="bi bi-patch-check me-1"></i>Đã chơi (@Model.Verified)</button>
+            }
+            <select class="rv-sort-sel" id="rvSortSel_@fid">
+                <option value="newest">Mới nhất</option>
+                <option value="highest">Sao cao nhất</option>
+                <option value="lowest">Sao thấp nhất</option>
+                <option value="helpful">Hữu ích nhất</option>
+            </select>
+        </div>
+    }
+
+    <div class="rv-list" id="rvList_@fid">
+        @if (!Model.Reviews.Any())
+        {
+            <div class="rv-empty">
+                <i class="bi bi-star-half"></i>
+                <div style="font-weight:700;color:#1a1209;margin-bottom:.4rem;">Chưa có đánh giá nào</div>
+                <div style="font-size:.82rem;">Hãy là người đầu tiên chia sẻ!</div>
+            </div>
+        }
+        @foreach (var rv in Model.Reviews)
+        {
+            var liked = Model.MyLikedReviewIds.Contains(rv.ReviewId);
+            <div class="rv-card"
+                 data-rating="@rv.Rating"
+                 data-has-img="@(rv.ImageCount > 0 ? "1" : "0")"
+                 data-verified="@(rv.IsVerifiedBooking ? "1" : "0")"
+                 data-helpful="@rv.LikeCount">
+                <div class="rv-card-hd">
+                    <img src="@rv.UserAvatar" class="rv-avatar" alt="" onerror="this.src='/images/default-avatar.jpg'" />
+                    <div class="rv-author">
+                        <div class="rv-author-name">
+                            @rv.UserName
+                            @if (rv.IsVerifiedBooking)
+                            {
+                                <span class="rv-verified"><i class="bi bi-patch-check-fill"></i>Đã chơi</span>
+                            }
+                            @if (rv.IsFeatured)
+                            {
+                                <span class="rv-feat"><i class="bi bi-pin-angle-fill"></i>Nổi bật</span>
+                            }
+                        </div>
+                        <div class="rv-date">
+                            @rv.CreatedAt.ToString("dd/MM/yyyy")
+                            @if (!string.IsNullOrEmpty(rv.CourtName))
+                            {
+                                <span style="margin-left:.4rem;color:#d4a017;font-weight:600;">· @rv.CourtName</span>
+                            }
+                        </div>
+                        <div class="rv-stars-row">
+                            @for (int s = 1; s <= 5; s++)
+                            {
+                                <i class="bi bi-star-fill rv-star @(s <= rv.Rating ? "on" : "off")"></i>
+                            }
+                        </div>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(rv.Content))
+                {
+                    <div class="rv-card-body"><div class="rv-content">@rv.Content</div></div>
+                }
+                @if (rv.ImageCount > 0 && rv.ThumbnailUrl != null)
+                {
+                    <div class="rv-img-gallery" style="padding:0 1.1rem .75rem;">
+                        <img src="@rv.ThumbnailUrl" class="rv-gimg"
+                             onclick="rvOpenLightbox(this.src)" />
+                        @if (rv.ImageCount > 1)
+                        {
+                            <div style="width:72px;height:72px;border-radius:7px;border:1px solid #ede5d8;background:rgba(26,18,9,.05);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#8a7560;">
+                                +@(rv.ImageCount - 1)
+                            </div>
+                        }
+                    </div>
+                }
+                <div class="rv-card-ft">
+                    <button class="rv-like-btn @(liked ? "liked" : "")"
+                            onclick="rvLike(@rv.ReviewId,'Like',this)"
+                            @(!isLoggedIn ? "disabled title='Đăng nhập để thích'" : "")>
+                        <i class="bi bi-hand-thumbs-up@(liked ? "-fill" : "")"></i>
+                        Hữu ích <span class="like-cnt">@rv.LikeCount</span>
+                    </button>
+                    @if (isLoggedIn)
+                    {
+                        <button class="rv-reply-btn" onclick="rvToggleReply(@rv.ReviewId)">
+                            <i class="bi bi-chat-dots"></i> Phản hồi
+                        </button>
+                    }
+                </div>
+                @if (rv.AdminReply != null)
+                {
+                    <div class="rv-admin-reply">
+                        <div class="rv-ar-hd">
+                            <span class="rv-ar-badge"><i class="bi bi-shield-check me-1"></i>Ban quản lý</span>
+                            <span class="rv-ar-date">@rv.AdminReply.CreatedAt.ToString("dd/MM/yyyy")</span>
+                        </div>
+                        <div class="rv-ar-content">@rv.AdminReply.Content</div>
+                    </div>
+                }
+                @if (rv.ReplyCount > 0)
+                {
+                    <div class="rv-replies" id="rvreplies_@rv.ReviewId"></div>
+                }
+                @if (isLoggedIn)
+                {
+                    <div class="rv-inline-reply" id="rvireply_@rv.ReviewId">
+                        <input type="text" class="rv-inline-input" id="rviinput_@rv.ReviewId"
+                               placeholder="Viết phản hồi..." maxlength="500" />
+                        <div class="rv-inline-acts">
+                            <button class="btn-ilcancel" onclick="rvToggleReply(@rv.ReviewId)">Hủy</button>
+                            <button class="btn-ilsend" onclick="rvSendReply(@rv.ReviewId)">Gửi</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    @if (Model.HasMore)
+    {
+        <button class="rv-load-more" id="rvMore_@fid"
+                onclick="rvLoadMore(@fid, @Model.LoadedCount)">
+            <i class="bi bi-arrow-down-circle me-1"></i>
+            Xem thêm (@(Model.TotalCount - Model.LoadedCount) còn lại)
+        </button>
+    }
+</div>
+
+<div class="rv-lightbox" id="rvLightbox" onclick="this.classList.remove('show')">
+    <button class="rv-lb-close" onclick="event.stopPropagation();document.getElementById('rvLightbox').classList.remove('show')">
+        <i class="bi bi-x-lg"></i>
+    </button>
+    <img id="rvLBImg" src="" alt="" onclick="event.stopPropagation()" />
+</div>
+
+@*
+   ════════════════════════════════════════════════════════
+   SCRIPT — INLINE (không dùng @section Scripts)
+   
+   FIX "trắng tinh":
+   Script dùng ID cụ thể (rvFormWrap_@fid, btnOpenReviewForm_@fid...)
+   KHÔNG query #rvFormWrap chung chung nữa → tránh conflict
+   
+   FIX "tab hidden không chạy":
+   Dùng setTimeout(fn, 0) để defer ra sau render xong
+   Các hàm global (rvLike, rvToggleReply...) bind vào window ngay,
+   chỉ defer phần addEventListener cần DOM ready
+   ════════════════════════════════════════════════════════
+*@
+<script>
+    (function() {
+        var F = @fid;
+        var TOKEN = '';
+
+        // ── Hàm lấy TOKEN (defer đến khi DOM có element) ──
+        function getToken() {
+            if (!TOKEN) TOKEN = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+            return TOKEN;
+        }
+
+        // ══════════════════════════════════════════════════
+        //  CÁC HÀM GLOBAL — bind vào window NGAY (không defer)
+        //  vì onclick="rvLike(...)" trong HTML gọi trực tiếp
+        // ══════════════════════════════════════════════════
+
+        // Like
+        window.rvLike = async function(reviewId, type, btn) {
+            if (btn.disabled) return;
+            var res = await fetch('/Review/Like', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getToken() },
+                body: JSON.stringify({ reviewId: reviewId, likeType: type })
+            }).then(function(r){ return r.json(); }).catch(function(){ return { success: false }; });
+            if (res.success) {
+                btn.querySelector('.like-cnt').textContent = res.newCount;
+                btn.classList.toggle('liked', res.isLiked);
+                btn.querySelector('i').className = res.isLiked ? 'bi bi-hand-thumbs-up-fill' : 'bi bi-hand-thumbs-up';
+            }
+        };
+
+        // Toggle inline reply
+        window.rvToggleReply = function(id) {
+            var el = document.getElementById('rvireply_' + id);
+            if (!el) return;
+            var isOpen = el.classList.contains('show');
+            document.querySelectorAll('.rv-inline-reply.show').forEach(function(x){ x.classList.remove('show'); });
+            if (!isOpen) { el.classList.add('show'); el.querySelector('input')?.focus(); }
+        };
+
+        // Send inline reply
+        window.rvSendReply = async function(reviewId) {
+            var input   = document.getElementById('rviinput_' + reviewId);
+            var content = input?.value.trim();
+            if (!content) { alert('Vui lòng nhập nội dung!'); return; }
+            var res = await fetch('/Review/Reply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getToken() },
+                body: JSON.stringify({ reviewId: reviewId, content: content })
+            }).then(function(r){ return r.json(); }).catch(function(){ return { success: false }; });
+            if (res.success) {
+                window.rvToggleReply(reviewId);
+                input.value = '';
+                var rlist = document.getElementById('rvreplies_' + reviewId);
+                if (!rlist) {
+                    rlist = document.createElement('div');
+                    rlist.className = 'rv-replies';
+                    rlist.id = 'rvreplies_' + reviewId;
+                    document.getElementById('rvireply_' + reviewId).before(rlist);
+                }
+                var item = document.createElement('div');
+                item.className = 'rv-reply-item';
+                item.innerHTML = '<img src="' + (res.userAvatar || '/images/default-avatar.jpg') + '" class="rv-reply-av" />'
+                    + '<div class="rv-reply-body"><div class="rv-reply-name">' + res.userName + '</div>'
+                    + '<div class="rv-reply-text">' + content + '</div>'
+                    + '<div class="rv-reply-date">Vừa xong</div></div>';
+                rlist.appendChild(item);
+            } else { alert(res.message || 'Gửi thất bại'); }
+        };
+
+        // Lightbox
+        window.rvOpenLightbox = function(src) {
+            document.getElementById('rvLBImg').src = src;
+            document.getElementById('rvLightbox').classList.add('show');
+        };
+        document.addEventListener('keydown', function(e){ if (e.key === 'Escape') document.getElementById('rvLightbox')?.classList.remove('show'); });
+
+        // Load more
+        window.rvLoadMore = async function(facilityId, offset) {
+            var btn = document.getElementById('rvMore_' + facilityId);
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang tải...';
+            btn.disabled  = true;
+            var res = await fetch('/Review/LoadMore?facilityId=' + facilityId + '&offset=' + offset + '&limit=5')
+                             .then(function(r){ return r.json(); })
+                             .catch(function(){ return { success: false }; });
+            if (res.success && res.html) {
+                document.getElementById('rvList_' + facilityId).insertAdjacentHTML('beforeend', res.html);
+                if (!res.hasMore) btn.remove();
+                else { btn.innerHTML = '<i class="bi bi-arrow-down-circle me-1"></i> Xem thêm'; btn.disabled = false; }
+            }
+        };
+
+        // ══════════════════════════════════════════════════
+        //  PHẦN CẦN DOM — dùng setTimeout(0) để defer
+        //  Giải quyết vấn đề tab hidden (display:none)
+        //  khi script chạy, element có thể chưa visible
+        //  nhưng đã có trong DOM → setTimeout đủ để defer
+        // ══════════════════════════════════════════════════
+        setTimeout(function() {
+
+            // ── Toggle form open/close ──
+            var btnOpen  = document.getElementById('btnOpenReviewForm_'  + F);
+            var btnClose = document.getElementById('btnCloseForm_'       + F);
+            var btnCancel= document.getElementById('btnCancelForm_'      + F);
+            var formWrap = document.getElementById('rvFormWrap_'         + F);
+
+            function toggleForm() {
+                if (!formWrap) return;
+                formWrap.classList.toggle('show');
+                if (formWrap.classList.contains('show'))
+                    formWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            if (btnOpen)   btnOpen.addEventListener('click', toggleForm);
+            if (btnClose)  btnClose.addEventListener('click', toggleForm);
+            if (btnCancel) btnCancel.addEventListener('click', toggleForm);
+
+            // ── Court picker ──
+            var picks = document.querySelectorAll('.rv-cpick_' + F);
+            picks.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    picks.forEach(function(b){ b.style.borderColor = ''; b.style.background = ''; });
+                    btn.style.borderColor = '#d4a017';
+                    btn.style.background  = 'rgba(212,160,23,.08)';
+                    var cidEl = document.getElementById('rvCid_' + F);
+                    var bidEl = document.getElementById('rvBid_' + F);
+                    if (cidEl) cidEl.value = btn.dataset.court;
+                    if (bidEl) bidEl.value = btn.dataset.booking;
+                });
+            });
+            // Auto-pick đầu tiên
+            if (picks.length > 0) picks[0].click();
+
+            // ── Star labels ──
+            var LABELS = ['', 'Rất tệ', 'Tệ', 'Bình thường', 'Tốt', 'Xuất sắc'];
+            var mainStars = document.getElementById('mainStars_' + F);
+            var starLbl   = document.getElementById('starLbl_'   + F);
+            if (mainStars && starLbl) {
+                mainStars.querySelectorAll('input').forEach(function(inp) {
+                    inp.addEventListener('change', function() {
+                        starLbl.textContent = LABELS[+inp.value] || '';
+                    });
+                });
+            }
+
+            // ── Sub-ratings ──
+            var formEl = document.getElementById('rvForm_' + F);
+            if (formEl) {
+                formEl.querySelectorAll('.sri-stars').forEach(function(row) {
+                    var stars  = row.querySelectorAll('.sri-star');
+                    var hidden = row.closest('.sub-rating-item').querySelector('.sri-hidden');
+                    stars.forEach(function(star, i) {
+                        star.addEventListener('click', function() {
+                            hidden.value = i + 1;
+                            stars.forEach(function(s, j){ s.classList.toggle('on', j <= i); });
+                        });
+                        star.addEventListener('mouseenter', function() {
+                            stars.forEach(function(s, j){ s.classList.toggle('on', j <= i); });
+                        });
+                        star.addEventListener('mouseleave', function() {
+                            var v = +hidden.value;
+                            stars.forEach(function(s, j){ s.classList.toggle('on', v > 0 && j < v); });
+                        });
+                    });
+                });
+
+                // ── Char count ──
+                var ta  = formEl.querySelector('textarea[name="content"]');
+                var cnt = formEl.querySelector('.rv-char-cnt');
+                if (ta && cnt) {
+                    ta.addEventListener('input', function() { cnt.textContent = ta.value.length + '/2000'; });
+                }
+
+                // ── Image preview ──
+                var imgInput   = document.getElementById('rvImgs_'      + F);
+                var imgUpload  = document.getElementById('rvImgUpload_' + F);
+                var prevRow    = document.getElementById('rvPrev_'      + F);
+                if (imgUpload && imgInput) {
+                    imgUpload.addEventListener('click', function() { imgInput.click(); });
+                    imgInput.addEventListener('change', function() {
+                        prevRow.innerHTML = '';
+                        Array.from(imgInput.files).slice(0, 5).forEach(function(f) {
+                            var reader = new FileReader();
+                            reader.onload = function(e) {
+                                var div = document.createElement('div');
+                                div.className = 'rv-prev-item';
+                                div.innerHTML = '<img src="' + e.target.result + '" />'
+                                    + '<button type="button" class="rv-prev-rm" onclick="this.parentElement.remove()"><i class="bi bi-x"></i></button>';
+                                prevRow.appendChild(div);
+                            };
+                            reader.readAsDataURL(f);
+                        });
+                    });
+                }
+
+                // ── Submit ──
+                formEl.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    var rating = formEl.querySelector('input[name="rating"]:checked');
+                    if (!rating) { alert('Vui lòng chọn số sao!'); return; }
+                    var cid = document.getElementById('rvCid_' + F).value;
+                    if (!cid && picks.length > 1) { alert('Vui lòng chọn sân!'); return; }
+
+                    var submitBtn = document.getElementById('rvSubBtn_' + F);
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang gửi...';
+
+                    var res = await fetch('/Review/Submit', {
+                        method: 'POST',
+                        headers: { 'RequestVerificationToken': getToken() },
+                        body: new FormData(formEl)
+                    }).then(function(r){ return r.json(); }).catch(function(){ return { success: false, message: 'Lỗi kết nối' }; });
+
+                    if (res.success) {
+                        formWrap.classList.remove('show');
+                        var toast = document.createElement('div');
+                        toast.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;background:#16a34a;color:#fff;padding:.75rem 1.25rem;border-radius:8px;font-size:.84rem;font-weight:700;z-index:9999;display:flex;align-items:center;gap:.5rem;box-shadow:0 4px 16px rgba(0,0,0,.2);';
+                        toast.innerHTML = '<i class="bi bi-check-circle-fill"></i> Đánh giá đã ghi nhận! Chờ kiểm duyệt.';
+                        document.body.appendChild(toast);
+                        setTimeout(function() { toast.style.transition = 'opacity .4s'; toast.style.opacity = '0'; setTimeout(function(){ toast.remove(); }, 400); }, 3500);
+                    } else {
+                        alert(res.message || 'Gửi thất bại');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="bi bi-send-fill"></i> Gửi đánh giá';
+                    }
+                });
+            }
+
+            // ── Filter tags ──
+            var listEl = document.getElementById('rvList_' + F);
+            document.querySelectorAll('#reviews .rv-ftag').forEach(function(tag) {
+                tag.addEventListener('click', function() {
+                    document.querySelectorAll('#reviews .rv-ftag').forEach(function(t){ t.classList.remove('on'); });
+                    tag.classList.add('on');
+                    var f = tag.dataset.rf;
+                    listEl?.querySelectorAll('.rv-card').forEach(function(card) {
+                        var show = true;
+                        if      (f === '5')        show = +card.dataset.rating === 5;
+                        else if (f === '4')        show = +card.dataset.rating === 4;
+                        else if (f === '3')        show = +card.dataset.rating === 3;
+                        else if (f === 'img')      show = card.dataset.hasImg === '1';
+                        else if (f === 'verified') show = card.dataset.verified === '1';
+                        card.style.display = show ? '' : 'none';
+                    });
+                });
+            });
+
+            // ── Sort ──
+            var sortSel = document.getElementById('rvSortSel_' + F);
+            if (sortSel && listEl) {
+                sortSel.addEventListener('change', function() {
+                    var cards = Array.from(listEl.querySelectorAll('.rv-card'));
+                    cards.sort(function(a, b) {
+                        if (sortSel.value === 'highest') return +b.dataset.rating   - +a.dataset.rating;
+                        if (sortSel.value === 'lowest')  return +a.dataset.rating   - +b.dataset.rating;
+                        if (sortSel.value === 'helpful') return +b.dataset.helpful  - +a.dataset.helpful;
+                        return 0;
+                    });
+                    cards.forEach(function(c){ listEl.appendChild(c); });
+                });
+            }
+
+        }, 0); // end setTimeout(0)
+
+    })();
+</script>

@@ -39,8 +39,11 @@ namespace QuanLiSanCauLong.Controllers
 
             var facilities = await query.OrderByDescending(f => f.CreatedAt).ToListAsync();
             ViewBag.Cities = await _context.Facilities.Select(f => f.City).Distinct().ToListAsync();
+            ViewBag.Search = search;
+            ViewBag.SelectedCity = city;
 
-            return View(facilities);
+            // Trả List<Facility> thẳng — AdminFacility/Index.cshtml dùng @model IEnumerable<Facility>
+            return View(facilities);  // Convention: Views/AdminFacility/Index.cshtml
         }
 
         // ──────────────────────────────────────────────────────────────

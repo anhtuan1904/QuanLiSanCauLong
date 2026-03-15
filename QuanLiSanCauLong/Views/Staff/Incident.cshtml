@@ -1,0 +1,673 @@
+﻿@model QuanLiSanCauLong.ViewModels.IncidentReportViewModel
+@{
+    Layout = "~/Views/Shared/_LayoutStaff.cshtml";
+    ViewData["Title"] = "Báo sự cố sân";
+}
+
+<style>
+    :root {
+        --D: #1a1209;
+        --D2: #231a0e;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --G3: rgba(212,160,23,.1);
+        --G4: rgba(212,160,23,.22);
+        --C: #fdf8f0;
+        --W: #f5ede0;
+        --S: #e8ddd0;
+        --M: #8a7560;
+        --GN: #10b981;
+        --BL: #3b82f6;
+        --RD: #ef4444;
+        --OR: #f97316;
+        --PU: #8b5cf6;
+        --r: 14px;
+        --r2: 10px;
+    }
+
+    /* ── LAYOUT ── */
+    .inc-wrap {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 1.2rem;
+        align-items: start;
+        max-width: 1000px;
+    }
+    @@media(max - width:820px) {
+        .inc-wrap {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ── ALERT BANNER ── */
+    .inc-alert {
+        background: rgba(239,68,68,.06);
+        border: 1px solid rgba(239,68,68,.22);
+        border-radius: var(--r2);
+        padding: .85rem 1.1rem;
+        display: flex;
+        align-items: flex-start;
+        gap: .7rem;
+        margin-bottom: 1.1rem;
+        font-size: .8rem;
+        color: var(--D);
+        line-height: 1.55;
+    }
+
+        .inc-alert strong {
+            color: var(--RD);
+        }
+
+    /* ── CARD ── */
+    .ic {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        overflow: hidden;
+        margin-bottom: .85rem;
+    }
+
+        .ic:last-child {
+            margin-bottom: 0;
+        }
+
+    .ic-head {
+        padding: .95rem 1.3rem;
+        border-bottom: 1px solid var(--S);
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+    }
+
+    .ic-head-ico {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .ic-head-title {
+        font-family: 'Syne',sans-serif;
+        font-size: .9rem;
+        font-weight: 800;
+        color: var(--D);
+    }
+
+    .ic-head-sub {
+        font-size: .67rem;
+        color: var(--M);
+        margin-top: .05rem;
+    }
+
+    .ic-body {
+        padding: 1.2rem 1.3rem;
+    }
+
+    /* ── FORM ELEMENTS ── */
+    .fg {
+        margin-bottom: .9rem;
+    }
+
+    .fl {
+        display: flex;
+        align-items: center;
+        gap: .38rem;
+        font-size: .67rem;
+        font-weight: 700;
+        letter-spacing: .09em;
+        text-transform: uppercase;
+        color: var(--M);
+        margin-bottom: .4rem;
+    }
+
+    .f-req {
+        color: var(--RD);
+    }
+
+    .fi, .fs, .fta {
+        width: 100%;
+        padding: .5rem .85rem;
+        border: 1.5px solid var(--S);
+        border-radius: 9px;
+        font-size: .83rem;
+        color: var(--D);
+        font-family: 'Space Grotesk',sans-serif;
+        background: #fff;
+        outline: none;
+        transition: border-color .18s,box-shadow .18s;
+    }
+
+        .fi:focus, .fs:focus, .fta:focus {
+            border-color: var(--G);
+            box-shadow: 0 0 0 3px rgba(212,160,23,.12);
+        }
+
+    .fta {
+        resize: vertical;
+        min-height: 100px;
+        line-height: 1.55;
+    }
+
+    .f2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .8rem;
+    }
+    @@media(max - width:480px) {
+        .f2 {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ── SEVERITY CARDS ── */
+    .sev-grid {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: .5rem;
+        margin-top: .4rem;
+    }
+
+    .sev-opt {
+        position: relative;
+    }
+
+        .sev-opt input[type=radio] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .sev-opt label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .3rem;
+            padding: .65rem .4rem;
+            border-radius: 9px;
+            border: 1.5px solid var(--S);
+            cursor: pointer;
+            transition: all .18s;
+            background: #fff;
+            text-align: center;
+            font-family: 'Space Grotesk',sans-serif;
+        }
+
+            .sev-opt label:hover {
+                transform: translateY(-1px);
+            }
+
+    .sev-ico {
+        font-size: 1.2rem;
+    }
+
+    .sev-lbl {
+        font-size: .65rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    /* Severity colors */
+    .sev-low label {
+        border-color: rgba(16,185,129,.25);
+    }
+
+        .sev-low label:hover, .sev-low input:checked + label {
+            background: rgba(16,185,129,.08);
+            border-color: var(--GN);
+        }
+
+    .sev-low .sev-lbl {
+        color: var(--GN);
+    }
+
+    .sev-norm label {
+        border-color: rgba(245,158,11,.25);
+    }
+
+        .sev-norm label:hover, .sev-norm input:checked + label {
+            background: rgba(245,158,11,.08);
+            border-color: #f59e0b;
+        }
+
+    .sev-norm .sev-lbl {
+        color: #b45309;
+    }
+
+    .sev-high label {
+        border-color: rgba(249,115,22,.25);
+    }
+
+        .sev-high label:hover, .sev-high input:checked + label {
+            background: rgba(249,115,22,.08);
+            border-color: var(--OR);
+        }
+
+    .sev-high .sev-lbl {
+        color: var(--OR);
+    }
+
+    .sev-crit label {
+        border-color: rgba(239,68,68,.25);
+    }
+
+        .sev-crit label:hover, .sev-crit input:checked + label {
+            background: rgba(239,68,68,.08);
+            border-color: var(--RD);
+        }
+
+    .sev-crit .sev-lbl {
+        color: var(--RD);
+    }
+
+    .sev-opt input:checked + label {
+        box-shadow: 0 0 0 3px rgba(212,160,23,.14);
+    }
+
+    @@media(max - width:480px) {
+        .sev-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+    }
+
+    /* ── INCIDENT TYPE GRID ── */
+    .type-grid {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: .5rem;
+        margin-top: .4rem;
+    }
+
+    .type-opt {
+        position: relative;
+    }
+
+        .type-opt input[type=radio] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .type-opt label {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .6rem .75rem;
+            border-radius: 9px;
+            border: 1.5px solid var(--S);
+            cursor: pointer;
+            transition: all .18s;
+            background: #fff;
+            font-size: .76rem;
+            font-weight: 600;
+            color: var(--D);
+            font-family: 'Space Grotesk',sans-serif;
+        }
+
+            .type-opt label:hover {
+                border-color: var(--G);
+                background: var(--G3);
+            }
+
+        .type-opt input:checked + label {
+            border-color: var(--G);
+            background: var(--G3);
+            box-shadow: 0 0 0 3px rgba(212,160,23,.14);
+        }
+
+    .type-ico {
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+    @@media(max - width:480px) {
+        .type-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+    }
+
+    /* ── VALIDATION ── */
+    .val-err {
+        background: rgba(239,68,68,.06);
+        border: 1px solid rgba(239,68,68,.2);
+        border-radius: 9px;
+        padding: .7rem 1rem;
+        margin-bottom: .9rem;
+        font-size: .78rem;
+        color: var(--RD);
+    }
+
+    /* ── SUBMIT ── */
+    .sub-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        padding: .72rem;
+        border-radius: 10px;
+        border: none;
+        background: var(--RD);
+        color: #fff;
+        font-family: 'Syne',sans-serif;
+        font-size: .9rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .sub-btn:hover {
+            background: #dc2626;
+            box-shadow: 0 6px 18px rgba(239,68,68,.35);
+        }
+
+    .cancel-lnk {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .4rem;
+        padding: .5rem;
+        border-radius: 9px;
+        margin-top: .45rem;
+        background: transparent;
+        border: 1px solid var(--S);
+        color: var(--M);
+        font-size: .77rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all .18s;
+    }
+
+        .cancel-lnk:hover {
+            border-color: var(--M);
+            color: var(--D);
+        }
+
+    /* ── RIGHT TIPS ── */
+    .tips {
+        background: var(--D);
+        border-radius: var(--r);
+        padding: 1.3rem 1.4rem;
+    }
+
+        .tips::after {
+            display: none;
+        }
+
+    .tips-title {
+        font-size: .6rem;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        color: var(--G);
+        font-weight: 700;
+        margin-bottom: .85rem;
+    }
+
+    .tip-item {
+        display: flex;
+        align-items: flex-start;
+        gap: .55rem;
+        padding: .5rem 0;
+        border-bottom: 1px solid rgba(255,255,255,.06);
+        font-size: .76rem;
+        color: rgba(255,255,255,.55);
+        line-height: 1.55;
+    }
+
+        .tip-item:last-child {
+            border-bottom: none;
+        }
+
+    .tip-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-top: .45rem;
+    }
+
+    .tip-item strong {
+        color: rgba(255,255,255,.85);
+        display: block;
+        font-size: .76rem;
+        margin-bottom: .12rem;
+    }
+
+    .sev-guide {
+        background: var(--C);
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        padding: 1rem 1.2rem;
+        margin-top: .7rem;
+    }
+
+    .sg-title {
+        font-size: .62rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--M);
+        font-weight: 700;
+        margin-bottom: .7rem;
+    }
+
+    .sg-row {
+        display: flex;
+        align-items: flex-start;
+        gap: .6rem;
+        margin-bottom: .5rem;
+        font-size: .74rem;
+        line-height: 1.5;
+    }
+
+        .sg-row:last-child {
+            margin-bottom: 0;
+        }
+
+    .sg-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-top: .3rem;
+    }
+
+    .sg-key {
+        font-weight: 700;
+        min-width: 65px;
+    }
+
+    .sg-val {
+        color: var(--M);
+    }
+</style>
+
+<!-- Alert -->
+<div class="inc-alert">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--RD)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:.15rem;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+    <div>Chọn mức độ <strong>Critical (Khẩn cấp)</strong> nếu sự cố nghiêm trọng — sân sẽ tự động chuyển sang trạng thái <strong>Bảo trì</strong> và không nhận đặt chỗ mới cho đến khi được xử lý.</div>
+</div>
+
+<form asp-action="Incident" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="inc-wrap">
+        <!-- LEFT: Form -->
+        <div>
+            <div asp-validation-summary="All" class="val-err"></div>
+
+            <!-- Thông tin sự cố -->
+            <div class="ic">
+                <div class="ic-head">
+                    <div class="ic-head-ico" style="background:rgba(239,68,68,.1);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--RD)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+                    </div>
+                    <div>
+                        <div class="ic-head-title">Thông Tin Sự Cố</div>
+                        <div class="ic-head-sub">Chọn sân và loại sự cố</div>
+                    </div>
+                </div>
+                <div class="ic-body">
+                    <div class="fg">
+                        <div class="fl">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6z" /></svg>
+                            Sân bị sự cố
+                        </div>
+                        <select asp-for="CourtId" class="fs">
+                            <option value="">— Không liên quan sân cụ thể —</option>
+                            @foreach (var court in (IEnumerable<dynamic>)ViewBag.Courts)
+                            {
+                                <option value="@court.CourtId">Sân @court.CourtNumber (@court.CourtType)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="fg" style="margin-bottom:0;">
+                        <div class="fl">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                            Loại sự cố <span class="f-req">*</span>
+                        </div>
+                        <div class="type-grid">
+                            @{
+                                var types = new[] {
+                                                        ("Light","💡","Đèn / Điện"),
+                                                        ("Net","🏸","Lưới / Cột"),
+                                                        ("Floor","🏟️","Mặt sân"),
+                                                        ("Equipment","🔧","Thiết bị"),
+                                                        ("Customer","👤","Sự cố khách"),
+                                                        ("Other","📋","Khác"),
+                                                        };
+                            }
+                            @foreach (var (val, ico, lbl) in types)
+                            {
+                                <div class="type-opt">
+                                    <input type="radio" asp-for="IncidentType" value="@val" id="tp-@val" />
+                                    <label for="tp-@val">
+                                        <span class="type-ico">@ico</span>
+                                        @lbl
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mô tả -->
+            <div class="ic">
+                <div class="ic-head">
+                    <div class="ic-head-ico" style="background:rgba(59,130,246,.1);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--BL)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
+                    </div>
+                    <div>
+                        <div class="ic-head-title">Mô Tả & Xử Lý</div>
+                        <div class="ic-head-sub">Chi tiết sự cố và biện pháp tạm thời</div>
+                    </div>
+                </div>
+                <div class="ic-body">
+                    <div class="fg">
+                        <div class="fl">Mô tả chi tiết sự cố <span class="f-req">*</span></div>
+                        <textarea asp-for="Description" class="fta"
+                                  placeholder="Mô tả cụ thể sự cố đang xảy ra... (vị trí, thời điểm phát hiện, ảnh hưởng đến khách như thế nào...)"></textarea>
+                    </div>
+                    <div class="fg" style="margin-bottom:0;">
+                        <div class="fl">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+                            Đã xử lý tạm thời
+                        </div>
+                        <input asp-for="ActionTaken" class="fi"
+                               placeholder="VD: Đã tắt đèn sân A1, hướng dẫn khách chuyển sang sân A2..." />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mức độ -->
+            <div class="ic">
+                <div class="ic-head">
+                    <div class="ic-head-ico" style="background:var(--G3);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--G)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
+                    </div>
+                    <div>
+                        <div class="ic-head-title">Mức Độ Nghiêm Trọng</div>
+                        <div class="ic-head-sub">Đánh giá mức độ ảnh hưởng</div>
+                    </div>
+                </div>
+                <div class="ic-body">
+                    <div class="sev-grid">
+                        <div class="sev-opt sev-low">
+                            <input type="radio" asp-for="Severity" value="Low" id="sv-lo" />
+                            <label for="sv-lo">
+                                <div class="sev-ico">🟢</div>
+                                <div class="sev-lbl">Nhẹ</div>
+                            </label>
+                        </div>
+                        <div class="sev-opt sev-norm">
+                            <input type="radio" asp-for="Severity" value="Normal" id="sv-nm" checked />
+                            <label for="sv-nm">
+                                <div class="sev-ico">🟡</div>
+                                <div class="sev-lbl">Bình thường</div>
+                            </label>
+                        </div>
+                        <div class="sev-opt sev-high">
+                            <input type="radio" asp-for="Severity" value="High" id="sv-hi" />
+                            <label for="sv-hi">
+                                <div class="sev-ico">🟠</div>
+                                <div class="sev-lbl">Nghiêm trọng</div>
+                            </label>
+                        </div>
+                        <div class="sev-opt sev-crit">
+                            <input type="radio" asp-for="Severity" value="Critical" id="sv-cr" />
+                            <label for="sv-cr">
+                                <div class="sev-ico">🔴</div>
+                                <div class="sev-lbl">Khẩn cấp</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Tips & submit -->
+        <div style="position:sticky;top:72px;display:flex;flex-direction:column;gap:.75rem;">
+            <button type="submit" class="sub-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
+                Gửi Báo Cáo Sự Cố
+            </button>
+            <a asp-action="Dashboard" class="cancel-lnk">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                Hủy
+            </a>
+
+            <div class="tips">
+                <div class="tips-title">Hướng Dẫn Báo Cáo</div>
+                <div class="tip-item">
+                    <div class="tip-dot" style="background:var(--GN)"></div>
+                    <div><strong>Mô tả đầy đủ</strong>Ghi rõ vị trí, thời điểm, số sân bị ảnh hưởng</div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-dot" style="background:var(--G)"></div>
+                    <div><strong>Xử lý tạm thời</strong>Ghi lại những gì bạn đã làm để giảm thiểu ảnh hưởng</div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-dot" style="background:var(--OR)"></div>
+                    <div><strong>Chọn đúng mức độ</strong>Ảnh hưởng hoạt động → Critical, có thể tiếp tục → Low/Normal</div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-dot" style="background:var(--RD)"></div>
+                    <div><strong>Critical = Đóng sân</strong>Sân sẽ tự động ngừng nhận đặt chỗ mới</div>
+                </div>
+            </div>
+
+            <div class="sev-guide">
+                <div class="sg-title">Thang mức độ</div>
+                <div class="sg-row"><div class="sg-dot" style="background:var(--GN)"></div><div><span class="sg-key" style="color:var(--GN)">Nhẹ</span><span class="sg-val">Ảnh hưởng nhỏ, không cản trở hoạt động</span></div></div>
+                <div class="sg-row"><div class="sg-dot" style="background:#f59e0b"></div><div><span class="sg-key" style="color:#b45309">Bình thường</span><span class="sg-val">Cần khắc phục sớm nhưng vẫn hoạt động được</span></div></div>
+                <div class="sg-row"><div class="sg-dot" style="background:var(--OR)"></div><div><span class="sg-key" style="color:var(--OR)">Nghiêm trọng</span><span class="sg-val">Ảnh hưởng lớn đến trải nghiệm khách hàng</span></div></div>
+                <div class="sg-row"><div class="sg-dot" style="background:var(--RD)"></div><div><span class="sg-key" style="color:var(--RD)">Khẩn cấp</span><span class="sg-val">Nguy hiểm hoặc không thể tiếp tục sử dụng</span></div></div>
+            </div>
+        </div>
+    </div>
+</form>

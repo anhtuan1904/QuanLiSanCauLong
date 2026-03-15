@@ -126,7 +126,7 @@ namespace QuanLiSanCauLong.Controllers
                         "Admin" => RedirectToAction("Index", "AdminDashboard"),
 
                         // Nếu có AdminStaffController thì sửa tương tự, không thì để Dashboard tạm
-                        "Staff" => RedirectToAction("Index", "AdminDashboard"),
+                        "Staff" => RedirectToAction("Dashboard", "Staff"),
 
                         // Khách hàng về trang chủ
                         _ => RedirectToAction("Index", "Home")
@@ -232,6 +232,98 @@ namespace QuanLiSanCauLong.Controllers
 
             TempData["SuccessMessage"] = "Đổi mật khẩu thành công!";
             return RedirectToAction(nameof(Profile));
+        }
+
+
+        // GET: Account/AccessDenied
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult AccessDenied(string returnUrl = null)
+        {
+            ViewData["ReturnUrl"] = returnUrl;
+            return View();
+        }
+
+
+        // ══════════════════════════════════════════
+        // NOTIFICATIONS API
+        // ══════════════════════════════════════════
+
+
+        // GET: Account/Notifications — Trang xem tất cả thông báo
+        [HttpGet]
+        [Authorize]
+        public IActionResult Notifications()
+        {
+            ViewData["Title"] = "Thông báo";
+            return View();
+        }
+
+        // GET: Account/GetNotifications
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetNotifications()
+        {
+            int userId = GetCurrentUserId();
+
+            // Lấy booking gần đây của user làm notifications
+            var bookings = await _context.Bookings
+                .Include(b => b.Court)
+                .Where(b => b.UserId == userId
+                         && b.CreatedAt >= DateTime.Now.AddDays(-7))
+                .OrderByDescending(b => b.CreatedAt)
+                .Take(10)
+                .ToListAsync();
+
+            var notifications = bookings.Select((b, i) => new
+            {
+                id = b.BookingId,
+                type = b.Status == "Cancelled" ? "cancel" :
+                          b.PaymentStatus == "Paid" ? "payment" : "booking",
+                message = b.Status switch
+                {
+                    "Confirmed" => $"Đơn {b.BookingCode} đã được xác nhận ✅",
+                    "Cancelled" => $"Đơn {b.BookingCode} đã bị hủy ❌",
+                    "Completed" => $"Đơn {b.BookingCode} đã hoàn thành 🏸",
+                    "Playing" => $"Bạn đang chơi tại Sân {b.Court?.CourtNumber}",
+                    _ => $"Đơn {b.BookingCode} đang chờ xác nhận ⏳"
+                },
+                time = GetTimeAgo(b.CreatedAt),
+                isRead = b.Status == "Completed" || b.CreatedAt < DateTime.Now.AddHours(-24),
+                link = "/Booking/MyBookings"
+            }).ToList();
+
+            int unreadCount = notifications.Count(n => !n.isRead);
+
+            return Json(new { notifications, unreadCount });
+        }
+
+        // POST: Account/MarkNotificationRead/{id}
+        [HttpPost]
+        [Authorize]
+        public IActionResult MarkNotificationRead(int id)
+        {
+            // TODO: Implement notification read table nếu cần
+            return Json(new { success = true });
+        }
+
+        // POST: Account/MarkAllNotificationsRead
+        [HttpPost]
+        [Authorize]
+        public IActionResult MarkAllNotificationsRead()
+        {
+            // TODO: Implement notification read table nếu cần
+            return Json(new { success = true });
+        }
+
+        private static string GetTimeAgo(DateTime dt)
+        {
+            var diff = DateTime.Now - dt;
+            if (diff.TotalMinutes < 1) return "Vừa xong";
+            if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes} phút trước";
+            if (diff.TotalHours < 24) return $"{(int)diff.TotalHours} giờ trước";
+            if (diff.TotalDays < 7) return $"{(int)diff.TotalDays} ngày trước";
+            return dt.ToString("dd/MM/yyyy");
         }
 
         // Helper method

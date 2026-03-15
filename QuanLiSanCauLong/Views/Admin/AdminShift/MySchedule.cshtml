@@ -1,0 +1,265 @@
+﻿@model List<QuanLiSanCauLong.Models.ShiftAssignment>
+@{
+    ViewData["Title"] = "Lịch Ca Của Tôi";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    var today = DateOnly.FromDateTime(DateTime.Today);
+    var grouped = Model.GroupBy(a => a.WorkDate).OrderBy(g => g.Key).ToList();
+}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #fdf8f0;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+    }
+
+    * {
+        font-family: 'Outfit',sans-serif;
+        box-sizing: border-box;
+    }
+
+    .pg-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+        .pg-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    .timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .day-block {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .day-head {
+        padding: .75rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--border);
+        background: var(--warm);
+    }
+
+    .day-label {
+        font-family: 'Playfair Display',serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+    .day-sublabel {
+        font-size: .72rem;
+        color: var(--muted);
+    }
+
+    .today-badge {
+        font-size: .65rem;
+        font-weight: 700;
+        padding: .18rem .55rem;
+        border-radius: 4px;
+        background: var(--gold);
+        color: var(--deep);
+    }
+
+    .shift-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: .9rem 1.25rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+        .shift-row:last-child {
+            border-bottom: none;
+        }
+
+    .shift-color-bar {
+        width: 4px;
+        height: 44px;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+
+    .shift-info {
+        flex: 1;
+    }
+
+    .shift-name {
+        font-size: .9rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+    .shift-time {
+        font-size: .75rem;
+        color: var(--muted);
+        margin-top: .1rem;
+    }
+
+    .shift-fac {
+        font-size: .72rem;
+        color: var(--muted);
+    }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .2rem;
+        font-size: .67rem;
+        font-weight: 700;
+        padding: .2rem .55rem;
+        border-radius: 4px;
+    }
+
+    .chip-sched {
+        background: rgba(79,70,229,.08);
+        color: #4f46e5;
+    }
+
+    .chip-in {
+        background: rgba(22,163,74,.1);
+        color: #16a34a;
+    }
+
+    .chip-out {
+        background: rgba(22,163,74,.15);
+        color: #15803d;
+    }
+
+    .chip-absent {
+        background: rgba(201,75,42,.1);
+        color: #c94b2a;
+    }
+
+    .chip-late {
+        background: rgba(234,88,12,.1);
+        color: #ea580c;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3.5rem;
+        color: var(--muted);
+    }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: .75rem;
+            opacity: .25;
+        }
+</style>
+
+<div style="max-width:680px;margin:0 auto;">
+    <div style="margin-bottom:1.5rem;">
+        <div style="font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:.25rem;">NHÂN VIÊN</div>
+        <h1 class="pg-title">Lịch Ca <em>Của Tôi</em></h1>
+        <div style="font-size:.8rem;color:var(--muted);margin-top:.3rem;">
+            Lịch làm việc 14 ngày tới · @DateTime.Today.ToString("dd/MM/yyyy")
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <i class="bi bi-calendar-x"></i>
+            <div style="font-weight:700;margin-bottom:.4rem;">Chưa có ca nào sắp tới</div>
+            <div style="font-size:.8rem;">Liên hệ quản lý để được phân công ca làm việc</div>
+        </div>
+    }
+    else
+    {
+        <div class="timeline">
+            @foreach (var g in grouped)
+            {
+                var isToday = g.Key == today;
+                var dayOfWeek = g.Key.DayOfWeek;
+                var vn = dayOfWeek switch
+                {
+                    DayOfWeek.Monday => "Thứ Hai",
+                    DayOfWeek.Tuesday => "Thứ Ba",
+                    DayOfWeek.Wednesday => "Thứ Tư",
+                    DayOfWeek.Thursday => "Thứ Năm",
+                    DayOfWeek.Friday => "Thứ Sáu",
+                    DayOfWeek.Saturday => "Thứ Bảy",
+                    _ => "Chủ Nhật"
+                };
+                <div class="day-block">
+                    <div class="day-head">
+                        <div>
+                            <div class="day-label">@vn, @g.Key.ToString("dd/MM/yyyy")</div>
+                            <div class="day-sublabel">@g.Count() ca làm việc</div>
+                        </div>
+                        @if (isToday)
+                        {
+                            <span class="today-badge">● Hôm nay</span>
+                        }
+                    </div>
+                    @foreach (var a in g.OrderBy(x => x.Shift?.StartTime))
+                    {
+                        var chipCls = a.Status switch
+                        {
+                                            "CheckedIn" => "chip-in",
+                                            "CheckedOut" => "chip-out",
+                                            "Absent" => "chip-absent",
+                                            "Late" => "chip-late",
+                            _ => "chip-sched"
+                        };
+                        var statusLabel = a.Status switch
+                        {
+                                            "Scheduled" => "Chờ làm",
+                                            "CheckedIn" => "Đang làm",
+                                            "CheckedOut" => "Hoàn thành",
+                                            "Absent" => "Vắng mặt",
+                                            "Late" => "Đi trễ",
+                            _ => a.Status
+                        };
+                        <div class="shift-row">
+                            <div class="shift-color-bar" style="background:@(a.Shift?.Color ?? "#d4a017");"></div>
+                            <div class="shift-info">
+                                <div class="shift-name">@(a.Shift?.ShiftName ?? "—")</div>
+                                <div class="shift-time">
+                                    <i class="bi bi-clock me-1"></i>@(a.Shift?.TimeRange ?? "—")
+                                    &nbsp;·&nbsp;
+                                    <i class="bi bi-hourglass me-1"></i>@(a.Shift?.HoursPerShift.ToString("0.0") ?? "0")h
+                                </div>
+                                <div class="shift-fac">
+                                    <i class="bi bi-building me-1"></i>@(a.Facility?.FacilityName ?? "—")
+                                </div>
+                            </div>
+                            <div>
+                                <span class="chip @chipCls">@statusLabel</span>
+                                @if (a.CheckInTime.HasValue)
+                                {
+                                    <div style="font-size:.68rem;color:var(--muted);margin-top:.25rem;">
+                                        Vào: @a.CheckInTime.Value.ToString("HH:mm")
+                                        @if (a.CheckOutTime.HasValue)
+                                        {
+                                            <text> · Ra: @a.CheckOutTime.Value.ToString("HH:mm")</text>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>

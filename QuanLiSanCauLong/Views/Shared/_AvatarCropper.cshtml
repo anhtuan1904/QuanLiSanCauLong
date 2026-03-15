@@ -1,4 +1,16 @@
-﻿@{
+﻿@* Load Cropper.js nếu chưa có (safe to call multiple times) *@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
+<script>
+    (function(){
+        if(window.Cropper) return; // đã load rồi
+        var s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js';
+        s.onload = function(){ document.dispatchEvent(new Event('cropperjs:ready')); };
+        document.head.appendChild(s);
+    })();
+</script>
+
+@{
     var userId = ViewData["UserId"] as int? ?? 0;
     var avatarUrl = ViewData["AvatarUrl"] as string;
     var fullName = ViewData["FullName"] as string ?? "User";
@@ -6,161 +18,202 @@
         .Split(' ', StringSplitOptions.RemoveEmptyEntries)
         .TakeLast(2)
         .Select(x => char.ToUpper(x[0])));
+    var hasAvatar = !string.IsNullOrEmpty(avatarUrl);
 }
 
-<div class="av-widget" id="avWidget_@userId">
+@* ── WIDGET: avatar circle + nút xóa ── *@
+<div class="av-widget av-lg" id="avWidget_@userId">
     <div class="av-display" onclick="openAvatarCropper(@userId)" title="Thay đổi ảnh đại diện">
-        @if (!string.IsNullOrEmpty(avatarUrl))
+        @if (hasAvatar)
         {
             <img id="avImg_@userId" src="@avatarUrl" alt="@fullName" class="av-photo" />
+            <div id="avInitials_@userId" class="av-initials" style="display:none;">@initials</div>
         }
         else
         {
-            <div id="avInitials_@userId" class="av-initials">@initials</div>
             <img id="avImg_@userId" src="" alt="@fullName" class="av-photo" style="display:none;" />
+            <div id="avInitials_@userId" class="av-initials">@initials</div>
         }
         <div class="av-overlay">
             <i class="bi bi-camera-fill"></i>
             <span>Thay ảnh</span>
         </div>
     </div>
-    <button type="button"
-            id="avDelBtn_@userId"
-            class="av-del-btn @(string.IsNullOrEmpty(avatarUrl) ? "d-none" : "")"
-            onclick="deleteAvatar(@userId, '@Html.Raw(fullName.Replace("'", "\\'"))')"
-            title="Xóa ảnh đại diện">
-        <i class="bi bi-x"></i>
-    </button>
 </div>
 
-<div class="modal fade v-modal" id="avatarModal_@userId" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="v-mh">
+@* ── MODAL CROP ── *@
+<div class="modal fade" id="avatarModal_@userId" tabindex="-1" aria-hidden="true"
+     data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content av-modal-content">
+
+            @* Header *@
+            <div class="av-mh">
                 <div>
-                    <div class="v-mlabel"><i class="bi bi-camera"></i> ẢNH ĐẠI DIỆN</div>
-                    <div class="v-mtitle">Chỉnh Sửa <em>Ảnh Đại Diện</em></div>
+                    <div class="av-mlabel"><i class="bi bi-camera"></i> ẢNH ĐẠI DIỆN</div>
+                    <div class="av-mtitle">Chỉnh Sửa <em>Ảnh Đại Diện</em></div>
                 </div>
-                <button class="v-mclose" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+                <button type="button" class="av-mclose" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
 
-            <div id="avStep1_@userId" class="v-mb">
-                <div class="av-source-grid">
-                    <label class="av-source-card" for="avFileInput_@userId">
-                        <div class="av-source-icon"><i class="bi bi-upload"></i></div>
-                        <div class="av-source-label">Tải ảnh lên</div>
-                        <div class="av-source-sub">JPG, PNG, WebP · Tối đa 10MB</div>
-                        <input type="file" id="avFileInput_@userId" accept="image/*"
-                               style="display:none;"
-                               onchange="handleFileSelect(@userId, this)" />
-                    </label>
-                    <div class="av-source-card" onclick="showAvatarLibrary(@userId)">
-                        <div class="av-source-icon" style="background:rgba(79,70,229,.08);color:#4f46e5;">
-                            <i class="bi bi-grid-3x3-gap-fill"></i>
-                        </div>
-                        <div class="av-source-label">Thư viện mẫu</div>
-                        <div class="av-source-sub">Chọn avatar có sẵn</div>
-                    </div>
-                </div>
+            @* ── Step 1: chọn nguồn ảnh ── *@
+            <div class="modal-body" style="padding:0;">
+                <div id="avStep1_@userId" class="av-mb">
 
-                <div class="av-drop-zone" id="avDropZone_@userId"
-                     ondragover="event.preventDefault();this.classList.add('drag-over')"
-                     ondragleave="this.classList.remove('drag-over')"
-                     ondrop="handleDrop(@userId, event)">
-                    <i class="bi bi-cloud-upload"></i>
-                    <p>Kéo &amp; thả ảnh vào đây</p>
-                    <span>hoặc click để chọn file</span>
-                    <input type="file" accept="image/*"
-                           style="position:absolute;inset:0;opacity:0;cursor:pointer;"
-                           onchange="handleFileSelect(@userId, this)" />
-                </div>
-
-                <div id="avLibrary_@userId" style="display:none;">
-                    <div class="av-lib-title"><i class="bi bi-grid-3x3-gap me-1"></i> Chọn Avatar Mẫu</div>
-                    <div class="av-lib-grid" id="avLibGrid_@userId"></div>
-                </div>
-            </div>
-
-            <div id="avStep2_@userId" class="v-mb" style="display:none;">
-                <div class="crop-toolbar">
-                    <div class="crop-tb-group">
-                        <button type="button" class="crop-btn" onclick="cropAction(@userId,'zoom-in')" title="Phóng to">
-                            <i class="bi bi-zoom-in"></i>
-                        </button>
-                        <button type="button" class="crop-btn" onclick="cropAction(@userId,'zoom-out')" title="Thu nhỏ">
-                            <i class="bi bi-zoom-out"></i>
-                        </button>
-                    </div>
-                    <div class="crop-tb-group">
-                        <button type="button" class="crop-btn" onclick="cropAction(@userId,'rotate-left')" title="Xoay trái">
-                            <i class="bi bi-arrow-counterclockwise"></i>
-                        </button>
-                        <button type="button" class="crop-btn" onclick="cropAction(@userId,'rotate-right')" title="Xoay phải">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
-                    </div>
-                    <div class="crop-tb-group">
-                        <button type="button" class="crop-btn" onclick="cropAction(@userId,'flip-h')" title="Lật ngang">
-                            <i class="bi bi-symmetry-horizontal"></i>
-                        </button>
-                        <button type="button" class="crop-btn" onclick="cropAction(@userId,'flip-v')" title="Lật dọc">
-                            <i class="bi bi-symmetry-vertical"></i>
-                        </button>
-                    </div>
-                    <div class="crop-tb-group">
-                        <button type="button" class="crop-btn" onclick="cropAction(@userId,'reset')">
-                            <i class="bi bi-arrow-repeat"></i> Đặt lại
-                        </button>
-                    </div>
-                    <div class="crop-tb-group" style="margin-left:auto;">
-                        <span style="font-size:.75rem;color:var(--muted);margin-right:.4rem;">Tỉ lệ:</span>
-                        <button type="button" class="crop-btn crop-ratio active" onclick="setRatio(@userId,1)" data-ratio="1">1:1</button>
-                        <button type="button" class="crop-btn crop-ratio" onclick="setRatio(@userId,1.3333)" data-ratio="1.33">4:3</button>
-                        <button type="button" class="crop-btn crop-ratio" onclick="setRatio(@userId,0)" data-ratio="0">Tự do</button>
-                    </div>
-                </div>
-
-                <div class="crop-container">
-                    <img id="avCropImg_@userId" style="max-width:100%;display:block;" alt="" />
-                </div>
-
-                <div class="crop-preview-row">
-                    <div>
-                        <div class="crop-preview-label">Xem trước</div>
-                        <div class="crop-preview-wrap">
-                            <div id="avPreviewCircle_@userId" class="crop-preview circle"></div>
-                            <div id="avPreviewSquare_@userId" class="crop-preview square"></div>
+                    @* 2 card nguồn *@
+                    <div class="av-source-grid">
+                        <label class="av-source-card" for="avFileInput_@userId">
+                            <div class="av-source-icon"><i class="bi bi-upload"></i></div>
+                            <div class="av-source-label">Tải ảnh lên</div>
+                            <div class="av-source-sub">JPG · PNG · WebP · GIF · Tối đa 10MB</div>
+                            <input type="file" id="avFileInput_@userId" accept="image/*"
+                                   style="display:none;"
+                                   onchange="avHandleFileSelect(@userId, this)" />
+                        </label>
+                        <div class="av-source-card" onclick="avShowLibrary(@userId)">
+                            <div class="av-source-icon" style="background:rgba(79,70,229,.08);color:#4f46e5;">
+                                <i class="bi bi-grid-3x3-gap-fill"></i>
+                            </div>
+                            <div class="av-source-label">Thư viện mẫu</div>
+                            <div class="av-source-sub">Avatar màu sắc có sẵn</div>
                         </div>
                     </div>
-                    <div class="crop-info" id="avCropInfo_@userId">
-                        <div class="crop-info-row"><span>Kích thước gốc</span><span id="avOrigSize_@userId">—</span></div>
-                        <div class="crop-info-row"><span>Vùng crop</span><span id="avCropSize_@userId">—</span></div>
-                        <div class="crop-info-row"><span>Xuất ra</span><span>256 × 256 WebP</span></div>
+
+                    @* Drop zone *@
+                    <div class="av-drop-zone" id="avDropZone_@userId"
+                         ondragover="event.preventDefault();this.classList.add('av-drag-over')"
+                         ondragleave="this.classList.remove('av-drag-over')"
+                         ondrop="avHandleDrop(@userId,event)">
+                        <i class="bi bi-cloud-upload-fill"></i>
+                        <p>Kéo &amp; thả ảnh vào đây</p>
+                        <span>hoặc click vào đây để chọn file</span>
+                        <input type="file" accept="image/*"
+                               style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;"
+                               onchange="avHandleFileSelect(@userId, this)" />
+                    </div>
+
+                    @* Thư viện *@
+                    <div id="avLibrary_@userId" style="display:none;">
+                        <div class="av-lib-title">
+                            <i class="bi bi-palette me-1"></i> Chọn Avatar Màu Sắc
+                        </div>
+                        <div class="av-lib-grid" id="avLibGrid_@userId"></div>
                     </div>
                 </div>
 
-                <div id="avSaveLoader_@userId" style="display:none;text-align:center;padding:1rem;">
-                    <div class="av-spinner"></div>
-                    <div style="font-size:.82rem;color:var(--muted);margin-top:.5rem;">Đang lưu ảnh…</div>
-                </div>
-            </div>
+                @* ── Step 2: crop ── *@
+                <div id="avStep2_@userId" class="av-mb" style="display:none;">
 
-            <div class="v-mf" id="avFooter_@userId">
-                <button class="btn-ov" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Hủy</button>
-                <button id="avStep2Back_@userId" class="btn-ov" onclick="backToStep1(@userId)"
-                        style="display:none;">
+                    @* Toolbar *@
+                    <div class="av-crop-toolbar">
+                        <div class="av-tb-group">
+                            <button type="button" class="av-crop-btn" onclick="avCropAction(@userId,'zoom-in')" title="Phóng to">
+                                <i class="bi bi-zoom-in"></i>
+                            </button>
+                            <button type="button" class="av-crop-btn" onclick="avCropAction(@userId,'zoom-out')" title="Thu nhỏ">
+                                <i class="bi bi-zoom-out"></i>
+                            </button>
+                        </div>
+                        <div class="av-tb-group">
+                            <button type="button" class="av-crop-btn" onclick="avCropAction(@userId,'rotate-left')" title="Xoay trái 90°">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
+                            <button type="button" class="av-crop-btn" onclick="avCropAction(@userId,'rotate-right')" title="Xoay phải 90°">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                        </div>
+                        <div class="av-tb-group">
+                            <button type="button" class="av-crop-btn" onclick="avCropAction(@userId,'flip-h')" title="Lật ngang">
+                                <i class="bi bi-symmetry-horizontal"></i>
+                            </button>
+                            <button type="button" class="av-crop-btn" onclick="avCropAction(@userId,'flip-v')" title="Lật dọc">
+                                <i class="bi bi-symmetry-vertical"></i>
+                            </button>
+                        </div>
+                        <div class="av-tb-group">
+                            <button type="button" class="av-crop-btn" onclick="avCropAction(@userId,'reset')">
+                                <i class="bi bi-arrow-repeat"></i> Đặt lại
+                            </button>
+                        </div>
+                        <div class="av-tb-group" style="margin-left:auto;">
+                            <span style="font-size:.73rem;color:#8a7560;margin-right:.3rem;">Tỉ lệ:</span>
+                            <button type="button" class="av-crop-btn av-ratio active"
+                                    onclick="avSetRatio(@userId,1)" data-ratio="1">
+                                1:1
+                            </button>
+                            <button type="button" class="av-crop-btn av-ratio"
+                                    onclick="avSetRatio(@userId,1.3333)" data-ratio="1.33">
+                                4:3
+                            </button>
+                            <button type="button" class="av-crop-btn av-ratio"
+                                    onclick="avSetRatio(@userId,0)" data-ratio="0">
+                                Tự do
+                            </button>
+                        </div>
+                    </div>
+
+                    @* Cropper container *@
+                    <div class="av-crop-container">
+                        <img id="avCropImg_@userId" style="max-width:100%;display:block;" alt="" />
+                    </div>
+
+                    @* Preview *@
+                    <div class="av-preview-row">
+                        <div>
+                            <div class="av-preview-label">Xem trước</div>
+                            <div class="av-preview-wrap">
+                                <div id="avPreviewCircle_@userId" class="av-preview av-circle"></div>
+                                <div id="avPreviewSquare_@userId" class="av-preview av-square"></div>
+                            </div>
+                        </div>
+                        <div class="av-crop-info">
+                            <div class="av-info-row">
+                                <span>Kích thước gốc</span>
+                                <span id="avOrigSize_@userId">—</span>
+                            </div>
+                            <div class="av-info-row">
+                                <span>Vùng cắt</span>
+                                <span id="avCropSize_@userId">—</span>
+                            </div>
+                            <div class="av-info-row">
+                                <span>Xuất ra</span>
+                                <span>256 × 256 px · WebP</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Loader *@
+                    <div id="avSaveLoader_@userId" style="display:none;text-align:center;padding:1.25rem 0;">
+                        <div class="av-spinner"></div>
+                        <div style="font-size:.82rem;color:#8a7560;margin-top:.5rem;">Đang lưu ảnh…</div>
+                    </div>
+                </div>
+
+            </div><!-- /modal-body -->
+            @* Footer (sticky, ngoài modal-body) *@
+            <div class="av-mf">
+                <button type="button" class="av-btn-cancel" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Hủy
+                </button>
+                <button id="avStep2Back_@userId" type="button" class="av-btn-cancel"
+                        onclick="avBackToStep1(@userId)" style="display:none;">
                     <i class="bi bi-arrow-left"></i> Chọn lại
                 </button>
-                <button id="avSaveBtn_@userId" class="btn-gold" onclick="saveCrop(@userId)"
-                        style="display:none;">
-                    <i class="bi bi-check-circle"></i> Lưu Ảnh Đại Diện
+                <button id="avSaveBtn_@userId" type="button" class="av-btn-save"
+                        onclick="avSaveCrop(@userId)" style="display:none;">
+                    <i class="bi bi-check-circle-fill"></i> Lưu Ảnh Đại Diện
                 </button>
             </div>
+
         </div>
     </div>
 </div>
 
+@* ══════════════════════ CSS ══════════════════════ *@
 <style>
+    /* Widget */
     .av-widget {
         position: relative;
         display: inline-block;
@@ -168,49 +221,61 @@
 
     .av-display {
         position: relative;
-        width: 80px;
-        height: 80px;
         border-radius: 50%;
         cursor: pointer;
         overflow: hidden;
-        border: 3px solid var(--border);
-        transition: border-color .2s;
+        border: 3px solid rgba(212,160,23,.4);
+        transition: border-color .2s, transform .2s;
+        width: 80px;
+        height: 80px;
+        display: block;
     }
 
-        .av-display:hover {
-            border-color: var(--gold);
-        }
+    .av-widget.av-lg .av-display {
+        width: 100px;
+        height: 100px;
+    }
 
-            .av-display:hover .av-overlay {
-                opacity: 1;
-            }
+    .av-display:hover {
+        border-color: #d4a017;
+        transform: scale(1.04);
+    }
+
+        .av-display:hover .av-overlay {
+            opacity: 1;
+        }
 
     .av-photo {
         width: 100%;
         height: 100%;
         object-fit: cover;
         border-radius: 50%;
+        display: block;
     }
 
     .av-initials {
         width: 100%;
         height: 100%;
-        border-radius: 50%;
-        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        background: linear-gradient(135deg,#d4a017,#f5c842);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: 'Playfair Display',serif;
+        font-family: 'Playfair Display', serif;
         font-weight: 700;
-        font-size: 1.6rem;
-        color: var(--deep);
+        font-size: 1.7rem;
+        color: #1a1209;
+        border-radius: 50%;
+    }
+
+    .av-widget.av-lg .av-initials {
+        font-size: 2.2rem;
     }
 
     .av-overlay {
         position: absolute;
         inset: 0;
         border-radius: 50%;
-        background: rgba(26,18,9,.55);
+        background: rgba(26,18,9,.58);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -231,30 +296,129 @@
             letter-spacing: .05em;
         }
 
-    .av-del-btn {
-        position: absolute;
-        top: -4px;
-        right: -4px;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: #c94b2a;
-        border: 2px solid #fff;
-        color: #fff;
-        font-size: .65rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all .2s;
-        padding: 0;
+
+
+    /* Modal scroll */
+    .av-modal-content .modal-body {
+        overflow-y: auto;
+        max-height: calc(100vh - 180px);
     }
 
-        .av-del-btn:hover {
-            background: #a33a1d;
-            transform: scale(1.1);
+    /* Modal */
+    .av-modal-content {
+        border-radius: 14px;
+        overflow: hidden;
+        font-family: 'Outfit', sans-serif;
+        border: 1px solid #e8ddd0;
+    }
+
+    .av-mh {
+        padding: 1.1rem 1.5rem;
+        border-bottom: 1px solid #e8ddd0;
+        background: #f5ede0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .av-mlabel {
+        font-size: .65rem;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: #8a7560;
+        margin-bottom: .15rem;
+    }
+
+    .av-mtitle {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1a1209;
+    }
+
+        .av-mtitle em {
+            font-style: italic;
+            color: #d4a017;
         }
 
+    .av-mclose {
+        background: none;
+        border: none;
+        color: #8a7560;
+        cursor: pointer;
+        font-size: 1.05rem;
+        padding: .3rem;
+        transition: color .2s;
+    }
+
+        .av-mclose:hover {
+            color: #1a1209;
+        }
+
+    .av-mb {
+        padding: .85rem 1.25rem;
+    }
+
+    .av-mf {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #e8ddd0;
+        background: #f5ede0;
+        display: flex;
+        gap: .75rem;
+        justify-content: flex-end;
+        align-items: center;
+    }
+
+    .av-btn-cancel {
+        padding: .62rem 1.25rem;
+        background: #fff;
+        border: 1.5px solid #e8ddd0;
+        color: #8a7560;
+        border-radius: 7px;
+        cursor: pointer;
+        font-family: 'Outfit', sans-serif;
+        font-size: .84rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        transition: all .2s;
+    }
+
+        .av-btn-cancel:hover {
+            border-color: #8a7560;
+            color: #1a1209;
+        }
+
+    .av-btn-save {
+        padding: .62rem 1.5rem;
+        background: linear-gradient(135deg,#d4a017,#f5c842);
+        border: none;
+        color: #1a1209;
+        border-radius: 7px;
+        cursor: pointer;
+        font-family: 'Outfit', sans-serif;
+        font-size: .84rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        transition: all .22s;
+    }
+
+        .av-btn-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 16px rgba(212,160,23,.35);
+        }
+
+        .av-btn-save:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    /* Source cards */
     .av-source-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -263,7 +427,7 @@
     }
 
     .av-source-card {
-        border: 1.5px solid var(--border);
+        border: 1.5px solid #e8ddd0;
         border-radius: 10px;
         padding: 1.1rem;
         text-align: center;
@@ -271,10 +435,11 @@
         transition: all .2s;
         background: #fff;
         position: relative;
+        display: block;
     }
 
         .av-source-card:hover {
-            border-color: var(--gold);
+            border-color: #d4a017;
             background: rgba(212,160,23,.04);
         }
 
@@ -286,39 +451,40 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto .55rem;
+        margin: 0 auto .5rem;
         font-size: 1.15rem;
-        color: var(--gold);
+        color: #d4a017;
     }
 
     .av-source-label {
         font-size: .86rem;
         font-weight: 700;
-        color: var(--deep);
+        color: #1a1209;
         margin-bottom: .2rem;
     }
 
     .av-source-sub {
         font-size: .72rem;
-        color: var(--muted);
+        color: #8a7560;
     }
 
+    /* Drop zone */
     .av-drop-zone {
-        border: 2px dashed var(--border);
+        border: 2px dashed #e8ddd0;
         border-radius: 10px;
         padding: 1.75rem;
         text-align: center;
-        color: var(--muted);
+        color: #8a7560;
         cursor: pointer;
         transition: all .2s;
         position: relative;
         overflow: hidden;
     }
 
-        .av-drop-zone:hover, .av-drop-zone.drag-over {
-            border-color: var(--gold);
+        .av-drop-zone:hover, .av-drop-zone.av-drag-over {
+            border-color: #d4a017;
             background: rgba(212,160,23,.04);
-            color: var(--deep);
+            color: #1a1209;
         }
 
         .av-drop-zone i {
@@ -338,26 +504,27 @@
             font-size: .72rem;
         }
 
+    /* Library */
     .av-lib-title {
         font-size: .71rem;
         font-weight: 700;
         letter-spacing: .1em;
         text-transform: uppercase;
-        color: var(--muted);
+        color: #8a7560;
         margin: .85rem 0 .6rem;
     }
 
     .av-lib-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill,minmax(64px,1fr));
+        grid-template-columns: repeat(auto-fill,minmax(60px,1fr));
         gap: .6rem;
     }
 
     .av-lib-item {
-        width: 64px;
-        height: 64px;
+        width: 60px;
+        height: 60px;
         border-radius: 50%;
-        border: 2.5px solid var(--border);
+        border: 2.5px solid #e8ddd0;
         cursor: pointer;
         overflow: hidden;
         transition: all .2s;
@@ -366,43 +533,44 @@
         justify-content: center;
         font-family: 'Playfair Display',serif;
         font-weight: 700;
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
 
         .av-lib-item:hover {
-            border-color: var(--gold);
+            border-color: #d4a017;
             transform: scale(1.08);
         }
 
-        .av-lib-item.selected {
-            border-color: var(--gold);
+        .av-lib-item.av-selected {
+            border-color: #d4a017;
             box-shadow: 0 0 0 3px rgba(212,160,23,.3);
         }
 
-    .crop-toolbar {
+    /* Crop toolbar */
+    .av-crop-toolbar {
         display: flex;
         align-items: center;
-        gap: .4rem;
+        gap: .35rem;
         flex-wrap: wrap;
-        padding: .65rem .85rem;
-        background: var(--warm);
+        padding: .6rem .75rem;
+        background: #f5ede0;
         border-radius: 8px;
         margin-bottom: .75rem;
     }
 
-    .crop-tb-group {
+    .av-tb-group {
         display: flex;
-        gap: .3rem;
+        gap: .25rem;
     }
 
-    .crop-btn {
-        padding: .38rem .65rem;
-        border: 1.5px solid var(--border);
+    .av-crop-btn {
+        padding: .36rem .6rem;
+        border: 1.5px solid #e8ddd0;
         border-radius: 6px;
         background: #fff;
-        font-size: .78rem;
+        font-size: .77rem;
         cursor: pointer;
-        color: var(--muted);
+        color: #8a7560;
         transition: all .15s;
         font-family: 'Outfit',sans-serif;
         display: inline-flex;
@@ -411,108 +579,111 @@
         white-space: nowrap;
     }
 
-        .crop-btn:hover {
-            border-color: var(--gold);
-            color: var(--deep);
+        .av-crop-btn:hover {
+            border-color: #d4a017;
+            color: #1a1209;
         }
 
-        .crop-btn.active {
-            border-color: var(--gold);
+        .av-crop-btn.active {
+            border-color: #d4a017;
             background: rgba(212,160,23,.1);
             color: #92660a;
             font-weight: 700;
         }
 
-    .crop-container {
+    /* Crop container */
+    .av-crop-container {
         background: #111;
         border-radius: 8px;
         overflow: hidden;
-        max-height: 360px;
+        max-height: 240px;
         display: flex;
         align-items: center;
         justify-content: center;
     }
 
-        .crop-container img {
-            max-height: 360px;
+        .av-crop-container img {
+            max-height: 240px;
         }
 
-    .crop-preview-row {
+    /* Preview row */
+    .av-preview-row {
         display: flex;
         align-items: flex-start;
         gap: 1.5rem;
         margin-top: .85rem;
         padding-top: .85rem;
-        border-top: 1px solid var(--border);
+        border-top: 1px solid #e8ddd0;
     }
 
-    .crop-preview-label {
+    .av-preview-label {
         font-size: .7rem;
         font-weight: 700;
         letter-spacing: .08em;
         text-transform: uppercase;
-        color: var(--muted);
+        color: #8a7560;
         margin-bottom: .5rem;
     }
 
-    .crop-preview-wrap {
+    .av-preview-wrap {
         display: flex;
-        gap: .75rem;
+        gap: .65rem;
         align-items: center;
     }
 
-    .crop-preview {
+    .av-preview {
         overflow: hidden;
-        background: var(--warm);
+        background: #f5ede0;
     }
 
-        .crop-preview.circle {
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
-            border: 2px solid var(--border);
-        }
+    .av-circle {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        border: 2px solid #e8ddd0;
+    }
 
-        .crop-preview.square {
-            width: 72px;
-            height: 72px;
-            border-radius: 8px;
-            border: 2px solid var(--border);
-        }
-
-    .crop-info {
-        flex: 1;
-        background: var(--warm);
+    .av-square {
+        width: 70px;
+        height: 70px;
         border-radius: 8px;
-        padding: .75rem 1rem;
+        border: 2px solid #e8ddd0;
     }
 
-    .crop-info-row {
+    .av-crop-info {
+        flex: 1;
+        background: #f5ede0;
+        border-radius: 8px;
+        padding: .7rem .9rem;
+    }
+
+    .av-info-row {
         display: flex;
         justify-content: space-between;
-        padding: .25rem 0;
-        font-size: .78rem;
-        border-bottom: 1px solid var(--border);
+        padding: .22rem 0;
+        font-size: .77rem;
+        border-bottom: 1px solid #e8ddd0;
     }
 
-        .crop-info-row:last-child {
+        .av-info-row:last-child {
             border-bottom: none;
         }
 
-        .crop-info-row span:first-child {
-            color: var(--muted);
+        .av-info-row span:first-child {
+            color: #8a7560;
         }
 
-        .crop-info-row span:last-child {
+        .av-info-row span:last-child {
             font-weight: 600;
-            color: var(--deep);
+            color: #1a1209;
         }
 
+    /* Spinner */
     .av-spinner {
         width: 32px;
         height: 32px;
-        border: 3px solid var(--border);
-        border-top-color: var(--gold);
+        border: 3px solid #e8ddd0;
+        border-top-color: #d4a017;
         border-radius: 50%;
         animation: avSpin .7s linear infinite;
         margin: 0 auto;
@@ -523,19 +694,358 @@
             transform: rotate(360deg);
         }
     }
-
-    .av-widget.lg .av-display {
-        width: 120px;
-        height: 120px;
-    }
-
-    .av-widget.lg .av-initials {
-        font-size: 2.5rem;
-    }
-
-    .av-widget.lg .av-del-btn {
-        width: 26px;
-        height: 26px;
-        font-size: .75rem;
-    }
 </style>
+
+@* ══════════════════════ JS (nhúng thẳng vào partial) ══════════════════════ *@
+<script>
+    (function () {
+        'use strict';
+
+        // ── Cropper instances (userId → Cropper) ──────────────────────────────
+        if (!window._avCroppers) window._avCroppers = {};
+
+        // ── Helpers ──────────────────────────────────────────────────────────
+        function gid(id) { return document.getElementById(id); }
+
+        function getToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+        }
+
+        function avToast(msg, type) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    toast: true, position: 'bottom-end',
+                    icon: type || 'success', title: msg,
+                    showConfirmButton: false, timer: 3000, timerProgressBar: true,
+                });
+            }
+        }
+
+        // ── Mở modal ─────────────────────────────────────────────────────────
+        window.openAvatarCropper = function (uid) {
+            const modal = document.getElementById('avatarModal_' + uid);
+            if (!modal) return;
+            avBackToStep1(uid);
+            bootstrap.Modal.getOrCreateInstance(modal).show();
+        };
+
+        // ── Step 1 → Step 2 (khởi Cropper) ───────────────────────────────────
+        function avGoToStep2(uid, src) {
+            gid('avStep1_' + uid).style.display   = 'none';
+            gid('avStep2_' + uid).style.display   = 'block';
+            gid('avStep2Back_' + uid).style.display = '';
+            gid('avSaveBtn_' + uid).style.display  = '';
+
+            const img = gid('avCropImg_' + uid);
+            img.src = src;
+
+            // Huỷ cropper cũ
+            if (window._avCroppers[uid]) {
+                window._avCroppers[uid].destroy();
+                delete window._avCroppers[uid];
+            }
+
+            // Đợi ảnh load xong rồi mới khởi Cropper
+            function initCropper() {
+                if (typeof Cropper === 'undefined') {
+                    // Cropper.js chưa load xong — thử lại sau 200ms
+                    setTimeout(initCropper, 200); return;
+                }
+                window._avCroppers[uid] = new Cropper(img, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 0.85,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false,
+                    preview: '#avPreviewCircle_' + uid + ',#avPreviewSquare_' + uid,
+                    ready: function () {
+                        var d = this.cropper.getImageData();
+                        var el = gid('avOrigSize_' + uid);
+                        if (el) el.textContent = Math.round(d.naturalWidth) + ' × ' + Math.round(d.naturalHeight);
+                    },
+                    crop: function (e) {
+                        var el = gid('avCropSize_' + uid);
+                        if (el) el.textContent = Math.round(e.detail.width) + ' × ' + Math.round(e.detail.height);
+                    },
+                });
+            }
+
+            // Nếu src là data URL thì ảnh đã sẵn sàng ngay
+            if (src.startsWith('data:')) {
+                // Dùng setTimeout để DOM kịp render
+                setTimeout(initCropper, 50);
+            } else {
+                img.onload = initCropper;
+            }
+        }
+
+        // ── Chọn file từ input ────────────────────────────────────────────────
+        window.avHandleFileSelect = function (uid, inputEl) {
+            var file = inputEl.files && inputEl.files[0];
+            if (!file) return;
+            avProcessFile(uid, file);
+            inputEl.value = '';
+        };
+
+        // ── Drag & drop ───────────────────────────────────────────────────────
+        window.avHandleDrop = function (uid, event) {
+            event.preventDefault();
+            var dz = gid('avDropZone_' + uid);
+            if (dz) dz.classList.remove('av-drag-over');
+            var file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+            if (!file) return;
+            avProcessFile(uid, file);
+        };
+
+        function avProcessFile(uid, file) {
+            if (!file.type.startsWith('image/')) {
+                avToast('Chỉ chấp nhận file ảnh (JPG, PNG, WebP, GIF).', 'error'); return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                avToast('File quá lớn! Tối đa 10MB.', 'error'); return;
+            }
+            var reader = new FileReader();
+            reader.onload = function (e) { avGoToStep2(uid, e.target.result); };
+            reader.readAsDataURL(file);
+        }
+
+        // ── Thư viện avatar mẫu ──────────────────────────────────────────────
+        window.avShowLibrary = function (uid) {
+            var wrap = gid('avLibrary_' + uid);
+            var grid = gid('avLibGrid_' + uid);
+            if (!wrap || !grid) return;
+            wrap.style.display = 'block';
+            if (grid.childElementCount > 0) return; // đã load rồi
+
+            // Avatar màu gradient mặc định (không cần API)
+            var palettes = [
+                { bg: '#d4a017', fg: '#1a1209' },
+                { bg: '#4f46e5', fg: '#ffffff' },
+                { bg: '#16a34a', fg: '#ffffff' },
+                { bg: '#c94b2a', fg: '#ffffff' },
+                { bg: '#0e7490', fg: '#ffffff' },
+                { bg: '#7c3aed', fg: '#ffffff' },
+                { bg: '#db2777', fg: '#ffffff' },
+                { bg: '#059669', fg: '#ffffff' },
+                { bg: '#d97706', fg: '#ffffff' },
+                { bg: '#2563eb', fg: '#ffffff' },
+                { bg: '#9d174d', fg: '#ffffff' },
+                { bg: '#1e3a5f', fg: '#ffffff' },
+            ];
+
+            // Lấy initials từ data attribute của widget
+            var widget = gid('avWidget_' + uid);
+            var initEl = gid('avInitials_' + uid);
+            var initial = initEl ? (initEl.textContent || '?').trim().substring(0, 2) : '?';
+
+            palettes.forEach(function (p) {
+                var el = document.createElement('div');
+                el.className = 'av-lib-item';
+                el.style.background = p.bg;
+                el.style.color = p.fg;
+                el.textContent = initial;
+                el.addEventListener('click', function () {
+                    grid.querySelectorAll('.av-lib-item').forEach(function (i) { i.classList.remove('av-selected'); });
+                    el.classList.add('av-selected');
+                    avColorToStep2(uid, p.bg, p.fg, initial);
+                });
+                grid.appendChild(el);
+            });
+
+            // Thử gọi API nếu có (tuỳ chọn)
+            fetch('/Profile/GetAvatarLibrary')
+                .then(function (r) { return r.json(); })
+                .then(function (items) {
+                    if (!items || items.length === 0) return;
+                    grid.innerHTML = '';
+                    items.forEach(function (item) {
+                        var el = document.createElement('div');
+                        el.className = 'av-lib-item';
+                        if (item.url) {
+                            el.style.backgroundImage = 'url(' + item.url + ')';
+                            el.style.backgroundSize  = 'cover';
+                        } else {
+                            el.style.background = item.bgColor || '#d4a017';
+                            el.style.color      = item.fgColor || '#1a1209';
+                            el.textContent      = item.label || initial;
+                        }
+                        el.addEventListener('click', function () {
+                            grid.querySelectorAll('.av-lib-item').forEach(function (i) { i.classList.remove('av-selected'); });
+                            el.classList.add('av-selected');
+                            if (item.url) avGoToStep2(uid, item.url);
+                            else avColorToStep2(uid, item.bgColor, item.fgColor, item.label || initial);
+                        });
+                        grid.appendChild(el);
+                    });
+                })
+                .catch(function () { /* không có API - dùng palette mặc định */ });
+        };
+
+        function avColorToStep2(uid, bg, fg, text) {
+            var canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 256;
+            var ctx = canvas.getContext('2d');
+            ctx.fillStyle = bg || '#d4a017';
+            ctx.beginPath();
+            ctx.arc(128, 128, 128, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = fg || '#1a1209';
+            ctx.font = 'bold 100px serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text || '?', 128, 128);
+            avGoToStep2(uid, canvas.toDataURL('image/png'));
+        }
+
+        // ── Điều khiển Cropper ────────────────────────────────────────────────
+        window.avCropAction = function (uid, action) {
+            var c = window._avCroppers[uid];
+            if (!c) return;
+            switch (action) {
+                case 'zoom-in':      c.zoom(0.15);  break;
+                case 'zoom-out':     c.zoom(-0.15); break;
+                case 'rotate-left':  c.rotate(-90); break;
+                case 'rotate-right': c.rotate(90);  break;
+                case 'flip-h':
+                    var dh = c.getData(); c.scaleX(dh.scaleX === -1 ? 1 : -1); break;
+                case 'flip-v':
+                    var dv = c.getData(); c.scaleY(dv.scaleY === -1 ? 1 : -1); break;
+                case 'reset': c.reset(); break;
+            }
+        };
+
+        window.avSetRatio = function (uid, ratio) {
+            var c = window._avCroppers[uid];
+            if (!c) return;
+            c.setAspectRatio(ratio === 0 ? NaN : ratio);
+            var modal = document.getElementById('avatarModal_' + uid);
+            if (modal) modal.querySelectorAll('.av-ratio').forEach(function (btn) {
+                btn.classList.toggle('active', parseFloat(btn.dataset.ratio) === ratio);
+            });
+        };
+
+        // ── Lưu ảnh đã crop ───────────────────────────────────────────────────
+        window.avSaveCrop = async function (uid) {
+            var cropper = window._avCroppers[uid];
+            if (!cropper) return;
+
+            var saveBtn    = gid('avSaveBtn_' + uid);
+            var saveLoader = gid('avSaveLoader_' + uid);
+            if (saveBtn)    { saveBtn.disabled = true; saveBtn.style.opacity = '.6'; }
+            if (saveLoader) saveLoader.style.display = 'block';
+
+            try {
+                var canvas = cropper.getCroppedCanvas({ width: 256, height: 256 });
+                var base64 = canvas.toDataURL('image/webp', 0.88);
+
+                var fd = new FormData();
+                fd.append('croppedBase64', base64);
+                fd.append('__RequestVerificationToken', getToken());
+
+                var res  = await fetch('/Profile/UploadAvatar', { method: 'POST', body: fd });
+                var data = await res.json();
+
+                if (data.success) {
+                    // Cập nhật ảnh trong widget ngay lập tức
+                    var avImg    = gid('avImg_' + uid);
+                    var avInit   = gid('avInitials_' + uid);
+                    var avDelBtn = gid('avDelBtn_' + uid);
+
+                    if (avImg)  {
+                        avImg.src = data.avatarUrl + '?t=' + Date.now();
+                        avImg.style.display = 'block';
+                        avImg.className = 'av-photo';
+                    }
+                    if (avInit)   avInit.style.display = 'none';
+                    // nút xóa đã được ẩn (xóa khỏi UI)
+
+                    // Đóng modal
+                    var modal = document.getElementById('avatarModal_' + uid);
+                    if (modal) bootstrap.Modal.getInstance(modal)?.hide();
+
+                    avToast('✓ Ảnh đại diện đã cập nhật!', 'success');
+                } else {
+                    avToast(data.message || 'Lưu thất bại. Thử lại.', 'error');
+                }
+            } catch (err) {
+                avToast('Lỗi kết nối. Vui lòng thử lại.', 'error');
+            } finally {
+                if (saveBtn)    { saveBtn.disabled = false; saveBtn.style.opacity = '1'; }
+                if (saveLoader) saveLoader.style.display = 'none';
+            }
+        };
+
+        // ── Quay lại Step 1 ───────────────────────────────────────────────────
+        window.avBackToStep1 = function (uid) {
+            var s1  = gid('avStep1_' + uid);
+            var s2  = gid('avStep2_' + uid);
+            var bk  = gid('avStep2Back_' + uid);
+            var sv  = gid('avSaveBtn_' + uid);
+            var lib = gid('avLibrary_' + uid);
+            var libGrid = gid('avLibGrid_' + uid);
+
+            if (s1)  s1.style.display  = 'block';
+            if (s2)  s2.style.display  = 'none';
+            if (bk)  bk.style.display  = 'none';
+            if (sv)  sv.style.display  = 'none';
+            if (lib) lib.style.display = 'none';
+            // Reset thư viện để lần sau load lại
+            if (libGrid) libGrid.innerHTML = '';
+
+            if (window._avCroppers[uid]) {
+                window._avCroppers[uid].destroy();
+                delete window._avCroppers[uid];
+            }
+        };
+
+        // ── Xóa avatar ────────────────────────────────────────────────────────
+        window.deleteAvatar = async function (uid, name) {
+            var confirmed = false;
+            if (typeof Swal !== 'undefined') {
+                var r = await Swal.fire({
+                    title: 'Xóa ảnh đại diện?',
+                    text: 'Ảnh của ' + name + ' sẽ bị xóa, hệ thống dùng chữ cái thay thế.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#c94b2a',
+                    cancelButtonColor: '#8a7560',
+                    confirmButtonText: 'Xóa',
+                    cancelButtonText: 'Hủy',
+                    reverseButtons: true,
+                });
+                confirmed = r.isConfirmed;
+            } else {
+                confirmed = confirm('Xóa ảnh đại diện?');
+            }
+            if (!confirmed) return;
+
+            try {
+                var fd = new FormData();
+                fd.append('__RequestVerificationToken', getToken());
+                var res  = await fetch('/Profile/DeleteAvatar', { method: 'POST', body: fd });
+                var data = await res.json();
+
+                if (data.success) {
+                    var avImg    = gid('avImg_' + uid);
+                    var avInit   = gid('avInitials_' + uid);
+                    var avDelBtn = gid('avDelBtn_' + uid);
+                    if (avImg)    { avImg.src = ''; avImg.style.display = 'none'; }
+                    if (avInit)   avInit.style.display = '';
+                    // nút xóa đã được ẩn (xóa khỏi UI)
+                    avToast('Đã xóa ảnh đại diện.', 'success');
+                } else {
+                    avToast(data.message || 'Xóa thất bại.', 'error');
+                }
+            } catch {
+                avToast('Lỗi kết nối.', 'error');
+            }
+        };
+
+    })();
+</script>

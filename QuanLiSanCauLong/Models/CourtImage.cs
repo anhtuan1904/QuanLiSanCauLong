@@ -8,12 +8,18 @@ namespace QuanLiSanCauLong.Models
         [Key]
         public int ImageId { get; set; }
 
+        // ✅ Alias NotMapped để controller/ViewModel có thể dùng CourtImageId
+        // mà không cần sửa DB migration
+        [NotMapped]
+        public int CourtImageId { get => ImageId; set => ImageId = value; }
+
         [Required]
         public int CourtId { get; set; }
 
         [Required]
         [StringLength(500)]
         public string ImagePath { get; set; }
+        public string? Caption { get; set; }
 
         public bool IsPrimary { get; set; } = false;
 

@@ -1,0 +1,340 @@
+﻿@model IEnumerable<QuanLiSanCauLong.Models.ShiftAssignment>
+@{
+    Layout = "~/Views/Shared/_LayoutStaff.cshtml";
+    ViewData["Title"] = "Lịch ca của tôi";
+    var today = DateTime.Today;
+}
+
+<style>
+    :root {
+        --D: #1a1209;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --G3: rgba(212,160,23,.1);
+        --G4: rgba(212,160,23,.22);
+        --C: #fdf8f0;
+        --W: #f5ede0;
+        --S: #e8ddd0;
+        --M: #8a7560;
+        --GN: #10b981;
+        --BL: #3b82f6;
+        --RD: #ef4444;
+        --OR: #f97316;
+        --r: 14px;
+        --r2: 10px;
+    }
+
+    /* ── HEADER BANNER ── */
+    .ms-banner {
+        background: var(--D);
+        border-radius: var(--r);
+        padding: 1.3rem 1.8rem;
+        margin-bottom: 1.3rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .ms-banner::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,var(--G),var(--G2),transparent);
+        }
+
+    .ms-banner-l {
+    }
+
+    .ms-banner-tag {
+        font-size: .6rem;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        color: var(--G);
+        font-weight: 600;
+        margin-bottom: .3rem;
+    }
+
+    .ms-banner-title {
+        font-family: 'Syne',sans-serif;
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #fff;
+    }
+
+    .ms-banner-sub {
+        font-size: .73rem;
+        color: rgba(255,255,255,.35);
+        margin-top: .2rem;
+    }
+
+    .ms-banner-r {
+        text-align: right;
+    }
+
+    .ms-banner-count {
+        font-family: 'Syne',sans-serif;
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--G2);
+        line-height: 1;
+    }
+
+    .ms-banner-count-lbl {
+        font-size: .65rem;
+        color: rgba(255,255,255,.35);
+        margin-top: .1rem;
+    }
+
+    /* ── SHIFT GRID ── */
+    .ms-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill,minmax(280px,1fr));
+        gap: .9rem;
+    }
+
+    /* ── SHIFT CARD ── */
+    .sc {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        overflow: hidden;
+        transition: transform .2s,box-shadow .2s;
+        position: relative;
+    }
+
+        .sc:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 28px rgba(26,18,9,.11);
+        }
+
+        .sc.is-today {
+            border-color: var(--G);
+        }
+
+            .sc.is-today::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: linear-gradient(90deg,var(--G),var(--G2));
+            }
+
+    .sc-head {
+        padding: .9rem 1.2rem;
+        border-bottom: 1px solid var(--S);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+    }
+
+    .sc-shift-name {
+        font-family: 'Syne',sans-serif;
+        font-size: .9rem;
+        font-weight: 800;
+        color: var(--D);
+    }
+
+    .sc-today-badge {
+        background: var(--G);
+        color: var(--D);
+        font-size: .58rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        padding: .18rem .6rem;
+        border-radius: 4px;
+    }
+
+    .sc-body {
+        padding: 1rem 1.2rem;
+    }
+
+    .sc-time {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        background: var(--C);
+        border: 1px solid var(--S);
+        border-radius: 8px;
+        padding: .6rem .85rem;
+        margin-bottom: .75rem;
+    }
+
+    .sc-time-ico {
+        color: var(--G);
+        flex-shrink: 0;
+    }
+
+    .sc-time-val {
+        font-family: 'Syne',sans-serif;
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--D);
+    }
+
+    .sc-time-lbl {
+        font-size: .65rem;
+        color: var(--M);
+    }
+
+    .sc-desc {
+        font-size: .76rem;
+        color: var(--M);
+        line-height: 1.55;
+        margin-bottom: .75rem;
+    }
+
+    .sc-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: .6rem;
+        border-top: 1px solid var(--S);
+    }
+
+    .sc-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        padding: .22rem .6rem;
+        border-radius: 4px;
+    }
+
+        .sc-status-badge::before {
+            content: '●';
+            font-size: .48em;
+        }
+
+    .ss-ok {
+        background: rgba(16,185,129,.1);
+        color: var(--GN);
+    }
+
+    .ss-pe {
+        background: rgba(212,160,23,.13);
+        color: #92660a;
+    }
+
+    .ss-na {
+        background: rgba(138,117,96,.1);
+        color: var(--M);
+    }
+
+    .sc-date {
+        font-size: .7rem;
+        color: var(--M);
+    }
+
+    /* ── SHIFT ICON ── */
+    .shift-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    /* ── EMPTY ── */
+    .ms-empty {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        padding: 4rem 2rem;
+        text-align: center;
+        color: var(--M);
+    }
+</style>
+
+<!-- Banner -->
+<div class="ms-banner">
+    <div class="ms-banner-l">
+        <div class="ms-banner-tag">Lịch làm việc</div>
+        <div class="ms-banner-title">Ca Làm Việc Của Tôi</div>
+        <div class="ms-banner-sub">@User.Identity?.Name · @today.ToString("dd/MM/yyyy")</div>
+    </div>
+    <div class="ms-banner-r">
+        <div class="ms-banner-count">@Model.Count()</div>
+        <div class="ms-banner-count-lbl">ca được phân công</div>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="ms-empty">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.2;margin-bottom:.75rem;"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="8" y1="15" x2="12" y2="15" /><line x1="12" y1="15" x2="12" y2="19" /></svg>
+        <div style="font-size:.9rem;font-weight:600;color:var(--D);margin-bottom:.3rem;">Chưa có lịch ca nào</div>
+        <div style="font-size:.78rem;">Liên hệ quản lý để được phân công ca làm việc</div>
+    </div>
+}
+else
+{
+    <div class="ms-grid">
+        @foreach (var sa in Model)
+        {
+            var shift = sa.Shift;
+            var isToday = false; // set true nếu có ShiftDate == today
+            var timeRange = shift != null
+            ? $"{shift.StartTime.ToString(@"HH\:mm")} – {shift.EndTime.ToString(@"HH\:mm")}"
+            : "—";
+
+            var shiftEmoji = shift?.ShiftName?.ToLower() switch
+            {
+                var n when n?.Contains("sáng") == true => "🌅",
+                var n when n?.Contains("chiều") == true => "☀️",
+                var n when n?.Contains("tối") == true => "🌙",
+                _ => "⏰"
+            };
+
+            var (ssCls, ssTxt) = sa.Status switch
+            {
+                            "Confirmed" => ("ss-ok", "Đã xác nhận"),
+                            "Pending" => ("ss-pe", "Chờ xác nhận"),
+                _ => ("ss-na", sa.Status ?? "—")
+            };
+
+            <div class="sc @(isToday ? "is-today" : "")">
+                <div class="sc-head">
+                    <div style="display:flex;align-items:center;gap:.55rem;">
+                        <span style="font-size:1.3rem;">@shiftEmoji</span>
+                        <div class="sc-shift-name">@(shift?.ShiftName ?? "Ca làm việc")</div>
+                    </div>
+                    @if (isToday)
+                    {
+                        <span class="sc-today-badge">Hôm nay</span>
+                    }
+                </div>
+                <div class="sc-body">
+                    <div class="sc-time">
+                        <svg class="sc-time-ico" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                        <div>
+                            <div class="sc-time-val">@timeRange</div>
+                            <div class="sc-time-lbl">Giờ làm việc</div>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(shift?.Description))
+                    {
+                        <div class="sc-desc">@shift.Description</div>
+                    }
+                    <div class="sc-footer">
+                        <span class="sc-status-badge @ssCls">@ssTxt</span>
+                        <span class="sc-date">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;margin-right:.25rem;"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+                            @today.ToString("dd/MM/yyyy")
+                        </span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

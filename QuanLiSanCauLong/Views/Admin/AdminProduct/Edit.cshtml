@@ -1,711 +1,1044 @@
 ﻿@model QuanLiSanCauLong.Models.Product
 @{
-    ViewData["Title"] = "Chỉnh sửa sản phẩm";
-    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
-    var behavior = Model.Category?.BehaviorType ?? "Retail";
-    var categoriesJson = ViewBag.CategoriesJson as string ?? "[]";
+    Layout = null;
+    var bh = Model.Category?.BehaviorType ?? "Retail";
+    var cats = ViewBag.Categories as IEnumerable<QuanLiSanCauLong.Models.ProductCategory> ?? Enumerable.Empty<QuanLiSanCauLong.Models.ProductCategory>();
+    var catsJson = ViewBag.CategoriesJson as string ?? "[]";
+    var activeVars = Model.Variants?.Where(v => v.IsActive)
+                        .OrderBy(v => v.SizeName).ThenBy(v => v.ColorName).ToList() ?? new();
 }
 
 <style>
-    @@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
-
     :root {
         --deep: #1a1209;
         --gold: #d4a017;
         --gold2: #f5c842;
-        --cream: #f5f4ec;
-        --warm: #f0ead8;
-        --card: #ffffff;
-        --border: #e4d9c8;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
         --muted: #8a7560;
+        --red: #c94b2a;
         --green: #15803d;
-        --green-soft: #dcfce7;
-        --red: #dc2626;
         --blue: #1d4ed8;
-        --blue-soft: #eff6ff;
         --purple: #7c3aed;
-        --purple-soft: #f5f3ff;
     }
 
-    body, .container-fluid {
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    * {
         font-family: 'Outfit',sans-serif;
-        background: var(--cream);
     }
 
-    .bc {
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-        font-size: .82rem;
-        color: var(--muted);
-        margin-bottom: 1.4rem;
-    }
-
-        .bc a {
-            color: var(--muted);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: .3rem;
-        }
-
-            .bc a:hover {
-                color: var(--deep);
-            }
-
-    .bc-sep {
-        opacity: .5;
-    }
-
-    .bc-cur {
-        color: var(--deep);
-        font-weight: 700;
-    }
-
-    .cf-wrap {
-        max-width: 780px;
-        margin: 0 auto;
-    }
-
-    .cf-head {
-        margin-bottom: 2rem;
-    }
-
-    .cf-head-label {
-        font-size: .68rem;
-        letter-spacing: .2em;
-        text-transform: uppercase;
-        color: var(--gold);
-        display: flex;
-        align-items: center;
-        gap: .6rem;
-        margin-bottom: .5rem;
-    }
-
-        .cf-head-label::before {
-            content: '';
-            width: 16px;
-            height: 1px;
-            background: var(--gold);
-        }
-
-    .cf-title {
-        font-family: 'Playfair Display',serif;
-        font-size: 1.9rem;
-        font-weight: 700;
-        color: var(--deep);
-    }
-
-        .cf-title em {
-            font-style: italic;
-            color: var(--gold);
-        }
-
-    .cf-sub {
-        font-size: .85rem;
-        color: var(--muted);
-        margin-top: .3rem;
-    }
-
-    .cf-card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        overflow: hidden;
-        margin-bottom: 1.25rem;
-        box-shadow: 0 2px 12px rgba(26,18,9,.06);
-    }
-
-    .cf-card-head {
-        padding: 1.1rem 1.75rem;
+    .md-hd {
+        padding: 1.1rem 1.4rem;
         border-bottom: 1px solid var(--border);
-        background: var(--warm);
         display: flex;
         align-items: center;
-        gap: .6rem;
+        justify-content: space-between;
+        background: var(--deep);
     }
 
-        .cf-card-head i {
-            color: var(--gold);
-            font-size: .95rem;
-        }
-
-    .cf-card-head-title {
+    .md-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.05rem;
         font-weight: 700;
-        font-size: .92rem;
-        color: var(--deep);
-        flex: 1;
+        color: #fff;
     }
 
-    .cf-card-body {
-        padding: 1.6rem 1.75rem;
-    }
-
-    .field-group {
-        margin-bottom: 1.2rem;
-    }
-
-    .field-label {
-        display: block;
-        font-size: .72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-        color: var(--muted);
-        margin-bottom: .5rem;
-    }
-
-    .field-input, .field-select, .field-textarea {
-        width: 100%;
-        padding: .6rem .9rem;
-        background: var(--cream);
-        border: 1px solid var(--border);
-        border-radius: 9px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .88rem;
-        color: var(--deep);
-        outline: none;
-        transition: .18s;
-    }
-
-        .field-input:focus, .field-select:focus, .field-textarea:focus {
-            border-color: var(--gold);
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(212,160,23,.1);
+        .md-title em {
+            font-style: italic;
+            color: var(--gold2);
         }
 
-    .field-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-    }
-
-    .field-row-3 {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 1rem;
-    }
-
-    @@media(max-width:600px) {
-        .field-row, .field-row-3 {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    .field-hint {
-        font-size: .74rem;
-        color: var(--muted);
-        margin-top: .25rem;
-    }
-
-    .behavior-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: .4rem;
-        padding: .3rem .75rem;
-        border-radius: 7px;
-        font-size: .75rem;
-        font-weight: 800;
-        letter-spacing: .04em;
-        text-transform: uppercase;
-    }
-
-    .bh-retail {
-        background: var(--green-soft);
-        color: var(--green);
-    }
-
-    .bh-rental {
-        background: var(--blue-soft);
-        color: var(--blue);
-    }
-
-    .bh-service {
-        background: var(--purple-soft);
-        color: var(--purple);
-    }
-
-    /* Variant Table */
-    .variant-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-        .variant-table th {
+        .md-title .sku {
             font-size: .68rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .08em;
-            color: var(--muted);
-            padding: .5rem .7rem;
-            border-bottom: 2px solid var(--border);
-            text-align: left;
-            white-space: nowrap;
+            color: rgba(255,255,255,.3);
+            font-family: monospace;
+            margin-left: .5rem;
+            font-style: normal;
         }
 
-        .variant-table td {
-            padding: .5rem .7rem;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-        }
-
-        .variant-table tr:last-child td {
-            border-bottom: none;
-        }
-
-    .vt-input {
-        width: 100%;
-        padding: .42rem .65rem;
-        background: var(--cream);
-        border: 1px solid var(--border);
-        border-radius: 7px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .83rem;
-        color: var(--deep);
-        outline: none;
-        transition: .15s;
-    }
-
-        .vt-input:focus {
-            border-color: var(--gold);
-            background: #fff;
-        }
-
-    .stock-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: .25rem;
-        padding: .12rem .45rem;
-        border-radius: 5px;
-        font-size: .72rem;
-        font-weight: 700;
-    }
-
-    .stock-low {
-        background: #fef9c3;
-        color: #92400e;
-    }
-
-    .vt-reserved {
-        color: var(--muted);
-        font-size: .8rem;
-    }
-
-    .btn-rm-row {
+    .md-close {
         background: none;
         border: none;
-        color: var(--muted);
+        color: rgba(255,255,255,.4);
+        font-size: 1rem;
         cursor: pointer;
-        padding: .3rem;
-        border-radius: 5px;
-        transition: .15s;
     }
 
-        .btn-rm-row:hover {
-            color: var(--red);
-        }
-
-        .btn-rm-row:disabled {
-            opacity: .3;
-            cursor: not-allowed;
-        }
-
-    .btn-add-row {
-        display: inline-flex;
-        align-items: center;
-        gap: .4rem;
-        margin-top: .8rem;
-        padding: .45rem 1rem;
-        background: var(--warm);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .82rem;
-        font-weight: 700;
-        color: var(--muted);
-        cursor: pointer;
-        transition: .15s;
-    }
-
-        .btn-add-row:hover {
-            background: var(--border);
-        }
-
-    /* Image edit */
-    .img-edit-box {
-        display: flex;
-        gap: 1.2rem;
-        align-items: flex-start;
-    }
-
-    .img-edit-thumb {
-        width: 110px;
-        height: 110px;
-        object-fit: cover;
-        border-radius: 10px;
-        border: 1px solid var(--border);
-        flex-shrink: 0;
-    }
-
-    .img-edit-right {
-        flex: 1;
-    }
-
-    .img-edit-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: .3rem;
-        font-size: .75rem;
-        font-weight: 700;
-        color: var(--gold);
-        margin-bottom: .4rem;
-    }
-
-    .img-edit-hint {
-        font-size: .76rem;
-        color: var(--muted);
-        margin-bottom: .6rem;
-    }
-
-    .field-file {
-        font-size: .82rem;
-        color: var(--muted);
-    }
-
-    .btn-row {
-        display: flex;
-        gap: .75rem;
-        margin-top: 1.5rem;
-    }
-
-    .btn-cancel {
-        flex: 1;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: .5rem;
-        padding: .65rem 1.4rem;
-        background: var(--warm);
-        color: var(--muted);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .88rem;
-        font-weight: 700;
-        text-decoration: none;
-        transition: .18s;
-    }
-
-        .btn-cancel:hover {
-            background: var(--cream);
-            color: var(--deep);
-        }
-
-    .btn-submit {
-        flex: 2;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: .5rem;
-        padding: .65rem 1.4rem;
-        background: var(--gold2);
-        color: var(--deep);
-        border: none;
-        border-radius: 10px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .88rem;
-        font-weight: 800;
-        cursor: pointer;
-        transition: .2s;
-        box-shadow: 0 2px 8px rgba(212,160,23,.3);
-    }
-
-        .btn-submit:hover {
-            background: var(--gold);
+        .md-close:hover {
             color: #fff;
         }
 
-    .info-box {
-        padding: .75rem 1rem;
-        border-radius: 9px;
-        font-size: .8rem;
+    .md-body {
+        padding: 1.3rem 1.4rem;
+        max-height: 76vh;
+        overflow-y: auto;
+    }
+
+    .md-ft {
+        padding: .9rem 1.4rem;
+        border-top: 1px solid var(--border);
+        background: var(--warm);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: .6rem;
+    }
+
+    .info-bar {
+        padding: .6rem .9rem;
+        border-radius: 7px;
+        font-size: .75rem;
         line-height: 1.5;
+        display: flex;
+        align-items: flex-start;
+        gap: .45rem;
+        margin-bottom: 1rem;
+    }
+
+    .ib-blue {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: var(--blue);
+    }
+
+    .ib-green {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: var(--green);
+    }
+
+    .ib-purple {
+        background: #f5f3ff;
+        border: 1px solid #ddd6fe;
+        color: var(--purple);
+    }
+
+    .ib-warn {
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        color: #c2410c;
+    }
+
+    .sec-hd {
+        font-size: .62rem;
+        font-weight: 700;
+        letter-spacing: .15em;
+        text-transform: uppercase;
+        color: var(--muted);
+        padding: .55rem 0;
+        margin-bottom: .8rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: .38rem;
+    }
+
+    .row2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .85rem;
+    }
+
+    .row3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: .75rem;
+    }
+
+    .fg {
+        display: flex;
+        flex-direction: column;
+        gap: .28rem;
+        margin-bottom: .85rem;
+    }
+
+        .fg label {
+            font-size: .72rem;
+            font-weight: 700;
+            color: var(--deep);
+        }
+
+        .fg .req {
+            color: var(--red);
+        }
+
+        .fg .hint {
+            font-size: .67rem;
+            color: var(--muted);
+        }
+
+    .fi {
+        padding: .6rem .85rem;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .84rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
+        transition: border-color .2s;
+        width: 100%;
+    }
+
+        .fi:focus {
+            border-color: var(--gold);
+        }
+
+    .money-w {
+        position: relative;
+    }
+
+        .money-w .fi {
+            padding-right: 2.4rem;
+        }
+
+    .money-sfx {
+        position: absolute;
+        right: .75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: .72rem;
+        font-weight: 700;
+        color: var(--muted);
+        pointer-events: none;
+    }
+
+    .combo-w {
+        position: relative;
+    }
+
+    .combo-list {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        z-index: 50;
+        box-shadow: 0 4px 16px rgba(0,0,0,.1);
+        max-height: 180px;
+        overflow-y: auto;
+        display: none;
+    }
+
+        .combo-list.show {
+            display: block;
+        }
+
+    .combo-opt {
+        padding: .45rem .85rem;
+        font-size: .82rem;
+        cursor: pointer;
+        color: var(--deep);
+    }
+
+        .combo-opt:hover {
+            background: var(--warm);
+        }
+
+    .ro-block {
+        background: var(--warm);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: .75rem 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .ro-hd {
+        font-size: .62rem;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: .45rem;
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+    }
+
+    .ro-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: .3rem 0;
+        border-bottom: 1px solid var(--border);
+        font-size: .8rem;
+    }
+
+        .ro-row:last-child {
+            border-bottom: none;
+        }
+
+    .ro-lbl {
+        color: var(--muted);
+    }
+
+    .ro-val {
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+        .ro-val.warn {
+            color: #c2410c;
+        }
+
+    .ro-note {
+        font-size: .67rem;
+        color: var(--muted);
+        margin-top: .35rem;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+    .bh-row {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: .65rem;
         margin-bottom: .75rem;
     }
 
-        .info-box.blue {
-            background: var(--blue-soft);
-            color: var(--blue);
-            border: 1px solid #93c5fd;
+    .bh-opt {
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        padding: .75rem;
+        background: #fff;
+        text-align: center;
+        opacity: .4;
+    }
+
+        .bh-opt.on {
+            opacity: 1;
         }
 
-        .info-box.purple {
-            background: var(--purple-soft);
-            color: var(--purple);
-            border: 1px solid #c4b5fd;
+        .bh-opt.on-Retail {
+            border-color: #16a34a;
+            background: #f0fdf4;
+        }
+
+        .bh-opt.on-Rental {
+            border-color: var(--blue);
+            background: #eff6ff;
+        }
+
+        .bh-opt.on-Service {
+            border-color: var(--purple);
+            background: #f5f3ff;
+        }
+
+    .bh-ico {
+        font-size: 1.2rem;
+        display: block;
+        margin-bottom: .3rem;
+    }
+
+    .bh-nm {
+        font-size: .78rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+    .bh-ds {
+        font-size: .62rem;
+        color: var(--muted);
+        margin-top: .1rem;
+    }
+
+    .vtbl {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: .8rem;
+    }
+
+        .vtbl th {
+            padding: .45rem .6rem;
+            background: rgba(0,0,0,.04);
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .vtbl td {
+            padding: .42rem .5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .vtbl tr:last-child td {
+            border-bottom: none;
+        }
+
+        .vtbl input {
+            padding: .38rem .6rem;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            font-family: 'Outfit',sans-serif;
+            font-size: .78rem;
+            width: 100%;
+            outline: none;
+        }
+
+            .vtbl input:focus {
+                border-color: var(--gold);
+            }
+
+    .vt-del {
+        width: 28px;
+        height: 28px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--muted);
+        font-size: .7rem;
+        transition: all .15s;
+    }
+
+        .vt-del:hover:not([disabled]) {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        .vt-del[disabled] {
+            opacity: .35;
+            cursor: not-allowed;
+        }
+
+    .vt-res {
+        display: inline-flex;
+        align-items: center;
+        gap: .2rem;
+        padding: .1rem .4rem;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 4px;
+        font-size: .62rem;
+        font-weight: 700;
+        color: #c2410c;
+    }
+
+    .sz-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .3rem;
+        margin-bottom: .55rem;
+    }
+
+    .sz-pill {
+        padding: .2rem .6rem;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        font-size: .7rem;
+        cursor: pointer;
+        background: #fff;
+        transition: all .15s;
+    }
+
+        .sz-pill:hover {
+            border-color: var(--gold);
+            background: rgba(212,160,23,.08);
+            color: #92660a;
+        }
+
+    .btn-add-v {
+        padding: .38rem .85rem;
+        border: 1.5px dashed var(--border);
+        border-radius: 6px;
+        background: #fff;
+        font-size: .76rem;
+        font-weight: 700;
+        cursor: pointer;
+        color: var(--muted);
+        transition: all .15s;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+        margin-top: .55rem;
+    }
+
+        .btn-add-v:hover {
+            border-color: var(--gold);
+            color: var(--deep);
+        }
+
+    .btn-p {
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
+        border: none;
+        padding: .65rem 1.4rem;
+        font-size: .86rem;
+        font-weight: 700;
+        border-radius: 7px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        transition: all .2s;
+    }
+
+        .btn-p:hover {
+            box-shadow: 0 4px 14px rgba(212,160,23,.35);
+            transform: translateY(-1px);
+        }
+
+        .btn-p:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    .btn-s {
+        padding: .62rem 1.15rem;
+        border: 1.5px solid var(--border);
+        border-radius: 7px;
+        background: #fff;
+        font-size: .84rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--muted);
+        transition: all .18s;
+    }
+
+        .btn-s:hover {
+            border-color: var(--deep);
+            color: var(--deep);
         }
 </style>
 
-<div class="container-fluid px-4 py-4">
-    <div class="bc">
-        <a asp-action="Index"><i class="bi bi-house"></i> Sản phẩm</a>
-        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
-        <a asp-action="Details" asp-route-id="@Model.ProductId">@Model.ProductName</a>
-        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
-        <span class="bc-cur">Chỉnh sửa</span>
+<!-- HEADER -->
+<div class="md-hd">
+    <span class="md-title">
+        Sửa <em>@Model.ProductName</em>
+        <span class="sku">#@Model.ProductId · @(Model.ProductCode ?? Model.SKU ?? "")</span>
+    </span>
+    <button class="md-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+</div>
+
+<div class="md-body">
+
+    <!-- READ-ONLY: thông số hệ thống -->
+    <div class="ro-block">
+        <div class="ro-hd"><i class="bi bi-lock-fill" style="font-size:.6rem"></i> Thông số hệ thống (chỉ đọc)</div>
+        <div class="ro-row">
+            <span class="ro-lbl">Tổng tồn kho</span>
+            <span class="ro-val">@Model.StockQuantity @(Model.Unit ?? "")</span>
+        </div>
+        @if (Model.ReservedQuantity > 0)
+        {
+            <div class="ro-row">
+                <span class="ro-lbl">Đang @(bh == "Rental" ? "cho thuê" : "xử lý / treo")</span>
+                <span class="ro-val warn">@Model.ReservedQuantity @(Model.Unit ?? "")</span>
+            </div>
+        }
+        <div class="ro-row">
+            <span class="ro-lbl">Ngày tạo</span>
+            <span class="ro-val" style="font-weight:400;font-size:.76rem;">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+        </div>
+        <div class="ro-note">
+            <i class="bi bi-info-circle"></i>
+            Tồn kho thay đổi qua nhập/xuất kho. Số lượng đang treo/thuê không thể chỉnh thủ công.
+        </div>
     </div>
 
-    <div class="cf-wrap">
-        <div class="cf-head">
-            <div class="cf-head-label">Sản Phẩm</div>
-            <div class="cf-title">Chỉnh sửa <em>Sản Phẩm</em></div>
-            <div class="cf-sub">
-                ID: #@Model.ProductId —
-                <span class="behavior-chip @(behavior == "Rental" ? "bh-rental" : behavior == "Service" ? "bh-service" : "bh-retail")">
-                    @(behavior == "Retail" ? "🛒 Bán lẻ" : behavior == "Rental" ? "🔄 Cho thuê" : "🔧 Dịch vụ")
-                </span>
+    <!-- THÔNG TIN CƠ BẢN -->
+    <div class="sec-hd"><i class="bi bi-info-circle"></i> Thông tin cơ bản</div>
+
+    <div class="fg">
+        <label>Tên sản phẩm / dịch vụ <span class="req">*</span></label>
+        <input type="text" id="inp_name" class="fi" maxlength="200" value="@Model.ProductName" />
+    </div>
+
+    <div class="row2">
+        <div class="fg">
+            <label>Mã SKU</label>
+            <input type="text" id="inp_sku" class="fi" value="@(Model.ProductCode ?? Model.SKU ?? "")" />
+        </div>
+        <div class="fg">
+            <label>Danh mục</label>
+            <select id="inp_cat" class="fi" onchange="onCatChange(this.value)">
+                <option value="">-- Chọn --</option>
+                @foreach (var c in cats)
+                {
+                    var bhLbl = c.BehaviorType == "Retail" ? "Bán lẻ" : c.BehaviorType == "Rental" ? "Cho thuê" : "Dịch vụ";
+                    var sel = Model.CategoryId == c.CategoryId;
+                    @Html.Raw($"<option value=\"{c.CategoryId}\" data-bh=\"{c.BehaviorType}\" data-unit=\"{c.DefaultUnit}\"{(sel ? " selected" : "")}>{c.CategoryName} ({bhLbl})</option>")
+                }
+            </select>
+        </div>
+    </div>
+
+    <div class="row2">
+        <div class="fg">
+            <label>Đơn vị tính</label>
+            <div class="combo-w">
+                <input type="text" id="inp_unit" class="fi" value="@(Model.Unit ?? "")"
+                       onfocus="showCombo('unitList')" oninput="filterCombo('unitList',this.value)" />
+                <div class="combo-list" id="unitList">
+                    @foreach (var u in new[] { "Cái", "Bộ", "Chiếc", "Đôi", "Chai", "Lon", "Hộp", "Thùng", "Túi", "Kg", "Gram", "Lít", "Lần", "Buổi" })
+                    {
+                        <div class="combo-opt" onclick="pickCombo('inp_unit','@u')">@u</div>
+                    }
+                </div>
             </div>
         </div>
+        <div class="fg">
+            <label>Trạng thái</label>
+            <select id="inp_status" class="fi">
+                @{
+                    var st = Model.Status ?? "Active";
+                }
+                @Html.Raw($"<option value=\"Active\"{(st == "Active" ? " selected" : "")}>Hoạt động / Còn hàng</option>")
+                @Html.Raw($"<option value=\"OutOfStock\"{(st == "OutOfStock" ? " selected" : "")}>Hết hàng</option>")
+                @Html.Raw($"<option value=\"Inactive\"{(st == "Inactive" ? " selected" : "")}>Ngừng kinh doanh</option>")
+            </select>
+        </div>
+    </div>
 
-        <form asp-action="Edit" method="post" enctype="multipart/form-data">
-            @Html.AntiForgeryToken()
-            <input type="hidden" asp-for="ProductId" />
-            <input type="hidden" asp-for="ImageUrl" />
+    <div class="fg">
+        <label>Mô tả</label>
+        <textarea id="inp_desc" class="fi" rows="2" placeholder="Mô tả ngắn...">@(Model.Description ?? "")</textarea>
+    </div>
 
-            <!-- ── Thông tin cơ bản ── -->
-            <div class="cf-card">
-                <div class="cf-card-head">
-                    <i class="bi bi-box-seam-fill"></i>
-                    <span class="cf-card-head-title">Thông tin sản phẩm</span>
+    <!-- NHÓM SẢN PHẨM (hiển thị theo danh mục, không tự đổi) -->
+    <div class="sec-hd"><i class="bi bi-diagram-3"></i> Nhóm nghiệp vụ</div>
+    <div class="bh-row">
+        <div class="bh-opt @(bh == "Retail" ? "on on-Retail" : "")">
+            <span class="bh-ico"><i class="bi bi-cart3" style="color:#16a34a;font-size:1.2rem"></i></span>
+            <div class="bh-nm">Bán lẻ</div>
+            <div class="bh-ds">Trừ kho khi bán</div>
+        </div>
+        <div class="bh-opt @(bh == "Rental" ? "on on-Rental" : "")">
+            <span class="bh-ico"><i class="bi bi-arrow-repeat" style="color:var(--blue);font-size:1.2rem"></i></span>
+            <div class="bh-nm">Cho thuê</div>
+            <div class="bh-ds">Hoàn kho khi trả</div>
+        </div>
+        <div class="bh-opt @(bh == "Service" ? "on on-Service" : "")">
+            <span class="bh-ico"><i class="bi bi-wrench-adjustable" style="color:var(--purple);font-size:1.2rem"></i></span>
+            <div class="bh-nm">Dịch vụ</div>
+            <div class="bh-ds">Không kho vật lý</div>
+        </div>
+    </div>
+    <p style="font-size:.7rem;color:var(--muted);margin-top:-.4rem;margin-bottom:1rem;">
+        <i class="bi bi-info-circle me-1"></i>Nhóm được xác định bởi danh mục. Đổi danh mục để thay đổi nhóm.
+    </p>
+
+    <!-- GIÁ: RETAIL -->
+    @if (bh == "Retail")
+    {
+        <div class="sec-hd"><i class="bi bi-currency-dollar"></i> Giá bán</div>
+        <div class="info-bar ib-green">
+            <i class="bi bi-info-circle-fill" style="flex-shrink:0;margin-top:1px"></i>
+            Chỉ sửa giá. Tồn kho điều chỉnh qua module Nhập/Xuất kho.
+        </div>
+        <div class="row3">
+            <div class="fg">
+                <label>Giá bán lẻ (đ)</label>
+                <div class="money-w">
+                    <input type="number" id="inp_price" class="fi" min="0" step="1000" value="@Model.Price" />
+                    <span class="money-sfx">₫</span>
                 </div>
-                <div class="cf-card-body">
-                    <div class="field-group">
-                        <label class="field-label">Tên Sản Phẩm / Dịch vụ *</label>
-                        <input asp-for="ProductName" class="field-input" />
-                        <span asp-validation-for="ProductName" style="font-size:.78rem;color:var(--red);display:block;margin-top:.3rem"></span>
-                    </div>
-                    <div class="field-row">
-                        <div class="field-group"><label class="field-label">Mã SKU</label><input asp-for="ProductCode" class="field-input" /></div>
-                        <div class="field-group"><label class="field-label">Đơn vị</label><input asp-for="Unit" class="field-input" /></div>
-                    </div>
-                    <div class="field-row">
-                        <div class="field-group">
-                            <label class="field-label">Giá bán (VNĐ)</label>
-                            <input asp-for="Price" type="number" class="field-input" />
-                        </div>
-                        <div class="field-group">
-                            <label class="field-label">Danh mục</label>
-                            <select asp-for="CategoryId" class="field-select"
-                                    asp-items="@(new SelectList(ViewBag.Categories, "CategoryId", "CategoryName"))">
-                                <option value="">-- Chọn danh mục --</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="field-row">
-                        <div class="field-group">
-                            <label class="field-label">Trạng thái</label>
-                            <select asp-for="Status" class="field-select">
-                                <option value="Active">✓ Đang bán / hoạt động</option>
-                                <option value="OutOfStock">⚠ Hết hàng</option>
-                                <option value="Inactive">✕ Ngừng bán</option>
-                            </select>
-                        </div>
+            </div>
+            <div class="fg">
+                <label>Giá nhập (đ)</label>
+                <div class="money-w">
+                    <input type="number" id="inp_cost" class="fi" min="0" step="1000" value="@Model.CostPrice" />
+                    <span class="money-sfx">₫</span>
+                </div>
+            </div>
+            <div class="fg">
+                <label>Giá sỉ (đ)</label>
+                <div class="money-w">
+                    <input type="number" id="inp_saleprice" class="fi" min="0" step="1000" value="@Model.SalePrice" />
+                    <span class="money-sfx">₫</span>
+                </div>
+                <span class="hint">Bỏ trống = không áp dụng</span>
+            </div>
+        </div>
+        <div class="row2">
+            <div class="fg">
+                <label>Safety stock (cảnh báo khi ≤)</label>
+                <input type="number" id="inp_minstk" class="fi" min="0" value="@Model.MinStockLevel" />
+                <span class="hint">Để 0 = tắt cảnh báo</span>
+            </div>
+        </div>
+    }
+
+    <!-- GIÁ: RENTAL -->
+    @if (bh == "Rental")
+    {
+        <div class="sec-hd"><i class="bi bi-arrow-repeat"></i> Cấu hình cho thuê</div>
+        @if (Model.ReservedQuantity > 0)
+        {
+            <div class="info-bar ib-warn">
+                <i class="bi bi-exclamation-circle-fill" style="flex-shrink:0;margin-top:1px"></i>
+                Hiện có <strong>@Model.ReservedQuantity</strong> đang cho thuê — số này tự cập nhật khi khách trả, không thể chỉnh tại đây.
+            </div>
+        }
+        <div class="row3">
+            <div class="fg">
+                <label>Giá thuê / giờ (đ)</label>
+                <div class="money-w">
+                    <input type="number" id="inp_rent_price" class="fi" min="0" step="1000" value="@Model.Price" />
+                    <span class="money-sfx">₫/h</span>
+                </div>
+            </div>
+            <div class="fg">
+                <label>Tiền đặt cọc (đ)</label>
+                <div class="money-w">
+                    <input type="number" id="inp_deposit" class="fi" min="0" step="1000" value="@Model.DepositAmount" />
+                    <span class="money-sfx">₫</span>
+                </div>
+            </div>
+            <div class="fg">
+                <label>Phí vệ sinh (đ)</label>
+                <div class="money-w">
+                    <input type="number" id="inp_cleaning" class="fi" min="0" step="1000" value="@Model.CleaningFee" />
+                    <span class="money-sfx">₫</span>
+                </div>
+                <span class="hint">Thu khi nhận đồ về</span>
+            </div>
+        </div>
+        <div class="row2">
+            <div class="fg">
+                <label>Thời gian tối đa (giờ)</label>
+                <input type="number" id="inp_maxhours" class="fi" min="1" placeholder="Không giới hạn"
+                       value="@(Model.MaxRentalHours.HasValue? Model.MaxRentalHours.ToString() : "")" />
+                <span class="hint">Bỏ trống = không giới hạn</span>
+            </div>
+        </div>
+    }
+
+    <!-- GIÁ: SERVICE -->
+    @if (bh == "Service")
+    {
+        <div class="sec-hd"><i class="bi bi-wrench-adjustable"></i> Cấu hình dịch vụ</div>
+        <div class="info-bar ib-purple">
+            <i class="bi bi-info-circle-fill" style="flex-shrink:0;margin-top:1px"></i>
+            Dịch vụ không có kho vật lý. Giá = tiền công + vật tư.
+        </div>
+        <div class="row2">
+            <div class="fg">
+                <label>Tiền công (đ)</label>
+                <div class="money-w">
+                    <input type="number" id="inp_labor" class="fi" min="0" step="1000" value="@Model.LaborPrice" />
+                    <span class="money-sfx">₫</span>
+                </div>
+            </div>
+            <div class="fg">
+                <label>Đơn vị công</label>
+                <div class="combo-w">
+                    <input type="text" id="inp_laborunit" class="fi" value="@(Model.LaborUnit ?? "")"
+                           onfocus="showCombo('luList')" oninput="filterCombo('luList',this.value)" />
+                    <div class="combo-list" id="luList">
+                        @foreach (var u in new[] { "bộ", "chiếc", "cặp", "lần", "buổi" })
+                        {
+                            <div class="combo-opt" onclick="pickCombo('inp_laborunit','@u')">@u</div>
+                        }
                     </div>
                 </div>
             </div>
-
-            <!-- ── RENTAL FIELDS ── -->
-            @if (behavior == "Rental")
-            {
-                <div class="cf-card">
-                    <div class="cf-card-head" style="border-left:4px solid var(--blue)">
-                        <i class="bi bi-arrow-repeat" style="color:var(--blue)"></i>
-                        <span class="cf-card-head-title">Cài đặt Cho thuê</span>
-                    </div>
-                    <div class="cf-card-body">
-                        <div class="info-box blue">
-                            <i class="bi bi-info-circle-fill"></i>
-                            Khi xuất → khách cầm đi. Khi nhập → khách trả về kho. Phí vệ sinh được thu khi nhận lại.
-                        </div>
-                        <div class="field-row-3">
-                            <div class="field-group">
-                                <label class="field-label">Tiền đặt cọc (₫)</label>
-                                <input type="number" name="depositAmount" class="field-input" value="@Model.DepositAmount" min="0" />
-                            </div>
-                            <div class="field-group">
-                                <label class="field-label">Phí vệ sinh (₫)</label>
-                                <input type="number" name="cleaningFee" class="field-input" value="@Model.CleaningFee" min="0" />
-                            </div>
-                            <div class="field-group">
-                                <label class="field-label">Tối đa (giờ)</label>
-                                <input type="number" name="maxRentalHours" class="field-input" value="@Model.MaxRentalHours" min="1" placeholder="—" />
-                            </div>
-                        </div>
-                    </div>
+        </div>
+        <div class="row2">
+            <div class="fg">
+                <label>Tiền vật tư (đ)</label>
+                <div class="money-w">
+                    <input type="number" id="inp_material" class="fi" min="0" step="1000" value="@Model.MaterialPrice" />
+                    <span class="money-sfx">₫</span>
                 </div>
-            }
-
-            <!-- ── SERVICE FIELDS ── -->
-            @if (behavior == "Service")
-            {
-                <div class="cf-card">
-                    <div class="cf-card-head" style="border-left:4px solid var(--purple)">
-                        <i class="bi bi-tools" style="color:var(--purple)"></i>
-                        <span class="cf-card-head-title">Cài đặt Dịch vụ kỹ thuật</span>
-                    </div>
-                    <div class="cf-card-body">
-                        <div class="info-box purple">
-                            <i class="bi bi-info-circle-fill"></i>
-                            Dịch vụ không quản lý kho vật lý. Tính tiền = tiền công + vật tư.
-                        </div>
-                        <div class="field-row">
-                            <div class="field-group">
-                                <label class="field-label">Tiền công (₫ / đơn vị)</label>
-                                <input type="number" name="laborPrice" class="field-input" value="@Model.LaborPrice" min="0" />
-                            </div>
-                            <div class="field-group">
-                                <label class="field-label">Đơn vị công</label>
-                                <input type="text" name="laborUnit" class="field-input" value="@Model.LaborUnit" placeholder="bộ, chiếc..." />
-                            </div>
-                        </div>
-                        <div class="field-row">
-                            <div class="field-group">
-                                <label class="field-label">Tiền vật tư (₫ / đơn vị)</label>
-                                <input type="number" name="materialPrice" class="field-input" value="@Model.MaterialPrice" min="0" />
-                                <div class="field-hint">Để 0 nếu khách tự mang vật tư</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-
-            <!-- ── RETAIL + RENTAL: Phân loại Size / Màu ── -->
-            @if (behavior != "Service")
-            {
-                <div class="cf-card">
-                    <div class="cf-card-head">
-                        <i class="bi bi-grid-3x3-gap-fill"></i>
-                        <span class="cf-card-head-title">Phân loại sản phẩm</span>
-                        <span style="font-size:.75rem;color:var(--muted)">Chỉnh sửa hoặc thêm mới size/màu</span>
-                    </div>
-                    <div class="cf-card-body">
-                        <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem;">
-                            <i class="bi bi-info-circle"></i>
-                            Điều chỉnh số lượng trực tiếp tại đây. Cột <strong>Đang treo/thuê</strong> không chỉnh sửa được.
-                        </p>
-                        <div style="overflow-x:auto;">
-                            <table class="variant-table">
-                                <thead>
-                                    <tr>
-                                        <th style="width:36px;">#</th>
-                                        <th>Size</th>
-                                        <th>Màu sắc</th>
-                                        <th style="width:110px;">Số lượng</th>
-                                        <th style="width:100px;">Đang @(behavior == "Rental" ? "thuê" : "treo")</th>
-                                        <th style="width:110px;">Tối thiểu</th>
-                                        <th style="width:40px;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="variantBody">
-                                    @if (Model.Variants != null && Model.Variants.Any())
-                                    {
-                                        int idx = 0;
-                                        foreach (var v in Model.Variants.Where(v => v.IsActive))
-                                        {
-                                            <tr>
-                                                <td style="color:var(--muted);font-size:.8rem;">@(++idx)</td>
-                                                <td>
-                                                    <input type="hidden" name="variantId" value="@v.VariantId" />
-                                                    <input type="text" name="variantSize" class="vt-input" value="@v.SizeName" placeholder="S, M, 38..." />
-                                                </td>
-                                                <td><input type="text" name="variantColor" class="vt-input" value="@v.ColorName" placeholder="Đỏ, Xanh..." /></td>
-                                                <td><input type="number" name="variantStock" class="vt-input" value="@v.StockQuantity" min="0" /></td>
-                                                <td>
-                                                    @if (v.ReservedQuantity > 0)
-                                                    {
-                                                        <span class="stock-badge stock-low"><i class="bi bi-hourglass-split"></i> @v.ReservedQuantity</span>
-                                                    }
-                                                    else
-                                                    {
-
-                                                        <span class="vt-reserved">—</span>
-                                                    }
-                                                </td>
-                                                <td><input type="number" name="variantMinStock" class="vt-input" value="@v.MinStockLevel" min="0" /></td>
-                                                <td>
-                                                    <button type="button" class="btn-rm-row"
-                                                            @(v.ReservedQuantity > 0 ? "disabled title=\"Đang được sử dụng\"" : "onclick=\"removeRow(this)\"")>
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        }
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                        <button type="button" class="btn-add-row" onclick="addVariantRow()">
-                            <i class="bi bi-plus-lg"></i> Thêm phân loại
-                        </button>
-                    </div>
-                </div>
-            }
-
-            <!-- ── Hình ảnh ── -->
-            <div class="cf-card">
-                <div class="cf-card-head">
-                    <i class="bi bi-image-fill"></i>
-                    <span class="cf-card-head-title">Hình ảnh</span>
-                </div>
-                <div class="cf-card-body">
-                    <div class="img-edit-box">
-                        <img id="previewEdit" src="@Model.ImageUrl" class="img-edit-thumb"
-                             onerror="this.src='/images/no-image.png'" alt="@Model.ProductName" />
-                        <div class="img-edit-right">
-                            <div class="img-edit-badge"><i class="bi bi-pencil-fill"></i> Thay ảnh</div>
-                            <div class="img-edit-hint">Tải ảnh mới để thay thế. Định dạng JPG, PNG, WEBP.</div>
-                            <input type="file" name="ImageFile" class="field-file" accept="image/*" id="imgEditInput" />
-                        </div>
-                    </div>
+                <span class="hint">Để 0 nếu khách tự mang</span>
+            </div>
+            <div class="fg">
+                <label>Giá trọn gói (đ)</label>
+                <div class="money-w">
+                    <input type="number" id="inp_svc_price" class="fi" min="0" step="1000"
+                           placeholder="Tự tính" value="@(Model.Price > 0 ? Model.Price.ToString() : "")" />
+                    <span class="money-sfx">₫</span>
                 </div>
             </div>
+        </div>
+    }
 
-            <!-- ── Actions ── -->
-            <div class="btn-row">
-                <a asp-action="Index" class="btn-cancel"><i class="bi bi-x-lg"></i> Hủy</a>
-                <button type="submit" class="btn-submit"><i class="bi bi-cloud-arrow-up-fill"></i> Lưu thay đổi</button>
+    <!-- VARIANTS: Retail + Rental -->
+    @if (bh != "Service")
+    {
+        <div class="sec-hd"><i class="bi bi-layers"></i> Phân loại size / màu <span style="font-weight:400;font-style:italic;font-size:.65rem;">(tùy chọn)</span></div>
+        @if (Model.ReservedQuantity > 0)
+        {
+            <div class="info-bar ib-blue">
+                <i class="bi bi-exclamation-circle-fill" style="flex-shrink:0;margin-top:1px"></i>
+                Những dòng đang @(bh == "Rental" ? "cho thuê" : "được dùng trong đơn") không thể xóa.
             </div>
-        </form>
+        }
+        <div class="sz-pills">
+            @foreach (var s in new[] { "XS", "S", "M", "L", "XL", "XXL", "Free Size" })
+            {
+                <span class="sz-pill" onclick="qAddSize('@s')">+ @s</span>
+            }
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="vtbl">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Size</th>
+                        <th>Màu sắc</th>
+                        <th style="width:100px">Tồn kho</th>
+                        <th style="width:90px">Đang @(bh == "Rental" ? "thuê" : "treo")</th>
+                        <th style="width:100px">Safety</th>
+                        <th style="width:32px"></th>
+                    </tr>
+                </thead>
+                <tbody id="varTbody">
+                    @{
+                        int vIdx = 0;
+                    }
+                    @foreach (var v in activeVars)
+                    {
+                        vIdx++;
+                        var locked = v.ReservedQuantity > 0;
+                        <tr>
+                            <td style="color:var(--muted);font-size:.76rem;">@vIdx</td>
+                            <input type="hidden" name="variantId" value="@v.VariantId" />
+                            <td>
+                                <input type="text" name="variantSize" class="fi" style="padding:.38rem .6rem;"
+                                       value="@v.SizeName" placeholder="S, M, L..." />
+                            </td>
+                            <td>
+                                <input type="text" name="variantColor" class="fi" style="padding:.38rem .6rem;"
+                                       value="@v.ColorName" placeholder="Đen, Trắng..." />
+                            </td>
+                            <td>
+                                <input type="number" name="variantStock" class="fi" style="padding:.38rem .6rem;"
+                                       value="@v.StockQuantity" min="0" />
+                            </td>
+                            <td style="text-align:center;">
+                                @if (locked)
+                                {
+                                    <span class="vt-res">
+                                        <i class="bi bi-hourglass-split"></i> @v.ReservedQuantity
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span style="color:var(--muted);font-size:.8rem;">—</span>
+                                }
+                            </td>
+                            <td>
+                                <input type="number" name="variantMinStock" class="fi" style="padding:.38rem .6rem;"
+                                       value="@v.MinStockLevel" min="0" />
+                            </td>
+                            <td>
+                                @if (locked)
+                                {
+                                    <button type="button" class="vt-del" disabled title="Đang được sử dụng">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="vt-del" onclick="delVRow(this)">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <button type="button" class="btn-add-v" onclick="addVRow()">
+            <i class="bi bi-plus-circle"></i> Thêm phân loại
+        </button>
+    }
+
+    <!-- HÌNH ẢNH -->
+    <div class="sec-hd" style="margin-top:1.1rem;"><i class="bi bi-image"></i> Hình ảnh</div>
+    <div style="display:flex;gap:1rem;align-items:center;">
+        <img id="imgPreview" src="@(Model.ImageUrl ?? "/images/no-image.png")"
+             style="width:72px;height:72px;border-radius:8px;object-fit:cover;border:1px solid var(--border);"
+             onerror="this.src='/images/no-image.png'" alt="" />
+        <div>
+            <div style="font-size:.72rem;font-weight:700;color:var(--deep);margin-bottom:.3rem;">Thay ảnh mới</div>
+            <input type="file" id="imgFile" accept="image/*" style="font-size:.76rem;" onchange="prevImg(this)" />
+            <div style="font-size:.67rem;color:var(--muted);margin-top:.25rem;">JPG, PNG, WEBP · Tối đa 5MB. Bỏ trống = giữ ảnh cũ.</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="md-ft">
+    <span style="font-size:.72rem;color:var(--muted);">
+        <i class="bi bi-clock me-1"></i>Tạo: @Model.CreatedAt.ToString("dd/MM/yyyy")
+    </span>
+    <div style="display:flex;gap:.6rem;">
+        <button class="btn-s" data-bs-dismiss="modal">Hủy</button>
+        <button class="btn-p" id="btnSave" onclick="saveEdit()">
+            <i class="bi bi-cloud-arrow-up-fill"></i> Lưu thay đổi
+        </button>
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        document.getElementById('imgEditInput').onchange = function () {
-            const [f] = this.files;
-            if (f) document.getElementById('previewEdit').src = URL.createObjectURL(f);
-        };
+<script>
+    const PROD_ID = @Model.ProductId;
+    const BH      = '@bh';
+    const TOKEN_E = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+    const CAT_D   = @Html.Raw(catsJson);
 
-        function addVariantRow() {
-            const tbody = document.getElementById('variantBody');
-            const idx = tbody.rows.length + 1;
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="color:var(--muted);font-size:.8rem;">${idx}</td>
-                <td><input type="hidden" name="variantId" value="" /><input type="text" name="variantSize" class="vt-input" placeholder="S, M, 38..." /></td>
-                <td><input type="text" name="variantColor" class="vt-input" placeholder="Đỏ, Xanh..." /></td>
-                <td><input type="number" name="variantStock" class="vt-input" placeholder="0" min="0" value="0" /></td>
-                <td><span class="vt-reserved">—</span></td>
-                <td><input type="number" name="variantMinStock" class="vt-input" placeholder="0" min="0" value="0" /></td>
-                <td><button type="button" class="btn-rm-row" onclick="removeRow(this)"><i class="bi bi-trash"></i></button></td>`;
-            tbody.appendChild(tr);
-            reindex();
+    function showCombo(id) {
+        document.querySelectorAll('.combo-list').forEach(l => l.classList.remove('show'));
+        document.getElementById(id)?.classList.add('show');
+    }
+    function pickCombo(inp, val) {
+        document.getElementById(inp).value = val;
+        document.querySelectorAll('.combo-list').forEach(l => l.classList.remove('show'));
+    }
+    function filterCombo(id, q) {
+        const l = document.getElementById(id);
+        if (!l) return;
+        l.classList.add('show');
+        l.querySelectorAll('.combo-opt').forEach(o => {
+            o.style.display = o.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+        });
+    }
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.combo-w'))
+            document.querySelectorAll('.combo-list').forEach(l => l.classList.remove('show'));
+    });
+
+    function onCatChange(catId) {
+        const c = CAT_D.find(x => x.CategoryId == catId);
+        if (!c || document.getElementById('inp_unit').value) return;
+        if (c.DefaultUnit) document.getElementById('inp_unit').value = c.DefaultUnit;
+    }
+
+    // Variants
+    function addVRow(size, color) {
+        size  = size  || '';
+        color = color || '';
+        const tbody = document.getElementById('varTbody');
+        const idx   = tbody.querySelectorAll('tr').length + 1;
+        const tr    = document.createElement('tr');
+        tr.innerHTML =
+            `<td style="color:var(--muted);font-size:.76rem;">${idx}</td>` +
+            `<input type="hidden" name="variantId" value="0" />` +
+            `<td><input type="text"   name="variantSize"     class="fi" style="padding:.38rem .6rem;" value="${size}"  placeholder="S, M, L..." /></td>` +
+            `<td><input type="text"   name="variantColor"    class="fi" style="padding:.38rem .6rem;" value="${color}" placeholder="Đen, Trắng..." /></td>` +
+            `<td><input type="number" name="variantStock"    class="fi" style="padding:.38rem .6rem;" value="0" min="0" /></td>` +
+            `<td style="text-align:center;"><span style="color:var(--muted);font-size:.8rem;">—</span></td>` +
+            `<td><input type="number" name="variantMinStock" class="fi" style="padding:.38rem .6rem;" value="0" min="0" /></td>` +
+            `<td><button type="button" class="vt-del" onclick="delVRow(this)"><i class="bi bi-x"></i></button></td>`;
+        tbody.appendChild(tr);
+        reindex();
+    }
+    function delVRow(btn) { btn.closest('tr')?.remove(); reindex(); }
+    function reindex() {
+        document.querySelectorAll('#varTbody tr').forEach((tr, i) => {
+            const f = tr.querySelector('td:first-child');
+            if (f) f.textContent = i + 1;
+        });
+    }
+    function qAddSize(s) { addVRow(s, ''); }
+
+    function prevImg(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => { document.getElementById('imgPreview').src = e.target.result; };
+        reader.readAsDataURL(file);
+    }
+
+    async function saveEdit() {
+        const name = document.getElementById('inp_name')?.value.trim();
+        if (!name) { alert('Tên sản phẩm không được để trống!'); return; }
+
+        const btn = document.getElementById('btnSave');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang lưu...';
+
+        const fd = new FormData();
+        fd.append('ProductId',   PROD_ID);
+        fd.append('ProductName', name);
+        fd.append('ProductCode', document.getElementById('inp_sku')?.value.trim() || '');
+        fd.append('SKU',         document.getElementById('inp_sku')?.value.trim() || '');
+        fd.append('CategoryId',  document.getElementById('inp_cat')?.value || '0');
+        fd.append('Unit',        document.getElementById('inp_unit')?.value || '');
+        fd.append('Status',      document.getElementById('inp_status')?.value || 'Active');
+        fd.append('Description', document.getElementById('inp_desc')?.value || '');
+
+        if (BH === 'Retail') {
+            fd.append('Price',         document.getElementById('inp_price')?.value     || '0');
+            fd.append('CostPrice',     document.getElementById('inp_cost')?.value      || '0');
+            fd.append('SalePrice',     document.getElementById('inp_saleprice')?.value || '0');
+            fd.append('MinStockLevel', document.getElementById('inp_minstk')?.value    || '0');
+        } else if (BH === 'Rental') {
+            fd.append('Price',          document.getElementById('inp_rent_price')?.value || '0');
+            fd.append('depositAmount',  document.getElementById('inp_deposit')?.value    || '0');
+            fd.append('cleaningFee',    document.getElementById('inp_cleaning')?.value   || '0');
+            fd.append('maxRentalHours', document.getElementById('inp_maxhours')?.value   || '');
+        } else {
+            fd.append('Price',          document.getElementById('inp_svc_price')?.value || '0');
+            fd.append('laborPrice',     document.getElementById('inp_labor')?.value      || '0');
+            fd.append('laborUnit',      document.getElementById('inp_laborunit')?.value  || '');
+            fd.append('materialPrice',  document.getElementById('inp_material')?.value   || '0');
+            fd.append('StockQuantity', '0');
         }
-        function removeRow(btn) { btn.closest('tr').remove(); reindex(); }
-        function reindex() {
-            document.querySelectorAll('#variantBody tr').forEach((tr, i) => {
-                tr.querySelector('td:first-child').textContent = i + 1;
-            });
+
+        // Variants — server sẽ giữ nguyên ReservedQuantity từ DB, không overwrite
+        document.querySelectorAll('#varTbody tr').forEach(row => {
+            const vid   = row.querySelector('input[name="variantId"]')?.value;
+            const size  = row.querySelector('input[name="variantSize"]')?.value.trim();
+            const color = row.querySelector('input[name="variantColor"]')?.value.trim();
+            const stk   = row.querySelector('input[name="variantStock"]')?.value    || '0';
+            const min   = row.querySelector('input[name="variantMinStock"]')?.value || '0';
+            if (size || color) {
+                if (vid) fd.append('variantId', vid);
+                fd.append('variantSize',     size  || '');
+                fd.append('variantColor',    color || '');
+                fd.append('variantStock',    stk);
+                fd.append('variantMinStock', min);
+            }
+        });
+
+        const imgF = document.getElementById('imgFile')?.files[0];
+        if (imgF) fd.append('ImageFile', imgF);
+
+        try {
+            const res = await fetch(`/Admin/AdminProduct/EditAjax/${PROD_ID}`, {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': TOKEN_E },
+                body: fd
+            }).then(r => r.json());
+
+            if (res.success) {
+                bootstrap.Modal.getInstance(document.getElementById('prodModal'))?.hide();
+                const t = document.createElement('div');
+                t.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;background:#15803d;color:#fff;padding:.75rem 1.25rem;border-radius:8px;font-size:.84rem;font-weight:700;z-index:9999;display:flex;align-items:center;gap:.5rem;box-shadow:0 4px 16px rgba(0,0,0,.2);';
+                t.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${res.message}`;
+                document.body.appendChild(t);
+                setTimeout(() => {
+                    t.style.opacity = '0'; t.style.transition = 'opacity .4s';
+                    setTimeout(() => { t.remove(); location.reload(); }, 400);
+                }, 1800);
+            } else {
+                alert(res.message || 'Có lỗi xảy ra!');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> Lưu thay đổi';
+            }
+        } catch (e) {
+            alert('Lỗi kết nối!');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> Lưu thay đổi';
         }
-    </script>
-}
+    }
+</script>

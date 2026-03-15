@@ -1,8 +1,9 @@
 ﻿@model QuanLiSanCauLong.ViewModels.BookingHistoryViewModel
 @{
     ViewData["Title"] = "Chi tiết đặt sân #" + Model.BookingCode;
+    bool canReview = (bool)(ViewBag.CanReview ?? false);
 }
-
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
     :root {
         --D: #1a1209;
@@ -10,886 +11,821 @@
         --G: #d4a017;
         --G2: #f5c842;
         --G3: rgba(212,160,23,.1);
+        --G4: rgba(212,160,23,.2);
         --W: #f5ede0;
         --S: #ede5d8;
         --R: #c94b2a;
         --GN: #10b981;
-        --M: rgba(255,255,255,.38);
+        --BL: #2563eb;
+        --r: 12px;
     }
 
-    * {
+    *, *::before, *::after {
         box-sizing: border-box;
+        font-family: 'Outfit',sans-serif;
     }
 
     body {
         background: var(--W);
+        margin: 0;
     }
 
+    /* ── BREADCRUMB ── */
     .pghd {
         background: var(--D);
-        border-bottom: 1px solid rgba(212,160,23,.18);
-        padding: .78rem 2rem;
+        padding: .75rem 2.5rem;
         display: flex;
         align-items: center;
-        gap: .6rem;
-        position: relative;
+        gap: .55rem;
+        border-bottom: 2px solid var(--G3);
     }
-
-        .pghd::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg,var(--G),var(--G2),transparent);
-        }
 
         .pghd a {
             color: var(--G2);
             text-decoration: none;
             font-size: .78rem;
             font-weight: 600;
-            opacity: .8;
-            display: flex;
-            align-items: center;
-            gap: .35rem;
         }
 
-            .pghd a:hover {
-                opacity: 1;
-            }
-
-        .pghd .sep {
-            color: var(--M);
+        .pghd span {
+            color: rgba(255,255,255,.4);
             font-size: .65rem;
         }
 
         .pghd .cur {
-            color: var(--M);
+            color: rgba(255,255,255,.55);
             font-size: .78rem;
-            font-style: italic;
         }
 
-    .pw {
+    /* ── LAYOUT ── */
+    .wrap {
         max-width: 1100px;
         margin: 0 auto;
-        padding: 2rem;
+        padding: 1.75rem 2rem 4rem;
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 1.5rem;
+        align-items: start;
     }
-
-    /* Hero banner */
-    .d-hero {
-        background: var(--D);
-        border: 1px solid rgba(212,160,23,.18);
-        border-radius: 10px;
-        padding: 1.8rem 2rem;
-        margin-bottom: 1.4rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 1.2rem;
-        position: relative;
-        overflow: hidden;
-    }
-
-        .d-hero::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(ellipse 55% 100% at 80% 50%,rgba(212,160,23,.06),transparent);
+    @@media(max - width:900px) {
+        .wrap {
+            grid-template-columns: 1fr;
         }
-
-    .d-hero-left {
-        position: relative;
-        z-index: 1;
     }
 
-    .d-code {
-        font-size: .6rem;
-        font-weight: 700;
-        letter-spacing: .2em;
-        text-transform: uppercase;
-        color: var(--G);
-        margin-bottom: .3rem;
-    }
-
-    .d-name {
-        font-family: 'Playfair Display',serif;
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: .4rem;
-    }
-
-    .d-addr {
-        font-size: .78rem;
-        color: var(--M);
-        display: flex;
-        align-items: center;
-        gap: .35rem;
-    }
-
-        .d-addr i {
-            color: var(--R);
-        }
-
-    .d-hero-right {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        position: relative;
-        z-index: 1;
-    }
-
-    .d-stat {
-        text-align: center;
-        padding: 1rem 1.2rem;
-        background: rgba(255,255,255,.04);
-        border: 1px solid rgba(212,160,23,.18);
-        border-radius: 8px;
-    }
-
-    .d-sv {
-        font-family: 'Outfit',sans-serif;
-        font-size: 1.3rem;
-        font-weight: 800;
-        color: var(--G2);
-        margin-bottom: .22rem;
-    }
-
-    .d-sl {
-        font-size: .58rem;
-        letter-spacing: .12em;
-        text-transform: uppercase;
-        color: var(--M);
-    }
-
-    /* Cards */
-    .c {
+    /* ── CARDS ── */
+    .card {
         background: #fff;
         border: 1px solid var(--S);
-        border-radius: 10px;
+        border-radius: var(--r);
         overflow: hidden;
-        margin-bottom: 1.2rem;
+        margin-bottom: 1.25rem;
     }
 
-    .c-hd {
-        background: var(--D);
-        padding: .85rem 1.4rem;
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-    }
-
-        .c-hd i {
-            color: var(--G);
-        }
-
-    .c-title {
-        font-family: 'Playfair Display',serif;
-        font-style: italic;
-        font-size: .9rem;
-        font-weight: 700;
-        color: #fff;
-    }
-
-    .c-bd {
-        padding: 1.3rem 1.4rem;
-    }
-
-    /* Info grid */
-    .ig {
-        display: grid;
-        grid-template-columns: repeat(3,1fr);
-        gap: 1rem;
-    }
-
-    .ig2 {
-        grid-template-columns: repeat(2,1fr);
-    }
-
-    .ig-item {
-    }
-
-    .ig-lbl {
-        font-size: .62rem;
-        font-weight: 700;
-        letter-spacing: .1em;
-        text-transform: uppercase;
-        color: #8c7a68;
-        margin-bottom: .28rem;
-    }
-
-    .ig-val {
-        font-size: .9rem;
-        font-weight: 600;
-        color: var(--D);
-        display: flex;
-        align-items: center;
-        gap: .35rem;
-    }
-
-        .ig-val i {
-            color: var(--G);
-        }
-
-    .vtag {
-        background: var(--S);
-        color: #4a3728;
-        font-size: .6rem;
-        font-weight: 700;
-        letter-spacing: .07em;
-        text-transform: uppercase;
-        padding: .14rem .5rem;
-        border-radius: 3px;
-    }
-
-    /* Status badge */
-    .sb {
-        padding: .24rem .75rem;
-        border-radius: 4px;
-        font-size: .66rem;
-        font-weight: 700;
-        letter-spacing: .06em;
-        text-transform: uppercase;
-    }
-
-        .sb.confirmed {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .sb.pending {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .sb.cancelled {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .sb.playing {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .sb.completed {
-            background: #f0fdf4;
-            color: #166534;
-        }
-
-        .sb.awaiting-ck {
-            background: #eff6ff;
-            color: #1d4ed8;
-            border: 1px solid #bfdbfe;
-        }
-
-    /* Timeline */
-    .timeline {
+    .card-hd {
         display: flex;
         align-items: center;
         gap: .6rem;
-        padding: 1rem 0;
-        overflow-x: auto;
-    }
-
-    .tstep {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: .3rem;
-        flex-shrink: 0;
-    }
-
-    .tstep-dot {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        border: 2px solid var(--S);
-        background: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        padding: .85rem 1.5rem;
+        background: var(--W);
+        border-bottom: 1px solid var(--S);
         font-size: .78rem;
-        color: #8c7a68;
-        transition: all .2s;
+        font-weight: 700;
+        color: var(--D);
+        letter-spacing: .04em;
+        text-transform: uppercase;
     }
 
-        .tstep-dot.done {
-            background: var(--G);
-            border-color: var(--G);
+        .card-hd i {
+            color: var(--G);
+        }
+
+    .card-bd {
+        padding: 1.5rem;
+    }
+
+    /* ── HERO CARD (booking summary) ── */
+    .bk-hero {
+        background: var(--D);
+        border-radius: var(--r);
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+    }
+
+    .bk-hero-img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        display: block;
+        filter: brightness(.75);
+    }
+
+    .bk-hero-body {
+        padding: 1.4rem 1.75rem 1.75rem;
+    }
+
+    .bk-code-row {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        flex-wrap: wrap;
+        margin-bottom: .9rem;
+    }
+
+    .bk-code {
+        font-family: monospace;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--G2);
+        letter-spacing: .1em;
+        background: rgba(245,200,66,.1);
+        border: 1px solid rgba(245,200,66,.25);
+        border-radius: 6px;
+        padding: .25rem .75rem;
+    }
+
+    .bk-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.15;
+        margin-bottom: .3rem;
+    }
+
+    .bk-sub {
+        font-size: .82rem;
+        color: rgba(255,255,255,.5);
+    }
+
+    /* ── INFO GRID ── */
+    .info-g {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .8rem;
+    }
+
+    .info-item .lbl {
+        font-size: .65rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: #8a7560;
+        margin-bottom: .25rem;
+    }
+
+    .info-item .val {
+        font-size: .9rem;
+        font-weight: 600;
+        color: var(--D);
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+        .info-item .val i {
+            color: var(--G);
+            font-size: .75rem;
+        }
+
+    /* ── PRICE TABLE ── */
+    .price-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: .55rem 0;
+        border-bottom: 1px solid var(--S);
+        font-size: .86rem;
+    }
+
+        .price-row:last-child {
+            border-bottom: none;
+        }
+
+        .price-row .lbl {
+            color: #5a4a38;
+        }
+
+        .price-row .val {
+            font-weight: 600;
             color: var(--D);
         }
 
-        .tstep-dot.cur {
-            background: var(--D);
-            border-color: var(--G);
+    .price-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: .85rem 1.25rem;
+        background: var(--D);
+        border-radius: 9px;
+        margin-top: .75rem;
+    }
+
+        .price-total .lbl {
+            font-size: .72rem;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.55);
+            font-weight: 700;
+        }
+
+        .price-total .val {
+            font-family: 'Playfair Display',serif;
+            font-size: 1.5rem;
+            font-weight: 700;
             color: var(--G2);
         }
 
-    .tstep-lbl {
-        font-size: .62rem;
-        font-weight: 600;
-        color: #8c7a68;
-        text-align: center;
-    }
-
-        .tstep-lbl.done {
-            color: var(--D);
-        }
-
-        .tstep-lbl.cur {
-            color: var(--G);
-        }
-
-    .tline {
-        height: 2px;
-        flex: 1;
-        background: var(--S);
-        min-width: 32px;
-    }
-
-        .tline.done {
-            background: linear-gradient(90deg,var(--G),var(--G2));
-        }
-
-    /* Product table */
-    .ptbl {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-        .ptbl th {
-            background: var(--D2);
-            padding: .7rem .9rem;
-            font-size: .64rem;
-            font-weight: 700;
-            letter-spacing: .1em;
-            text-transform: uppercase;
-            color: var(--G);
-            text-align: left;
-            border: none;
-        }
-
-        .ptbl td {
-            padding: .75rem .9rem;
-            font-size: .84rem;
-            border-bottom: 1px solid var(--S);
-            vertical-align: middle;
-        }
-
-        .ptbl tbody tr:hover {
-            background: #fdfcfa;
-        }
-
-        .ptbl tfoot td {
-            padding: .8rem .9rem;
-            font-size: .88rem;
-            font-weight: 700;
-            border-top: 2px solid var(--S);
-        }
-
-    .no-prod {
-        text-align: center;
-        padding: 2rem;
-        color: #8c7a68;
-        font-size: .82rem;
-    }
-
-    /* Price summary */
-    .ps-rows {
-        display: flex;
-        flex-direction: column;
-        gap: .4rem;
-    }
-
-    .psr {
-        display: flex;
-        justify-content: space-between;
-        font-size: .88rem;
-        padding: .38rem 0;
-    }
-
-        .psr + .psr {
-            border-top: 1px solid var(--S);
-        }
-
-    .psr-lbl {
-        color: #8c7a68;
-    }
-
-    .psr-val {
-        font-weight: 600;
-        color: var(--D);
-    }
-
-        .psr-val.gn {
-            color: var(--GN);
-        }
-
-        .psr-val.rd {
-            color: #dc2626;
-        }
-
-    .psr-div {
-        border: none;
-        border-top: 2px solid var(--S);
-        margin: .5rem 0;
-    }
-
-    .psr-tot {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-    }
-
-    .psr-tot-lbl {
-        font-size: .9rem;
-        font-weight: 700;
-        color: var(--D);
-    }
-
-    .psr-tot-val {
-        font-family: 'Outfit',sans-serif;
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--D);
-    }
-
-    /* Actions */
-    .act-row {
-        display: flex;
-        gap: .65rem;
-        flex-wrap: wrap;
-        margin-top: 1.4rem;
-    }
-
-    .btn-a {
+    /* ── STATUS CHIP ── */
+    .chip {
         display: inline-flex;
         align-items: center;
-        gap: .4rem;
-        padding: .62rem 1.2rem;
-        border-radius: 6px;
-        font-size: .8rem;
+        gap: .28rem;
+        padding: .22rem .7rem;
+        border-radius: 20px;
+        font-size: .72rem;
         font-weight: 700;
+    }
+
+    .chip-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .chip-confirmed {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .chip-playing {
+        background: rgba(212,160,23,.15);
+        color: #92660a;
+    }
+
+    .chip-completed {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .chip-cancelled {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .chip-paid {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .chip-unpaid {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .chip-processing {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+        display: block;
+        text-align: center;
+        padding: .72rem 1rem;
+        border-radius: 8px;
+        font-size: .82rem;
+        font-weight: 700;
+        text-decoration: none;
         cursor: pointer;
         border: none;
-        text-decoration: none;
+        font-family: 'Outfit',sans-serif;
         transition: all .2s;
     }
 
-        .btn-a.prim {
-            background: linear-gradient(135deg,var(--G),var(--G2));
+    .btn-gold {
+        background: linear-gradient(135deg,var(--G),var(--G2));
+        color: var(--D);
+    }
+
+        .btn-gold:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(212,160,23,.3);
             color: var(--D);
         }
 
-            .btn-a.prim:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 6px 18px rgba(212,160,23,.35);
-                color: var(--D);
-            }
-
-        .btn-a.sec {
-            background: none;
-            border: 1.5px solid var(--S);
-            color: #4a3728;
-        }
-
-            .btn-a.sec:hover {
-                border-color: var(--D);
-                color: var(--D);
-            }
-
-        .btn-a.dan {
-            background: rgba(220,38,38,.08);
-            border: 1.5px solid rgba(220,38,38,.2);
-            color: #dc2626;
-        }
-
-            .btn-a.dan:hover {
-                background: #dc2626;
-                color: #fff;
-            }
-
-    /* Cancel modal */
-    .modal-dark .modal-content {
-        border: 1px solid rgba(212,160,23,.18);
-        border-radius: 10px;
-        overflow: hidden;
-    }
-
-    .modal-dark .modal-header {
+    .btn-dark {
         background: var(--D);
-        border-bottom: 1px solid rgba(212,160,23,.18);
+        color: var(--G2);
     }
 
-    .modal-dark .modal-title {
-        font-family: 'Playfair Display',serif;
-        font-style: italic;
-        color: #fff;
-        font-size: 1rem;
-    }
-
-    .modal-dark .btn-close {
-        filter: invert(1) opacity(.5);
-    }
-
-    .modal-dark .modal-body {
-        background: #fff;
-        padding: 1.4rem;
-    }
-
-    .modal-dark .modal-footer {
-        background: #fdf8f0;
-        border-top: 1px solid var(--S);
-    }
-
-    .modal-dark textarea {
-        width: 100%;
-        padding: .7rem .95rem;
-        border: 1.5px solid var(--S);
-        border-radius: 7px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .84rem;
-        color: var(--D);
-        outline: none;
-        resize: vertical;
-    }
-
-        .modal-dark textarea:focus {
-            border-color: var(--G);
+        .btn-dark:hover {
+            background: #000;
         }
 
-    .warn-note {
-        background: rgba(212,160,23,.08);
-        border: 1px solid rgba(212,160,23,.22);
-        border-radius: 6px;
-        padding: .65rem .9rem;
-        margin-top: .9rem;
-        font-size: .76rem;
-        color: #7a5c0a;
+    .btn-outline {
+        background: #fff;
+        color: var(--D);
+        border: 1.5px solid var(--S);
+    }
+
+        .btn-outline:hover {
+            border-color: var(--D);
+        }
+
+    .btn-danger {
+        background: #fff;
+        color: var(--R);
+        border: 1.5px solid rgba(201,75,42,.3);
+    }
+
+        .btn-danger:hover {
+            background: var(--R);
+            color: #fff;
+        }
+
+    /* ── QR PAYMENT ── */
+    .qr-box {
+        background: var(--D);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        margin-bottom: 1.25rem;
+    }
+
+        .qr-box img {
+            width: 160px;
+            height: 160px;
+            border-radius: 8px;
+            background: #fff;
+            padding: 6px;
+            margin: 0 auto .85rem;
+            display: block;
+        }
+
+    .qr-info {
+        font-size: .78rem;
+        color: rgba(255,255,255,.5);
+        margin-bottom: .3rem;
+    }
+
+    .qr-val {
+        font-family: monospace;
+        font-size: .92rem;
+        font-weight: 700;
+        color: var(--G2);
+        word-break: break-all;
+    }
+
+    /* ── ORDER ITEMS ── */
+    .order-item {
         display: flex;
-        align-items: flex-start;
+        justify-content: space-between;
+        align-items: center;
+        padding: .55rem 0;
+        border-bottom: 1px dashed var(--S);
+        font-size: .83rem;
+    }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-item .nm {
+            color: var(--D);
+            font-weight: 500;
+        }
+
+        .order-item .qty {
+            color: #8a7560;
+            font-size: .75rem;
+        }
+
+        .order-item .price {
+            font-weight: 700;
+            color: var(--D);
+        }
+
+    /* ── STAR RATING ── */
+    .star-row {
+        display: flex;
         gap: .4rem;
     }
 
-        .warn-note i {
-            color: var(--G);
-            flex-shrink: 0;
-            margin-top: 1px;
+    .star-btn {
+        background: none;
+        border: none;
+        font-size: 1.6rem;
+        cursor: pointer;
+        color: #ddd;
+        transition: color .15s;
+        padding: 0;
+        line-height: 1;
+    }
+
+        .star-btn.on, .star-btn:hover ~ .star-btn {
+            color: #ddd;
         }
 
-    .btn-confirm-cancel {
-        padding: .6rem 1.3rem;
-        background: linear-gradient(135deg,#dc2626,#ef4444);
-        color: #fff;
-        border: none;
-        border-radius: 6px;
+        .star-btn:hover, .star-row:hover .star-btn {
+            color: var(--G2);
+        }
+
+        .star-btn ~ .star-btn:hover ~ .star-btn {
+            color: #ddd;
+        }
+
+    .star-row .star-btn:hover ~ .star-btn {
+        color: #ddd !important;
+    }
+
+    /* ── TIMELINE ── */
+    .tl {
+        padding-left: .5rem;
+    }
+
+    .tl-item {
+        display: flex;
+        gap: .85rem;
+        padding: .45rem 0;
+        position: relative;
+    }
+
+    .tl-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--G);
+        flex-shrink: 0;
+        margin-top: 5px;
+        box-shadow: 0 0 0 3px rgba(212,160,23,.15);
+    }
+
+        .tl-dot.done {
+            background: var(--GN);
+            box-shadow: 0 0 0 3px rgba(16,185,129,.15);
+        }
+
+        .tl-dot.cur {
+            background: var(--BL);
+            box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+        }
+
+        .tl-dot.off {
+            background: #ddd;
+            box-shadow: none;
+        }
+
+    .tl-content .t {
         font-size: .8rem;
         font-weight: 700;
-        cursor: pointer;
+        color: var(--D);
     }
 
-    .btn-modal-close {
-        padding: .6rem 1.1rem;
-        background: none;
-        border: 1.5px solid var(--S);
-        border-radius: 6px;
-        font-size: .8rem;
-        font-weight: 600;
-        color: #8c7a68;
-        cursor: pointer;
-    }
-
-        .btn-modal-close:hover {
-            border-color: var(--D);
-            color: var(--D);
-        }
-
-    .note-box {
-        background: #fdf8f0;
-        border: 1px solid rgba(212,160,23,.2);
-        border-left: 3px solid var(--G);
-        border-radius: 6px;
-        padding: .75rem 1rem;
-        font-size: .84rem;
-        color: #4a3728;
-    }
-
-    @@media(max-width:900px) {
-        .ig {
-            grid-template-columns: 1fr 1fr;
-        }
-
-        .d-hero {
-            flex-direction: column;
-        }
-
-        .d-hero-right {
-            flex-direction: row;
-            width: 100%;
-        }
-
-        .pw, .pghd {
-            padding-left: 1.2rem;
-            padding-right: 1.2rem;
-        }
-    }
-
-    @@media(max-width:600px) {
-        .ig {
-            grid-template-columns: 1fr;
-        }
-
-        .ig2 {
-            grid-template-columns: 1fr;
-        }
-
-        .act-row {
-            flex-direction: column;
-        }
+    .tl-content .d {
+        font-size: .72rem;
+        color: #8a7560;
     }
 </style>
 
+@* ── BREADCRUMB ── *@
 <div class="pghd">
-    <a asp-action="MyBookings"><i class="bi bi-arrow-left"></i> Lịch đặt sân</a>
-    <span class="sep"><i class="bi bi-chevron-right"></i></span>
-    <span class="cur">@Model.BookingCode</span>
+    <a asp-action="MyBookings"><i class="bi bi-calendar3"></i> Lịch của tôi</a>
+    <span>›</span>
+    <span class="cur">#@Model.BookingCode</span>
 </div>
 
-<div class="pw">
-
-    <!-- Transfer Pending Notice -->
-    @if (Model.PaymentMethod == "Transfer" && Model.PaymentStatus?.ToLower() != "paid" && Model.Status == "Pending")
-    {
-        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:1.1rem 1.4rem;margin-bottom:1.4rem;display:flex;align-items:flex-start;gap:.75rem">
-            <i class="bi bi-bank" style="color:#1d4ed8;font-size:1.3rem;flex-shrink:0;margin-top:.1rem"></i>
-            <div>
-                <div style="font-weight:700;color:#1d4ed8;margin-bottom:.3rem;font-size:.88rem">Đang chờ xác nhận chuyển khoản</div>
-                <div style="font-size:.8rem;color:#3b82f6;line-height:1.6">
-                    Đơn của bạn đã được tạo thành công. Admin sẽ xác nhận sau khi nhận được tiền chuyển khoản.<br />
-                    Vui lòng ghi đúng nội dung chuyển khoản: <strong>@Model.BookingCode</strong>
-                </div>
-            </div>
-        </div>
-    }
-
-    <!-- Hero -->
-    <div class="d-hero">
-        <div class="d-hero-left">
-            <div class="d-code"><i class="bi bi-hash"></i> Mã đơn: @Model.BookingCode</div>
-            <div class="d-name">@Model.FacilityName</div>
-            <div class="d-addr"><i class="bi bi-geo-alt-fill"></i> Chi tiết đặt sân cầu lông</div>
-        </div>
-        <div class="d-hero-right">
-            <div class="d-stat">
-                <div class="d-sv"><span class="sb @Model.Status.ToLower()">@Model.Status</span></div>
-                <div class="d-sl">Trạng thái</div>
-            </div>
-            <div class="d-stat">
-                <div class="d-sv">@Model.GrandTotal.ToString("N0")đ</div>
-                <div class="d-sl">Tổng tiền</div>
-            </div>
-            <div class="d-stat">
-                <div class="d-sv">@Model.BookingDate.ToString("dd/MM")</div>
-                <div class="d-sl">Ngày chơi</div>
-            </div>
-        </div>
+@* ── ALERTS ── *@
+@if (TempData["SuccessMessage"] != null)
+{
+    <div style="background:#d1fae5;border:1px solid #6ee7b7;padding:.85rem 2rem;font-size:.84rem;color:#065f46;display:flex;align-items:center;gap:.6rem;">
+        <i class="bi bi-check-circle-fill"></i> @Html.Raw(TempData["SuccessMessage"])
     </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div style="background:#fee2e2;border:1px solid #fca5a5;padding:.85rem 2rem;font-size:.84rem;color:#991b1b;display:flex;align-items:center;gap:.6rem;">
+        <i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]
+    </div>
+}
 
-    <!-- Status Timeline -->
-    <div class="c">
-        <div class="c-hd"><i class="bi bi-arrow-right-circle"></i><span class="c-title">Tiến trình đơn đặt</span></div>
-        <div class="c-bd">
-            @{
-                var steps = new[] { ("Pending", "Chờ xác nhận", "bi-hourglass"), ("Confirmed", "Đã xác nhận", "bi-check-circle"), ("Playing", "Đang chơi", "bi-controller"), ("Completed", "Hoàn thành", "bi-trophy") };
-                var statusOrder = new[] { "Pending", "Confirmed", "Playing", "Completed" };
-                int curIdx = Array.IndexOf(statusOrder, Model.Status);
+<div class="wrap">
+
+    @* ══ LEFT COLUMN ══ *@
+    <div>
+
+        @* Hero booking card *@
+        <div class="bk-hero">
+            @if (!string.IsNullOrEmpty(Model.CourtImageUrl))
+            {
+                <img src="@Model.CourtImageUrl" alt="@Model.CourtNumber" class="bk-hero-img" />
             }
-            <div class="timeline">
-                @for (int si = 0; si < steps.Length; si++)
-                {
-                    var (sv, sl, icon) = steps[si];
-                    bool done = curIdx > si || Model.Status == sv;
-                    bool cur = Model.Status == sv;
-                    <div class="tstep">
-                        <div class="tstep-dot @(done ? "done" : "") @(cur ? "cur" : "")"><i class="bi @icon"></i></div>
-                        <div class="tstep-lbl @(done ? "done" : "") @(cur ? "cur" : "")">@sl</div>
+            <div class="bk-hero-body">
+                <div class="bk-code-row">
+                    <span class="bk-code">#@Model.BookingCode</span>
+                    @{
+                        var (chipCls, chipLbl) = Model.Status switch
+                        {
+                                    "Pending" => ("chip-pending", "Chờ xác nhận"),
+                                    "Confirmed" => ("chip-confirmed", "Đã xác nhận"),
+                                    "Playing" => ("chip-playing", "Đang chơi"),
+                                    "Completed" => ("chip-completed", "Hoàn thành"),
+                                    "Cancelled" => ("chip-cancelled", "Đã hủy"),
+                            _ => ("chip-pending", Model.Status)
+                        };
+                        var (pChipCls, pChipLbl) = Model.PaymentStatus switch
+                        {
+                                    "Paid" => ("chip-paid", "Đã thanh toán"),
+                                    "Processing" => ("chip-processing", "Đang xử lý"),
+                            _ => ("chip-unpaid", "Chưa thanh toán")
+                        };
+                    }
+                    <span class="chip @chipCls">● @chipLbl</span>
+                    <span class="chip @pChipCls">@pChipLbl</span>
+                </div>
+                <div class="bk-title">@Model.FacilityName</div>
+                <div class="bk-sub">Sân @Model.CourtNumber · @(Model.CourtTypeLabel ?? Model.CourtType)</div>
+            </div>
+        </div>
+
+        @* Thông tin booking *@
+        <div class="card">
+            <div class="card-hd"><i class="bi bi-info-circle"></i> Thông Tin Đặt Sân</div>
+            <div class="card-bd">
+                <div class="info-g">
+                    <div class="info-item">
+                        <div class="lbl">Ngày chơi</div>
+                        <div class="val"><i class="bi bi-calendar3"></i>@Model.BookingDate.ToString("dd/MM/yyyy")</div>
                     </div>
-                    if (si < steps.Length - 1)
+                    <div class="info-item">
+                        <div class="lbl">Khung giờ</div>
+                        <div class="val"><i class="bi bi-clock"></i>@Model.StartTime.ToString(@"hh\:mm") – @Model.EndTime.ToString(@"hh\:mm") (@Model.Duration phút)</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="lbl">Cơ sở</div>
+                        <div class="val"><i class="bi bi-building"></i>@Model.FacilityName</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="lbl">Địa chỉ</div>
+                        <div class="val"><i class="bi bi-geo-alt"></i><span style="font-size:.8rem;">@Model.FacilityAddress</span></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="lbl">Phương thức TT</div>
+                        <div class="val"><i class="bi bi-credit-card"></i>@(Model.PaymentMethod == "Transfer" ? "Chuyển khoản" : "Tiền mặt")</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="lbl">Đặt lúc</div>
+                        <div class="val"><i class="bi bi-calendar-plus"></i>@Model.CreatedAt.ToString("HH:mm dd/MM/yyyy")</div>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Note))
+                {
+                    <div style="margin-top:1rem;padding:.75rem 1rem;background:var(--W);border-radius:8px;border-left:3px solid var(--G);">
+                        <div style="font-size:.68rem;font-weight:700;color:#8a7560;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;">Ghi chú</div>
+                        <div style="font-size:.84rem;color:var(--D);">@Model.Note</div>
+                    </div>
+                }
+                @if (Model.Status == "Cancelled" && !string.IsNullOrEmpty(Model.CancelReason))
+                {
+                    <div style="margin-top:1rem;padding:.75rem 1rem;background:#fee2e2;border-radius:8px;border-left:3px solid var(--R);">
+                        <div style="font-size:.68rem;font-weight:700;color:#991b1b;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;">Lý do hủy</div>
+                        <div style="font-size:.84rem;color:#991b1b;">@Model.CancelReason</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* Chi tiết giá *@
+        <div class="card">
+            <div class="card-hd"><i class="bi bi-receipt"></i> Chi Tiết Thanh Toán</div>
+            <div class="card-bd">
+                <div class="price-row">
+                    <span class="lbl">Tiền sân (@Model.Duration phút)</span>
+                    <span class="val">₫@Model.CourtPrice.ToString("N0")</span>
+                </div>
+                @if (Model.ServiceFee > 0)
+                {
+                    <div class="price-row">
+                        <span class="lbl">Phí dịch vụ</span>
+                        <span class="val">₫@Model.ServiceFee.ToString("N0")</span>
+                    </div>
+                }
+                @if (Model.DiscountAmount > 0)
+                {
+                    <div class="price-row">
+                        <span class="lbl" style="color:var(--R);">
+                            <i class="bi bi-ticket-perforated"></i>
+                            Giảm giá @(!string.IsNullOrEmpty(Model.VoucherCode) ? $"({Model.VoucherCode})" : "")
+                        </span>
+                        <span class="val" style="color:var(--R);">−₫@Model.DiscountAmount.ToString("N0")</span>
+                    </div>
+                }
+                @if (Model.RelatedOrders?.Any() == true)
+                {
+                    foreach (var order in Model.RelatedOrders)
                     {
-                        <div class="tline @(curIdx > si ? "done" : "")"></div>
+                        <div class="price-row">
+                            <span class="lbl"><i class="bi bi-bag-check" style="color:var(--G);"></i> Đơn hàng #@order.OrderCode</span>
+                            <span class="val">₫@order.TotalAmount.ToString("N0")</span>
+                        </div>
                     }
                 }
-                @if (Model.Status == "Cancelled")
-                {
-                    <div style="margin-left:.8rem;display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:#dc2626;font-weight:600">
-                        <i class="bi bi-x-circle"></i> Đã hủy
-                    </div>
-                }
+                <div class="price-total">
+                    <span class="lbl">Tổng thanh toán</span>
+                    <span class="val">₫@Model.TotalPrice.ToString("N0")</span>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Booking Info -->
-    <div class="c">
-        <div class="c-hd"><i class="bi bi-calendar-check"></i><span class="c-title">Thông tin đặt sân</span></div>
-        <div class="c-bd">
-            <div class="ig">
-                <div class="ig-item">
-                    <div class="ig-lbl">Cơ sở</div>
-                    <div class="ig-val"><i class="bi bi-building"></i> @Model.FacilityName</div>
-                </div>
-                <div class="ig-item">
-                    <div class="ig-lbl">Sân</div>
-                    <div class="ig-val"><i class="bi bi-grid-3x3-gap"></i> @Model.CourtNumber <span class="vtag">@Model.CourtType</span></div>
-                </div>
-                <div class="ig-item">
-                    <div class="ig-lbl">Ngày chơi</div>
-                    <div class="ig-val"><i class="bi bi-calendar3"></i> @Model.BookingDate.ToString("dd/MM/yyyy") <span style="color:#8c7a68;font-size:.74rem">(@Model.BookingDate.ToString("dddd", new System.Globalization.CultureInfo("vi-VN")))</span></div>
-                </div>
-                <div class="ig-item">
-                    <div class="ig-lbl">Giờ chơi</div>
-                    <div class="ig-val"><i class="bi bi-clock"></i> @Model.StartTime.ToString(@"hh\:mm") – @Model.EndTime.ToString(@"hh\:mm") <span style="color:#8c7a68;font-size:.74rem">(@Model.Duration phút)</span></div>
-                </div>
-                <div class="ig-item">
-                    <div class="ig-lbl">Thanh toán</div>
-                    <div class="ig-val">
-                        <i class="bi bi-credit-card"></i> @Model.PaymentMethod
-                        @{
-                            string detPayClass, detPayLabel;
-                            if (Model.PaymentStatus?.ToLower() == "paid")
-                            {
-                                detPayClass = "confirmed"; detPayLabel = "Đã thanh toán";
-                            }
-                            else if (Model.PaymentMethod == "Transfer")
-                            {
-                                detPayClass = "awaiting-ck"; detPayLabel = "Chờ xác nhận CK";
-                            }
-                            else
-                            {
-                                detPayClass = "pending"; detPayLabel = "Chưa thanh toán";
-                            }
-                        }
-                        <span class="sb @detPayClass" style="font-size:.62rem">@detPayLabel</span>
-                    </div>
-                </div>
-                <div class="ig-item">
-                    <div class="ig-lbl">Đặt lúc</div>
-                    <div class="ig-val" style="font-size:.82rem"><i class="bi bi-clock-history"></i> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
-                </div>
-            </div>
-            @if (!string.IsNullOrEmpty(Model.Note))
+        @* Đơn hàng kèm theo *@
+        @if (Model.RelatedOrders?.Any() == true)
+        {
+            foreach (var order in Model.RelatedOrders)
             {
-                <div style="margin-top:1rem">
-                    <div style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8c7a68;margin-bottom:.3rem">Ghi chú</div>
-                    <div class="note-box">@Model.Note</div>
-                </div>
-            }
-        </div>
-    </div>
-
-    <!-- Products -->
-    @if (Model.RelatedOrders != null && Model.RelatedOrders.Any())
-    {
-        <div class="c">
-            <div class="c-hd"><i class="bi bi-bag-check"></i><span class="c-title">Sản phẩm đi kèm</span></div>
-            <div style="overflow-x:auto">
-                @foreach (var order in Model.RelatedOrders)
+                if (order.OrderDetails?.Any() == true)
                 {
-                    <table class="ptbl">
-                        <thead>
-                            <tr><th>Sản phẩm</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th></tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var d in order.OrderDetails)
+                    <div class="card">
+                        <div class="card-hd"><i class="bi bi-bag-check"></i> Đơn Hàng #@order.OrderCode</div>
+                        <div class="card-bd">
+                            @foreach (var item in order.OrderDetails)
                             {
-                                <tr>
-                                    <td><strong>@d.ProductName</strong> <span style="color:#8c7a68;font-size:.76rem">@d.Unit</span></td>
-                                    <td><span style="font-weight:700">×@d.Quantity</span></td>
-                                    <td>@d.UnitPrice.ToString("N0")đ</td>
-                                    <td style="font-weight:700;color:var(--G)">@d.TotalPrice.ToString("N0")đ</td>
-                                </tr>
+                                <div class="order-item">
+                                    <div>
+                                        <div class="nm">@item.ProductName</div>
+                                        <div class="qty">@item.Quantity @item.Unit × ₫@item.UnitPrice.ToString("N0")</div>
+                                    </div>
+                                    <div class="price">₫@item.TotalPrice.ToString("N0")</div>
+                                </div>
                             }
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="3" style="text-align:right;color:#8c7a68">Tổng đơn hàng:</td>
-                                <td style="color:var(--GN)">@order.TotalAmount.ToString("N0")đ</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                }
-            </div>
-        </div>
-    }
-
-    <!-- Payment summary -->
-    <div class="c">
-        <div class="c-hd"><i class="bi bi-receipt"></i><span class="c-title">Chi tiết thanh toán</span></div>
-        <div class="c-bd" style="max-width:380px">
-            <div class="ps-rows">
-                <div class="psr"><span class="psr-lbl">Giá sân</span><span class="psr-val gn">@Model.TotalPrice.ToString("N0")đ</span></div>
-                @if (Model.RelatedOrders != null && Model.RelatedOrders.Any())
-                {
-                    <div class="psr"><span class="psr-lbl">Sản phẩm</span><span class="psr-val">@Model.RelatedOrders.Sum(o => o.TotalAmount).ToString("N0")đ</span></div>
-                }
-                <hr class="psr-div" />
-                <div class="psr-tot"><span class="psr-tot-lbl">Tổng cộng</span><span class="psr-tot-val">@Model.GrandTotal.ToString("N0")đ</span></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Actions -->
-    <div class="act-row">
-        <a asp-action="MyBookings" class="btn-a sec"><i class="bi bi-arrow-left"></i> Quay lại</a>
-        @if (Model.CanCancel)
-        {
-            <button type="button" class="btn-a dan" onclick="document.getElementById('cancelModal').querySelector('.modal').show?.() || new bootstrap.Modal(document.getElementById('cancelModal')).show()">
-                <i class="bi bi-x-circle"></i> Hủy đơn này
-            </button>
-        }
-        @if (Model.Status == "Completed")
-        {
-            <button type="button" class="btn-a prim"><i class="bi bi-star"></i> Viết đánh giá</button>
-        }
-    </div>
-</div>
-
-<!-- Cancel Modal -->
-<div class="modal fade modal-dark" id="cancelModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2" style="color:var(--G)"></i> Hủy đặt sân</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form asp-action="Cancel" method="post">
-                @Html.AntiForgeryToken()
-                <div class="modal-body">
-                    <input type="hidden" name="id" value="@Model.BookingId" />
-                    <p style="font-size:.88rem;color:var(--D)">Hủy đơn <strong>@Model.BookingCode</strong>?</p>
-                    <div>
-                        <div style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8c7a68;margin-bottom:.35rem">Lý do hủy *</div>
-                        <textarea name="cancelReason" rows="3" required placeholder="Nhập lý do hủy..."></textarea>
+                        </div>
                     </div>
-                    <div class="warn-note"><i class="bi bi-info-circle"></i><span>Chỉ có thể hủy trước giờ chơi ít nhất <strong>2 giờ</strong></span></div>
+                }
+            }
+        }
+
+        @* Đánh giá — chỉ hiện khi Completed và chưa đánh giá *@
+        @if (canReview)
+        {
+            <div class="card">
+                <div class="card-hd"><i class="bi bi-star-half"></i> Đánh Giá Buổi Chơi</div>
+                <div class="card-bd">
+                    <p style="font-size:.84rem;color:#5a4a38;margin-bottom:1rem;">Chia sẻ trải nghiệm của bạn để giúp người chơi khác!</p>
+                    <form asp-action="Rate" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="bookingId" value="@Model.BookingId" />
+                        <div style="margin-bottom:1rem;">
+                            <div style="font-size:.78rem;font-weight:700;color:var(--D);margin-bottom:.5rem;">Chất lượng sân</div>
+                            <div class="star-row" id="starRow">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <button type="button" class="star-btn" data-val="@i" onclick="setStar(@i)">★</button>
+                                }
+                            </div>
+                            <input type="hidden" name="rating" id="ratingInput" value="5" />
+                        </div>
+                        <div style="margin-bottom:1rem;">
+                            <label style="font-size:.78rem;font-weight:700;color:var(--D);display:block;margin-bottom:.4rem;">Nhận xét</label>
+                            <textarea name="comment" rows="3"
+                                  placeholder="Cơ sở sạch sẽ, nhân viên nhiệt tình..."
+                                  style="width:100%;padding:.65rem .95rem;border:1.5px solid var(--S);border-radius:7px;font-size:.86rem;font-family:'Outfit',sans-serif;outline:none;resize:vertical;"
+                                  onfocus="this.style.borderColor='var(--G)'" onblur="this.style.borderColor='var(--S)'"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-gold">
+                            <i class="bi bi-star-fill"></i> Gửi đánh giá
+                        </button>
+                    </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn-confirm-cancel"><i class="bi bi-x-circle me-1"></i> Xác nhận hủy</button>
-                </div>
-            </form>
+            </div>
+        }
+        @if ((bool)(ViewBag.HasReview ?? false))
+        {
+            <div style="background:#d1fae5;border:1px solid #6ee7b7;border-radius:8px;padding:.85rem 1.25rem;margin-bottom:1.25rem;font-size:.84rem;color:#065f46;display:flex;align-items:center;gap:.6rem;">
+                <i class="bi bi-check-circle-fill"></i> Bạn đã đánh giá sân này. Cảm ơn!
+            </div>
+        }
+
+    </div>
+
+    @* ══ RIGHT COLUMN ══ *@
+    <div>
+
+        @* Actions *@
+        <div class="card" style="margin-bottom:1.25rem;">
+            <div class="card-hd"><i class="bi bi-lightning-charge"></i> Thao Tác</div>
+            <div class="card-bd" style="display:flex;flex-direction:column;gap:.55rem;">
+                <a asp-action="Invoice" asp-route-id="@Model.BookingId" class="btn btn-dark">
+                    <i class="bi bi-receipt"></i> Xem hoá đơn
+                </a>
+                @if (Model.CanCancel)
+                {
+                    <a asp-action="Reschedule" asp-route-id="@Model.BookingId" class="btn btn-outline">
+                        <i class="bi bi-calendar-event"></i> Đổi lịch
+                    </a>
+                    <a asp-action="Cancel" asp-route-id="@Model.BookingId" class="btn btn-danger">
+                        <i class="bi bi-x-circle"></i> Hủy đặt sân
+                    </a>
+                }
+                @if (Model.PaymentStatus == "Unpaid" && Model.PaymentMethod == "Transfer")
+                {
+                    <form asp-action="ConfirmPayment" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.BookingId" />
+                        <button type="submit" class="btn btn-gold" style="width:100%;">
+                            <i class="bi bi-check-circle"></i> Tôi đã chuyển khoản
+                        </button>
+                    </form>
+                }
+                <a asp-action="MyBookings" class="btn btn-outline">
+                    <i class="bi bi-arrow-left"></i> Quay lại danh sách
+                </a>
+            </div>
         </div>
+
+        @* QR chuyển khoản *@
+        @if (Model.PaymentMethod == "Transfer" && Model.PaymentStatus != "Paid")
+        {
+            <div class="qr-box">
+                <div style="font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:.85rem;font-weight:700;">
+                    <i class="bi bi-qr-code"></i> Chuyển khoản ngân hàng
+                </div>
+                @if (!string.IsNullOrEmpty(ViewBag.QrUrl as string))
+                {
+                    <img src="@ViewBag.QrUrl" alt="QR" />
+                }
+                <div class="qr-info">Ngân hàng</div>
+                <div class="qr-val" style="margin-bottom:.55rem;">@ViewBag.BankName</div>
+                <div class="qr-info">Số tài khoản</div>
+                <div class="qr-val" style="margin-bottom:.55rem;">@ViewBag.BankAccount</div>
+                <div class="qr-info">Tên TK</div>
+                <div class="qr-val" style="margin-bottom:.75rem;">@ViewBag.BankAccountName</div>
+                <div style="background:rgba(212,160,23,.1);border:1px solid rgba(212,160,23,.25);border-radius:7px;padding:.65rem .9rem;">
+                    <div class="qr-info">Nội dung chuyển khoản</div>
+                    <div class="qr-val">@Model.BookingCode</div>
+                </div>
+                <div style="font-size:.72rem;color:rgba(255,255,255,.35);margin-top:.75rem;">
+                    Vui lòng chuyển đúng nội dung để hệ thống tự động xác nhận
+                </div>
+            </div>
+        }
+
+        @* Trạng thái timeline *@
+        <div class="card">
+            <div class="card-hd"><i class="bi bi-list-check"></i> Tiến Trình</div>
+            <div class="card-bd">
+                <div class="tl">
+                    @{
+                        var steps = new[] {
+                                        ("Đã đặt",      "Pending",   Model.CreatedAt.ToString("dd/MM HH:mm")),
+                                        ("Xác nhận",    "Confirmed", ""),
+                                        ("Đang chơi",   "Playing",   ""),
+                                        ("Hoàn thành",  "Completed", ""),
+                                        };
+                        var statusOrder = new[] { "Pending", "Confirmed", "Playing", "Completed" };
+                        var curIdx = Array.IndexOf(statusOrder, Model.Status);
+                    }
+                    @for (int i = 0; i < steps.Length; i++)
+                    {
+                        var (lbl, st, dt) = steps[i];
+                        string dotCls = i < curIdx ? "done" : i == curIdx ? "cur" : "off";
+                        if (Model.Status == "Cancelled") dotCls = "off";
+                        <div class="tl-item">
+                            <div class="tl-dot @dotCls"></div>
+                            <div class="tl-content">
+                                <div class="t" style="@(i == curIdx && Model.Status != "Cancelled" ? "color:var(--BL);" : i < curIdx ? "" : "color:#aaa;")">@lbl</div>
+                                @if (!string.IsNullOrEmpty(dt))
+                                {
+                                    <div class="d">@dt</div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    @if (Model.Status == "Cancelled")
+                    {
+                        <div class="tl-item">
+                            <div class="tl-dot" style="background:var(--R);box-shadow:0 0 0 3px rgba(201,75,42,.15);"></div>
+                            <div class="tl-content">
+                                <div class="t" style="color:var(--R);">Đã hủy</div>
+                                @if (Model.CancelledAt.HasValue)
+                                {
+                                    <div class="d">@Model.CancelledAt.Value.ToString("dd/MM HH:mm")</div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
 @section Scripts {
     <script>
-        document.querySelector('.btn-a.dan')?.addEventListener('click', function(){
-            new bootstrap.Modal(document.getElementById('cancelModal')).show();
-        });
+        function setStar(val) {
+            document.getElementById('ratingInput').value = val;
+            document.querySelectorAll('.star-btn').forEach(function(b, i) {
+                b.style.color = i < val ? '#f5c842' : '#ddd';
+            });
+        }
+        setStar(5); // default 5 sao
     </script>
 }

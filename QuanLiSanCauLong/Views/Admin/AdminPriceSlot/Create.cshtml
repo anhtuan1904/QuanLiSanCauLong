@@ -14,8 +14,14 @@
         --muted: #8a7560;
         --green: #16a34a;
         --red: #c94b2a;
+        --blue: #1d4ed8;
     }
 
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    /* ── SHELL ── */
     .mh {
         display: flex;
         align-items: flex-start;
@@ -80,7 +86,7 @@
 
     .mbody {
         padding: 1.25rem 1.5rem;
-        max-height: calc(85vh - 130px);
+        max-height: calc(90vh - 130px);
         overflow-y: auto;
         overflow-x: hidden;
     }
@@ -99,6 +105,16 @@
             border-radius: 3px;
         }
 
+    .mfooter {
+        display: flex;
+        justify-content: flex-end;
+        gap: .6rem;
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border);
+        background: var(--warm);
+    }
+
+    /* ── CARDS ── */
     .sf-card {
         background: #fff;
         border: 1px solid var(--border);
@@ -135,6 +151,7 @@
         gap: .75rem;
     }
 
+    /* ── FORM FIELDS ── */
     .fg {
         display: flex;
         flex-direction: column;
@@ -150,11 +167,16 @@
     }
 
     .fg-req {
-        color: #c94b2a;
+        color: var(--red);
         margin-left: .15rem;
     }
 
-    .fg-input, .fg-select, .fg-textarea {
+    .fg-hint {
+        font-size: .7rem;
+        color: var(--muted);
+    }
+
+    .fg-input, .fg-select {
         padding: .6rem .85rem;
         border: 1px solid var(--border);
         border-radius: 7px;
@@ -163,123 +185,329 @@
         color: var(--deep);
         background: #fff;
         outline: none;
-        transition: border-color .2s;
+        transition: border-color .2s,box-shadow .2s;
         width: 100%;
-        box-sizing: border-box;
     }
 
-        .fg-input:focus, .fg-select:focus, .fg-textarea:focus {
+        .fg-input:focus, .fg-select:focus {
             border-color: var(--gold);
             box-shadow: 0 0 0 3px rgba(212,160,23,.08);
         }
 
-    .fg-hint {
-        font-size: .7rem;
-        color: var(--muted);
-        margin-top: .2rem;
+        .fg-input.err {
+            border-color: var(--red);
+        }
+
+    .price-wrap {
+        position: relative;
     }
-    /* Day selector */
-    .day-btn-row {
+
+        .price-wrap .fg-input {
+            padding-left: 1.8rem;
+        }
+
+    .price-sym {
+        position: absolute;
+        left: .7rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--muted);
+        font-weight: 700;
+        font-size: .86rem;
+    }
+
+    /* ── COURT PICKER ── */
+    .court-loading {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .65rem .85rem;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        font-size: .82rem;
+        color: var(--muted);
+        background: #fafaf8;
+    }
+
+    /* ── TIMELINE PICKER ── */
+    .tl-section {
+        padding: 1rem;
+    }
+
+    .tl-presets {
         display: flex;
         gap: .4rem;
         flex-wrap: wrap;
-        margin-bottom: .6rem;
+        margin-bottom: .85rem;
+    }
+
+    .tl-preset-lbl {
+        font-size: .65rem;
+        color: var(--muted);
+        font-weight: 600;
+        align-self: center;
+        white-space: nowrap;
+    }
+
+    .tl-preset {
+        padding: .3rem .75rem;
+        border: 1.5px solid var(--border);
+        border-radius: 20px;
+        background: #fff;
+        font-size: .72rem;
+        font-weight: 700;
+        color: var(--muted);
+        cursor: pointer;
+        transition: all .15s;
+        white-space: nowrap;
+    }
+
+        .tl-preset:hover, .tl-preset.on {
+            border-color: var(--gold);
+            background: var(--cream);
+            color: #92660a;
+        }
+
+    .tl-grid-wrap {
+        overflow-x: auto;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+    }
+
+        .tl-grid-wrap::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .tl-grid-wrap::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 2px;
+        }
+
+    .tl-header-row {
+        display: flex;
+        background: var(--warm);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .tl-tick {
+        flex: 0 0 32px;
+        height: 24px;
+        border-right: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .52rem;
+        font-weight: 700;
+        color: var(--muted);
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+        .tl-tick.hour {
+            color: var(--deep);
+            font-size: .58rem;
+        }
+
+    .tl-cells-row {
+        display: flex;
+    }
+
+    .tl-cell {
+        flex: 0 0 32px;
+        height: 40px;
+        border-right: 1px solid var(--border);
+        border-bottom: none;
+        cursor: pointer;
+        transition: background .08s;
+        position: relative;
+    }
+
+        .tl-cell.hour-start {
+            border-left: 2px solid rgba(212,160,23,.3);
+        }
+
+        .tl-cell.unavail {
+            background: #f5f5f5 !important;
+            cursor: not-allowed;
+            opacity: .4;
+        }
+
+        .tl-cell.hover-range {
+            background: rgba(212,160,23,.18) !important;
+        }
+
+        .tl-cell.selected {
+            background: var(--deep) !important;
+        }
+
+        .tl-cell.selected-start {
+            border-radius: 5px 0 0 5px;
+        }
+
+        .tl-cell.selected-end {
+            border-radius: 0 5px 5px 0;
+        }
+
+        .tl-cell.selected-only {
+            border-radius: 5px;
+        }
+
+        .tl-cell:not(.unavail):not(.selected):hover {
+            background: rgba(212,160,23,.12);
+        }
+
+    /* ── TIME INPUTS (still present, synced with timeline) ── */
+    .time-inputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: .65rem;
+        margin-top: .85rem;
+    }
+
+    /* ── DURATION BADGE ── */
+    .dur-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .35rem .85rem;
+        background: var(--deep);
+        color: var(--gold2);
+        border-radius: 6px;
+        font-size: .82rem;
+        font-weight: 700;
+    }
+
+        .dur-badge.empty {
+            background: var(--warm);
+            color: var(--muted);
+        }
+
+    /* ── PRICE LIVE PREVIEW (big) ── */
+    .price-live {
+        background: linear-gradient(135deg,#1a1209,#2e2010);
+        border-radius: 10px;
+        padding: 1.1rem 1.3rem;
+        margin-top: .75rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .5rem;
+    }
+
+    .pl-block {
+        display: flex;
+        flex-direction: column;
+        gap: .2rem;
+    }
+
+    .pl-label {
+        font-size: .58rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,.35);
+        font-weight: 700;
+    }
+
+    .pl-value {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--gold2);
+        line-height: 1;
+    }
+
+        .pl-value.dim {
+            font-size: .92rem;
+            color: rgba(255,255,255,.55);
+        }
+
+    .pl-sub {
+        font-size: .65rem;
+        color: rgba(255,255,255,.3);
+        margin-top: .1rem;
+    }
+
+    /* ── CONFLICT ALERT ── */
+    .conflict-alert {
+        display: none;
+        align-items: center;
+        gap: .5rem;
+        padding: .55rem .85rem;
+        background: rgba(201,75,42,.06);
+        border: 1px solid rgba(201,75,42,.2);
+        border-radius: 7px;
+        font-size: .78rem;
+        color: var(--red);
+        margin-top: .5rem;
+    }
+
+        .conflict-alert.show {
+            display: flex;
+        }
+
+    /* ── DAYS ── */
+    .days-row {
+        display: flex;
+        gap: .4rem;
+        flex-wrap: wrap;
+    }
+
+    .day-pill {
+        width: 42px;
+        height: 42px;
+        border-radius: 8px;
+        border: 1.5px solid var(--border);
+        background: #fff;
+        font-size: .76rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all .15s;
+        user-select: none;
+        color: var(--deep);
+    }
+
+        .day-pill.we {
+            color: var(--red);
+        }
+
+        .day-pill.on {
+            border-color: var(--deep);
+            background: var(--deep);
+            color: var(--gold2);
+        }
+
+        .day-pill:hover:not(.on) {
+            border-color: var(--gold);
+            background: var(--cream);
+        }
+
+    .day-quick-row {
+        display: flex;
+        gap: .35rem;
+        flex-wrap: wrap;
+        margin-top: .5rem;
     }
 
     .day-quick {
-        padding: .3rem .7rem;
+        padding: .28rem .7rem;
+        border: 1px solid var(--border);
+        border-radius: 5px;
         background: #fff;
-        border: 1.5px solid var(--border);
-        border-radius: 20px;
-        font-size: .72rem;
+        font-size: .7rem;
         font-weight: 600;
-        color: var(--deep);
+        color: var(--muted);
         cursor: pointer;
-        transition: all .2s;
+        transition: all .15s;
     }
 
         .day-quick:hover {
             border-color: var(--gold);
-            color: var(--gold);
-            background: var(--cream);
+            color: var(--deep);
         }
 
-    .day-grid {
-        display: grid;
-        grid-template-columns: repeat(4,1fr);
-        gap: .5rem;
-    }
-
-    .day-item input {
-        display: none;
-    }
-
-    .day-lbl {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: .5rem .3rem;
-        border: 1.5px solid var(--border);
-        border-radius: 7px;
-        font-size: .78rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all .2s;
-        background: #fff;
-    }
-
-        .day-lbl:hover {
-            border-color: var(--gold);
-            background: var(--cream);
-        }
-
-    .day-item input:checked + .day-lbl {
-        background: var(--deep);
-        color: var(--gold2);
-        border-color: var(--deep);
-    }
-
-    .day-weekend .day-lbl {
-        color: var(--red);
-    }
-
-    .day-item input:checked + .day-lbl {
-        color: var(--gold2);
-    }
-    /* Price preview */
-    .price-preview {
-        background: linear-gradient(135deg,rgba(26,18,9,.04),rgba(212,160,23,.08));
-        border: 1px solid rgba(212,160,23,.25);
-        border-radius: 8px;
-        padding: .8rem 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: .75rem;
-    }
-
-    .pp-label {
-        font-size: .68rem;
-        font-weight: 700;
-        letter-spacing: .08em;
-        text-transform: uppercase;
-        color: var(--muted);
-    }
-
-    .pp-value {
-        font-family: 'Playfair Display',serif;
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: var(--green);
-        line-height: 1;
-    }
-
-    .pp-break {
-        font-size: .7rem;
-        color: var(--muted);
-        margin-top: .1rem;
-    }
-    /* Peak toggle */
+    /* ── PEAK TOGGLE ── */
     .peak-toggle {
         display: flex;
         align-items: center;
@@ -296,7 +524,7 @@
             border-color: var(--gold);
         }
 
-        .peak-toggle.active {
+        .peak-toggle.on {
             background: rgba(201,75,42,.06);
             border-color: rgba(201,75,42,.3);
         }
@@ -316,7 +544,7 @@
         margin-top: .1rem;
     }
 
-    .toggle-sw {
+    .sw {
         width: 40px;
         height: 22px;
         border-radius: 11px;
@@ -326,7 +554,7 @@
         flex-shrink: 0;
     }
 
-        .toggle-sw::after {
+        .sw::after {
             content: '';
             position: absolute;
             width: 16px;
@@ -338,41 +566,15 @@
             transition: transform .2s;
         }
 
-        .toggle-sw.on {
+        .sw.on {
             background: var(--red);
         }
 
-            .toggle-sw.on::after {
+            .sw.on::after {
                 transform: translateX(18px);
             }
-    /* Price wrap */
-    .price-wrap {
-        position: relative;
-    }
 
-        .price-wrap .fg-input {
-            padding-left: 1.8rem;
-        }
-
-    .price-sym {
-        position: absolute;
-        left: .7rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--muted);
-        font-weight: 700;
-        font-size: .86rem;
-    }
-    /* Footer */
-    .mfooter {
-        display: flex;
-        justify-content: flex-end;
-        gap: .6rem;
-        padding: 1rem 1.5rem;
-        border-top: 1px solid var(--border);
-        background: var(--warm);
-    }
-
+    /* ── BUTTONS ── */
     .btn-cancel {
         padding: .6rem 1.4rem;
         border: 1px solid var(--border);
@@ -421,9 +623,9 @@
 <!-- HEADER -->
 <div class="mh">
     <div>
-        <div class="mh-label">Khung Giờ & Giá</div>
+        <div class="mh-label"><i class="bi bi-plus-circle-fill"></i> Khung Giờ & Giá</div>
         <div class="mh-title">Thêm Khung Giờ Mới</div>
-        <div class="mh-sub">Thiết lập quy tắc giá và khung giờ cho sân</div>
+        <div class="mh-sub">Chọn sân, kéo timeline chọn giờ, nhập giá — xong!</div>
     </div>
     <button class="mh-close" data-bs-dismiss="modal" title="Đóng"><i class="bi bi-x-lg"></i></button>
 </div>
@@ -432,18 +634,17 @@
     <form id="createPSForm" asp-action="Create" asp-controller="AdminPriceSlot" method="post">
         @Html.AntiForgeryToken()
 
-        <!-- 1. Đối tượng áp dụng -->
+        <!-- ① CƠ SỞ & SÂN -->
         <div class="sf-card">
-            <div class="sf-card-head"><i class="bi bi-geo-alt sf-card-icon"></i><span class="sf-card-title">Đối Tượng Áp Dụng</span></div>
-            <div class="sf-card-body">
-                <div class="fg">
-                    <label class="fg-label">Tên bảng giá <span style="font-weight:400;color:var(--muted)">(tuỳ chọn)</span></label>
-                    <input asp-for="SlotName" class="fg-input" placeholder="Giá ngày thường, Giá cuối tuần..." />
-                </div>
+            <div class="sf-card-head">
+                <i class="bi bi-geo-alt sf-card-icon"></i>
+                <span class="sf-card-title">① Sân Áp Dụng</span>
+            </div>
+            <div class="sf-card-body" style="grid-template-columns:1fr;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
                     <div class="fg">
                         <label class="fg-label">Cơ sở <span class="fg-req">*</span></label>
-                        <select id="FacilitySelectC" asp-for="FacilityId" class="fg-select" required>
+                        <select id="FacilitySelectC" asp-for="FacilityId" class="fg-select" required onchange="loadCourtsCreate(this.value)">
                             <option value="">— Chọn cơ sở —</option>
                             @if (ViewBag.Facilities != null)
                             {
@@ -455,25 +656,21 @@
                         </select>
                     </div>
                     <div class="fg">
-                        <label class="fg-label">Sân cụ thể <span class="fg-req">*</span></label>
-                        <select asp-for="CourtId" id="CourtSelectC" class="fg-select" required>
+                        <label class="fg-label">Sân <span class="fg-req">*</span></label>
+                        <select asp-for="CourtId" id="CourtSelectC" class="fg-select" required onchange="onCourtChange(this)">
                             <option value="">— Chọn cơ sở trước —</option>
                         </select>
                     </div>
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
                     <div class="fg">
-                        <label class="fg-label">Loại sân</label>
-                        <select asp-for="CourtType" class="fg-select">
-                            <option value="Standard">Tiêu chuẩn</option>
-                            <option value="Professional">Chuyên nghiệp</option>
-                            <option value="Practice">Tập luyện</option>
-                        </select>
+                        <label class="fg-label">Tên bảng giá</label>
+                        <input asp-for="SlotName" class="fg-input" placeholder="Giờ thường, Peak tối..." />
                     </div>
                     <div class="fg">
-                        <label class="fg-label">Loại khách hàng</label>
+                        <label class="fg-label">Loại khách</label>
                         <select asp-for="CustomerType" class="fg-select">
-                            <option value="All">Tất cả</option>
+                            <option value="All">Tất cả khách</option>
                             <option value="Retail">Vãng lai</option>
                             <option value="Member">Cố định / Tháng</option>
                         </select>
@@ -482,44 +679,44 @@
             </div>
         </div>
 
-        <!-- 2. Ngày áp dụng -->
+        <!-- ② TIMELINE CHỌN GIỜ -->
         <div class="sf-card">
-            <div class="sf-card-head"><i class="bi bi-calendar3 sf-card-icon"></i><span class="sf-card-title">Ngày Áp Dụng</span></div>
-            <div class="sf-card-body" style="grid-template-columns:1fr;">
-                <div class="day-btn-row">
-                    <button type="button" class="day-quick" onclick="selectDaysC([1,2,3,4,5])">T2–T6</button>
-                    <button type="button" class="day-quick" onclick="selectDaysC([6,0])">T7 & CN</button>
-                    <button type="button" class="day-quick" onclick="selectDaysC([0,1,2,3,4,5,6])">Tất cả</button>
-                    <button type="button" class="day-quick" onclick="selectDaysC([])">Bỏ chọn</button>
-                </div>
-                <div class="day-grid">
-                    @foreach (var (val, label, isWe) in new[] { (1, "Thứ Hai", false), (2, "Thứ Ba", false), (3, "Thứ Tư", false), (4, "Thứ Năm", false), (5, "Thứ Sáu", false), (6, "Thứ Bảy", true), (0, "Chủ Nhật", true) })
-                    {
-                        <div class="day-item @(isWe ? "day-weekend" : "")">
-                            <input type="checkbox" class="day-check-c" id="dc@val" value="@val">
-                            <label class="day-lbl" for="dc@val">@label</label>
-                        </div>
-                    }
-                </div>
-                <input type="hidden" name="AppliedDays" id="appliedDaysC" />
+            <div class="sf-card-head">
+                <i class="bi bi-clock sf-card-icon"></i>
+                <span class="sf-card-title">② Khung Giờ</span>
+                <span style="margin-left:auto;" id="durBadge"><span class="dur-badge empty"><i class="bi bi-hand-index"></i> Kéo timeline để chọn giờ</span></span>
             </div>
-        </div>
+            <div class="tl-section">
+                <!-- Quick presets -->
+                <div class="tl-presets">
+                    <span class="tl-preset-lbl"><i class="bi bi-lightning-charge me-1"></i>Nhanh:</span>
+                    <button type="button" class="tl-preset" data-s="05:00" data-e="07:00">5–7h</button>
+                    <button type="button" class="tl-preset" data-s="07:00" data-e="11:00">7–11h</button>
+                    <button type="button" class="tl-preset" data-s="11:00" data-e="13:00">11–13h</button>
+                    <button type="button" class="tl-preset" data-s="13:00" data-e="17:00">13–17h</button>
+                    <button type="button" class="tl-preset" data-s="17:00" data-e="20:00">17–20h 🔥</button>
+                    <button type="button" class="tl-preset" data-s="20:00" data-e="23:00">20–23h 🔥</button>
+                    <button type="button" class="tl-preset" data-s="05:00" data-e="23:00">Cả ngày</button>
+                </div>
 
-        <!-- 3. Khung giờ & Giá -->
-        <div class="sf-card">
-            <div class="sf-card-head"><i class="bi bi-clock sf-card-icon"></i><span class="sf-card-title">Khung Giờ & Đơn Giá</span></div>
-            <div class="sf-card-body">
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;">
+                <!-- Timeline visual -->
+                <div class="tl-grid-wrap" id="tlWrap">
+                    <div class="tl-header-row" id="tlHeader"></div>
+                    <div class="tl-cells-row" id="tlCells"></div>
+                </div>
+
+                <!-- Time inputs (synced) -->
+                <div class="time-inputs">
                     <div class="fg">
-                        <label class="fg-label">Giờ bắt đầu <span class="fg-req">*</span></label>
-                        <input asp-for="StartTime" class="fg-input" type="time" />
+                        <label class="fg-label">Bắt đầu <span class="fg-req">*</span></label>
+                        <input asp-for="StartTime" id="startInput" class="fg-input" type="time" step="1800" oninput="syncFromInputs()" />
                     </div>
                     <div class="fg">
-                        <label class="fg-label">Giờ kết thúc <span class="fg-req">*</span></label>
-                        <input asp-for="EndTime" class="fg-input" type="time" />
+                        <label class="fg-label">Kết thúc <span class="fg-req">*</span></label>
+                        <input asp-for="EndTime" id="endInput" class="fg-input" type="time" step="1800" oninput="syncFromInputs()" />
                     </div>
                     <div class="fg">
-                        <label class="fg-label">Làm tròn giờ</label>
+                        <label class="fg-label">Làm tròn</label>
                         <select asp-for="RoundingMinutes" class="fg-select">
                             <option value="15">15 phút</option>
                             <option value="30">30 phút</option>
@@ -527,39 +724,100 @@
                         </select>
                     </div>
                 </div>
+
+                <!-- Conflict alert -->
+                <div class="conflict-alert" id="conflictAlert">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span id="conflictMsg">Khoảng giờ này trùng với slot khác đã tồn tại cho sân này.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ③ NGÀY ÁP DỤNG -->
+        <div class="sf-card">
+            <div class="sf-card-head">
+                <i class="bi bi-calendar-week sf-card-icon"></i>
+                <span class="sf-card-title">③ Ngày Áp Dụng</span>
+                <span style="margin-left:auto;font-size:.7rem;color:var(--muted)">Để trống = mọi ngày</span>
+            </div>
+            <div class="sf-card-body" style="grid-template-columns:1fr;">
+                <div class="days-row" id="daysRowC">
+                    <div class="day-pill" data-d="1">T2</div>
+                    <div class="day-pill" data-d="2">T3</div>
+                    <div class="day-pill" data-d="3">T4</div>
+                    <div class="day-pill" data-d="4">T5</div>
+                    <div class="day-pill" data-d="5">T6</div>
+                    <div class="day-pill we" data-d="6">T7</div>
+                    <div class="day-pill we" data-d="0">CN</div>
+                </div>
+                <div class="day-quick-row">
+                    <button type="button" class="day-quick" onclick="setDaysC([1,2,3,4,5])"><i class="bi bi-briefcase me-1"></i>T2–T6</button>
+                    <button type="button" class="day-quick" onclick="setDaysC([6,0])"><i class="bi bi-sun me-1"></i>T7 & CN</button>
+                    <button type="button" class="day-quick" onclick="setDaysC([0,1,2,3,4,5,6])">Tất cả</button>
+                    <button type="button" class="day-quick" onclick="setDaysC([])">Xóa chọn</button>
+                </div>
+                <input type="hidden" name="AppliedDays" id="appliedDaysC" />
+            </div>
+        </div>
+
+        <!-- ④ ĐƠN GIÁ -->
+        <div class="sf-card">
+            <div class="sf-card-head">
+                <i class="bi bi-cash-stack sf-card-icon"></i>
+                <span class="sf-card-title">④ Đơn Giá</span>
+            </div>
+            <div class="sf-card-body">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
                     <div class="fg">
                         <label class="fg-label">Đơn giá (₫/giờ) <span class="fg-req">*</span></label>
                         <div class="price-wrap">
                             <span class="price-sym">₫</span>
-                            <input asp-for="Price" class="fg-input" type="number" step="1000" id="priceInputC" placeholder="100000" oninput="calcTotalC()" />
+                            <input asp-for="Price" class="fg-input" type="number" step="1000" id="priceInputC" placeholder="70000" oninput="calcC()" />
                         </div>
                     </div>
                     <div class="fg">
                         <label class="fg-label">Phụ phí (₫/giờ)</label>
                         <div class="price-wrap">
                             <span class="price-sym">₫</span>
-                            <input asp-for="Surcharge" class="fg-input" type="number" step="1000" id="surInputC" placeholder="0" oninput="calcTotalC()" />
+                            <input asp-for="Surcharge" class="fg-input" type="number" step="1000" id="surInputC" placeholder="0" oninput="calcC()" />
                         </div>
                     </div>
                 </div>
                 <div class="fg">
-                    <label class="fg-label">Mô tả phụ phí <span style="font-weight:400;color:var(--muted)">(tuỳ chọn)</span></label>
-                    <input asp-for="SurchargeNote" class="fg-input" placeholder="Phí bật đèn 30.000đ/giờ..." />
+                    <label class="fg-label">Mô tả phụ phí</label>
+                    <input asp-for="SurchargeNote" class="fg-input" placeholder="Phí bật đèn 20,000đ/h..." />
                 </div>
-                <div class="price-preview">
-                    <div><div class="pp-label">Khách trả / giờ</div><div class="pp-value" id="totalPreviewC">0 ₫</div><div class="pp-break" id="priceBreakC"></div></div>
-                    <i class="bi bi-calculator" style="font-size:1.5rem;color:rgba(212,160,23,.3)"></i>
+
+                <!-- LIVE PREVIEW BOX -->
+                <div class="price-live" id="priceLive">
+                    <div class="pl-block">
+                        <div class="pl-label">Khách trả / giờ</div>
+                        <div class="pl-value" id="plPerHour">— ₫</div>
+                        <div class="pl-sub" id="plBreak"></div>
+                    </div>
+                    <div class="pl-block">
+                        <div class="pl-label">Tổng cho khung này</div>
+                        <div class="pl-value" id="plTotal">— ₫</div>
+                        <div class="pl-sub" id="plDurSub">Chọn giờ để tính</div>
+                    </div>
                 </div>
+
+                <!-- Peak toggle -->
                 <div class="peak-toggle" id="peakToggleC" onclick="togglePeakC()">
-                    <div><div class="peak-title"><i class="bi bi-fire" style="color:var(--red)"></i> Giờ cao điểm</div><div class="peak-sub">Thường 17:00–22:00</div></div>
-                    <div class="toggle-sw" id="peakSwC"></div>
+                    <div>
+                        <div class="peak-title"><i class="bi bi-fire" style="color:var(--red)"></i> Giờ cao điểm</div>
+                        <div class="peak-sub">Đánh dấu để admin dễ phân biệt — thường 17:00–22:00</div>
+                    </div>
+                    <div class="sw" id="peakSwC"></div>
                 </div>
                 <input asp-for="IsPeakHour" id="isPeakC" type="hidden" value="false" />
 
-                <!-- Trạng thái -->
+                <!-- Active toggle -->
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:.7rem .9rem;background:var(--cream);border:1px solid var(--border);border-radius:7px;">
-                    <div><span style="font-weight:700;font-size:.84rem;color:var(--deep);">✓ Kích hoạt ngay</span><br><span style="font-size:.7rem;color:var(--muted);">Có hiệu lực ngay khi lưu</span></div>
+                    <div>
+                        <span style="font-weight:700;font-size:.84rem;color:var(--deep);">✓ Kích hoạt ngay</span>
+                        <div style="font-size:.7rem;color:var(--muted);">Có hiệu lực ngay sau khi lưu</div>
+                    </div>
                     <input asp-for="IsActive" type="checkbox" checked style="width:17px;height:17px;accent-color:var(--gold);cursor:pointer" />
                 </div>
             </div>
@@ -567,63 +825,263 @@
     </form>
 </div>
 
-<!-- FOOTER -->
 <div class="mfooter">
     <button type="button" class="btn-cancel" data-bs-dismiss="modal">Hủy</button>
-    <button type="submit" form="createPSForm" class="btn-save" id="btnCreatePS" onclick="return prepareSubmitC()">
-        <i class="bi bi-check-circle"></i> Lưu Cấu Hình Giá
+    <button type="submit" form="createPSForm" class="btn-save" id="btnCreatePS" onclick="return validateCreate()">
+        <i class="bi bi-check-circle-fill"></i> Lưu Khung Giờ
     </button>
 </div>
 
 <script>
     (function(){
-        // Load courts
-        document.getElementById('FacilitySelectC').addEventListener('change', function(){
-            const fId = this.value, sel = document.getElementById('CourtSelectC');
-            if (!fId) { sel.innerHTML = '<option value="">— Chọn cơ sở trước —</option>'; return; }
-            sel.innerHTML = '<option value="">Đang tải...</option>';
-            fetch('/AdminCourt/GetByFacility?facilityId='+fId)
-                .then(r=>r.json()).then(data=>{
-                    const courts = data.courts ?? data;
-                    sel.innerHTML = '<option value="">— Chọn sân —</option>';
-                    courts.forEach(c=>{
-                        sel.innerHTML += `<option value="${c.courtId??c.CourtId}">Sân ${c.courtNumber??c.CourtNumber} (${c.courtType??c.CourtType})</option>`;
-                    });
-                }).catch(()=>{ sel.innerHTML='<option value="">Lỗi tải sân</option>'; });
+        /* ═══ TIMELINE SETUP ═══ */
+        const TL_START = 5*60, TL_END = 23*60, STEP = 30;
+        const SLOTS = (TL_END - TL_START) / STEP; // 36
+        let tlSt = null, tlEt = null;
+        let dragging = false, dragFrom = null;
+        let existingSlots = []; // [{st,et}] from server for selected court
+
+        function p2(n){ return String(n).padStart(2,'0'); }
+        function minToHH(m){ return p2(Math.floor(m/60))+':'+p2(m%60); }
+        function hhToMin(s){ if(!s)return null; const[h,mm]=s.split(':').map(Number); return h*60+(mm||0); }
+
+        /* Build timeline DOM */
+        function buildTimeline(){
+            const hdr = document.getElementById('tlHeader');
+            const cells = document.getElementById('tlCells');
+            hdr.innerHTML = ''; cells.innerHTML = '';
+            for(let i=0;i<SLOTS;i++){
+                const m = TL_START + i*STEP;
+                const isHour = m%60===0;
+                const t = document.createElement('div');
+                t.className = 'tl-tick'+(isHour?' hour':'');
+                t.textContent = isHour ? minToHH(m) : ':30';
+                hdr.appendChild(t);
+
+                const c = document.createElement('div');
+                c.className = 'tl-cell'+(isHour?' hour-start':'');
+                c.dataset.i = i;
+                c.addEventListener('mousedown', onCellDown);
+                c.addEventListener('mouseenter', onCellEnter);
+                c.addEventListener('touchstart', e=>{ onCellDown.call(c,e); }, {passive:true});
+                c.addEventListener('touchmove', onTouchMove, {passive:false});
+                cells.appendChild(c);
+            }
+            document.addEventListener('mouseup', onMouseUp);
+        }
+        buildTimeline();
+
+        function cellAt(i){ return document.querySelector(`.tl-cell[data-i="${i}"]`); }
+
+        function onCellDown(e){
+            if(this.classList.contains('unavail')) return;
+            dragging=true; dragFrom=+this.dataset.i;
+            clearSelection(); applyHover(dragFrom, dragFrom);
+        }
+        function onCellEnter(e){
+            if(!dragging) return;
+            applyHover(Math.min(dragFrom,+this.dataset.i), Math.max(dragFrom,+this.dataset.i));
+        }
+        function onTouchMove(e){
+            e.preventDefault();
+            const t=e.touches[0], el=document.elementFromPoint(t.clientX,t.clientY);
+            if(el&&el.classList.contains('tl-cell')&&!el.classList.contains('unavail'))
+                applyHover(Math.min(dragFrom,+el.dataset.i), Math.max(dragFrom,+el.dataset.i));
+        }
+        function onMouseUp(e){
+            if(!dragging) return; dragging=false;
+            commitSelection();
+        }
+
+        function applyHover(lo, hi){
+            document.querySelectorAll('.tl-cell').forEach((c,i)=>{
+                c.classList.toggle('hover-range', i>=lo && i<=hi && !c.classList.contains('unavail'));
+            });
+        }
+        function clearSelection(){
+            document.querySelectorAll('.tl-cell').forEach(c=>{
+                c.classList.remove('selected','selected-start','selected-end','selected-only','hover-range');
+            });
+        }
+        function commitSelection(){
+            document.querySelectorAll('.tl-cell').forEach((c,i)=>{
+                if(c.classList.contains('hover-range')){ c.classList.remove('hover-range'); c.classList.add('selected'); }
+            });
+            // find range
+            const sels = [...document.querySelectorAll('.tl-cell.selected')].map(c=>+c.dataset.i);
+            if(!sels.length) return;
+            const lo=Math.min(...sels), hi=Math.max(...sels);
+            tlSt = TL_START + lo*STEP;
+            tlEt = TL_START + (hi+1)*STEP;
+            // Round corners
+            cellAt(lo)?.classList.add(lo===hi?'selected-only':'selected-start');
+            cellAt(hi)?.classList.add(lo===hi?'selected-only':'selected-end');
+            pushToInputs();
+            checkConflict();
+            calcC();
+        }
+
+        function setRange(stMin, etMin){
+            clearSelection();
+            tlSt=stMin; tlEt=etMin;
+            const lo=(stMin-TL_START)/STEP, hi=(etMin-TL_START)/STEP-1;
+            document.querySelectorAll('.tl-cell').forEach((c,i)=>{
+                if(i>=lo && i<=hi){ c.classList.add('selected'); }
+            });
+            if(lo<=hi){
+                cellAt(lo)?.classList.add(lo===hi?'selected-only':'selected-start');
+                cellAt(hi)?.classList.add(lo===hi?'selected-only':'selected-end');
+            }
+            pushToInputs(); checkConflict(); calcC();
+        }
+
+        function pushToInputs(){
+            if(tlSt!==null) document.getElementById('startInput').value = minToHH(tlSt);
+            if(tlEt!==null) document.getElementById('endInput').value   = minToHH(tlEt);
+            updateDurBadge();
+        }
+
+        window.syncFromInputs = function(){
+            const s=hhToMin(document.getElementById('startInput').value);
+            const e=hhToMin(document.getElementById('endInput').value);
+            if(s!==null&&e!==null&&s<e){ setRange(s,e); }
+            else updateDurBadge();
+        };
+
+        function updateDurBadge(){
+            const b=document.getElementById('durBadge');
+            if(tlSt===null||tlEt===null||tlSt>=tlEt){
+                b.innerHTML='<span class="dur-badge empty"><i class="bi bi-hand-index me-1"></i>Kéo timeline để chọn giờ</span>';
+                return;
+            }
+            const mins=tlEt-tlSt, h=Math.floor(mins/60), m=mins%60;
+            const dur=h>0?(h+'h'+(m?m+'p':'')):(m+'p');
+            b.innerHTML=`<span class="dur-badge"><i class="bi bi-clock-fill me-1"></i>${minToHH(tlSt)} → ${minToHH(tlEt)} · ${dur}</span>`;
+        }
+
+        /* Preset buttons */
+        document.querySelectorAll('.tl-preset').forEach(btn=>{
+            btn.addEventListener('click',function(){
+                document.querySelectorAll('.tl-preset').forEach(b=>b.classList.remove('on'));
+                this.classList.add('on');
+                const s=hhToMin(this.dataset.s), e=hhToMin(this.dataset.e);
+                setRange(s,e);
+                // Auto peak hint
+                if(s>=17*60) { if(!peakOn){ togglePeakC(); } }
+                else if(peakOn) { togglePeakC(); }
+            });
         });
 
-        // Day selector
-        window.selectDaysC = function(vals) {
-            document.querySelectorAll('.day-check-c').forEach(cb=>{ cb.checked = vals.includes(parseInt(cb.value)); });
+        /* ═══ COURT LOADING ═══ */
+        window.loadCourtsCreate = function(fId){
+            const sel=document.getElementById('CourtSelectC');
+            existingSlots=[];
+            if(!fId){ sel.innerHTML='<option value="">— Chọn cơ sở trước —</option>'; return; }
+            sel.innerHTML='<option value="">Đang tải...</option>';
+            fetch('/AdminCourt/GetByFacility?facilityId='+fId)
+                .then(r=>r.json()).then(data=>{
+                    const courts=data.courts??data;
+                    sel.innerHTML='<option value="">— Chọn sân —</option>';
+                    courts.forEach(c=>{
+                        sel.innerHTML+=`<option value="${c.courtId??c.CourtId}">Sân ${c.courtNumber??c.CourtNumber} (${c.courtType??c.CourtType})</option>`;
+                    });
+                }).catch(()=>{ sel.innerHTML='<option value="">Lỗi tải sân</option>'; });
+        };
+
+        window.onCourtChange = function(sel){
+            existingSlots=[];
+            markUnavail();
+            document.getElementById('conflictAlert').classList.remove('show');
+            if(!sel.value) return;
+            // Fetch existing price slots for this court to show on timeline
+            fetch(`/Admin/PriceSlot/Index?facilityId=0`)
+                .then(()=>{}) // placeholder — real endpoint would return slots for courtId
+                .catch(()=>{});
+            // Also load slots from GetTimeSlots if available
+            fetch(`/Facility/GetTimeSlots?courtId=${sel.value}&date=${new Date().toISOString().slice(0,10)}`)
+                .then(r=>r.json()).then(d=>{
+                    if(d.success && d.timeSlots){
+                        existingSlots = d.timeSlots.map(s=>({
+                            st: hhToMin(s.startTime),
+                            et: hhToMin(s.endTime)
+                        }));
+                        markUnavail();
+                    }
+                }).catch(()=>{});
+        };
+
+        function markUnavail(){
+            document.querySelectorAll('.tl-cell').forEach((c,i)=>{
+                const m = TL_START + i*STEP;
+                const blocked = existingSlots.some(s=> m>=s.st && m<s.et);
+                c.classList.toggle('unavail', blocked);
+            });
+        }
+
+        function checkConflict(){
+            if(tlSt===null||tlEt===null) return;
+            const overlap = existingSlots.some(s=> tlSt<s.et && tlEt>s.st);
+            document.getElementById('conflictAlert').classList.toggle('show', overlap);
+            if(overlap) document.getElementById('conflictMsg').textContent=
+                `Khoảng ${minToHH(tlSt)}–${minToHH(tlEt)} trùng với slot đã có trên sân này.`;
+        }
+
+        /* ═══ DAYS ═══ */
+        document.querySelectorAll('#daysRowC .day-pill').forEach(p=>{
+            p.addEventListener('click',()=>{ p.classList.toggle('on'); syncDaysC(); });
+        });
+        window.setDaysC = function(arr){
+            document.querySelectorAll('#daysRowC .day-pill').forEach(p=>{
+                p.classList.toggle('on', arr.includes(+p.dataset.d));
+            });
             syncDaysC();
         };
-        function syncDaysC() {
-            document.getElementById('appliedDaysC').value = Array.from(document.querySelectorAll('.day-check-c:checked')).map(c=>c.value).join(',');
+        function syncDaysC(){
+            document.getElementById('appliedDaysC').value=
+                Array.from(document.querySelectorAll('#daysRowC .day-pill.on')).map(p=>p.dataset.d).join(',');
         }
-        document.querySelectorAll('.day-check-c').forEach(cb=>cb.addEventListener('change', syncDaysC));
 
-        // Price calc
-        window.calcTotalC = function() {
-            const p = parseFloat(document.getElementById('priceInputC').value)||0;
-            const s = parseFloat(document.getElementById('surInputC').value)||0;
-            document.getElementById('totalPreviewC').textContent = (p+s).toLocaleString('vi-VN')+' ₫';
-            document.getElementById('priceBreakC').textContent = s>0 ? `${p.toLocaleString('vi-VN')}₫ + ${s.toLocaleString('vi-VN')}₫ phụ phí` : '';
+        /* ═══ PRICE CALC ═══ */
+        window.calcC = function(){
+            const price=parseFloat(document.getElementById('priceInputC').value)||0;
+            const sur=parseFloat(document.getElementById('surInputC').value)||0;
+            const perHour=price+sur;
+            document.getElementById('plPerHour').textContent=perHour>0?perHour.toLocaleString('vi-VN')+' ₫':'— ₫';
+            document.getElementById('plBreak').textContent=sur>0?`${price.toLocaleString('vi-VN')}₫ + ${sur.toLocaleString('vi-VN')}₫ phụ phí`:'';
+            if(tlSt!==null&&tlEt!==null&&tlSt<tlEt){
+                const hrs=(tlEt-tlSt)/60;
+                const total=Math.round(perHour*hrs);
+                document.getElementById('plTotal').textContent=total>0?total.toLocaleString('vi-VN')+' ₫':'— ₫';
+                const h=Math.floor(hrs), m=(hrs*60)%60;
+                document.getElementById('plDurSub').textContent=`${h>0?h+'h':''}${m>0?m+'p':''} · ${minToHH(tlSt)}–${minToHH(tlEt)}`;
+            } else {
+                document.getElementById('plTotal').textContent='— ₫';
+                document.getElementById('plDurSub').textContent='Chọn giờ để tính';
+            }
         };
 
-        // Peak toggle
-        let peakOnC = false;
-        window.togglePeakC = function() {
-            peakOnC = !peakOnC;
-            document.getElementById('peakSwC').classList.toggle('on', peakOnC);
-            document.getElementById('peakToggleC').classList.toggle('active', peakOnC);
-            document.getElementById('isPeakC').value = peakOnC ? 'true' : 'false';
+        /* ═══ PEAK TOGGLE ═══ */
+        let peakOn=false;
+        window.togglePeakC=function(){
+            peakOn=!peakOn;
+            document.getElementById('peakSwC').classList.toggle('on',peakOn);
+            document.getElementById('peakToggleC').classList.toggle('on',peakOn);
+            document.getElementById('isPeakC').value=peakOn?'true':'false';
         };
 
-        // Submit validation
-        window.prepareSubmitC = function() {
-            const checked = document.querySelectorAll('.day-check-c:checked');
-            if (!checked.length) { alert('Vui lòng chọn ít nhất một ngày áp dụng!'); return false; }
-            if (!document.getElementById('CourtSelectC').value) { alert('Vui lòng chọn sân!'); return false; }
+        /* ═══ VALIDATE & SUBMIT ═══ */
+        window.validateCreate=function(){
+            const court=document.getElementById('CourtSelectC').value;
+            if(!court){ alert('Vui lòng chọn sân!'); return false; }
+            const st=document.getElementById('startInput').value;
+            const et=document.getElementById('endInput').value;
+            if(!st||!et){ alert('Vui lòng chọn khung giờ!'); return false; }
+            if(hhToMin(st)>=hhToMin(et)){ alert('Giờ bắt đầu phải nhỏ hơn giờ kết thúc!'); return false; }
+            const price=parseFloat(document.getElementById('priceInputC').value);
+            if(!price||price<=0){ alert('Vui lòng nhập đơn giá lớn hơn 0!'); return false; }
+            if(document.getElementById('conflictAlert').classList.contains('show')){
+                if(!confirm('Khoảng giờ này có thể trùng slot hiện có. Vẫn tiếp tục?')) return false;
+            }
             syncDaysC();
             return true;
         };

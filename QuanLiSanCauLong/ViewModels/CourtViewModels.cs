@@ -62,7 +62,15 @@ namespace QuanLiSanCauLong.ViewModels
         public int TodayBookings { get; set; }
         public decimal TodayRevenue { get; set; }
     }
-
+    public class CourtImageViewModel
+    {
+        public int CourtImageId { get; set; }
+        public int CourtId { get; set; }
+        public string ImagePath { get; set; } = string.Empty;
+        public bool IsPrimary { get; set; }
+        public int DisplayOrder { get; set; }
+        public string? Caption { get; set; }
+    }
     public class CourtManageViewModel
     {
         public int CourtId { get; set; }

@@ -1,260 +1,261 @@
 ﻿@model QuanLiSanCauLong.ViewModels.StockTransactionViewModel
 @{
     Layout = null;
+    var facilities = ViewBag.Facilities as IEnumerable<QuanLiSanCauLong.Models.Facility> ?? Enumerable.Empty<QuanLiSanCauLong.Models.Facility>();
+    var products   = ViewBag.Products   as IEnumerable<QuanLiSanCauLong.Models.Product>  ?? Enumerable.Empty<QuanLiSanCauLong.Models.Product>();
+
+    // ✅ FIX: dùng Context.Request thay vì Request (không tồn tại trong partial view context)
+    int    preProductId   = 0;
+    int.TryParse(Context.Request.Query["preProductId"], out preProductId);
+    string preProductName = Context.Request.Query["preProductName"].ToString() ?? "";
+    int    preFacilityId  = Model.FacilityId > 0 ? Model.FacilityId : 0;
+    int    preAvailable   = 0;
+    int.TryParse(Context.Request.Query["available"], out preAvailable);
 }
 
 <style>
-    :root {
-        --deep:#1a1209;--gold:#d4a017;--gold2:#f5c842;
-        --cream:#f5f4ec;--warm:#f0ead8;--card:#fff;--border:#e4d9c8;--muted:#8a7560;
-        --red:#dc2626;--red-soft:#fef2f2;
-    }
-    .so-wrap { font-family:'Outfit',sans-serif; }
-    .so-hd {
-        background:linear-gradient(135deg,#7f1d1d,#991b1b);
-        color:#fff; padding:1.1rem 1.5rem;
-        display:flex; align-items:center; gap:.85rem;
-    }
-    .so-hd-icon { width:38px;height:38px;border-radius:9px;background:rgba(255,255,255,.15);
-        display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0; }
-    .so-hd h5 { font-weight:800;font-size:1rem;margin:0; }
-    .so-hd p  { font-size:.75rem;color:rgba(255,255,255,.65);margin:0; }
-    .so-close { margin-left:auto;background:none;border:none;color:rgba(255,255,255,.7);font-size:1.3rem;cursor:pointer; }
-
-    .so-body { padding:1.25rem 1.5rem; background:var(--cream); }
-    .so-field { display:flex;flex-direction:column;gap:.3rem;margin-bottom:.85rem; }
-    .so-field label { font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted); }
-    .so-fc { border:1.5px solid var(--border);border-radius:9px;padding:.5rem .8rem;
-        font-size:.875rem;width:100%;background:var(--card);outline:none;font-family:'Outfit',sans-serif; }
-    .so-fc:focus { border-color:var(--red);box-shadow:0 0 0 3px rgba(220,38,38,.12); }
-    .so-two { display:grid;grid-template-columns:1fr 1fr;gap:.75rem; }
-
-    /* Items table */
-    .so-items { background:var(--card);border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:.85rem; }
-    .so-items-hd { background:var(--warm);padding:.5rem 1rem;display:grid;
-        grid-template-columns:2fr 1fr 1fr;gap:.5rem;
-        font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted); }
-    .so-item-row { display:grid;grid-template-columns:2fr 1fr 1fr;gap:.5rem;padding:.55rem 1rem;
-        border-top:1px solid var(--border);align-items:center; }
-    .so-item-row:first-of-type { border-top:none; }
-    .so-fc-sm { border:1.5px solid var(--border);border-radius:7px;padding:.35rem .6rem;
-        font-size:.82rem;width:100%;background:var(--cream);outline:none;font-family:'Outfit',sans-serif; }
-    .so-fc-sm:focus { border-color:var(--red);background:#fff; }
-    .so-add-row { display:block;width:100%;padding:.5rem;border:1.5px dashed var(--border);
-        border-radius:8px;background:transparent;font-size:.78rem;font-weight:700;color:var(--muted);
-        cursor:pointer;transition:.15s;margin-top:.5rem;font-family:'Outfit',sans-serif; }
-    .so-add-row:hover { border-color:var(--red);color:var(--red); }
-
-    /* Stock availability chip */
-    .avail-chip { font-size:.68rem;font-weight:700;padding:.12rem .45rem;border-radius:6px;
-        background:var(--red-soft);color:var(--red);margin-left:.35rem;white-space:nowrap; }
-    .avail-chip.ok { background:#dcfce7;color:#15803d; }
-
-    /* Warning banner */
-    .so-warn { background:var(--red-soft);border:1px solid #fca5a5;border-radius:9px;
-        padding:.7rem 1rem;margin-bottom:.85rem;font-size:.82rem;color:var(--red);
-        display:flex;align-items:flex-start;gap:.5rem; }
-
-    .so-foot { padding:.9rem 1.5rem;background:var(--warm);border-top:1px solid var(--border);
-        display:flex;gap:.6rem;justify-content:flex-end; }
-    .btn-cancel { padding:.5rem 1.2rem;border:1.5px solid var(--border);border-radius:9px;
-        background:transparent;font-size:.84rem;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif; }
-    .btn-submit { padding:.5rem 1.5rem;border:none;border-radius:9px;background:var(--red);
-        color:#fff;font-size:.84rem;font-weight:700;cursor:pointer;transition:.18s;font-family:'Outfit',sans-serif;
-        display:flex;align-items:center;gap:.4rem; }
-    .btn-submit:hover { background:#b91c1c; }
-    .btn-submit:disabled { opacity:.5;cursor:not-allowed; }
-    .spinner-sm { width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
-        border-radius:50%;animation:spin .7s linear infinite; }
-    @@keyframes spin { to { transform:rotate(360deg); } }
+:root{--deep:#1a1209;--gold:#d4a017;--gold2:#f5c842;--warm:#f5ede0;--border:#e8ddd0;--muted:#8a7560;--red:#c94b2a;--green:#15803d;}
+*,*::before,*::after{box-sizing:border-box;}*{font-family:'Outfit',sans-serif;}
+.md-hd{padding:1rem 1.3rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--deep);}
+.md-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#fff;}
+.md-title em{color:#fca5a5;font-style:italic;}
+.md-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:1rem;cursor:pointer;}
+.md-close:hover{color:#fff;}
+.md-body{padding:1.2rem 1.3rem;max-height:72vh;overflow-y:auto;}
+.md-ft{padding:.85rem 1.3rem;border-top:1px solid var(--border);background:var(--warm);display:flex;justify-content:flex-end;gap:.55rem;}
+.sec-hd{font-size:.62rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:.5rem 0;margin-bottom:.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.38rem;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
+.fg{display:flex;flex-direction:column;gap:.25rem;margin-bottom:.8rem;}
+.fg label{font-size:.72rem;font-weight:700;color:var(--deep);}
+.fg .req{color:var(--red);}
+.fg .hint{font-size:.66rem;color:var(--muted);}
+.fi{padding:.58rem .82rem;border:1px solid var(--border);border-radius:7px;font-family:'Outfit',sans-serif;font-size:.83rem;color:var(--deep);background:#fff;outline:none;transition:border-color .2s;width:100%;}
+.fi:focus{border-color:var(--gold);}
+.combo-w{position:relative;}
+.combo-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:7px;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:200px;overflow-y:auto;display:none;}
+.combo-list.show{display:block;}
+.combo-opt{padding:.45rem .82rem;font-size:.82rem;cursor:pointer;color:var(--deep);}
+.combo-opt:hover{background:var(--warm);}
+.stk-bar-box{background:var(--warm);border:1px solid var(--border);border-radius:7px;padding:.65rem .9rem;margin-bottom:.85rem;display:none;}
+.stk-bar-box.show{display:block;}
+.stk-num{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;}
+.stk-num.ok{color:var(--green);}
+.stk-num.low{color:#c2410c;}
+.stk-num.zero{color:var(--red);}
+.stk-bar-w{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:.4rem;}
+.stk-bar-f{height:100%;border-radius:3px;transition:width .3s;}
+.qty-presets{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.35rem;}
+.qty-pill{padding:.18rem .55rem;border:1px solid var(--border);border-radius:4px;font-size:.7rem;cursor:pointer;background:#fff;transition:all .15s;color:var(--muted);}
+.qty-pill:hover{border-color:var(--red);background:rgba(201,75,42,.06);color:var(--red);}
+.warn-pill{background:#fff7ed;border:1px solid #fed7aa;border-radius:7px;padding:.5rem .75rem;font-size:.76rem;color:#c2410c;display:none;align-items:center;gap:.4rem;margin-top:.4rem;}
+.warn-pill.show{display:flex;}
+.btn-p{background:linear-gradient(135deg,#dc4040,#ef5a5a);color:#fff;border:none;padding:.62rem 1.3rem;font-size:.84rem;font-weight:700;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:.38rem;transition:all .2s;}
+.btn-p:hover{box-shadow:0 4px 14px rgba(201,75,42,.35);transform:translateY(-1px);}
+.btn-p:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.btn-s{padding:.6rem 1.1rem;border:1.5px solid var(--border);border-radius:7px;background:#fff;font-size:.82rem;font-weight:600;cursor:pointer;color:var(--muted);transition:all .18s;}
+.btn-s:hover{border-color:var(--deep);color:var(--deep);}
 </style>
 
-<div class="so-wrap">
-    <div class="so-hd">
-        <div class="so-hd-icon"><i class="bi bi-box-arrow-up"></i></div>
-        <div>
-            <h5>Xuất Kho Thủ Công</h5>
-            <p>Hàng hao hụt, thanh lý, nội bộ dùng</p>
-        </div>
-        <button class="so-close" onclick="$('#inventoryModal').modal('hide')">&times;</button>
-    </div>
+<div class="md-hd">
+    <span class="md-title"><i class="bi bi-box-arrow-up me-1" style="color:#fca5a5"></i> Xuất <em>Kho</em></span>
+    <button class="md-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+</div>
 
-    <div class="so-body">
-        <div class="so-warn">
-            <i class="bi bi-exclamation-triangle-fill" style="margin-top:1px;flex-shrink:0;"></i>
-            <span>Xuất kho thủ công sẽ <strong>trừ kho vĩnh viễn</strong>. Chỉ dùng khi kiểm kê phát hiện hao hụt, thanh lý hàng cũ hoặc xuất nội bộ không qua đơn hàng.</span>
-        </div>
+<div class="md-body">
 
-        <div class="so-two">
-            <div class="so-field">
-                <label>Cơ sở <span style="color:var(--red)">*</span></label>
-                <select id="so_facilityId" class="so-fc" onchange="loadAvailability()">
-                    @foreach (var f in ViewBag.Facilities as List<QuanLiSanCauLong.Models.Facility> ?? new())
+    <!-- CƠ SỞ + SẢN PHẨM -->
+    <div class="row2">
+        <div class="fg">
+            <label>Cơ sở <span class="req">*</span></label>
+            <select id="so_fac" class="fi" onchange="onSoFacChange()">
+                <option value="">-- Chọn cơ sở --</option>
+                @foreach (var f in facilities)
+                {
+                    @Html.Raw($"<option value=\"{f.FacilityId}\"{(preFacilityId==f.FacilityId?" selected":"")}>{f.FacilityName}</option>")
+                }
+            </select>
+        </div>
+        <div class="fg">
+            <label>Sản phẩm <span class="req">*</span></label>
+            <div class="combo-w">
+                <input type="text" id="so_prod_txt" class="fi" placeholder="Tìm sản phẩm..."
+                       value="@preProductName"
+                       oninput="filterSoProd(this.value)" onfocus="showCombo('soProdList')" />
+                <input type="hidden" id="so_prod_id" value="@(preProductId > 0 ? preProductId.ToString() : "")" />
+                <div class="combo-list" id="soProdList">
+                    @foreach (var p in products)
                     {
-                        <!option value="@f.FacilityId" @(f.FacilityId == Model.FacilityId ? "selected" : "")>
-                        @f.FacilityName
-                        </!option>
+                        <div class="combo-opt" onclick="pickSoProd('@Html.Raw(p.ProductName.Replace("'","\'"))',@p.ProductId)">
+                            @p.ProductName <span style="font-size:.66rem;color:var(--muted);">@p.ProductCode</span>
+                        </div>
                     }
-                </select>
-            </div>
-            <div class="so-field">
-                <label>Lý do xuất <span style="color:var(--red)">*</span></label>
-                <select id="so_reason" class="so-fc">
-                    <option value="Hao hụt / thất thoát">Hao hụt / thất thoát</option>
-                    <option value="Thanh lý hàng cũ">Thanh lý hàng cũ</option>
-                    <option value="Xuất nội bộ">Xuất nội bộ</option>
-                    <option value="Hỏng / không dùng được">Hỏng / không dùng được</option>
-                    <option value="Khác">Khác</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="so-field">
-            <label>Ghi chú</label>
-            <input type="text" id="so_note" class="so-fc" placeholder="Mô tả thêm lý do xuất kho..." />
-        </div>
-
-        <!-- Items -->
-        <div class="so-field">
-            <label>Danh sách sản phẩm xuất</label>
-        </div>
-        <div class="so-items">
-            <div class="so-items-hd">
-                <span>Sản phẩm</span>
-                <span style="text-align:center;">Số lượng xuất</span>
-                <span style="text-align:center;">Khả dụng</span>
-            </div>
-            <div id="so_itemList">
-                <div class="so-item-row">
-                    <select class="so-fc-sm so-product-sel" onchange="fetchAvail(this)">
-                        <option value="">— Chọn sản phẩm —</option>
-                        @foreach (var p in ViewBag.Products as List<QuanLiSanCauLong.Models.Product> ?? new())
-                        {
-                            <option value="@p.ProductId" data-unit="@p.Unit">@p.ProductName</option>
-                        }
-                    </select>
-                    <input type="number" class="so-fc-sm so-qty" min="1" value="1" placeholder="SL" />
-                    <div class="so-avail-cell" style="text-align:center;font-size:.78rem;color:var(--muted);">—</div>
                 </div>
             </div>
-            <button class="so-add-row" type="button" onclick="addSoRow()">
-                <i class="bi bi-plus-circle me-1"></i>Thêm sản phẩm
-            </button>
         </div>
     </div>
 
-    <div class="so-foot">
-        <button class="btn-cancel" onclick="$('#inventoryModal').modal('hide')">Huỷ</button>
-        <button class="btn-submit" id="soSubmitBtn" onclick="submitStockOut()">
-            <i class="bi bi-box-arrow-up"></i> Xuất kho
-        </button>
+    <!-- STOCK INDICATOR -->
+    <div class="stk-bar-box @(preProductId > 0 && preAvailable >= 0 ? "show" : "")" id="soStkBox">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:.72rem;color:var(--muted);">Tồn kho khả dụng</span>
+            <span class="stk-num @(preAvailable <= 0 ? "zero" : preAvailable <= 5 ? "low" : "ok")" id="soStkNum">
+                @(preAvailable > 0 ? preAvailable.ToString() : "0")
+            </span>
+        </div>
+        <div class="stk-bar-w">
+            <div class="stk-bar-f" id="soStkBar" style="width:60%;background:var(--green);"></div>
+        </div>
+    </div>
+
+    <!-- SỐ LƯỢNG + LÝ DO -->
+    <div class="row2">
+        <div class="fg">
+            <label>Số lượng xuất <span class="req">*</span></label>
+            <input type="number" id="so_qty" class="fi" min="1" value="1" placeholder="SL" oninput="checkSoQty()" />
+            <div class="qty-presets">
+                @foreach (var q in new[]{1,2,5,10,20})
+                {
+                    <span class="qty-pill" onclick="document.getElementById('so_qty').value=@q;checkSoQty();">@q</span>
+                }
+                <span class="qty-pill" onclick="setSoAll()" style="border-style:dashed;">Tất cả</span>
+            </div>
+            <div class="warn-pill" id="soWarn"><i class="bi bi-exclamation-triangle-fill"></i> Vượt quá tồn kho!</div>
+        </div>
+        <div class="fg">
+            <label>Lý do xuất kho <span class="req">*</span></label>
+            <div class="combo-w">
+                <input type="text" id="so_reason" class="fi" placeholder="Chọn hoặc nhập lý do..."
+                       onfocus="showCombo('soReasonList')" oninput="filterCombo('soReasonList',this.value)" />
+                <div class="combo-list" id="soReasonList">
+                    @foreach (var r in new[]{"Bán hàng","Hư hỏng — viết sổ","Hàng mẫu / marketing","Kiểm kê thực tế","Xuất hủy hết hạn","Xuất nội bộ","Trả nhà cung cấp","Khác"})
+                    {
+                        <div class="combo-opt" onclick="pickCombo2('so_reason','@r')">@r</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fg">
+        <label>Ghi chú</label>
+        <textarea id="so_note" class="fi" rows="2" placeholder="Ghi chú thêm..."></textarea>
     </div>
 </div>
 
+<div class="md-ft">
+    <button class="btn-s" data-bs-dismiss="modal">Hủy</button>
+    <button class="btn-p" id="soBtnSave" onclick="submitStockOut()">
+        <i class="bi bi-box-arrow-up"></i> Xác nhận xuất kho
+    </button>
+</div>
+
 <script>
-const _soProducts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-    (ViewBag.Products as List<QuanLiSanCauLong.Models.Product> ?? new()).Select(p => new { p.ProductId, p.ProductName, p.Unit })
-));
+const SO_PRODS_ALL = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(products.Select(p => new {
+    id = p.ProductId,
+    name = p.ProductName,
+    code = p.ProductCode ?? p.SKU ?? ""
+})));
+const TOKEN_SO = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+let soMaxAvailable = @preAvailable;
 
-async function fetchAvail(sel) {
-    const row   = sel.closest('.so-item-row');
-    const cell  = row.querySelector('.so-avail-cell');
-    const pid   = sel.value;
-    const fid   = document.getElementById('so_facilityId').value;
-    if (!pid) { cell.innerHTML = '—'; return; }
-    cell.innerHTML = '<span style="font-size:.7rem;color:var(--muted);">...</span>';
+function showCombo(id) { document.querySelectorAll('.combo-list').forEach(l=>l.classList.remove('show')); document.getElementById(id)?.classList.add('show'); }
+function filterCombo(listId, q) { const l=document.getElementById(listId); if(!l)return; l.classList.add('show'); l.querySelectorAll('.combo-opt').forEach(o=>{ o.style.display=o.textContent.toLowerCase().includes(q.toLowerCase())?'':'none'; }); }
+function pickCombo2(id, val) { document.getElementById(id).value=val; document.querySelectorAll('.combo-list').forEach(l=>l.classList.remove('show')); }
+document.addEventListener('click', e=>{ if(!e.target.closest('.combo-w')) document.querySelectorAll('.combo-list').forEach(l=>l.classList.remove('show')); });
+
+function filterSoProd(q) {
+    const l = document.getElementById('soProdList'); if(!l)return;
+    l.classList.add('show');
+    l.querySelectorAll('.combo-opt').forEach(o=>{ o.style.display=o.textContent.toLowerCase().includes(q.toLowerCase())?'':'none'; });
+    document.getElementById('so_prod_id').value='';
+}
+
+async function pickSoProd(name, id) {
+    document.getElementById('so_prod_txt').value = name;
+    document.getElementById('so_prod_id').value  = id;
+    document.getElementById('soProdList').classList.remove('show');
+    await updateStkBox();
+}
+
+async function onSoFacChange() { await updateStkBox(); }
+
+async function updateStkBox() {
+    const facId  = document.getElementById('so_fac').value;
+    const prodId = document.getElementById('so_prod_id').value;
+    if(!facId || !prodId) return;
     try {
-        const r = await fetch(`/AdminInventory/GetProductStock?facilityId=${fid}&productId=${pid}`);
-        const d = await r.json();
-        if (d.success) {
-            const cls = d.availableQuantity > 0 ? 'ok' : '';
-            cell.innerHTML = `<span class="avail-chip ${cls}">${d.availableQuantity} ${d.unit}</span>`;
-            row.querySelector('.so-qty').max = d.availableQuantity;
-        } else {
-            cell.innerHTML = '<span class="avail-chip">Chưa có kho</span>';
+        const data = await fetch(`/AdminInventory/GetProductStock?facilityId=${facId}&productId=${prodId}`).then(r=>r.json());
+        if(data.success) {
+            soMaxAvailable = data.availableQuantity;
+            const box = document.getElementById('soStkBox');
+            const num = document.getElementById('soStkNum');
+            const bar = document.getElementById('soStkBar');
+            box.classList.add('show');
+            num.textContent = soMaxAvailable;
+            num.className = 'stk-num ' + (soMaxAvailable<=0?'zero':soMaxAvailable<=5?'low':'ok');
+            const pct = data.maxQuantity>0?Math.min(soMaxAvailable/data.maxQuantity*100,100):soMaxAvailable>0?60:0;
+            bar.style.width = pct+'%';
+            bar.style.background = soMaxAvailable<=0?'var(--red)':soMaxAvailable<=5?'#c2410c':'var(--green)';
         }
-    } catch { cell.innerHTML = '<span class="avail-chip">Lỗi</span>'; }
+    } catch(e){}
 }
 
-async function loadAvailability() {
-    document.querySelectorAll('.so-product-sel').forEach(sel => {
-        if (sel.value) fetchAvail(sel);
-    });
+function checkSoQty() {
+    const qty = parseInt(document.getElementById('so_qty').value)||0;
+    document.getElementById('soWarn').classList.toggle('show', qty > soMaxAvailable && soMaxAvailable > 0);
 }
 
-let _soRowCount = 1;
-function addSoRow() {
-    _soRowCount++;
-    const opts = _soProducts.map(p => `<option value="${p.productId}" data-unit="${p.unit}">${p.productName}</option>`).join('');
-    const div = document.createElement('div');
-    div.className = 'so-item-row';
-    div.innerHTML = `
-        <select class="so-fc-sm so-product-sel" onchange="fetchAvail(this)">
-            <option value="">— Chọn sản phẩm —</option>${opts}
-        </select>
-        <input type="number" class="so-fc-sm so-qty" min="1" value="1" placeholder="SL" />
-        <div class="so-avail-cell" style="text-align:center;">
-            <button onclick="this.closest('.so-item-row').remove()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;" title="Xoá dòng">
-                <i class="bi bi-x-circle"></i>
-            </button>
-        </div>`;
-    document.getElementById('so_itemList').appendChild(div);
+function setSoAll() {
+    document.getElementById('so_qty').value = soMaxAvailable > 0 ? soMaxAvailable : 1;
+    checkSoQty();
 }
 
 async function submitStockOut() {
-    const btn = document.getElementById('soSubmitBtn');
-    const rows = document.querySelectorAll('#so_itemList .so-item-row');
-    const items = [];
-    let valid = true;
+    const facId  = document.getElementById('so_fac').value;
+    const prodId = document.getElementById('so_prod_id').value;
+    const qty    = parseInt(document.getElementById('so_qty').value)||0;
+    const reason = document.getElementById('so_reason').value.trim();
 
-    rows.forEach(row => {
-        const pid = row.querySelector('.so-product-sel').value;
-        const qty = parseInt(row.querySelector('.so-qty').value);
-        if (pid && qty > 0) items.push({ productId: parseInt(pid), quantity: qty });
-    });
+    if(!facId)  { alert('Vui lòng chọn cơ sở!'); return; }
+    if(!prodId) { alert('Vui lòng chọn sản phẩm!'); return; }
+    if(qty<=0)  { alert('Số lượng phải lớn hơn 0!'); return; }
+    if(!reason) { alert('Vui lòng nhập lý do xuất kho!'); return; }
+    if(qty > soMaxAvailable && soMaxAvailable > 0) {
+        const ok = confirm(`Số lượng xuất (${qty}) vượt quá tồn kho khả dụng (${soMaxAvailable}). Tiếp tục?`);
+        if(!ok) return;
+    }
 
-    if (!items.length) { alert('Vui lòng chọn ít nhất 1 sản phẩm!'); return; }
+    const btn = document.getElementById('soBtnSave');
+    btn.disabled=true; btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span> Đang xử lý...';
 
-    btn.disabled = true;
-    btn.innerHTML = '<div class="spinner-sm"></div> Đang xử lý...';
-
-    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
-    const form  = new FormData();
-    form.append('FacilityId',      document.getElementById('so_facilityId').value);
-    form.append('TransactionType', 'StockOut');
-    form.append('Reason',          document.getElementById('so_reason').value);
-    form.append('Note',            document.getElementById('so_note').value);
-    items.forEach((it, i) => {
-        form.append(`Items[${i}].ProductId`, it.productId);
-        form.append(`Items[${i}].Quantity`,  it.quantity);
-    });
-    form.append('__RequestVerificationToken', token);
+    const payload = {
+        facilityId: parseInt(facId),
+        reason: reason,
+        note: document.getElementById('so_note').value,
+        items: [{ productId: parseInt(prodId), quantity: qty }]
+    };
 
     try {
-        const res  = await fetch('/AdminInventory/StockOut', { method: 'POST', body: form });
-        const data = await res.json();
-        if (data.success) {
-            showToast(true, data.message);
-            setTimeout(() => { $('#inventoryModal').modal('hide'); location.reload(); }, 900);
-        } else {
-            showToast(false, data.message);
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-box-arrow-up"></i> Xuất kho';
-        }
-    } catch {
-        showToast(false, 'Lỗi kết nối. Vui lòng thử lại.');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-box-arrow-up"></i> Xuất kho';
-    }
-}
+        const res = await fetch('/AdminInventory/StockOut', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': TOKEN_SO },
+            body: JSON.stringify(payload)
+        }).then(r=>r.json());
 
-function showToast(ok, msg) {
-    const el = document.getElementById('invToastWrap');
-    if (!el) return;
-    const d = document.createElement('div');
-    d.className = 'inv-toast ' + (ok ? 'inv-toast-ok' : 'inv-toast-err');
-    d.textContent = msg;
-    el.appendChild(d);
-    setTimeout(() => d.remove(), 3500);
+        if(res.success) {
+            bootstrap.Modal.getInstance(document.getElementById('invModal'))?.hide();
+            const t=document.createElement('div');
+            t.style.cssText='position:fixed;bottom:1.5rem;right:1.5rem;background:#15803d;color:#fff;padding:.75rem 1.25rem;border-radius:8px;font-size:.84rem;font-weight:700;z-index:9999;display:flex;align-items:center;gap:.5rem;box-shadow:0 4px 16px rgba(0,0,0,.2);';
+            t.innerHTML=`<i class="bi bi-check-circle-fill"></i> ${res.message}`;
+            document.body.appendChild(t);
+            setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(()=>{ t.remove(); location.reload(); },400); },1800);
+        } else {
+            alert(res.message||'Có lỗi xảy ra!');
+            btn.disabled=false; btn.innerHTML='<i class="bi bi-box-arrow-up"></i> Xác nhận xuất kho';
+        }
+    } catch(e) {
+        alert('Lỗi kết nối!');
+        btn.disabled=false; btn.innerHTML='<i class="bi bi-box-arrow-up"></i> Xác nhận xuất kho';
+    }
 }
 </script>

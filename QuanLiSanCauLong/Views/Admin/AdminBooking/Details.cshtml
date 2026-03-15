@@ -1,8 +1,46 @@
 ﻿@model QuanLiSanCauLong.ViewModels.BookingHistoryViewModel
 @{
     ViewData["Title"] = "Admin · Chi tiết đơn #" + Model.BookingCode;
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
     bool isTransferUnpaid = Model.PaymentMethod == "Transfer"
         && (Model.PaymentStatus?.ToLower() == "unpaid" || Model.PaymentStatus?.ToLower() == "pending");
+
+    // ── Tính sẵn 1 lần, dùng lại khắp view ──
+    string heroStatusClass = Model.Status.ToLower();
+    string heroStatusLabel = Model.Status switch
+    {
+        "Pending" => "Chờ xác nhận",
+        "Confirmed" => "Đã xác nhận",
+        "Playing" => "Đang chơi",
+        "Completed" => "Hoàn thành",
+        "Cancelled" => "Đã hủy",
+        _ => Model.Status
+    };
+
+    string payClass2, payLabel2;
+    if (Model.PaymentStatus?.ToLower() == "paid")
+    { payClass2 = "paid"; payLabel2 = "Đã TT"; }
+    else if (Model.PaymentMethod == "Transfer")
+    { payClass2 = "awaiting-ck"; payLabel2 = "Chờ CK"; }
+    else
+    { payClass2 = "unpaid"; payLabel2 = "Chưa TT"; }
+
+    string pmDisplay = Model.PaymentMethod switch
+    {
+        "Transfer" => "Chuyển khoản",
+        "Cash" => "Tiền mặt",
+        _ => Model.PaymentMethod ?? "—"
+    };
+    string pmPayClass, pmPayLabel;
+    if (Model.PaymentStatus?.ToLower() == "paid")
+    { pmPayClass = "paid"; pmPayLabel = "Đã TT"; }
+    else if (Model.PaymentMethod == "Transfer")
+    { pmPayClass = "awaiting-ck"; pmPayLabel = "Chờ xác nhận CK"; }
+    else
+    { pmPayClass = "unpaid"; pmPayLabel = "Chưa TT"; }
+
+    // Dữ liệu truyền xuống JS qua data-* (tránh hoàn toàn escape trong onclick)
+    string bookingDateStr = Model.BookingDate.ToString("dd/MM/yyyy");
 }
 
 <style>
@@ -96,7 +134,6 @@
         padding: 2rem;
     }
 
-    /* Hero */
     .d-hero {
         background: var(--D);
         border: 1px solid rgba(212,160,23,.18);
@@ -179,7 +216,6 @@
         color: var(--M);
     }
 
-    /* Alert Transfer */
     .alert-transfer {
         background: #eff6ff;
         border: 1.5px solid #93c5fd;
@@ -237,7 +273,6 @@
             box-shadow: 0 6px 20px rgba(29,78,216,.35);
         }
 
-    /* Cards */
     .c {
         background: #fff;
         border: 1px solid var(--S);
@@ -280,7 +315,6 @@
         padding: 1.3rem 1.4rem;
     }
 
-    /* Info grid */
     .ig {
         display: grid;
         grid-template-columns: repeat(3,1fr);
@@ -320,7 +354,6 @@
         border-radius: 3px;
     }
 
-    /* Status badges */
     .sb {
         padding: .24rem .75rem;
         border-radius: 4px;
@@ -371,7 +404,6 @@
             color: #92400e;
         }
 
-    /* Timeline */
     .timeline {
         display: flex;
         align-items: center;
@@ -440,7 +472,6 @@
             background: linear-gradient(90deg,var(--G),var(--G2));
         }
 
-    /* Product table */
     .ptbl {
         width: 100%;
         border-collapse: collapse;
@@ -475,7 +506,6 @@
             border-top: 2px solid var(--S);
         }
 
-    /* Payment summary */
     .ps-rows {
         display: flex;
         flex-direction: column;
@@ -530,7 +560,6 @@
         color: var(--D);
     }
 
-    /* Actions */
     .act-row {
         display: flex;
         gap: .65rem;
@@ -550,6 +579,7 @@
         border: none;
         text-decoration: none;
         transition: all .2s;
+        font-family: 'Outfit',sans-serif;
     }
 
         .btn-a.prim {
@@ -605,7 +635,6 @@
                 color: #fff;
             }
 
-    /* Note & modals */
     .note-box {
         background: #fdf8f0;
         border: 1px solid rgba(212,160,23,.2);
@@ -798,9 +827,21 @@
     <span class="admin-chip"><i class="bi bi-shield-fill"></i> Admin</span>
 </div>
 
+@*
+    ── DATA BRIDGE ──
+    Truyền dữ liệu Razor → JS qua hidden span, không nhúng vào onclick.
+    Tránh hoàn toàn lỗi "Unterminated string literal" / CS1056.
+*@
+<span id="js-data"
+      data-booking-id="@Model.BookingId"
+      data-booking-code="@Model.BookingCode"
+      data-court-number="@Model.CourtNumber"
+      data-booking-date="@bookingDateStr"
+      style="display:none"></span>
+
 <div class="pw">
 
-    @* ── Banner nổi bật: Chờ xác nhận CK ── *@
+    @* ── Banner CK chờ xác nhận ── *@
     @if (isTransferUnpaid)
     {
         <div class="alert-transfer">
@@ -808,12 +849,12 @@
             <div class="alert-transfer-body">
                 <div class="alert-transfer-title">⚡ Đơn chuyển khoản đang chờ xác nhận thanh toán</div>
                 <div class="alert-transfer-sub">
-                    Khách hàng đã chọn phương thức <strong>Chuyển khoản</strong>.
-                    Sau khi kiểm tra tài khoản và xác nhận đã nhận tiền, hãy nhấn nút bên phải để kích hoạt đơn.<br>
+                    Khách đã chọn <strong>Chuyển khoản</strong>.
+                    Sau khi kiểm tra tài khoản, nhấn nút xác nhận để kích hoạt đơn.<br>
                     Nội dung CK cần khớp: <strong>@Model.BookingCode</strong>
                 </div>
             </div>
-            <button type="button" class="btn-confirm-pay" onclick="showConfirmPayModal()">
+            <button type="button" class="btn-confirm-pay" onclick="openStatus('ConfirmCK')">
                 <i class="bi bi-check-circle-fill"></i> Xác nhận đã nhận tiền CK
             </button>
         </div>
@@ -828,31 +869,10 @@
         </div>
         <div class="d-hero-right">
             <div class="d-stat">
-                @{
-                    string heroStatusClass = Model.Status.ToLower();
-                    string heroStatusLabel = Model.Status switch
-                    {
-                                "Pending" => "Chờ xác nhận",
-                                "Confirmed" => "Đã xác nhận",
-                                "Playing" => "Đang chơi",
-                                "Completed" => "Hoàn thành",
-                                "Cancelled" => "Đã hủy",
-                        _ => Model.Status
-                    };
-                }
                 <div class="d-sv"><span class="sb @heroStatusClass">@heroStatusLabel</span></div>
                 <div class="d-sl">Trạng thái đơn</div>
             </div>
             <div class="d-stat">
-                @{
-                    string payClass2, payLabel2;
-                    if (Model.PaymentStatus?.ToLower() == "paid")
-                    { payClass2 = "paid"; payLabel2 = "Đã TT"; }
-                    else if (Model.PaymentMethod == "Transfer")
-                    { payClass2 = "awaiting-ck"; payLabel2 = "Chờ CK"; }
-                    else
-                    { payClass2 = "unpaid"; payLabel2 = "Chưa TT"; }
-                }
                 <div class="d-sv"><span class="sb @payClass2">@payLabel2</span></div>
                 <div class="d-sl">Thanh toán</div>
             </div>
@@ -888,7 +908,9 @@
                     bool done = curIdx > si || Model.Status == sv;
                     bool cur = Model.Status == sv;
                     <div class="tstep">
-                        <div class="tstep-dot @(done ? "done" : "") @(cur ? "cur" : "")"><i class="bi @icon"></i></div>
+                        <div class="tstep-dot @(done ? "done" : "") @(cur ? "cur" : "")">
+                            <i class="bi @icon"></i>
+                        </div>
                         <div class="tstep-lbl @(done ? "done" : "") @(cur ? "cur" : "")">@sl</div>
                     </div>
                     if (si < steps.Length - 1)
@@ -917,14 +939,19 @@
                 </div>
                 <div class="ig-item">
                     <div class="ig-lbl">Sân</div>
-                    <div class="ig-val"><i class="bi bi-grid-3x3-gap"></i> @Model.CourtNumber <span class="vtag">@Model.CourtType</span></div>
+                    <div class="ig-val">
+                        <i class="bi bi-grid-3x3-gap"></i> @Model.CourtNumber
+                        <span class="vtag">@Model.CourtType</span>
+                    </div>
                 </div>
                 <div class="ig-item">
                     <div class="ig-lbl">Ngày chơi</div>
                     <div class="ig-val">
                         <i class="bi bi-calendar3"></i>
                         @Model.BookingDate.ToString("dd/MM/yyyy")
-                        <span style="color:#8c7a68;font-size:.74rem">(@Model.BookingDate.ToString("dddd", new System.Globalization.CultureInfo("vi-VN")))</span>
+                        <span style="color:#8c7a68;font-size:.74rem">
+                            (@Model.BookingDate.ToString("dddd", new System.Globalization.CultureInfo("vi-VN")))
+                        </span>
                     </div>
                 </div>
                 <div class="ig-item">
@@ -937,22 +964,6 @@
                 </div>
                 <div class="ig-item">
                     <div class="ig-lbl">Phương thức TT</div>
-                    @{
-                        /* FIX: Lấy từ Model.PaymentMethod thay vì hardcode */
-                        string pmDisplay = Model.PaymentMethod switch
-                        {
-                                    "Transfer" => "Chuyển khoản",
-                                    "Cash" => "Tiền mặt",
-                            _ => Model.PaymentMethod ?? "—"
-                        };
-                        string pmPayClass, pmPayLabel;
-                        if (Model.PaymentStatus?.ToLower() == "paid")
-                        { pmPayClass = "paid"; pmPayLabel = "Đã TT"; }
-                        else if (Model.PaymentMethod == "Transfer")
-                        { pmPayClass = "awaiting-ck"; pmPayLabel = "Chờ xác nhận CK"; }
-                        else
-                        { pmPayClass = "unpaid"; pmPayLabel = "Chưa TT"; }
-                    }
                     <div class="ig-val">
                         <i class="bi bi-credit-card"></i> @pmDisplay
                         <span class="sb @pmPayClass" style="font-size:.62rem">@pmPayLabel</span>
@@ -960,7 +971,9 @@
                 </div>
                 <div class="ig-item">
                     <div class="ig-lbl">Đặt lúc</div>
-                    <div class="ig-val" style="font-size:.82rem"><i class="bi bi-clock-history"></i> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                    <div class="ig-val" style="font-size:.82rem">
+                        <i class="bi bi-clock-history"></i> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                    </div>
                 </div>
             </div>
             @if (!string.IsNullOrEmpty(Model.Note))
@@ -973,7 +986,7 @@
         </div>
     </div>
 
-    <!-- Products -->
+    <!-- Sản phẩm đi kèm -->
     @if (Model.RelatedOrders != null && Model.RelatedOrders.Any())
     {
         <div class="c">
@@ -1014,7 +1027,7 @@
         </div>
     }
 
-    <!-- Payment Summary -->
+    <!-- Chi tiết thanh toán -->
     <div class="c">
         <div class="c-hd"><i class="bi bi-receipt"></i><span class="c-title">Chi tiết thanh toán</span></div>
         <div class="c-bd" style="max-width:380px">
@@ -1045,43 +1058,38 @@
             <i class="bi bi-arrow-left"></i> Quay lại DS
         </a>
 
-        @* Nút CK: chỉ hiện khi Transfer + chưa được duyệt *@
         @if (isTransferUnpaid)
         {
-            <button type="button" class="btn-a blue" onclick="showConfirmPayModal()">
-                <i class="bi bi-bank"></i> Xác nhận đã nhận tiền CK
+            <button type="button" class="btn-a blue" onclick="openStatus('ConfirmCK')">
+                <i class="bi bi-bank"></i> Xác nhận CK
             </button>
         }
 
-        @* Nút Confirm Order: Pending + (Cash HOẶC đã xác nhận CK) *@
         @if (Model.Status == "Pending"
                 && (Model.PaymentMethod != "Transfer" || Model.PaymentStatus?.ToLower() == "paid"))
         {
-            <button type="button" class="btn-a prim" onclick="showConfirmOrderModal()">
-                <i class="bi bi-check-circle"></i> Xác nhận đơn hàng
+            <button type="button" class="btn-a prim" onclick="openStatus('Confirmed')">
+                <i class="bi bi-check-circle"></i> Xác nhận đơn
             </button>
         }
 
-        @* Đang chơi *@
         @if (Model.Status == "Confirmed")
         {
-            <button type="button" class="btn-a grn" onclick="showStatusModal('Playing','Đang chơi')">
+            <button type="button" class="btn-a grn" onclick="openStatus('Playing')">
                 <i class="bi bi-controller"></i> Đang chơi
             </button>
         }
 
-        @* Hoàn thành *@
         @if (Model.Status == "Playing")
         {
-            <button type="button" class="btn-a grn" onclick="showStatusModal('Completed','Hoàn thành')">
+            <button type="button" class="btn-a grn" onclick="openStatus('Completed')">
                 <i class="bi bi-trophy"></i> Hoàn thành
             </button>
         }
 
-        @* Hủy *@
         @if (Model.Status != "Cancelled" && Model.Status != "Completed")
         {
-            <button type="button" class="btn-a dan" onclick="showCancelModal()">
+            <button type="button" class="btn-a dan" onclick="openCancel()">
                 <i class="bi bi-x-circle"></i> Hủy đơn
             </button>
         }
@@ -1093,37 +1101,32 @@
     </div>
 </div>
 
-<!-- Modal: Xác nhận nhận tiền CK -->
-<div class="modal fade modal-dark" id="confirmPayModal" tabindex="-1">
+<!-- Modal SetStatus (dùng chung) -->
+<div class="modal fade modal-dark" id="setStatusModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-bank me-2" style="color:var(--G2)"></i> Xác nhận nhận tiền CK</h5>
+                <h5 class="modal-title">
+                    <i class="bi bi-arrow-repeat me-2" style="color:var(--G2)"></i>
+                    <span id="ss-title">Xác nhận thao tác</span>
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form asp-controller="AdminBooking" asp-action="ConfirmPayment" method="post">
+            <form asp-controller="AdminBooking" asp-action="SetStatus" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" value="@Model.BookingId" />
+                <input type="hidden" name="newStatus" id="ss-value" />
                 <div class="modal-body">
-                    <p style="font-size:.88rem;color:var(--D)">
-                        Xác nhận đã nhận tiền chuyển khoản cho đơn <strong>@Model.BookingCode</strong>?
-                    </p>
-                    <div class="info-note">
-                        <i class="bi bi-info-circle-fill"></i>
-                        <span>
-                            Hành động này sẽ đặt <strong>PaymentStatus = Paid</strong>
-                            và tự động chuyển đơn sang <strong>Confirmed</strong>. Không thể hoàn tác.
-                        </span>
-                    </div>
-                    <div style="margin-top:1rem">
-                        <div class="ig-lbl" style="margin-bottom:.35rem">Ghi chú xác nhận (tuỳ chọn)</div>
-                        <textarea name="confirmNote" rows="2" placeholder="VD: Đã nhận 450.000đ lúc 14:32 ngày 04/03..."></textarea>
+                    <p style="font-size:.88rem;color:var(--D)" id="ss-desc"></p>
+                    <div id="ss-note-wrap" style="display:none;margin-top:.75rem">
+                        <div class="ig-lbl" style="margin-bottom:.3rem">Ghi chú (tuỳ chọn)</div>
+                        <textarea name="note" rows="2" placeholder="VD: Đã nhận 450.000đ lúc 14:32..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn-modal-confirm-pay">
-                        <i class="bi bi-check-circle me-1"></i> Xác nhận đã nhận tiền
+                    <button type="submit" class="btn-confirm-action">
+                        <i class="bi bi-check me-1"></i> Xác nhận
                     </button>
                 </div>
             </form>
@@ -1131,82 +1134,37 @@
     </div>
 </div>
 
-<!-- Modal: Xác nhận đơn -->
-<div class="modal fade modal-dark" id="confirmOrderModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-check-circle me-2" style="color:var(--G2)"></i> Xác nhận đơn đặt sân</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form asp-controller="AdminBooking" asp-action="ConfirmOrder" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="id" value="@Model.BookingId" />
-                <div class="modal-body">
-                    <p style="font-size:.88rem;color:var(--D)">
-                        Xác nhận đơn <strong>@Model.BookingCode</strong> — sân <strong>@Model.CourtNumber</strong>
-                        ngày <strong>@Model.BookingDate.ToString("dd/MM/yyyy")</strong>?
-                    </p>
-                    <div class="warn-note">
-                        <i class="bi bi-info-circle"></i>
-                        <span>Sau khi xác nhận, sân sẽ được giữ chỗ cho khách hàng.</span>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn-confirm-action"><i class="bi bi-check-circle me-1"></i> Xác nhận đơn</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal: Cập nhật trạng thái -->
-<div class="modal fade modal-dark" id="statusModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="statusModalTitle"><i class="bi bi-arrow-repeat me-2" style="color:var(--G2)"></i> Cập nhật trạng thái</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form asp-controller="AdminBooking" asp-action="UpdateStatus" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="id" value="@Model.BookingId" />
-                <input type="hidden" name="newStatus" id="statusModalValue" />
-                <div class="modal-body">
-                    <p style="font-size:.88rem;color:var(--D)" id="statusModalDesc">Bạn có chắc muốn cập nhật trạng thái?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn-confirm-action"><i class="bi bi-check me-1"></i> Xác nhận</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal: Hủy đơn -->
+<!-- Modal Hủy đơn -->
 <div class="modal fade modal-dark" id="cancelModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2" style="color:var(--G)"></i> Hủy đặt sân</h5>
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle me-2" style="color:var(--G)"></i> Hủy đặt sân
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form asp-controller="AdminBooking" asp-action="Cancel" method="post">
                 @Html.AntiForgeryToken()
                 <div class="modal-body">
                     <input type="hidden" name="id" value="@Model.BookingId" />
-                    <p style="font-size:.88rem;color:var(--D)">Hủy đơn <strong>@Model.BookingCode</strong>?</p>
+                    <p style="font-size:.88rem;color:var(--D)">
+                        Hủy đơn <strong>@Model.BookingCode</strong>?
+                    </p>
                     <div>
                         <div class="ig-lbl" style="margin-bottom:.35rem">Lý do hủy *</div>
                         <textarea name="cancelReason" rows="3" required placeholder="Nhập lý do hủy..."></textarea>
                     </div>
-                    <div class="warn-note"><i class="bi bi-info-circle"></i><span>Thao tác hủy bởi Admin không thể hoàn tác.</span></div>
+                    <div class="warn-note">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Thao tác hủy bởi Admin không thể hoàn tác.</span>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn-confirm-cancel"><i class="bi bi-x-circle me-1"></i> Xác nhận hủy</button>
+                    <button type="submit" class="btn-confirm-cancel">
+                        <i class="bi bi-x-circle me-1"></i> Xác nhận hủy
+                    </button>
                 </div>
             </form>
         </div>
@@ -1215,16 +1173,49 @@
 
 @section Scripts {
     <script>
-        function showConfirmPayModal()   { new bootstrap.Modal(document.getElementById('confirmPayModal')).show(); }
-        function showConfirmOrderModal() { new bootstrap.Modal(document.getElementById('confirmOrderModal')).show(); }
-        function showStatusModal(status, label) {
-            document.getElementById('statusModalValue').value = status;
-            document.getElementById('statusModalTitle').innerHTML =
-                `<i class="bi bi-arrow-repeat me-2" style="color:var(--G2)"></i> Đặt trạng thái: ${label}`;
-            document.getElementById('statusModalDesc').textContent =
-                `Xác nhận chuyển đơn #@Model.BookingCode sang trạng thái "${label}"?`;
-            new bootstrap.Modal(document.getElementById('statusModal')).show();
-        }
-        function showCancelModal() { new bootstrap.Modal(document.getElementById('cancelModal')).show(); }
+        (function () {
+            // Đọc dữ liệu từ data-* thay vì nhúng vào onclick
+            var d = document.getElementById('js-data').dataset;
+            var code   = d.bookingCode;
+            var court  = d.courtNumber;
+            var date   = d.bookingDate;
+
+            var cfg = {
+                ConfirmCK: {
+                    title:    'Xác nhận nhận tiền CK',
+                    desc:     'Xác nhận đã nhận tiền chuyển khoản cho đơn ' + code + '?',
+                    showNote: true
+                },
+                Confirmed: {
+                    title:    'Xác nhận đơn đặt sân',
+                    desc:     'Xác nhận đơn ' + code + ' — sân ' + court + ' ngày ' + date + '?',
+                    showNote: false
+                },
+                Playing: {
+                    title:    'Chuyển sang Đang chơi',
+                    desc:     'Xác nhận đơn ' + code + ' bắt đầu vào sân?',
+                    showNote: false
+                },
+                Completed: {
+                    title:    'Hoàn thành buổi chơi',
+                    desc:     'Xác nhận đơn ' + code + ' đã kết thúc và hoàn thành?',
+                    showNote: false
+                }
+            };
+
+            window.openStatus = function (newStatus) {
+                var c = cfg[newStatus];
+                if (!c) return;
+                document.getElementById('ss-value').value           = newStatus;
+                document.getElementById('ss-title').textContent     = c.title;
+                document.getElementById('ss-desc').textContent      = c.desc;
+                document.getElementById('ss-note-wrap').style.display = c.showNote ? '' : 'none';
+                new bootstrap.Modal(document.getElementById('setStatusModal')).show();
+            };
+
+            window.openCancel = function () {
+                new bootstrap.Modal(document.getElementById('cancelModal')).show();
+            };
+        }());
     </script>
 }

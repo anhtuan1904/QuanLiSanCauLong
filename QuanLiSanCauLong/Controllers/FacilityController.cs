@@ -9,10 +9,12 @@ namespace QuanLiSanCauLong.Controllers
     public class FacilityController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public FacilityController(ApplicationDbContext context)
+        public FacilityController(ApplicationDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         // GET: Facility/Index
@@ -35,28 +37,27 @@ namespace QuanLiSanCauLong.Controllers
 
             query = sortBy switch
             {
-                "name_asc"  => query.OrderBy(f => f.FacilityName),
+                "name_asc" => query.OrderBy(f => f.FacilityName),
                 "name_desc" => query.OrderByDescending(f => f.FacilityName),
-                "newest"    => query.OrderByDescending(f => f.CreatedAt),
-                _           => query.OrderBy(f => f.FacilityName)
+                "newest" => query.OrderByDescending(f => f.CreatedAt),
+                _ => query.OrderBy(f => f.FacilityName)
             };
 
             var facilities = await query.ToListAsync();
 
             var model = facilities.Select(f => new FacilityCardViewModel
             {
-                FacilityId   = f.FacilityId,
+                FacilityId = f.FacilityId,
                 FacilityName = f.FacilityName,
-                Address      = f.Address,
-                City         = f.City,
-                District     = f.District,
-                Phone        = f.Phone,
-                ImageUrl     = f.ImageUrl ?? "/images/default-facility.jpg",
-                // ✅ FIX: Đếm tất cả sân (không chỉ Available) để hiển thị đúng tổng số
-                TotalCourts  = f.Courts.Count,
-                OpenTime     = f.OpenTime,
-                CloseTime    = f.CloseTime,
-                Description  = f.Description
+                Address = f.Address,
+                City = f.City,
+                District = f.District,
+                Phone = f.Phone,
+                ImageUrl = f.ImageUrl ?? "/images/default-facility.jpg",
+                TotalCourts = f.Courts.Count,
+                OpenTime = f.OpenTime,
+                CloseTime = f.CloseTime,
+                Description = f.Description
             }).ToList();
 
             ViewBag.Cities = await _context.Facilities
@@ -67,10 +68,10 @@ namespace QuanLiSanCauLong.Controllers
                 .Where(f => f.IsActive && !string.IsNullOrEmpty(f.District))
                 .Select(f => f.District).Distinct().OrderBy(d => d).ToListAsync();
 
-            ViewBag.Search           = search;
-            ViewBag.SelectedCity     = city;
+            ViewBag.Search = search;
+            ViewBag.SelectedCity = city;
             ViewBag.SelectedDistrict = district;
-            ViewBag.SortBy           = sortBy;
+            ViewBag.SortBy = sortBy;
 
             return View(model);
         }
@@ -82,6 +83,8 @@ namespace QuanLiSanCauLong.Controllers
             var facility = await _context.Facilities
                 .Include(f => f.Courts)
                     .ThenInclude(c => c.PriceSlots)
+                .Include(f => f.Courts)
+                    .ThenInclude(c => c.CourtImages)
                 .Include(f => f.Inventories)
                     .ThenInclude(i => i.Product)
                         .ThenInclude(p => p.Category)
@@ -90,11 +93,9 @@ namespace QuanLiSanCauLong.Controllers
 
             if (facility == null) return NotFound();
 
-            // ✅ FIX: Dùng ngày được chọn hoặc mặc định hôm nay
             var selectedDate = date?.Date ?? DateTime.Today;
-            var dayOfWeek    = selectedDate.DayOfWeek;
+            var dayOfWeek = selectedDate.DayOfWeek;
 
-            // ✅ FIX: Lấy tất cả booking của ngày được chọn (không bị cancelled)
             var bookedSlots = await _context.Bookings
                 .Where(b => b.Court.FacilityId == id
                          && b.BookingDate.Date == selectedDate
@@ -102,78 +103,111 @@ namespace QuanLiSanCauLong.Controllers
                 .Select(b => new { b.CourtId, b.StartTime, b.EndTime })
                 .ToListAsync();
 
-            // ✅ FIX: Map Courts với Slots đầy đủ
             var courts = facility.Courts
                 .Where(c => c.Status == "Available")
                 .OrderBy(c => c.CourtNumber)
                 .Select(c => new FacilityCourtViewModel
                 {
-                    CourtId    = c.CourtId,
+                    CourtId = c.CourtId,
                     CourtNumber = c.CourtNumber,
-                    CourtType  = c.CourtType,
-                    Status     = c.Status,
-                    Description = "Sân tiêu chuẩn",
+                    CourtType = c.CourtType,
+                    CourtTypeLabel = c.CourtTypeLabel,
+                    SurfaceType = c.SurfaceType,
+                    SurfaceTypeLabel = c.SurfaceTypeLabel,
+                    FloorNumber = c.FloorNumber,
+                    HasLighting = c.HasLighting,
+                    HasAC = c.HasAC,
+                    HourlyRate = c.HourlyRate,
+                    Status = c.Status,
+                    StatusLabel = c.StatusLabel,
+                    Description = c.Description,
+                    ImagePath = c.ImagePath,
 
-                    // ✅ FIX: Map từng PriceSlot thành SlotViewModel
-                    Slots = c.PriceSlots
-                        .Where(p => p.IsActive
-                                    && (p.DayOfWeek == null || p.DayOfWeek == dayOfWeek))
-                        .OrderBy(p => p.StartTime)
-                        .Select(p => new TimeSlotViewModel // <--- Đổi lại thành TimeSlotViewModel
+                    // ✅ FIX: Map CourtImage → CourtImageViewModel
+                    // CourtImage.PK = ImageId (không phải CourtImageId)
+                    CourtImages = c.CourtImages?
+                        .OrderBy(i => i.IsPrimary ? 0 : 1)
+                        .ThenBy(i => i.DisplayOrder)
+                        .Select(img => new CourtImageViewModel
                         {
-                            // Gán các giá trị cơ bản
+                            CourtImageId = img.ImageId,      // ✅ ImageId là PK thật
+                            CourtId = img.CourtId,
+                            ImagePath = img.ImagePath,
+                            IsPrimary = img.IsPrimary,
+                            DisplayOrder = img.DisplayOrder,
+                            Caption = img.Caption
+                        })
+                        .ToList(),
+
+                    Slots = c.PriceSlots
+                        .Where(p => p.IsActive && (p.DayOfWeek == null || p.DayOfWeek == dayOfWeek))
+                        .OrderBy(p => p.StartTime)
+                        .Select(p => new TimeSlotViewModel
+                        {
                             StartTime = p.StartTime,
                             EndTime = p.EndTime,
                             Price = p.Price,
                             IsPeakHour = p.IsPeakHour,
-
-                            // IsAvailable là thuộc tính gốc của bạn, ta tính toán nó tại đây
                             IsAvailable = !bookedSlots.Any(b =>
-                                              b.CourtId == c.CourtId
-                                           && b.StartTime < p.EndTime
-                                           && b.EndTime > p.StartTime)
+                                b.CourtId == c.CourtId
+                             && b.StartTime < p.EndTime
+                             && b.EndTime > p.StartTime)
                         }).ToList()
                 }).ToList();
 
             var model = new FacilityDetailsViewModel
             {
-                FacilityId   = facility.FacilityId,
+                FacilityId = facility.FacilityId,
                 FacilityName = facility.FacilityName,
-                Description  = facility.Description,
-                Address      = facility.Address,
-                District     = facility.District,
-                City         = facility.City,
-                Phone        = facility.Phone,
-                OpenTime     = facility.OpenTime,
-                CloseTime    = facility.CloseTime,
+                Description = facility.Description,
+                Address = facility.Address,
+                District = facility.District,
+                City = facility.City,
+                Phone = facility.Phone,
+                OpenTime = facility.OpenTime,
+                CloseTime = facility.CloseTime,
                 SelectedDate = selectedDate,
-
                 ImageUrls = facility.FacilityImages.Any()
-                    ? facility.FacilityImages
-                              .OrderBy(i => i.DisplayOrder)
-                              .Select(i => i.ImagePath).ToList()
+                    ? facility.FacilityImages.OrderBy(i => i.DisplayOrder).Select(i => i.ImagePath).ToList()
                     : new List<string> { facility.ImageUrl ?? "/images/default-facility.jpg" },
-
-                Courts      = courts,
-                // ✅ FIX: Đếm tất cả sân (không chỉ Available) để hiển thị đúng
+                Courts = courts,
                 TotalCourts = facility.Courts.Count,
-
                 MinPrice = facility.Courts.SelectMany(c => c.PriceSlots).Any()
-                           ? facility.Courts.SelectMany(c => c.PriceSlots).Min(p => p.Price) : 0,
+                               ? facility.Courts.SelectMany(c => c.PriceSlots).Min(p => p.Price) : 0,
                 MaxPrice = facility.Courts.SelectMany(c => c.PriceSlots).Any()
-                           ? facility.Courts.SelectMany(c => c.PriceSlots).Max(p => p.Price) : 0,
-
-                Amenities = new List<FacilityAmenityViewModel>
-                {
-                    new() { AmenityName = "Bãi đỗ xe", IsAvailable = true,                                                                 Icon = "fa-car"      },
-                    new() { AmenityName = "Wifi",       IsAvailable = true,                                                                 Icon = "fa-wifi"     },
-                    new() { AmenityName = "Canteen",
-                            IsAvailable = facility.Inventories != null && facility.Inventories.Any(i => i.Quantity > 0),
-                            Icon = "fa-utensils" }
-                }
+                               ? facility.Courts.SelectMany(c => c.PriceSlots).Max(p => p.Price) : 0,
+                Amenities = string.IsNullOrEmpty(facility.Amenities)
+                    ? new List<FacilityAmenityViewModel>
+                      {
+                          new() {
+                              AmenityName = "Canteen",
+                              IsAvailable = facility.Inventories != null && facility.Inventories.Any(i => i.Quantity > 0),
+                              Icon        = "fa-utensils"
+                          }
+                      }
+                    : facility.Amenities
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(a => new FacilityAmenityViewModel
+                        {
+                            AmenityName = a.Trim(),
+                            IsAvailable = true,
+                            Icon = "fa-check"
+                        })
+                        .ToList()
             };
 
-            // Nếu là Ajax request → trả về PartialView
+            // Review section
+            int? currentUserId = null;
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int uid))
+                currentUserId = uid;
+
+            var reviewSvc = new ReviewController(_context, _env);
+            model.ReviewSection = await reviewSvc.BuildSectionVm(id, currentUserId);
+            model.TotalReviews = model.ReviewSection.TotalCount;
+            model.AverageRating = model.ReviewSection.TotalCount > 0
+                                   ? model.ReviewSection.AverageRating : (double?)null;
+
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                 return PartialView("_Details", model);
 
@@ -198,15 +232,15 @@ namespace QuanLiSanCauLong.Controllers
 
             var result = courts.Select(c => new
             {
-                courtId    = c.CourtId,
+                courtId = c.CourtId,
                 courtNumber = c.CourtNumber,
-                courtType  = c.CourtType,
-                minPrice   = c.PriceSlots.Any() ? c.PriceSlots.Min(p => p.Price) : 0,
-                maxPrice   = c.PriceSlots.Any() ? c.PriceSlots.Max(p => p.Price) : 0,
+                courtType = c.CourtType,
+                minPrice = c.PriceSlots.Any() ? c.PriceSlots.Min(p => p.Price) : 0,
+                maxPrice = c.PriceSlots.Any() ? c.PriceSlots.Max(p => p.Price) : 0,
                 isAvailable = startTime.HasValue
                     ? !bookedCourts.Any(b => b.CourtId == c.CourtId
                                           && b.StartTime < startTime.Value.Add(TimeSpan.FromHours(1))
-                                          && b.EndTime   > startTime.Value)
+                                          && b.EndTime > startTime.Value)
                     : true
             }).ToList();
 
@@ -224,8 +258,8 @@ namespace QuanLiSanCauLong.Controllers
             if (court == null)
                 return Json(new { success = false, message = "Không tìm thấy sân!" });
 
-            var targetDate  = date.Date;
-            var dayOfWeek   = targetDate.DayOfWeek;
+            var targetDate = date.Date;
+            var dayOfWeek = targetDate.DayOfWeek;
 
             var bookedSlots = await _context.Bookings
                 .Where(b => b.CourtId == courtId
@@ -239,10 +273,10 @@ namespace QuanLiSanCauLong.Controllers
                 .OrderBy(p => p.StartTime)
                 .Select(p => new
                 {
-                    startTime   = p.StartTime.ToString(@"hh\:mm"),
-                    endTime     = p.EndTime.ToString(@"hh\:mm"),
-                    price       = p.Price,
-                    isPeakHour  = p.IsPeakHour,
+                    startTime = p.StartTime.ToString(@"hh\:mm"),
+                    endTime = p.EndTime.ToString(@"hh\:mm"),
+                    price = p.Price,
+                    isPeakHour = p.IsPeakHour,
                     isAvailable = !bookedSlots.Any(b => b.StartTime < p.EndTime && b.EndTime > p.StartTime)
                 }).ToList();
 

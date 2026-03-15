@@ -18,57 +18,51 @@ namespace QuanLiSanCauLong.Controllers
             _context = context;
         }
 
+        // ═══════════════════════════════════════════════════════════
+        // INDEX
+        // ═══════════════════════════════════════════════════════════
         [HttpGet]
-        public async Task<IActionResult> Index(string status, string applicableFor)
+        public async Task<IActionResult> Index(string? status, string? applicableFor, string? search)
         {
             var query = _context.Vouchers.AsQueryable();
+            var now = DateTime.Now;
 
             if (!string.IsNullOrEmpty(status))
             {
-                var now = DateTime.Now;
-                if (status == "active")
-                    query = query.Where(v => v.IsActive && v.StartDate <= now && v.EndDate >= now);
-                else if (status == "expired")
-                    query = query.Where(v => v.EndDate < now);
-                else if (status == "upcoming")
-                    query = query.Where(v => v.StartDate > now);
-                else if (status == "inactive")
-                    query = query.Where(v => !v.IsActive);
+                query = status switch
+                {
+                    "active" => query.Where(v => v.IsActive && v.StartDate <= now && v.EndDate >= now),
+                    "expired" => query.Where(v => v.EndDate < now),
+                    "upcoming" => query.Where(v => v.StartDate > now),
+                    "inactive" => query.Where(v => !v.IsActive),
+                    _ => query
+                };
             }
 
             if (!string.IsNullOrEmpty(applicableFor))
                 query = query.Where(v => v.ApplicableFor == applicableFor);
 
+            if (!string.IsNullOrEmpty(search))
+                query = query.Where(v => v.VoucherCode.Contains(search) || v.VoucherName.Contains(search));
+
             var vouchers = await query.OrderByDescending(v => v.CreatedAt).ToListAsync();
 
-            var model = vouchers.Select(v => new VoucherViewModel
-            {
-                VoucherId = v.VoucherId,
-                VoucherCode = v.VoucherCode,
-                VoucherName = v.VoucherName,
-                Description = v.Description,
-                DiscountType = v.DiscountType,
-                DiscountValue = v.DiscountValue,
-                MinOrderAmount = v.MinOrderAmount,
-                MaxDiscount = v.MaxDiscount,
-                ApplicableFor = v.ApplicableFor,
-                StartDate = v.StartDate,
-                EndDate = v.EndDate,
-                UsageLimit = v.UsageLimit,
-                UsageLimitPerUser = v.UsageLimitPerUser,
-                UsedCount = v.UsedCount,
-                IsActive = v.IsActive
-            }).ToList();
+            var model = vouchers.Select(MapToViewModel).ToList();
 
-            var currentTime = DateTime.Now;
             ViewBag.TotalVouchers = model.Count;
-            ViewBag.ActiveVouchers = model.Count(v => v.IsActive && v.StartDate <= currentTime && v.EndDate >= currentTime);
-            ViewBag.ExpiredVouchers = model.Count(v => v.EndDate < currentTime);
+            ViewBag.ActiveVouchers = model.Count(v => v.IsActive && v.StartDate <= now && v.EndDate >= now);
+            ViewBag.ExpiredVouchers = model.Count(v => v.EndDate < now);
             ViewBag.TotalUsage = model.Sum(v => v.UsedCount);
+            ViewBag.Status = status;
+            ViewBag.ApplicableFor = applicableFor;
+            ViewBag.Search = search;
 
             return View(model);
         }
 
+        // ═══════════════════════════════════════════════════════════
+        // CREATE GET
+        // ═══════════════════════════════════════════════════════════
         [HttpGet]
         public IActionResult Create()
         {
@@ -76,88 +70,63 @@ namespace QuanLiSanCauLong.Controllers
             {
                 StartDate = DateTime.Now,
                 EndDate = DateTime.Now.AddMonths(1),
-                IsActive = true
+                IsActive = true,
+                DiscountType = "Percentage",
+                ApplicableFor = "All"
             };
             return View(model);
         }
 
+        // ═══════════════════════════════════════════════════════════
+        // CREATE POST
+        // ═══════════════════════════════════════════════════════════
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(VoucherViewModel model)
         {
-            if (ModelState.IsValid)
+            // Validate
+            if (await _context.Vouchers.AnyAsync(v => v.VoucherCode.ToUpper() == model.VoucherCode.ToUpper()))
+                ModelState.AddModelError("VoucherCode", "Mã voucher đã tồn tại!");
+
+            if (model.StartDate >= model.EndDate)
+                ModelState.AddModelError("EndDate", "Ngày kết thúc phải sau ngày bắt đầu!");
+
+            if (model.DiscountType == "Percentage" && model.DiscountValue > 100)
+                ModelState.AddModelError("DiscountValue", "Giảm giá % không được vượt quá 100%!");
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var voucher = new Voucher
             {
-                if (await _context.Vouchers.AnyAsync(v => v.VoucherCode.ToUpper() == model.VoucherCode.ToUpper()))
-                {
-                    ModelState.AddModelError("VoucherCode", "Mã voucher đã tồn tại!");
-                }
-                else if (model.StartDate >= model.EndDate)
-                {
-                    ModelState.AddModelError("EndDate", "Ngày kết thúc phải sau ngày bắt đầu!");
-                }
-                else if (model.DiscountType == "Percentage" && model.DiscountValue > 100)
-                {
-                    ModelState.AddModelError("DiscountValue", "Giảm giá % không được vượt quá 100%!");
-                }
-                else
-                {
-                    var voucher = new Voucher
-                    {
-                        VoucherCode = model.VoucherCode.ToUpper().Trim(),
-                        VoucherName = model.VoucherName,
-                        Description = model.Description,
-                        DiscountType = model.DiscountType,
-                        DiscountValue = model.DiscountValue,
-                        MinOrderAmount = model.MinOrderAmount,
-                        MaxDiscount = model.MaxDiscount,
-                        ApplicableFor = model.ApplicableFor,
-                        // ✅ FIX CS0266 dòng 115-116: DateTime? không thể gán trực tiếp vào DateTime
-                        StartDate = model.StartDate ?? DateTime.Now,
-                        EndDate = model.EndDate ?? DateTime.Now.AddMonths(1),
-                        UsageLimit = model.UsageLimit,
-                        UsageLimitPerUser = model.UsageLimitPerUser,
-                        UsedCount = 0,
-                        IsActive = model.IsActive,
-                        CreatedAt = DateTime.Now,
-                        CreatedBy = GetCurrentUserId()
-                    };
+                VoucherCode = model.VoucherCode.ToUpper().Trim(),
+                VoucherName = model.VoucherName,
+                Description = model.Description,
+                DiscountType = model.DiscountType,
+                DiscountValue = model.DiscountValue,
+                MinOrderAmount = model.MinOrderAmount,
+                MaxDiscount = model.MaxDiscount,
+                ApplicableFor = model.ApplicableFor ?? "All",
+                StartDate = model.StartDate ?? DateTime.Now,
+                EndDate = model.EndDate ?? DateTime.Now.AddMonths(1),
+                UsageLimit = model.UsageLimit,
+                UsageLimitPerUser = model.UsageLimitPerUser,
+                UsedCount = 0,
+                IsActive = model.IsActive,
+                CreatedAt = DateTime.Now,
+                CreatedBy = GetCurrentUserId()
+            };
 
-                    _context.Vouchers.Add(voucher);
-                    await _context.SaveChangesAsync();
+            _context.Vouchers.Add(voucher);
+            await _context.SaveChangesAsync();
 
-                    TempData["SuccessMessage"] = "Tạo voucher thành công!";
-                    return RedirectToAction(nameof(Index));
-                }
-            }
-
-            var vouchers = await _context.Vouchers.OrderByDescending(v => v.CreatedAt).ToListAsync();
-            var listModel = vouchers.Select(v => MapToViewModel(v)).ToList();
-            TempData["ErrorMessage"] = "Có lỗi xảy ra, vui lòng kiểm tra lại thông tin!";
-            return View("Index", listModel);
+            TempData["SuccessMessage"] = $"Đã tạo voucher <strong>{voucher.VoucherCode}</strong> thành công!";
+            return RedirectToAction(nameof(Index));
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Details(int id)
-        {
-            var voucher = await _context.Vouchers.FindAsync(id);
-            if (voucher == null) return NotFound();
-
-            var model = MapToViewModel(voucher);
-
-            if (voucher.UsageLimit.HasValue)
-                ViewBag.RemainingUsage = voucher.UsageLimit.Value - voucher.UsedCount;
-            else
-                ViewBag.RemainingUsage = "Không giới hạn";
-
-            double percentage = 0;
-            if (voucher.UsageLimit.HasValue && voucher.UsageLimit.Value > 0)
-                percentage = (double)voucher.UsedCount * 100.0 / (double)voucher.UsageLimit.Value;
-
-            ViewBag.UsagePercentage = percentage.ToString("F1");
-
-            return View(model);
-        }
-
+        // ═══════════════════════════════════════════════════════════
+        // EDIT GET
+        // ═══════════════════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
@@ -166,110 +135,173 @@ namespace QuanLiSanCauLong.Controllers
             return View(MapToViewModel(voucher));
         }
 
+        // ═══════════════════════════════════════════════════════════
+        // EDIT POST
+        // ═══════════════════════════════════════════════════════════
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(VoucherViewModel model)
         {
-            if (ModelState.IsValid)
-            {
-                var voucher = await _context.Vouchers.FindAsync(model.VoucherId);
-                if (voucher == null) return NotFound();
+            if (model.StartDate >= model.EndDate)
+                ModelState.AddModelError("EndDate", "Ngày kết thúc phải sau ngày bắt đầu!");
 
-                if (model.StartDate >= model.EndDate)
-                {
-                    ModelState.AddModelError("EndDate", "Ngày kết thúc phải sau ngày bắt đầu!");
-                    return View(model);
-                }
+            if (!ModelState.IsValid)
+                return View(model);
 
-                voucher.VoucherName = model.VoucherName;
-                voucher.Description = model.Description;
-                voucher.DiscountType = model.DiscountType;
-                voucher.DiscountValue = model.DiscountValue;
-                voucher.MinOrderAmount = model.MinOrderAmount;
-                voucher.MaxDiscount = model.MaxDiscount;
-                voucher.ApplicableFor = model.ApplicableFor;
-                // ✅ FIX CS0266 dòng 201-202: dùng ?? để giữ giá trị cũ nếu null
-                voucher.StartDate = model.StartDate ?? voucher.StartDate;
-                voucher.EndDate = model.EndDate ?? voucher.EndDate;
-                voucher.UsageLimit = model.UsageLimit;
-                voucher.UsageLimitPerUser = model.UsageLimitPerUser;
-                voucher.IsActive = model.IsActive;
-                voucher.UpdatedAt = DateTime.Now;
+            var voucher = await _context.Vouchers.FindAsync(model.VoucherId);
+            if (voucher == null) return NotFound();
 
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Cập nhật thành công!";
-                return RedirectToAction(nameof(Index));
-            }
+            voucher.VoucherName = model.VoucherName;
+            voucher.Description = model.Description;
+            voucher.DiscountType = model.DiscountType;
+            voucher.DiscountValue = model.DiscountValue;
+            voucher.MinOrderAmount = model.MinOrderAmount;
+            voucher.MaxDiscount = model.MaxDiscount;
+            voucher.ApplicableFor = model.ApplicableFor ?? "All";
+            voucher.StartDate = model.StartDate ?? voucher.StartDate;
+            voucher.EndDate = model.EndDate ?? voucher.EndDate;
+            voucher.UsageLimit = model.UsageLimit;
+            voucher.UsageLimitPerUser = model.UsageLimitPerUser;
+            voucher.IsActive = model.IsActive;
+            voucher.UpdatedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Cập nhật voucher thành công!";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // DETAILS
+        // ═══════════════════════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
+        {
+            var voucher = await _context.Vouchers.FindAsync(id);
+            if (voucher == null) return NotFound();
+
+            var model = MapToViewModel(voucher);
+
+            ViewBag.RemainingUsage = voucher.UsageLimit.HasValue
+                ? (object)(voucher.UsageLimit.Value - voucher.UsedCount)
+                : "Không giới hạn";
+
+            ViewBag.UsagePercentage = voucher.UsageLimit.HasValue && voucher.UsageLimit.Value > 0
+                ? ((double)voucher.UsedCount / voucher.UsageLimit.Value * 100).ToString("F1")
+                : "0";
+
             return View(model);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var voucher = await _context.Vouchers.FindAsync(id);
-            if (voucher == null)
-                return Json(new { success = false, message = "Không tìm thấy!" });
-
-            if (voucher.UsedCount > 0)
-                return Json(new { success = false, message = "Voucher đã dùng không thể xóa!" });
-
-            _context.Vouchers.Remove(voucher);
-            await _context.SaveChangesAsync();
-            return Json(new { success = true, message = "Xóa thành công!" });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> ToggleStatus(int voucherId, bool isActive)
-        {
-            var voucher = await _context.Vouchers.FindAsync(voucherId);
-            if (voucher == null) return Json(new { success = false });
-
-            voucher.IsActive = isActive;
-            voucher.UpdatedAt = DateTime.Now;
-            await _context.SaveChangesAsync();
-            return Json(new { success = true });
-        }
-
+        // ═══════════════════════════════════════════════════════════
+        // USAGE — lịch sử sử dụng thật từ VoucherUsages
+        // ═══════════════════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> Usage(int id)
         {
             var voucher = await _context.Vouchers.FindAsync(id);
             if (voucher == null) return NotFound();
 
-            ViewBag.Voucher = MapToViewModel(voucher);
-            ViewBag.TotalDiscounted = 0m;
+            // Query VoucherUsages thật, join User + Booking + Order
+            var usages = await _context.VoucherUsages
+                .Include(vu => vu.User)
+                .Include(vu => vu.Booking)
+                .Include(vu => vu.Order)
+                .Where(vu => vu.VoucherId == id)
+                .OrderByDescending(vu => vu.Booking != null
+                    ? vu.Booking.CreatedAt
+                    : (vu.Order != null ? vu.Order.CreatedAt : DateTime.MinValue))
+                .ToListAsync();
 
-            return View(new List<VoucherUsageViewModel>());
-        }
-
-        private VoucherViewModel MapToViewModel(Voucher v)
-        {
-            return new VoucherViewModel
+            var model = usages.Select(vu =>
             {
-                VoucherId = v.VoucherId,
-                VoucherCode = v.VoucherCode,
-                VoucherName = v.VoucherName,
-                Description = v.Description,
-                DiscountType = v.DiscountType,
-                DiscountValue = v.DiscountValue,
-                MinOrderAmount = v.MinOrderAmount,
-                MaxDiscount = v.MaxDiscount,
-                ApplicableFor = v.ApplicableFor,
-                StartDate = v.StartDate,
-                EndDate = v.EndDate,
-                UsageLimit = v.UsageLimit,
-                UsageLimitPerUser = v.UsageLimitPerUser,
-                UsedCount = v.UsedCount,
-                IsActive = v.IsActive
-            };
+                // Xác định ngày sử dụng từ Booking hoặc Order
+                var usedAt = vu.Booking?.CreatedAt ?? vu.Order?.CreatedAt ?? DateTime.MinValue;
+                // Mã đơn: BookingCode hoặc OrderCode
+                var orderCode = vu.Booking?.BookingCode ?? vu.Order?.OrderCode ?? "—";
+                var orderType = vu.Booking != null ? "Đặt sân" : "Đơn hàng";
+                var orderTotal = vu.Booking?.TotalPrice ?? vu.Order?.TotalAmount ?? 0m;
+
+                return new VoucherUsageViewModel
+                {
+                    CustomerName = vu.User?.FullName ?? vu.User?.Email ?? "Khách",
+                    CustomerPhone = vu.User?.Phone ?? "—",
+                    OrderCode = orderCode,
+                    OrderType = orderType,
+                    UsedAt = usedAt,
+                    OrderTotal = orderTotal,
+                    DiscountAmount = vu.DiscountAmount
+                };
+            }).ToList();
+
+            var totalDiscounted = model.Sum(u => u.DiscountAmount);
+
+            ViewBag.Voucher = MapToViewModel(voucher);
+            ViewBag.TotalDiscounted = totalDiscounted;
+
+            return View(model);
         }
+
+        // ═══════════════════════════════════════════════════════════
+        // DELETE
+        // ═══════════════════════════════════════════════════════════
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var voucher = await _context.Vouchers.FindAsync(id);
+            if (voucher == null)
+                return Json(new { success = false, message = "Không tìm thấy voucher!" });
+
+            if (voucher.UsedCount > 0)
+                return Json(new { success = false, message = "Voucher đã được sử dụng, không thể xóa!" });
+
+            _context.Vouchers.Remove(voucher);
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Đã xóa voucher thành công!" });
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // TOGGLE STATUS
+        // ═══════════════════════════════════════════════════════════
+        [HttpPost]
+        public async Task<IActionResult> ToggleStatus(int voucherId, bool isActive)
+        {
+            var voucher = await _context.Vouchers.FindAsync(voucherId);
+            if (voucher == null)
+                return Json(new { success = false, message = "Không tìm thấy!" });
+
+            voucher.IsActive = isActive;
+            voucher.UpdatedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = isActive ? "Đã kích hoạt!" : "Đã tắt!" });
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // HELPERS
+        // ═══════════════════════════════════════════════════════════
+        private static VoucherViewModel MapToViewModel(Voucher v) => new()
+        {
+            VoucherId = v.VoucherId,
+            VoucherCode = v.VoucherCode,
+            VoucherName = v.VoucherName,
+            Description = v.Description,
+            DiscountType = v.DiscountType,
+            DiscountValue = v.DiscountValue,
+            MinOrderAmount = v.MinOrderAmount,
+            MaxDiscount = v.MaxDiscount,
+            ApplicableFor = v.ApplicableFor,
+            StartDate = v.StartDate,
+            EndDate = v.EndDate,
+            UsageLimit = v.UsageLimit,
+            UsageLimitPerUser = v.UsageLimitPerUser,
+            UsedCount = v.UsedCount,
+            IsActive = v.IsActive
+        };
 
         private int GetCurrentUserId()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
-                return userId;
-            return 0;
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+            return claim != null && int.TryParse(claim.Value, out int uid) ? uid : 0;
         }
     }
 }

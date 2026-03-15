@@ -1,6 +1,7 @@
 ﻿@model IEnumerable<QuanLiSanCauLong.ViewModels.BookingHistoryViewModel>
 @{
     ViewData["Title"] = "Admin · Quản lý đặt sân";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
     string currentFilter = ViewBag.FilterType as string ?? "";
     int awaitingCount = ViewBag.AwaitingTransferCount ?? 0;
 }
@@ -158,11 +159,11 @@
 
     @@keyframes pulse-badge {
         0%, 100% {
-            opacity: 1;
+            opacity: 1
         }
 
         50% {
-            opacity: .6;
+            opacity: .6
         }
     }
 
@@ -232,6 +233,7 @@
         outline: none;
         background: #fff;
         transition: border-color .2s;
+        font-family: 'Outfit',sans-serif;
     }
 
         .fi:focus {
@@ -253,6 +255,7 @@
         align-items: center;
         justify-content: center;
         gap: .35rem;
+        font-family: 'Outfit',sans-serif;
     }
 
         .btn-filter:hover {
@@ -275,6 +278,7 @@
         justify-content: center;
         gap: .35rem;
         text-decoration: none;
+        font-family: 'Outfit',sans-serif;
     }
 
         .btn-reset:hover {
@@ -462,6 +466,7 @@
         border: none;
         cursor: pointer;
         transition: all .2s;
+        font-family: 'Outfit',sans-serif;
     }
 
         .btn-tbl.det {
@@ -532,6 +537,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        text-decoration: none;
     }
 
         .page-btn.on {
@@ -545,6 +551,29 @@
             color: var(--G);
         }
 
+    /* Alerts */
+    .sys-alert {
+        padding: .9rem 1.25rem;
+        border-radius: 8px;
+        margin-bottom: 1.25rem;
+        font-size: .84rem;
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+    }
+
+        .sys-alert.success {
+            background: rgba(22,163,74,.08);
+            border: 1px solid rgba(22,163,74,.25);
+            color: #16a34a;
+        }
+
+        .sys-alert.error {
+            background: rgba(201,75,42,.06);
+            border: 1px solid rgba(201,75,42,.25);
+            color: #c94b2a;
+        }
+
     @@media(max-width:900px) {
         .filter-g {
             grid-template-columns: 1fr 1fr;
@@ -555,11 +584,7 @@
             align-items: flex-start;
         }
 
-        .tab-nav {
-            padding: 0 1.2rem;
-        }
-
-        .wrap, .pg-hd {
+        .tab-nav, .wrap, .pg-hd {
             padding-left: 1.2rem;
             padding-right: 1.2rem;
         }
@@ -568,10 +593,6 @@
     @@media(max-width:600px) {
         .filter-g {
             grid-template-columns: 1fr;
-        }
-
-        table {
-            font-size: .78rem;
         }
     }
 </style>
@@ -582,7 +603,7 @@
         <div>
             <div class="pg-eyebrow"><i class="bi bi-shield-fill me-1"></i> Admin · Quản lý</div>
             <h1 class="pg-title">Danh sách đặt sân</h1>
-            <div class="pg-sub">Quản lý toàn bộ đơn đặt sân — xác nhận, theo dõi & hủy</div>
+            <div class="pg-sub">Quản lý toàn bộ đơn đặt sân — xác nhận, theo dõi &amp; hủy</div>
         </div>
         @if (awaitingCount > 0)
         {
@@ -637,14 +658,24 @@
 
 <div class="wrap">
 
-    @* Banner nhắc nhở khi đang xem tab "Chờ Duyệt CK" *@
+    @* Alerts *@
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="sys-alert success"><i class="bi bi-check-circle-fill"></i> @Html.Raw(TempData["SuccessMessage"])</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="sys-alert error"><i class="bi bi-exclamation-circle"></i> @TempData["ErrorMessage"]</div>
+    }
+
+    @* Banner nhắc CK *@
     @if (currentFilter == "awaiting-transfer" && Model.Any())
     {
         <div class="ck-banner">
             <i class="bi bi-info-circle-fill"></i>
             <span>
-                Đây là các đơn khách hàng đã chọn <strong>Chuyển khoản</strong> nhưng chưa được xác nhận.
-                Vào chi tiết từng đơn để nhấn <strong>"Xác nhận đã nhận tiền CK"</strong> sau khi kiểm tra tài khoản.
+                Đây là các đơn khách đã chọn <strong>Chuyển khoản</strong> nhưng chưa xác nhận.
+                Vào chi tiết từng đơn để nhấn <strong>"Xác nhận CK"</strong> sau khi kiểm tra tài khoản.
             </span>
         </div>
     }
@@ -666,8 +697,8 @@
                         <div class="fl">Phương thức TT</div>
                         <select name="paymentMethod" class="fi">
                             <option value="">Tất cả</option>
-                            <option value="Cash" selected="@(ViewBag.PaymentMethod == "Cash")">Tiền mặt</option>
-                            <option value="Transfer" selected="@(ViewBag.PaymentMethod == "Transfer")">Chuyển khoản</option>
+                            <option value="Cash" selected="@(ViewBag.PaymentMethod == "Cash" ? "selected" : null)">Tiền mặt</option>
+                            <option value="Transfer" selected="@(ViewBag.PaymentMethod == "Transfer" ? "selected" : null)">Chuyển khoản</option>
                         </select>
                     </div>
                     <div>
@@ -693,7 +724,7 @@
             <i class="bi bi-table"></i>
             <span class="tbl-title">
                 @(currentFilter == "awaiting-transfer" ? "Đơn chuyển khoản chờ duyệt" :
-                                currentFilter != "" ? $"Lọc theo: {currentFilter}" : "Tất cả đơn đặt sân")
+                                currentFilter != "" ? $"Lọc: {currentFilter}" : "Tất cả đơn đặt sân")
             </span>
             <span class="tbl-count">@Model.Count() đơn</span>
         </div>
@@ -712,6 +743,7 @@
                     <thead>
                         <tr>
                             <th>Mã đơn</th>
+                            <th>Khách hàng</th>
                             <th>Sân / Cơ sở</th>
                             <th>Ngày chơi</th>
                             <th>Khung giờ</th>
@@ -725,8 +757,27 @@
                         @foreach (var b in Model)
                         {
                             bool isCkPending = b.PaymentMethod == "Transfer"
-                            && (b.PaymentStatus?.ToLower() == "unpaid" || b.PaymentStatus?.ToLower() == "pending")
+                            && b.PaymentStatus?.ToLower() != "paid"
                             && b.Status == "Pending";
+
+                            string stClass = b.Status.ToLower();
+                            string stLabel = b.Status switch
+                            {
+                                            "Pending" => "Chờ xác nhận",
+                                            "Confirmed" => "Đã xác nhận",
+                                            "Playing" => "Đang chơi",
+                                            "Completed" => "Hoàn thành",
+                                            "Cancelled" => "Đã hủy",
+                                _ => b.Status
+                            };
+
+                            string payClass, payLabel;
+                            if (b.PaymentStatus?.ToLower() == "paid")
+                            { payClass = "paid"; payLabel = "Đã TT"; }
+                            else if (b.PaymentMethod == "Transfer")
+                            { payClass = "awaiting-ck"; payLabel = "Chờ CK"; }
+                            else
+                            { payClass = "unpaid"; payLabel = "Chưa TT"; }
 
                             <tr class="@(isCkPending ? "tr-ck" : "")">
                                 <td>
@@ -734,12 +785,21 @@
                                     <div style="font-size:.7rem;color:#8c7a68">@b.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
                                 </td>
                                 <td>
+                                    <div style="font-weight:600;font-size:.84rem;">@(b.CustomerName ?? "—")</div>
+                                    @if (!string.IsNullOrEmpty(b.Phone))
+                                    {
+                                        <div style="font-size:.72rem;color:#8c7a68;">@b.Phone</div>
+                                    }
+                                </td>
+                                <td>
                                     <div style="font-weight:600;font-size:.84rem">@b.FacilityName</div>
                                     <div style="font-size:.72rem;color:#8c7a68">Sân @b.CourtNumber · @b.CourtType</div>
                                 </td>
                                 <td>
                                     <strong>@b.BookingDate.ToString("dd/MM/yyyy")</strong>
-                                    <div style="font-size:.7rem;color:#8c7a68">@b.BookingDate.ToString("ddd", new System.Globalization.CultureInfo("vi-VN"))</div>
+                                    <div style="font-size:.7rem;color:#8c7a68">
+                                        @b.BookingDate.ToString("ddd", new System.Globalization.CultureInfo("vi-VN"))
+                                    </div>
                                 </td>
                                 <td style="font-size:.82rem">
                                     @b.StartTime.ToString(@"hh\:mm") – @b.EndTime.ToString(@"hh\:mm")
@@ -748,34 +808,15 @@
                                     <span class="method-tag @(b.PaymentMethod == "Transfer" ? "transfer" : "")">
                                         @(b.PaymentMethod == "Transfer" ? "CK" : b.PaymentMethod == "Cash" ? "Tiền mặt" : b.PaymentMethod)
                                     </span>
-                                    <br>
-                                    @{
-                                        string payClass3, payLabel3;
-                                        if (b.PaymentStatus?.ToLower() == "paid")
-                                        { payClass3 = "paid"; payLabel3 = "Đã TT"; }
-                                        else if (b.PaymentMethod == "Transfer")
-                                        { payClass3 = "awaiting-ck"; payLabel3 = "Chờ CK"; }
-                                        else
-                                        { payClass3 = "unpaid"; payLabel3 = "Chưa TT"; }
-                                    }
-                                    <span class="sb @payClass3" style="margin-top:.25rem;font-size:.58rem">@payLabel3</span>
+                                    <br />
+                                    <span class="sb @payClass" style="margin-top:.25rem;font-size:.58rem">@payLabel</span>
                                 </td>
                                 <td>
-                                    @{
-                                        string stClass = b.Status.ToLower();
-                                        string stLabel = b.Status switch
-                                        {
-                                                            "Pending" => "Chờ xác nhận",
-                                                            "Confirmed" => "Đã xác nhận",
-                                                            "Playing" => "Đang chơi",
-                                                            "Completed" => "Hoàn thành",
-                                                            "Cancelled" => "Đã hủy",
-                                            _ => b.Status
-                                        };
-                                    }
                                     <span class="sb @stClass">@stLabel</span>
                                 </td>
-                                <td style="font-weight:700;font-size:.9rem">@b.GrandTotal.ToString("N0")đ</td>
+                                <td style="font-weight:700;font-size:.9rem">
+                                    @b.GrandTotal.ToString("N0")đ
+                                </td>
                                 <td>
                                     <div style="display:flex;gap:.4rem;flex-wrap:wrap">
                                         <a asp-controller="AdminBooking" asp-action="Details"
@@ -784,9 +825,11 @@
                                         </a>
                                         @if (isCkPending)
                                         {
-                                            <form asp-controller="AdminBooking" asp-action="ConfirmPayment" method="post" style="display:inline">
+                                            <form asp-controller="AdminBooking" asp-action="SetStatus"
+                                                  method="post" style="display:inline">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@b.BookingId" />
+                                                <input type="hidden" name="newStatus" value="ConfirmCK" />
                                                 <button type="submit" class="btn-tbl ck"
                                                         onclick="return confirm('Xác nhận đã nhận tiền CK cho đơn @b.BookingCode?')">
                                                     <i class="bi bi-bank"></i> Xác nhận CK
@@ -803,23 +846,37 @@
         </div>
     </div>
 
-    @if (Model.Count() > 20)
+    @* Pagination *@
+    @{
+        int curPage = ViewBag.Page ?? 1;
+        int totalPage = ViewBag.TotalPage ?? 1;
+    }
+    @if (totalPage > 1)
     {
         <div class="pagi">
-            <button class="page-btn"><i class="bi bi-chevron-left"></i></button>
-            <button class="page-btn on">1</button>
-            <button class="page-btn">2</button>
-            <button class="page-btn"><i class="bi bi-chevron-right"></i></button>
+            @if (curPage > 1)
+            {
+                <a href="@Url.Action("Index", "AdminBooking", new { filter = currentFilter, page = curPage - 1 })"
+                   class="page-btn"><i class="bi bi-chevron-left"></i></a>
+            }
+            @for (int i = Math.Max(1, curPage - 2); i <= Math.Min(totalPage, curPage + 2); i++)
+            {
+                if (i == curPage)
+                {
+                    <span class="page-btn on">@i</span>
+                }
+                else
+                {
+                    <a href="@Url.Action("Index", "AdminBooking", new { filter = currentFilter, page = i })"
+                       class="page-btn">@i</a>
+                }
+            }
+            @if (curPage < totalPage)
+            {
+                <a href="@Url.Action("Index", "AdminBooking", new { filter = currentFilter, page = curPage + 1 })"
+                   class="page-btn"><i class="bi bi-chevron-right"></i></a>
+            }
         </div>
     }
-</div>
 
-@section Scripts {
-    <script>
-        // Highlight tab khi có đơn CK chờ duyệt
-        const ckBadge = document.querySelector('.tab-badge.pulse');
-        if (ckBadge) {
-            document.querySelector('.tab-item.tab-ck')?.classList.add('ck-urgent');
-        }
-    </script>
-}
+</div>

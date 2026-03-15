@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace QuanLiSanCauLong.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Staff")]
     public class AdminBookingController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -18,454 +18,403 @@ namespace QuanLiSanCauLong.Controllers
             _context = context;
         }
 
-        // ================================================================
-        // INDEX — Danh sách đặt sân + Tab filter "Chờ Duyệt CK"
-        // ================================================================
+        // ═════════════════════════════════════════════════════════════════════
+        // INDEX
+        // ═════════════════════════════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> Index(
-            string? filter = "",
-            string? search = "",
-            string? paymentMethod = "",
-            DateTime? fromDate = null,
-            DateTime? toDate = null,
-            int? facilityId = null,
-            string? status = null,
-            string? paymentStatus = null)
+            string? filter, string? search,
+            string? paymentMethod,
+            DateTime? fromDate, DateTime? toDate,
+            int page = 1)
         {
+            const int pageSize = 25;
+
             var query = _context.Bookings
-                .Include(b => b.Court)
-                    .ThenInclude(c => c.Facility)
+                .Include(b => b.Court).ThenInclude(c => c!.Facility)
                 .Include(b => b.User)
-                .Include(b => b.Orders)
-                    .ThenInclude(o => o.OrderDetails)
-                        .ThenInclude(od => od.Product)
                 .AsQueryable();
 
-            // ── Tab filter (ưu tiên hơn status param) ──
-            switch (filter)
+            // Tab filter
+            if (filter == "awaiting-transfer")
+                query = query.Where(b =>
+                    b.PaymentMethod == "Transfer" &&
+                    b.PaymentStatus != "Paid" &&
+                    b.Status != "Cancelled");
+            else if (!string.IsNullOrEmpty(filter))
+                query = query.Where(b => b.Status == filter);
+
+            // Search: ma don / ten / SDT
+            if (!string.IsNullOrWhiteSpace(search))
             {
-                case "awaiting-transfer":
-                    // Đơn Transfer chưa được xác nhận thanh toán
-                    query = query.Where(b =>
-                        b.PaymentMethod == "Transfer" &&
-                        (b.PaymentStatus == "Unpaid" || b.PaymentStatus == "Pending") &&
-                        b.Status == "Pending");
-                    break;
-                case "Pending":
-                case "Confirmed":
-                case "Playing":
-                case "Completed":
-                case "Cancelled":
-                    query = query.Where(b => b.Status == filter);
-                    break;
-                default:
-                    // Fallback: dùng status param cũ nếu không có filter tab
-                    if (!string.IsNullOrEmpty(status))
-                        query = query.Where(b => b.Status == status);
-                    break;
+                var s = search.Trim().ToLower();
+                query = query.Where(b =>
+                    b.BookingCode.ToLower().Contains(s) ||
+                    (b.User != null && b.User.FullName.ToLower().Contains(s)) ||
+                    (b.User != null && b.User.Phone != null && b.User.Phone.Contains(s)));
             }
 
-            // ── Search theo mã đơn ──
-            if (!string.IsNullOrWhiteSpace(search))
-                query = query.Where(b => b.BookingCode.Contains(search));
-
-            // ── Phương thức thanh toán ──
             if (!string.IsNullOrEmpty(paymentMethod))
                 query = query.Where(b => b.PaymentMethod == paymentMethod);
-            else if (!string.IsNullOrEmpty(paymentStatus))
-                query = query.Where(b => b.PaymentStatus == paymentStatus);
-
-            // ── Cơ sở ──
-            if (facilityId.HasValue)
-                query = query.Where(b => b.Court.FacilityId == facilityId.Value);
-
-            // ── Date range ──
             if (fromDate.HasValue)
-                query = query.Where(b => b.BookingDate >= fromDate.Value);
+                query = query.Where(b => b.BookingDate >= fromDate.Value.Date);
             if (toDate.HasValue)
-                query = query.Where(b => b.BookingDate <= toDate.Value);
+                query = query.Where(b => b.BookingDate <= toDate.Value.Date);
 
-            var bookings = await query.OrderByDescending(b => b.CreatedAt).ToListAsync();
+            // Badge counts cho tab (1 query duy nhat)
+            var counts = await _context.Bookings
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    Total = g.Count(),
+                    Pending = g.Count(b => b.Status == "Pending"),
+                    Confirmed = g.Count(b => b.Status == "Confirmed"),
+                    AwaitCk = g.Count(b =>
+                        b.PaymentMethod == "Transfer" &&
+                        b.PaymentStatus != "Paid" &&
+                        b.Status != "Cancelled")
+                })
+                .FirstOrDefaultAsync();
 
-            // ── ViewBag counters cho tab badges ──
-            ViewBag.FilterType = filter;
+            ViewBag.TotalCount = counts?.Total ?? 0;
+            ViewBag.PendingCount = counts?.Pending ?? 0;
+            ViewBag.ConfirmedCount = counts?.Confirmed ?? 0;
+            ViewBag.AwaitingTransferCount = counts?.AwaitCk ?? 0;
+
+            int total = await query.CountAsync();
+            var bookings = await query
+                .OrderByDescending(b => b.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.FilterType = filter ?? "";
             ViewBag.Search = search;
             ViewBag.PaymentMethod = paymentMethod;
             ViewBag.FromDate = fromDate?.ToString("yyyy-MM-dd");
             ViewBag.ToDate = toDate?.ToString("yyyy-MM-dd");
-            ViewBag.Facilities = await _context.Facilities.ToListAsync();
-            ViewBag.TotalCount = await _context.Bookings.CountAsync();
-            ViewBag.TotalBookings = bookings.Count;
-            ViewBag.PendingCount = await _context.Bookings.CountAsync(b => b.Status == "Pending");
-            ViewBag.PendingBookings = bookings.Count(b => b.Status == "Pending");
-            ViewBag.ConfirmedCount = await _context.Bookings.CountAsync(b => b.Status == "Confirmed");
-            ViewBag.ConfirmedBookings = bookings.Count(b => b.Status == "Confirmed");
-            ViewBag.CompletedBookings = bookings.Count(b => b.Status == "Completed");
-            ViewBag.TotalRevenue = bookings.Where(b => b.Status != "Cancelled").Sum(b => b.TotalPrice);
-            ViewBag.AwaitingTransferCount = await _context.Bookings.CountAsync(b =>
-                b.PaymentMethod == "Transfer" &&
-                (b.PaymentStatus == "Unpaid" || b.PaymentStatus == "Pending") &&
-                b.Status == "Pending");
+            ViewBag.Page = page;
+            ViewBag.TotalPage = (int)Math.Ceiling((double)total / pageSize);
 
-            var model = bookings.Select(b => new BookingHistoryViewModel
-            {
-                BookingId = b.BookingId,
-                BookingCode = b.BookingCode,
-                CustomerName = b.User?.FullName ?? "Khách vãng lai",
-                Phone = b.User?.Phone ?? "N/A",
-                Email = b.User?.Email ?? "N/A",
-                FacilityName = b.Court?.Facility?.FacilityName ?? "N/A",
-                CourtNumber = b.Court?.CourtNumber?.ToString() ?? "N/A",
-                CourtType = b.Court?.CourtType ?? "N/A",
-                BookingDate = b.BookingDate,
-                StartTime = b.StartTime,
-                EndTime = b.EndTime,
-                Duration = b.Duration,
-                TotalPrice = b.TotalPrice,
-                Status = b.Status,
-                PaymentStatus = b.PaymentStatus,
-                PaymentMethod = b.PaymentMethod,
-                CreatedAt = b.CreatedAt,
-                Note = b.Note,
-                RelatedOrders = b.Orders?.Select(o => new OrderViewModel
-                {
-                    OrderId = o.OrderId,
-                    TotalAmount = o.TotalAmount,
-                    OrderStatus = o.OrderStatus,
-                    OrderDetails = o.OrderDetails?.Select(od => new OrderDetailViewModel
-                    {
-                        ProductName = od.Product?.ProductName ?? "",
-                        Quantity = od.Quantity,
-                        Unit = od.Product?.Unit ?? "",
-                        UnitPrice = od.UnitPrice,
-                        TotalPrice = od.TotalPrice
-                    }).ToList() ?? new()
-                }).ToList() ?? new()
-            }).ToList();
-
-            return View(model);
+            var cancelHours = await GetSetting("BookingCancellationHours", 2m);
+            return View(bookings.Select(b => Map(b, cancelHours)).ToList());
         }
 
-        // ================================================================
+        // ═════════════════════════════════════════════════════════════════════
         // DETAILS
-        // ================================================================
+        // ═════════════════════════════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            var booking = await _context.Bookings
-                .Include(b => b.Court)
-                    .ThenInclude(c => c.Facility)
-                .Include(b => b.User)
-                .Include(b => b.Orders)
-                    .ThenInclude(o => o.OrderDetails)
-                        .ThenInclude(od => od.Product)
-                .FirstOrDefaultAsync(b => b.BookingId == id);
+            var b = await LoadFull(id);
+            if (b == null) return NotFound();
 
-            if (booking == null) return NotFound();
+            // Load VoucherCode riêng — tránh EF join bảng VoucherUsages
+            // (bảng này không có cột CreatedAt nên gây SqlException nếu Include thẳng)
+            string? voucherCode = await _context.VoucherUsages
+                .Where(v => v.BookingId == id)
+                .Select(v => v.Voucher != null ? v.Voucher.VoucherCode : null)
+                .FirstOrDefaultAsync();
 
-            var model = new BookingHistoryViewModel
-            {
-                BookingId = booking.BookingId,
-                BookingCode = booking.BookingCode,
-                CustomerName = booking.User?.FullName ?? "Khách vãng lai",
-                Phone = booking.User?.Phone ?? "N/A",
-                Email = booking.User?.Email ?? "N/A",
-                FacilityName = booking.Court?.Facility?.FacilityName ?? "N/A",
-                CourtNumber = booking.Court?.CourtNumber?.ToString() ?? "N/A",
-                CourtType = booking.Court?.CourtType ?? "N/A",
-                BookingDate = booking.BookingDate,
-                StartTime = booking.StartTime,
-                EndTime = booking.EndTime,
-                Duration = (int)(booking.EndTime - booking.StartTime).TotalMinutes,
-                TotalPrice = booking.TotalPrice,
-                Status = booking.Status,
-                PaymentStatus = booking.PaymentStatus,
-                PaymentMethod = booking.PaymentMethod,
-                Note = booking.Note,
-                CreatedAt = booking.CreatedAt,
-                CanCancel = booking.Status != "Cancelled" && booking.Status != "Completed",
-                RelatedOrders = booking.Orders?.Select(o => new OrderViewModel
-                {
-                    OrderId = o.OrderId,
-                    OrderCode = o.OrderCode,
-                    TotalAmount = o.TotalAmount,
-                    OrderStatus = o.OrderStatus,
-                    OrderDetails = o.OrderDetails?.Select(od => new OrderDetailViewModel
-                    {
-                        ProductName = od.Product?.ProductName ?? "Không xác định",
-                        Quantity = od.Quantity,
-                        Unit = od.Product?.Unit ?? "",
-                        UnitPrice = od.UnitPrice,
-                        TotalPrice = od.TotalPrice
-                    }).ToList() ?? new()
-                }).ToList() ?? new()
-            };
-
-            return View(model);
+            SetBankViewBag(b.BookingCode);
+            var cancelHours = await GetSetting("BookingCancellationHours", 2m);
+            var vm = Map(b, cancelHours);
+            vm.VoucherCode = voucherCode;
+            return View(vm);
         }
 
-        // ================================================================
-        // CONFIRM PAYMENT — Xác nhận đã nhận tiền chuyển khoản (MỚI)
-        // ================================================================
+        // ═════════════════════════════════════════════════════════════════════
+        // SET STATUS  <-- gop: ConfirmPayment + ConfirmOrder + UpdateStatus
+        //
+        //  newStatus  | Hanh dong
+        // ────────────┼──────────────────────────────────────────────────────
+        //  ConfirmCK  | PaymentStatus -> Paid (chua doi Status don)
+        //  Confirmed  | Pending -> Confirmed, PaymentStatus -> Paid
+        //  Playing    | Confirmed -> Playing
+        //  Completed  | Playing -> Completed, tu Paid neu chua
+        // ═════════════════════════════════════════════════════════════════════
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ConfirmPayment(int id, string? confirmNote)
+        public async Task<IActionResult> SetStatus(int id, string newStatus, string? note)
         {
             var booking = await _context.Bookings.FindAsync(id);
             if (booking == null) return NotFound();
 
-            if (booking.PaymentMethod != "Transfer")
+            if (booking.Status is "Cancelled" or "Completed")
             {
-                TempData["ErrorMessage"] = "Chỉ áp dụng cho đơn chuyển khoản.";
+                TempData["ErrorMessage"] = $"Khong the thay doi don da {booking.Status}.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            if (booking.PaymentStatus == "Paid")
+            string old = booking.Status;
+
+            switch (newStatus)
             {
-                TempData["ErrorMessage"] = "Đơn này đã được xác nhận thanh toán trước đó.";
+                case "ConfirmCK":
+                    if (booking.PaymentStatus == "Paid")
+                    {
+                        TempData["ErrorMessage"] = "Don nay da xac nhan CK truoc do!";
+                        return RedirectToAction(nameof(Details), new { id });
+                    }
+                    booking.PaymentStatus = "Paid";
+                    break;
+
+                case "Confirmed":
+                    if (booking.Status != "Pending")
+                    {
+                        TempData["ErrorMessage"] = "Chi xac nhan duoc don dang Cho xac nhan!";
+                        return RedirectToAction(nameof(Details), new { id });
+                    }
+                    if (booking.PaymentMethod == "Transfer" && booking.PaymentStatus != "Paid")
+                    {
+                        TempData["ErrorMessage"] = "Vui long xac nhan CK truoc!";
+                        return RedirectToAction(nameof(Details), new { id });
+                    }
+                    booking.Status = "Confirmed";
+                    booking.PaymentStatus = "Paid";
+                    break;
+
+                case "Playing":
+                case "Completed":
+                    booking.Status = newStatus;
+                    if (newStatus == "Completed" && booking.PaymentStatus != "Paid")
+                        booking.PaymentStatus = "Paid";
+                    break;
+
+                default:
+                    TempData["ErrorMessage"] = "Trang thai khong hop le!";
+                    return RedirectToAction(nameof(Details), new { id });
+            }
+
+            if (!string.IsNullOrWhiteSpace(note))
+                booking.Note = note.Trim();
+
+            booking.UpdatedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+            await Log(GetAdminId(), "SetStatus", booking.BookingId, old,
+                newStatus + (note != null ? $"|{note}" : ""));
+
+            string label = newStatus switch
+            {
+                "ConfirmCK" => "Xac nhan CK",
+                "Confirmed" => "Da xac nhan",
+                "Playing" => "Dang choi",
+                "Completed" => "Hoan thanh",
+                _ => newStatus
+            };
+            TempData["SuccessMessage"] =
+                $"Don <strong>{booking.BookingCode}</strong> &rarr; <strong>{label}</strong>.";
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // ═════════════════════════════════════════════════════════════════════
+        // CANCEL  (admin khong bi gioi han gio nhu khach)
+        // ═════════════════════════════════════════════════════════════════════
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Cancel(int id, string cancelReason)
+        {
+            var booking = await _context.Bookings.FindAsync(id);
+            if (booking == null) return NotFound();
+
+            if (booking.Status is "Cancelled" or "Completed")
+            {
+                TempData["ErrorMessage"] = $"Khong the huy don dang o trang thai {booking.Status}!";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            booking.PaymentStatus = "Paid";
+            if (string.IsNullOrWhiteSpace(cancelReason))
+            {
+                TempData["ErrorMessage"] = "Vui long nhap ly do huy!";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            string old = booking.Status;
+            booking.Status = "Cancelled";
+            booking.CancelReason = $"[Admin] {cancelReason.Trim()}";
+            booking.CancelledAt = DateTime.Now;
             booking.UpdatedAt = DateTime.Now;
 
-            // Tự động chuyển sang Confirmed sau khi nhận tiền
-            if (booking.Status == "Pending")
-                booking.Status = "Confirmed";
-
-            // Append ghi chú xác nhận
-            if (!string.IsNullOrEmpty(confirmNote))
-                booking.Note = string.IsNullOrEmpty(booking.Note)
-                    ? $"[Admin CK] {confirmNote}"
-                    : $"{booking.Note}\n[Admin CK] {confirmNote}";
-
             await _context.SaveChangesAsync();
+            await Log(GetAdminId(), "Cancel", booking.BookingId, old, cancelReason);
 
-            // Log activity
+            TempData["SuccessMessage"] = $"Da huy don <strong>{booking.BookingCode}</strong>.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ═════════════════════════════════════════════════════════════════════
+        // EXPORT CSV
+        // ═════════════════════════════════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> ExportCsv(
+            string? filter, string? search,
+            string? paymentMethod,
+            DateTime? fromDate, DateTime? toDate)
+        {
+            var query = _context.Bookings
+                .Include(b => b.Court).ThenInclude(c => c!.Facility)
+                .Include(b => b.User)
+                .AsQueryable();
+
+            if (filter == "awaiting-transfer")
+                query = query.Where(b =>
+                    b.PaymentMethod == "Transfer" &&
+                    b.PaymentStatus != "Paid" &&
+                    b.Status != "Cancelled");
+            else if (!string.IsNullOrEmpty(filter))
+                query = query.Where(b => b.Status == filter);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.Trim().ToLower();
+                query = query.Where(b =>
+                    b.BookingCode.ToLower().Contains(s) ||
+                    (b.User != null && b.User.FullName.ToLower().Contains(s)));
+            }
+
+            if (!string.IsNullOrEmpty(paymentMethod))
+                query = query.Where(b => b.PaymentMethod == paymentMethod);
+            if (fromDate.HasValue) query = query.Where(b => b.BookingDate >= fromDate.Value.Date);
+            if (toDate.HasValue) query = query.Where(b => b.BookingDate <= toDate.Value.Date);
+
+            var rows = await query.OrderByDescending(b => b.CreatedAt).ToListAsync();
+
+            var csv = new System.Text.StringBuilder();
+            csv.AppendLine("Ma don,Khach hang,Dien thoai,Co so,San,Ngay choi,Gio,Phuong thuc,Thanh toan,Trang thai,Tong tien");
+
+            foreach (var b in rows)
+            {
+                csv.AppendLine(string.Join(",",
+                    b.BookingCode,
+                    $"\"{b.User?.FullName ?? "N/A"}\"",
+                    b.User?.Phone ?? "",
+                    $"\"{b.Court?.Facility?.FacilityName ?? "N/A"}\"",
+                    b.Court?.CourtNumber ?? "",
+                    b.BookingDate.ToString("dd/MM/yyyy"),
+                    $"{b.StartTime:hh\\:mm}-{b.EndTime:hh\\:mm}",
+                    b.PaymentMethod,
+                    b.PaymentStatus,
+                    b.Status,
+                    b.TotalPrice.ToString("N0")));
+            }
+
+            byte[] bytes = System.Text.Encoding.UTF8.GetPreamble()
+                .Concat(System.Text.Encoding.UTF8.GetBytes(csv.ToString()))
+                .ToArray();
+
+            return File(bytes, "text/csv; charset=utf-8",
+                $"bookings_{DateTime.Now:yyyyMMdd_HHmm}.csv");
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // HELPERS
+        // ─────────────────────────────────────────────────────────────────────
+
+        private Task<Booking?> LoadFull(int id) =>
+            _context.Bookings
+                .Include(b => b.Court).ThenInclude(c => c!.Facility)
+                .Include(b => b.User)
+                .Include(b => b.Orders)
+                    .ThenInclude(o => o.OrderDetails)
+                    .ThenInclude(od => od.Product)
+                // VoucherUsages được load riêng trong Details() vì bảng không có CreatedAt
+                .FirstOrDefaultAsync(b => b.BookingId == id);
+
+        private static BookingHistoryViewModel Map(Booking b, decimal cancelHours) => new()
+        {
+            BookingId = b.BookingId,
+            BookingCode = b.BookingCode,
+            CustomerName = b.User?.FullName ?? "N/A",
+            Phone = b.User?.Phone ?? "N/A",
+            Email = b.User?.Email ?? "N/A",
+            FacilityName = b.Court?.Facility?.FacilityName ?? "N/A",
+            FacilityAddress = $"{b.Court?.Facility?.Address}, {b.Court?.Facility?.District}, {b.Court?.Facility?.City}",
+            CourtNumber = b.Court?.CourtNumber ?? "N/A",
+            CourtType = b.Court?.CourtType ?? "N/A",
+            CourtTypeLabel = b.Court?.CourtTypeLabel,
+            CourtImageUrl = b.Court?.ImagePath,
+            BookingDate = b.BookingDate,
+            StartTime = b.StartTime,
+            EndTime = b.EndTime,
+            Duration = b.Duration,
+            CourtPrice = b.CourtPrice,
+            ServiceFee = b.ServiceFee,
+            DiscountAmount = b.DiscountAmount,
+            TotalPrice = b.TotalPrice,
+            Status = b.Status,
+            PaymentStatus = b.PaymentStatus,
+            PaymentMethod = b.PaymentMethod,
+            Note = b.Note,
+            CancelReason = b.CancelReason,
+            CreatedAt = b.CreatedAt,
+            CancelledAt = b.CancelledAt,
+            CanCancel = b.Status is not ("Cancelled" or "Completed"),
+            VoucherCode = null, // set riêng trong Details() sau khi query tách
+            RelatedOrders = b.Orders?.Select(o => new OrderViewModel
+            {
+                OrderId = o.OrderId,
+                OrderCode = o.OrderCode,
+                OrderType = o.OrderType,
+                TotalAmount = o.TotalAmount,
+                OrderStatus = o.OrderStatus,
+                OrderDetails = o.OrderDetails?.Select(od => new OrderDetailViewModel
+                {
+                    ProductName = od.Product?.ProductName ?? "Khong xac dinh",
+                    Quantity = od.Quantity,
+                    Unit = od.Product?.Unit ?? "",
+                    UnitPrice = od.UnitPrice,
+                    TotalPrice = od.TotalPrice
+                }).ToList() ?? new()
+            }).ToList() ?? new()
+        };
+
+        private void SetBankViewBag(string? bookingCode = null)
+        {
+            const string code = "MB", acc = "0123456789",
+                         name = "CONG TY QUAN LI SAN CAU LONG";
+            ViewBag.BankCode = code;
+            ViewBag.BankAccount = acc;
+            ViewBag.BankAccountName = name;
+            ViewBag.BankName = "MB Bank";
+            if (!string.IsNullOrEmpty(bookingCode))
+                ViewBag.QrUrl =
+                    $"https://img.vietqr.io/image/{code}-{acc}-compact2.png" +
+                    $"?addInfo={Uri.EscapeDataString(bookingCode)}" +
+                    $"&accountName={Uri.EscapeDataString(name)}";
+        }
+
+        private async Task<decimal> GetSetting(string key, decimal def)
+        {
+            var s = await _context.SystemSettings
+                .FirstOrDefaultAsync(x => x.SettingKey == key && x.IsActive);
+            return s != null && decimal.TryParse(s.SettingValue, out var v) ? v : def;
+        }
+
+        private async Task Log(int userId, string action, int? recordId,
+            string? oldVal, string newVal)
+        {
             _context.ActivityLogs.Add(new ActivityLog
             {
-                UserId = GetCurrentAdminId(),
-                Action = "ConfirmPayment",
+                UserId = userId,
+                Action = action,
                 TableName = "Bookings",
-                RecordId = booking.BookingId,
-                OldValue = "PaymentStatus=Unpaid",
-                NewValue = $"PaymentStatus=Paid | Status=Confirmed | Note: {confirmNote}",
-                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                RecordId = recordId,
+                OldValue = oldVal ?? "",
+                NewValue = newVal,
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "",
                 UserAgent = HttpContext.Request.Headers["User-Agent"].ToString(),
                 CreatedAt = DateTime.Now
             });
             await _context.SaveChangesAsync();
-
-            TempData["SuccessMessage"] = $"✅ Đã xác nhận nhận tiền CK cho đơn {booking.BookingCode}. Đơn đã chuyển sang Confirmed.";
-            return RedirectToAction(nameof(Details), new { id });
         }
 
-        // ================================================================
-        // CONFIRM ORDER — Xác nhận đơn Pending → Confirmed (MỚI, thay Confirm cũ)
-        // Bao gồm guard: Transfer phải xác nhận CK trước
-        // ================================================================
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ConfirmOrder(int id)
+        private int GetAdminId()
         {
-            var booking = await _context.Bookings.FindAsync(id);
-            if (booking == null) return NotFound();
-
-            if (booking.Status != "Pending")
-            {
-                TempData["ErrorMessage"] = "Đơn không ở trạng thái Pending.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            // Guard: không confirm đơn Transfer chưa xác nhận thanh toán
-            if (booking.PaymentMethod == "Transfer" && booking.PaymentStatus != "Paid")
-            {
-                TempData["ErrorMessage"] = "Vui lòng xác nhận đã nhận tiền CK trước khi xác nhận đơn.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            booking.Status = "Confirmed";
-            booking.UpdatedAt = DateTime.Now;
-            await _context.SaveChangesAsync();
-
-            TempData["SuccessMessage"] = $"✅ Đã xác nhận đơn {booking.BookingCode}.";
-            return RedirectToAction(nameof(Details), new { id });
-        }
-
-        // ================================================================
-        // CONFIRM (JSON) — giữ lại để tương thích với JS cũ gọi Ajax
-        // ================================================================
-        [HttpPost]
-        public async Task<IActionResult> Confirm(int bookingId)
-        {
-            if (bookingId <= 0)
-                return Json(new { success = false, message = "ID không hợp lệ!" });
-
-            var booking = await _context.Bookings.FindAsync(bookingId);
-            if (booking == null)
-                return Json(new { success = false, message = "Không tìm thấy đơn đặt sân!" });
-
-            if (booking.Status != "Pending")
-                return Json(new { success = false, message = "Chỉ có thể xác nhận đơn đang chờ!" });
-
-            // Guard: Transfer chưa nhận tiền → block
-            if (booking.PaymentMethod == "Transfer" && booking.PaymentStatus != "Paid")
-                return Json(new { success = false, message = "Đơn chuyển khoản chưa được xác nhận thanh toán. Vui lòng dùng nút 'Xác nhận đã nhận tiền CK' trước." });
-
-            booking.Status = "Confirmed";
-            booking.UpdatedAt = DateTime.Now;
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "Xác nhận đơn đặt sân thành công!" });
-        }
-
-        // ================================================================
-        // UPDATE STATUS — Cập nhật trạng thái (Playing / Completed) (MỚI)
-        // ================================================================
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateStatus(int id, string newStatus)
-        {
-            var allowed = new[] { "Playing", "Completed" };
-            if (!allowed.Contains(newStatus))
-            {
-                TempData["ErrorMessage"] = "Trạng thái không hợp lệ.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            var booking = await _context.Bookings.FindAsync(id);
-            if (booking == null) return NotFound();
-
-            booking.Status = newStatus;
-            booking.UpdatedAt = DateTime.Now;
-            await _context.SaveChangesAsync();
-
-            TempData["SuccessMessage"] = $"✅ Đã cập nhật trạng thái đơn {booking.BookingCode} → {newStatus}.";
-            return RedirectToAction(nameof(Details), new { id });
-        }
-
-        // ================================================================
-        // CHECKIN (JSON) — Confirmed → Playing, tương thích JS cũ
-        // ================================================================
-        [HttpPost]
-        public async Task<IActionResult> CheckIn(int bookingId)
-        {
-            if (bookingId <= 0)
-                return Json(new { success = false, message = "ID không hợp lệ!" });
-
-            var booking = await _context.Bookings.FindAsync(bookingId);
-            if (booking == null)
-                return Json(new { success = false, message = "Không tìm thấy đơn đặt sân!" });
-
-            if (booking.Status != "Confirmed")
-                return Json(new { success = false, message = "Chỉ có thể check-in đơn đã xác nhận!" });
-
-            booking.Status = "Playing";
-            booking.UpdatedAt = DateTime.Now;
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "Check-in thành công! Chúc khách hàng chơi vui vẻ." });
-        }
-
-        // ================================================================
-        // COMPLETE (JSON) — Playing/Confirmed → Completed, tương thích JS cũ
-        // ================================================================
-        [HttpPost]
-        public async Task<IActionResult> Complete(int bookingId)
-        {
-            if (bookingId <= 0)
-                return Json(new { success = false, message = "ID không hợp lệ!" });
-
-            var booking = await _context.Bookings.FindAsync(bookingId);
-            if (booking == null)
-                return Json(new { success = false, message = "Không tìm thấy đơn đặt sân!" });
-
-            if (booking.Status != "Confirmed" && booking.Status != "Playing")
-                return Json(new { success = false, message = "Không thể hoàn thành đơn này!" });
-
-            booking.Status = "Completed";
-            booking.UpdatedAt = DateTime.Now;
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "Đánh dấu hoàn thành thành công!" });
-        }
-
-        // ================================================================
-        // CANCEL — Admin huỷ đơn (hỗ trợ cả JSON lẫn form POST)
-        // ================================================================
-        [HttpPost]
-        public async Task<IActionResult> Cancel(int? bookingId, int? id, string? reason, string? cancelReason)
-        {
-            // Hỗ trợ cả 2 cách gọi: Ajax (bookingId, reason) và form (id, cancelReason)
-            int targetId = bookingId ?? id ?? 0;
-            string? theReason = reason ?? cancelReason;
-
-            if (targetId <= 0)
-                return Request.Headers["X-Requested-With"] == "XMLHttpRequest"
-                    ? Json(new { success = false, message = "ID không hợp lệ!" })
-                    : BadRequest();
-
-            var booking = await _context.Bookings.FindAsync(targetId);
-            if (booking == null)
-                return Request.Headers["X-Requested-With"] == "XMLHttpRequest"
-                    ? Json(new { success = false, message = "Không tìm thấy đơn đặt sân!" })
-                    : NotFound();
-
-            if (booking.Status == "Cancelled")
-                return Request.Headers["X-Requested-With"] == "XMLHttpRequest"
-                    ? Json(new { success = false, message = "Đơn đã được hủy trước đó!" })
-                    : RedirectToAction(nameof(Details), new { id = targetId });
-
-            if (booking.Status == "Completed")
-                return Request.Headers["X-Requested-With"] == "XMLHttpRequest"
-                    ? Json(new { success = false, message = "Không thể hủy đơn đã hoàn thành!" })
-                    : RedirectToAction(nameof(Details), new { id = targetId });
-
-            booking.Status = "Cancelled";
-            booking.CancelReason = theReason;
-            booking.CancelledAt = DateTime.Now;
-            booking.UpdatedAt = DateTime.Now;
-            await _context.SaveChangesAsync();
-
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                return Json(new { success = true, message = "Hủy đơn đặt sân thành công!" });
-
-            TempData["SuccessMessage"] = $"Đã hủy đơn {booking.BookingCode}.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        // ================================================================
-        // UPDATE PAYMENT (JSON) — Admin cập nhật trạng thái thanh toán thủ công
-        // ================================================================
-        [HttpPost]
-        public async Task<IActionResult> UpdatePayment(int bookingId, string paymentStatus)
-        {
-            var booking = await _context.Bookings.FindAsync(bookingId);
-            if (booking == null)
-                return Json(new { success = false, message = "Không tìm thấy đơn!" });
-
-            booking.PaymentStatus = paymentStatus;
-            booking.UpdatedAt = DateTime.Now;
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "Cập nhật thanh toán thành công!" });
-        }
-
-        // ================================================================
-        // EXPORT — Xuất Excel (placeholder)
-        // ================================================================
-        [HttpGet]
-        public IActionResult Export()
-        {
-            TempData["InfoMessage"] = "Tính năng xuất Excel đang được phát triển.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        // ── Helper ──
-        private int GetCurrentAdminId()
-        {
-            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
-            return (claim != null && int.TryParse(claim.Value, out int id)) ? id : 0;
+            var c = User.FindFirst(ClaimTypes.NameIdentifier);
+            return c != null && int.TryParse(c.Value, out var id)
+                ? id
+                : HttpContext.Session.GetInt32("UserId") ?? 0;
         }
     }
 }

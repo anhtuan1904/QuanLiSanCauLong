@@ -1,0 +1,528 @@
+﻿@model List<QuanLiSanCauLong.ViewModels.StaffCourtStatusViewModel>
+@{
+    Layout = "~/Views/Shared/_LayoutStaff.cshtml";
+    ViewData["Title"] = "Sơ đồ sân";
+}
+
+<style>
+    :root {
+        --D: #1a1209;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --G3: rgba(212,160,23,.1);
+        --G4: rgba(212,160,23,.22);
+        --C: #fdf8f0;
+        --W: #f5ede0;
+        --S: #e8ddd0;
+        --M: #8a7560;
+        --GN: #10b981;
+        --BL: #3b82f6;
+        --RD: #ef4444;
+        --OR: #f97316;
+        --r: 14px;
+        --r2: 10px;
+    }
+
+    /* ── HEADER ── */
+    .cm-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1.3rem;
+        flex-wrap: wrap;
+    }
+
+    .cm-legend {
+        display: flex;
+        gap: .85rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .75rem;
+        color: var(--M);
+        font-weight: 500;
+    }
+
+    .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        flex-shrink: 0;
+    }
+
+    .cm-actions {
+        display: flex;
+        gap: .5rem;
+    }
+
+    .cm-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .42rem .9rem;
+        border-radius: 8px;
+        border: 1px solid var(--S);
+        background: #fff;
+        color: var(--M);
+        font-size: .76rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all .18s;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+        .cm-btn:hover {
+            border-color: var(--G);
+            color: var(--G);
+        }
+
+    .cm-btn-g {
+        background: var(--G);
+        border-color: var(--G);
+        color: var(--D);
+    }
+
+        .cm-btn-g:hover {
+            background: var(--G2);
+            border-color: var(--G2);
+            color: var(--D);
+        }
+
+    /* ── COURT GRID ── */
+    .ct-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+        gap: 14px;
+    }
+
+    .ct {
+        border-radius: var(--r);
+        padding: 1.3rem 1.4rem;
+        cursor: pointer;
+        transition: transform .18s, box-shadow .2s;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .ct:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 32px rgba(0,0,0,.13);
+        }
+
+        .ct::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: var(--r) var(--r) 0 0;
+        }
+
+        .ct.free {
+            background: rgba(16,185,129,.07);
+            border: 1px solid rgba(16,185,129,.2);
+        }
+
+            .ct.free::before {
+                background: linear-gradient(90deg,var(--GN),#34d399);
+            }
+
+        .ct.playing {
+            background: rgba(212,160,23,.08);
+            border: 1px solid rgba(212,160,23,.22);
+        }
+
+            .ct.playing::before {
+                background: linear-gradient(90deg,var(--G),var(--G2));
+            }
+
+        .ct.incoming {
+            background: rgba(249,115,22,.07);
+            border: 1px solid rgba(249,115,22,.2);
+        }
+
+            .ct.incoming::before {
+                background: linear-gradient(90deg,var(--OR),#fbbf24);
+            }
+
+        .ct.maintenance {
+            background: rgba(138,117,96,.07);
+            border: 1px dashed rgba(138,117,96,.3);
+        }
+
+            .ct.maintenance::before {
+                background: linear-gradient(90deg,var(--M),rgba(138,117,96,.3));
+            }
+
+    .ct-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: .6rem;
+    }
+
+    .ct-num {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.45rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .ct.free .ct-num {
+        color: var(--GN);
+    }
+
+    .ct.playing .ct-num {
+        color: var(--G);
+    }
+
+    .ct.incoming .ct-num {
+        color: var(--OR);
+    }
+
+    .ct.maintenance .ct-num {
+        color: var(--M);
+    }
+
+    .ct-badge {
+        font-size: .58rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        padding: .18rem .55rem;
+        border-radius: 4px;
+    }
+
+    .ct.free .ct-badge {
+        background: rgba(16,185,129,.15);
+        color: var(--GN);
+    }
+
+    .ct.playing .ct-badge {
+        background: var(--G3);
+        color: #92660a;
+    }
+
+    .ct.incoming .ct-badge {
+        background: rgba(249,115,22,.15);
+        color: var(--OR);
+    }
+
+    .ct.maintenance .ct-badge {
+        background: rgba(138,117,96,.12);
+        color: var(--M);
+    }
+
+    .ct-type {
+        font-size: .68rem;
+        color: var(--M);
+        margin-bottom: .8rem;
+    }
+
+    .ct-info {
+        font-size: .77rem;
+        color: var(--D);
+        font-weight: 600;
+        line-height: 1.45;
+    }
+
+    .ct-meta {
+        font-size: .7rem;
+        color: var(--M);
+        margin-top: .2rem;
+    }
+
+    .ct-countdown {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        font-size: .72rem;
+        font-weight: 700;
+        color: var(--OR);
+        margin-top: .5rem;
+    }
+
+    .ct-book-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .38rem;
+        width: 100%;
+        padding: .5rem;
+        border-radius: 8px;
+        background: rgba(16,185,129,.12);
+        border: 1px solid rgba(16,185,129,.25);
+        color: var(--GN);
+        font-size: .74rem;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all .18s;
+        margin-top: .75rem;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+        .ct-book-btn:hover {
+            background: var(--GN);
+            color: #fff;
+        }
+
+    /* ── SUMMARY BAR ── */
+    .ct-summary {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: .7rem;
+        margin-bottom: 1.3rem;
+    }
+
+    .cts {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r2);
+        padding: .9rem 1.1rem;
+        text-align: center;
+    }
+
+    .cts-n {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .cts-l {
+        font-size: .65rem;
+        color: var(--M);
+        margin-top: .2rem;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    /* ── MODAL ── */
+    .modal-content {
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        overflow: hidden;
+    }
+
+    .modal-header {
+        background: var(--D);
+        border-bottom: none;
+        padding: 1rem 1.3rem;
+    }
+
+    .modal-title {
+        font-family: 'Syne', sans-serif;
+        font-weight: 800;
+        color: #fff;
+        font-size: .95rem;
+    }
+
+    .btn-close-white {
+        filter: brightness(0) invert(1);
+        opacity: .5;
+    }
+
+        .btn-close-white:hover {
+            opacity: 1;
+        }
+
+    .modal-body {
+        padding: 1.2rem 1.3rem;
+        background: #fff;
+    }
+
+    .modal-footer {
+        background: var(--W);
+        border-top: 1px solid var(--S);
+        padding: .8rem 1.3rem;
+    }
+
+    .mi-row {
+        display: flex;
+        gap: .5rem;
+        align-items: center;
+        font-size: .82rem;
+        padding: .35rem 0;
+        border-bottom: 1px solid var(--S);
+    }
+
+        .mi-row:last-child {
+            border-bottom: none;
+        }
+
+    .mi-lbl {
+        color: var(--M);
+        min-width: 90px;
+        font-weight: 500;
+    }
+
+    .mi-val {
+        color: var(--D);
+        font-weight: 600;
+    }
+
+    @@media(max-width: 600px) {
+        .ct-summary {
+            grid-template-columns: repeat(2,1fr);
+        }
+    }
+</style>
+
+<!-- Summary bar -->
+<div class="ct-summary">
+    <div class="cts">
+        <div class="cts-n" style="color:var(--GN)">@Model.Count(c => c.Status == "free")</div>
+        <div class="cts-l">Sân trống</div>
+    </div>
+    <div class="cts">
+        <div class="cts-n" style="color:var(--G)">@Model.Count(c => c.Status == "playing")</div>
+        <div class="cts-l">Đang có khách</div>
+    </div>
+    <div class="cts">
+        <div class="cts-n" style="color:var(--OR)">@Model.Count(c => c.Status == "incoming")</div>
+        <div class="cts-l">Sắp đến</div>
+    </div>
+    <div class="cts">
+        <div class="cts-n" style="color:var(--M)">@Model.Count(c => c.Status == "maintenance")</div>
+        <div class="cts-l">Bảo trì</div>
+    </div>
+</div>
+
+<!-- Header -->
+<div class="cm-head">
+    <div class="cm-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--GN)"></div>Trống</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--G)"></div>Đang chơi</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--OR)"></div>Sắp đến</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--M)"></div>Bảo trì</div>
+    </div>
+    <div class="cm-actions">
+        <a asp-controller="Staff" asp-action="WalkIn" class="cm-btn cm-btn-g">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+            Đặt sân tại chỗ
+        </a>
+        <button class="cm-btn" onclick="location.reload()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>
+            Làm mới
+        </button>
+    </div>
+</div>
+
+<!-- Court grid -->
+<div class="ct-grid">
+    @foreach (var c in Model)
+    {
+        <div class="ct @c.Status" onclick="showDetail(@c.CourtId)" data-id="@c.CourtId">
+            <div class="ct-header">
+                <div class="ct-num">@c.CourtNumber</div>
+                <span class="ct-badge">
+                    @(c.Status == "free" ? "Trống" : c.Status == "playing" ? "Đang chơi" : c.Status == "incoming" ? "Sắp đến" : "Bảo trì")
+                </span>
+            </div>
+            <div class="ct-type">@c.CourtType</div>
+
+            @if (c.Status == "playing")
+            {
+                <div class="ct-info">@c.CustomerName</div>
+                <div class="ct-meta">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                    @c.StartTime – @c.EndTime
+                </div>
+                <div class="ct-countdown">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                    <span id="cd-@c.CourtId">@c.Countdown</span>
+                </div>
+            }
+            else if (c.Status == "incoming")
+            {
+                <div class="ct-info">@c.NextName</div>
+                <div class="ct-meta">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                    @c.NextTime
+                </div>
+            }
+            else if (c.Status == "free")
+            {
+                <div class="ct-meta" style="margin-bottom:.5rem;">Sẵn sàng nhận đặt</div>
+                <a asp-controller="Staff" asp-action="WalkIn" asp-route-courtId="@c.CourtId"
+                   class="ct-book-btn" onclick="event.stopPropagation()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                    Đặt ngay
+                </a>
+            }
+            else
+            {
+                <div class="ct-meta">Đang bảo trì / không sử dụng</div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="ctModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title" id="ctModalTitle">Chi tiết sân</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="ctModalBody"></div>
+            <div class="modal-footer" id="ctModalFoot"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const courts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
+
+    function showDetail(id) {
+        const c = courts.find(x => x.courtId === id);
+        if (!c) return;
+        document.getElementById('ctModalTitle').textContent = 'Sân ' + c.courtNumber + ' — ' + c.courtType;
+
+            const statusMap = { free:'Trống', playing:'Đang chơi', incoming:'Sắp đến', maintenance:'Bảo trì' };
+            let body = `<div class="mi-row"><span class="mi-lbl">Trạng thái</span><span class="mi-val">${statusMap[c.status]||c.status}</span></div>`;
+
+            if (c.status === 'playing') {
+                body += `<div class="mi-row"><span class="mi-lbl">Khách hàng</span><span class="mi-val">${c.customerName||'—'}</span></div>
+                         <div class="mi-row"><span class="mi-lbl">Điện thoại</span><span class="mi-val">${c.customerPhone||'—'}</span></div>
+                         <div class="mi-row"><span class="mi-lbl">Khung giờ</span><span class="mi-val">${c.startTime}–${c.endTime}</span></div>
+                         <div class="mi-row"><span class="mi-lbl">Còn lại</span><span class="mi-val" style="color:var(--OR)">${c.countdown}</span></div>`;
+            } else if (c.status === 'incoming') {
+                body += `<div class="mi-row"><span class="mi-lbl">Khách tiếp theo</span><span class="mi-val">${c.nextName||'—'}</span></div>
+                         <div class="mi-row"><span class="mi-lbl">Giờ vào</span><span class="mi-val">${c.nextTime||'—'}</span></div>`;
+            }
+            document.getElementById('ctModalBody').innerHTML = body;
+
+            const tok = document.querySelector('input[name=__RequestVerificationToken]')?.value || '';
+            let foot = '';
+            if (c.status === 'playing' && c.bookingId) {
+                foot = `<form method="post" action="/Staff/DoCheckOut" class="d-inline me-2">
+                    <input type="hidden" name="bookingId" value="${c.bookingId}">
+                    <input type="hidden" name="__RequestVerificationToken" value="${tok}">
+                    <button type="submit" style="display:inline-flex;align-items:center;gap:.35rem;padding:.42rem .95rem;border-radius:8px;background:var(--G);border:none;color:var(--D);font-size:.76rem;font-weight:700;cursor:pointer;">Check-out</button>
+                </form>
+                <button onclick="showExtend(${c.bookingId})" style="display:inline-flex;align-items:center;gap:.35rem;padding:.42rem .85rem;border-radius:8px;background:#fff;border:1px solid var(--S);color:var(--M);font-size:.76rem;font-weight:600;cursor:pointer;">Gia hạn</button>`;
+            } else if (c.status === 'free') {
+                foot = `<a href="/Staff/WalkIn?courtId=${c.courtId}" style="display:inline-flex;align-items:center;gap:.35rem;padding:.42rem .95rem;border-radius:8px;background:var(--GN);color:#fff;font-size:.76rem;font-weight:700;text-decoration:none;">Đặt ngay</a>`;
+            }
+            document.getElementById('ctModalFoot').innerHTML = foot;
+            new bootstrap.Modal(document.getElementById('ctModal')).show();
+        }
+
+        // Auto-refresh 30s
+        setTimeout(() => location.reload(), 30000);
+    </script>
+    @Html.AntiForgeryToken()
+}

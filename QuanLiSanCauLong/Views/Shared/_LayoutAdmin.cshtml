@@ -10,8 +10,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
 
     <style>
         :root {
@@ -60,7 +58,6 @@
                 transform: translateX(calc(-1 * var(--sidebar-w)));
             }
 
-            /* Decorative gold line top */
             #sidebar::before {
                 content: '';
                 position: absolute;
@@ -71,51 +68,60 @@
                 background: linear-gradient(90deg, var(--gold) 0%, var(--gold2) 50%, transparent 100%);
             }
 
-        /* Brand header */
         .sb-brand {
-            padding: 2rem 1.6rem 1.5rem;
+            padding: 1rem 1rem .9rem;
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
         }
 
-        .sb-brand-logo {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-            margin-bottom: .4rem;
-        }
-
-        .sb-icon {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 100%);
-            border-radius: 6px;
+        /* Logo banner tỷ lệ ngang */
+        .sb-logo-banner {
+            width: 100%;
+            border-radius: 7px;
+            overflow: hidden;
+            margin-bottom: .55rem;
+            background: rgba(212,160,23,.06);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
-            color: var(--deep);
-            flex-shrink: 0;
+            min-height: 52px;
+        }
+
+            .sb-logo-banner img {
+                width: 100%;
+                height: auto;
+                display: block;
+                max-height: 80px;
+                object-fit: contain;
+            }
+
+            .sb-logo-banner i {
+                font-size: 1.6rem;
+                color: var(--gold);
+                opacity: .5;
+            }
+
+        /* giữ các class cũ để không lỗi nếu còn dùng đâu đó */
+        .sb-brand-logo {
+            display: none;
+        }
+
+        .sb-icon {
+            display: none;
         }
 
         .sb-name {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: #fff;
-            line-height: 1.2;
+            display: none;
         }
 
         .sb-sub {
-            font-size: .68rem;
+            font-size: .62rem;
             color: var(--muted);
             letter-spacing: .15em;
             text-transform: uppercase;
-            margin-top: .2rem;
-            padding-left: .2rem;
+            text-align: center;
         }
 
-        /* Nav */
         .sb-nav {
             flex: 1;
             overflow-y: auto;
@@ -153,7 +159,6 @@
             font-size: .875rem;
             font-weight: 400;
             transition: all .2s;
-            position: relative;
             border-left: 2px solid transparent;
         }
 
@@ -196,25 +201,27 @@
             text-transform: uppercase;
         }
 
-            .sb-badge.new {
-                background: var(--gold);
-            }
-
             .sb-badge.hot {
                 background: #c94b2a;
                 color: #fff;
             }
 
-        /* User footer */
         .sb-user {
-            padding: 1.2rem 1.4rem;
+            padding: 1.1rem 1.4rem;
             border-top: 1px solid var(--border);
             flex-shrink: 0;
             display: flex;
             align-items: center;
             gap: .85rem;
             background: rgba(0,0,0,.15);
+            text-decoration: none;
+            cursor: pointer;
+            transition: background .2s;
         }
+
+            .sb-user:hover {
+                background: rgba(212,160,23,.08);
+            }
 
         .sb-avatar {
             width: 38px;
@@ -229,7 +236,16 @@
             font-size: .95rem;
             flex-shrink: 0;
             font-family: 'Playfair Display', serif;
+            overflow: hidden;
+            border: 2px solid rgba(212,160,23,.35);
         }
+
+            .sb-avatar img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 50%;
+            }
 
         .sb-user-name {
             font-size: .85rem;
@@ -257,7 +273,6 @@
                 margin-left: 0;
             }
 
-        /* TOP NAVBAR */
         .top-nav {
             position: sticky;
             top: 0;
@@ -364,13 +379,11 @@
             white-space: nowrap;
         }
 
-        /* MAIN */
         main {
             padding: 2rem;
             flex: 1;
         }
 
-        /* ── OVERLAY (mobile) ────────────────────────── */
         .sb-overlay {
             display: none;
             position: fixed;
@@ -384,7 +397,6 @@
                 display: block;
             }
 
-        /* ── RESPONSIVE ──────────────────────────────── */
         @@media (max-width: 900px) {
             #sidebar {
                 transform: translateX(calc(-1 * var(--sidebar-w)));
@@ -407,7 +419,6 @@
             }
         }
 
-        /* ── GLOBAL ADMIN COMPONENTS ─────────────────── */
         .admin-card {
             background: #fff;
             border: 1px solid #ede5d8;
@@ -483,101 +494,164 @@
 </head>
 <body>
 
-    <!-- Overlay mobile -->
     <div class="sb-overlay" id="sbOverlay"></div>
 
     <!-- SIDEBAR -->
     <nav id="sidebar">
         <div class="sb-brand">
-            <div class="sb-brand-logo">
-                <div class="sb-icon"><i class="bi bi-trophy-fill"></i></div>
-                <div class="sb-name">Badminton</div>
+            @* Đặt ảnh logo vào: wwwroot/images/logo/logo-sidebar.png (tỷ lệ ngang 16:5 hoặc 16:4) *@
+            <div class="sb-logo-banner">
+                <img src="~/images/logo/logo-sidebar.png" alt="Logo"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+                <i class="bi bi-trophy-fill" style="display:none;"></i>
             </div>
             <div class="sb-sub">Admin Dashboard</div>
         </div>
 
         <div class="sb-nav">
+
             <!-- Dashboard -->
-            <a asp-controller="AdminDashboard" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminDashboard" ? "active" : "")">
+            <a asp-controller="AdminDashboard" asp-action="Index"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminDashboard" ? "active" : "")">
                 <i class="bi bi-speedometer2"></i><span>Dashboard</span>
             </a>
 
+            <!-- ── Quản Lý Cơ Sở ── -->
             <div class="sb-section">Quản Lý Cơ Sở</div>
-            <a asp-controller="AdminFacility" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminFacility" ? "active" : "")">
+            <a asp-controller="AdminFacility" asp-action="Index"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminFacility" ? "active" : "")">
                 <i class="bi bi-building"></i><span>Cơ sở sân</span>
             </a>
-            <a asp-controller="AdminCourt" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminCourt" ? "active" : "")">
+            <a asp-controller="AdminCourt" asp-action="Index"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminCourt" ? "active" : "")">
                 <i class="bi bi-grid-3x3"></i><span>Sân cầu lông</span>
             </a>
-            <a asp-controller="AdminPriceSlot" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminPriceSlot" ? "active" : "")">
+            <a asp-controller="AdminPriceSlot" asp-action="Index"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminPriceSlot" ? "active" : "")">
                 <i class="bi bi-cash-stack"></i><span>Khung giờ &amp; Giá</span>
             </a>
-            <a asp-controller="AdminReview" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminReview" ? "active" : "")">
+            <a asp-controller="AdminReview" asp-action="Index"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminReview" ? "active" : "")">
                 <i class="bi bi-star-half"></i><span>Đánh giá</span>
                 <span class="sb-badge new">NEW</span>
             </a>
 
+            <!-- ── Đặt Sân & Đơn Hàng ── -->
             <div class="sb-section">Đặt Sân &amp; Đơn Hàng</div>
-            <a asp-controller="AdminBooking" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminBooking" ? "active" : "")">
+            <a asp-controller="AdminBooking" asp-action="Index"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminBooking" ? "active" : "")">
                 <i class="bi bi-calendar-check"></i><span>Đặt sân</span>
             </a>
-            <a asp-controller="AdminOrder" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminOrder" ? "active" : "")">
+            <a asp-controller="AdminOrder" asp-action="Index"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminOrder" ? "active" : "")">
                 <i class="bi bi-receipt"></i><span>Đơn hàng</span>
             </a>
 
+            <!-- ── Sản Phẩm ── -->
             <div class="sb-section">Sản Phẩm</div>
-            <a asp-controller="AdminCategory" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminCategory" ? "active" : "")">
+            <a asp-controller="AdminCategory" asp-action="Index"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminCategory" ? "active" : "")">
                 <i class="bi bi-tags"></i><span>Danh mục</span>
             </a>
-            <a asp-controller="AdminProduct" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminProduct" ? "active" : "")">
+            <a asp-controller="AdminProduct" asp-action="Index"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminProduct" ? "active" : "")">
                 <i class="bi bi-box-seam"></i><span>Sản phẩm</span>
             </a>
-            <a asp-controller="AdminInventory" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminInventory" ? "active" : "")">
+            <a asp-controller="AdminInventory" asp-action="Index"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminInventory" ? "active" : "")">
                 <i class="bi bi-boxes"></i><span>Kho hàng</span>
             </a>
 
+            <!-- ── Nội Dung ── -->
             <div class="sb-section">Nội Dung</div>
-            <a asp-controller="AdminBlog" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminBlog" ? "active" : "")">
+            <a asp-controller="AdminBlog" asp-action="Index"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminBlog" ? "active" : "")">
                 <i class="bi bi-newspaper"></i><span>Bài viết</span>
             </a>
-            <a asp-controller="AdminService" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminService" ? "active" : "")">
+            <a asp-controller="AdminService" asp-action="Index"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminService" ? "active" : "")">
                 <i class="bi bi-stars"></i><span>Dịch vụ</span>
             </a>
 
+            <!-- ── Tuyển Dụng & Liên Hệ ── -->
             <div class="sb-section">Tuyển Dụng &amp; Liên Hệ</div>
-            <a asp-controller="AdminJob" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminJob" ? "active" : "")">
+            <a asp-controller="AdminJob" asp-action="Index"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminJob" ? "active" : "")">
                 <i class="bi bi-briefcase"></i><span>Tuyển dụng</span>
             </a>
-            <a asp-controller="AdminContact" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminContact" ? "active" : "")">
+            <a asp-controller="AdminContact" asp-action="Index"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminContact" ? "active" : "")">
                 <i class="bi bi-chat-dots"></i><span>Liên hệ</span>
             </a>
 
+            <!-- ── Nhân Viên & Ca Làm Việc ── -->
+            <div class="sb-section">Nhân Viên &amp; Ca Làm Việc</div>
+            <a asp-controller="AdminStaff" asp-action="Index"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminStaff" ? "active" : "")">
+                <i class="bi bi-people-fill"></i><span>Nhân viên</span>
+            </a>
+            <a asp-controller="AdminShift" asp-action="Schedule"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminShift" && ViewContext.RouteData.Values["action"]?.ToString() == "Schedule" ? "active" : "")">
+                <i class="bi bi-calendar-week"></i><span>Lịch phân ca</span>
+            </a>
+            <a asp-controller="AdminShift" asp-action="Report"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminShift" && ViewContext.RouteData.Values["action"]?.ToString() == "Report" ? "active" : "")">
+                <i class="bi bi-bar-chart-line"></i><span>Báo cáo ca</span>
+            </a>
+
+            <!-- ── Marketing ── -->
             <div class="sb-section">Marketing</div>
-            <a asp-controller="AdminVoucher" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminVoucher" ? "active" : "")">
+            <a asp-controller="AdminVoucher" asp-action="Index"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminVoucher" ? "active" : "")">
                 <i class="bi bi-ticket-perforated"></i><span>Voucher</span>
             </a>
 
+            <!-- ── Báo Cáo ── -->
             <div class="sb-section">Báo Cáo</div>
-            <a asp-controller="AdminReport" asp-action="Revenue" class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Revenue" ? "active" : "")">
+            <a asp-controller="AdminReport" asp-action="Revenue"
+               class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Revenue" ? "active" : "")">
                 <i class="bi bi-graph-up"></i><span>Doanh thu</span>
             </a>
 
+            <!-- ── Hệ Thống ── -->
             <div class="sb-section">Hệ Thống</div>
-            <a asp-controller="AdminUser" asp-action="Index" class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminUser" ? "active" : "")">
+            <a asp-controller="AdminUser" asp-action="Index"
+               class="sb-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminUser" ? "active" : "")">
                 <i class="bi bi-person-badge"></i><span>Người dùng</span>
             </a>
             <a asp-controller="Home" asp-action="Index" class="sb-link">
                 <i class="bi bi-house-door"></i><span>Về trang chủ</span>
             </a>
+
         </div>
 
-        <div class="sb-user">
-            <div class="sb-avatar">@User.Identity?.Name?.Substring(0, 1).ToUpper()</div>
-            <div>
-                <div class="sb-user-name">@User.Identity?.Name</div>
-                <div class="sb-user-role">Administrator</div>
+        <a href="/Profile" class="sb-user" title="Xem hồ sơ">
+            <div class="sb-avatar">
+                @{
+                    var _sbAvatar = User.FindFirst("AvatarUrl")?.Value
+                    ?? ViewData["UserAvatar"] as string;
+                    var _sbName = User.Identity?.Name ?? "";
+                    var _sbInit = _sbName.Length > 0 ? _sbName.Substring(0, 1).ToUpper() : "A";
+                }
+                @if (!string.IsNullOrEmpty(_sbAvatar))
+                {
+                    <img src="@_sbAvatar" alt="@_sbName" />
+                }
+                else
+                {
+                    @_sbInit
+                }
             </div>
-        </div>
+            <div style="min-width:0;flex:1;">
+                <div class="sb-user-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    @(User.Identity?.Name ?? "")
+                </div>
+                <div class="sb-user-role">
+                    @(User.IsInRole("Admin") ? "Administrator" : User.IsInRole("Staff") ? "Staff" : "User")
+                </div>
+            </div>
+            <i class="bi bi-box-arrow-up-right" style="font-size:.65rem;color:rgba(255,255,255,.25);flex-shrink:0;"></i>
+        </a>
     </nav>
 
     <!-- CONTENT -->
@@ -594,13 +668,7 @@
                     <i class="bi bi-box-arrow-up-right"></i>
                 </a>
                 <div class="top-action-btn"><i class="bi bi-bell"></i></div>
-                @if (User.Identity?.IsAuthenticated == true)
-                {
-                    <div class="top-user-chip">
-                        <div class="top-avatar">@User.Identity.Name?.Substring(0, 1).ToUpper()</div>
-                        <span class="top-user-name">@User.Identity.Name</span>
-                    </div>
-                }
+
             </div>
         </nav>
 
@@ -609,16 +677,34 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-
     <script src="~/js/avatar-cropper.js"></script>
     <script>
-        const sidebar   = document.getElementById('sidebar');
-        const content   = document.getElementById('content');
-        const overlay   = document.getElementById('sbOverlay');
-        const toggle    = document.getElementById('sidebarToggle');
-        const isMobile  = () => window.innerWidth <= 900;
+        const sidebar  = document.getElementById('sidebar');
+        const content  = document.getElementById('content');
+        const overlay  = document.getElementById('sbOverlay');
+        const toggle   = document.getElementById('sidebarToggle');
+        const sbNav    = sidebar.querySelector('.sb-nav');
+        const isMobile = () => window.innerWidth <= 900;
+
+        // ── Khôi phục vị trí scroll sidebar ──
+        const SCROLL_KEY = 'sb_scroll';
+        const savedScroll = sessionStorage.getItem(SCROLL_KEY);
+        if (savedScroll && sbNav) sbNav.scrollTop = parseInt(savedScroll, 10);
+
+        // Lưu vị trí scroll khi user cuộn
+        if (sbNav) {
+            sbNav.addEventListener('scroll', () => {
+                sessionStorage.setItem(SCROLL_KEY, sbNav.scrollTop);
+            });
+        }
+
+        // Lưu trạng thái collapsed
+        const COLLAPSED_KEY = 'sb_collapsed';
+        if (sessionStorage.getItem(COLLAPSED_KEY) === '1') {
+            sidebar.classList.add('collapsed');
+            content.classList.add('expanded');
+        }
 
         toggle.addEventListener('click', () => {
             if (isMobile()) {
@@ -627,6 +713,8 @@
             } else {
                 sidebar.classList.toggle('collapsed');
                 content.classList.toggle('expanded');
+                sessionStorage.setItem(COLLAPSED_KEY,
+                    sidebar.classList.contains('collapsed') ? '1' : '0');
             }
         });
 
@@ -635,7 +723,7 @@
             overlay.classList.remove('show');
         });
 
-        // TinyMCE modal fix
+        // Ngăn TinyMCE bị chiếm focus
         $(document).on('focusin', function(e) {
             if (e.target.closest(".tox-tinymce-aux, .moxman-window, .tam-assetmanager-root") !== null) {
                 e.stopImmediatePropagation();

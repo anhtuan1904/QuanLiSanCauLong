@@ -1,2053 +1,242 @@
-﻿@model QuanLiSanCauLong.ViewModels.CreateBookingViewModel
+﻿@* ═══════════════════════════════════════════════════════════════════
+   Cancel.cshtml
+═══════════════════════════════════════════════════════════════════ *@
+@model QuanLiSanCauLong.ViewModels.BookingHistoryViewModel
 @{
-    ViewData["Title"] = "Xác nhận đặt sân";
+    ViewData["Title"] = "Hủy đặt sân";
 }
-
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-    @@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
-
     :root {
         --D: #1a1209;
-        --D2: #231a0e;
         --G: #d4a017;
         --G2: #f5c842;
-        --G3: rgba(212,160,23,.1);
         --W: #f5ede0;
         --S: #ede5d8;
         --R: #c94b2a;
-        --GN: #10b981;
-        --M: rgba(255,255,255,.38);
-        --BL: #2563eb;
-        --PU: #7c3aed;
     }
 
-    * {
+    *, *::before, *::after {
         box-sizing: border-box;
-        margin: 0;
-        padding: 0;
+        font-family: 'Outfit',sans-serif;
     }
 
     body {
         background: var(--W);
-        font-family: 'Outfit', sans-serif;
+        margin: 0;
     }
 
-    /* ── Breadcrumb ── */
-    .pghd {
-        background: var(--D);
-        border-bottom: 1px solid rgba(212,160,23,.18);
-        padding: .78rem 2rem;
-        display: flex;
-        align-items: center;
-        gap: .6rem;
-        position: relative;
+    .wrap {
+        max-width: 580px;
+        margin: 3rem auto;
+        padding: 0 1.25rem 4rem;
     }
 
-        .pghd::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg,var(--G),var(--G2),transparent);
-        }
-
-        .pghd a {
-            color: var(--G2);
-            text-decoration: none;
-            font-size: .78rem;
-            font-weight: 600;
-            opacity: .8;
-            display: flex;
-            align-items: center;
-            gap: .35rem;
-        }
-
-            .pghd a:hover {
-                opacity: 1;
-            }
-
-        .pghd .sep {
-            color: var(--M);
-            font-size: .65rem;
-        }
-
-        .pghd .cur {
-            color: var(--M);
-            font-size: .78rem;
-            font-style: italic;
-        }
-
-    /* ── Layout ── */
-    .pw {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 2rem;
-        display: grid;
-        grid-template-columns: 1fr 360px;
-        gap: 1.8rem;
-        align-items: start;
-    }
-
-    /* ── Card ── */
-    .c {
+    .card {
         background: #fff;
         border: 1px solid var(--S);
         border-radius: 12px;
         overflow: hidden;
-        margin-bottom: 1.2rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,.04);
     }
 
-    .c-hd {
-        background: var(--D);
-        border-bottom: 1px solid rgba(212,160,23,.18);
-        padding: .95rem 1.4rem;
-        display: flex;
-        align-items: center;
-        gap: .5rem;
+    .card-hd {
+        padding: 1.25rem 1.75rem;
+        background: #fff3f0;
+        border-bottom: 1px solid rgba(201,75,42,.15);
     }
 
-        .c-hd i {
-            color: var(--G);
-        }
-
-    .c-title {
+    .card-title {
         font-family: 'Playfair Display',serif;
-        font-style: italic;
-        font-size: .96rem;
+        font-size: 1.35rem;
         font-weight: 700;
-        color: #fff;
+        color: var(--R);
     }
 
-    .c-bd {
-        padding: 1.3rem 1.4rem;
-    }
-
-    /* ── Court Hero ── */
-    .court-hero {
-        position: relative;
-        height: 200px;
-        overflow: hidden;
-    }
-
-        .court-hero img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-    .court-hero-overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(to top, rgba(26,18,9,.85) 0%, transparent 60%);
-        display: flex;
-        align-items: flex-end;
-        padding: 1.2rem 1.4rem;
-        gap: .6rem;
-    }
-
-    .court-badge {
-        background: var(--G);
-        color: var(--D);
-        font-size: .65rem;
-        font-weight: 800;
-        letter-spacing: .08em;
-        text-transform: uppercase;
-        padding: .22rem .6rem;
-        border-radius: 4px;
-    }
-
-    .court-badge-outline {
-        background: rgba(255,255,255,.15);
-        backdrop-filter: blur(4px);
-        border: 1px solid rgba(255,255,255,.3);
-        color: #fff;
-        font-size: .65rem;
-        font-weight: 700;
-        letter-spacing: .05em;
-        text-transform: uppercase;
-        padding: .22rem .6rem;
-        border-radius: 4px;
-    }
-
-    .court-hero-link {
-        margin-left: auto;
-        background: rgba(255,255,255,.18);
-        backdrop-filter: blur(4px);
-        border: 1px solid rgba(255,255,255,.3);
-        color: #fff;
-        font-size: .72rem;
-        font-weight: 600;
-        padding: .35rem .85rem;
-        border-radius: 6px;
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        gap: .35rem;
-        transition: all .2s;
-    }
-
-        .court-hero-link:hover {
-            background: rgba(255,255,255,.28);
-            color: #fff;
-        }
-
-    /* ── Info Grid ── */
-    .ig {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: .9rem;
-    }
-
-    .ig-lbl {
-        font-size: .63rem;
-        font-weight: 700;
-        letter-spacing: .1em;
-        text-transform: uppercase;
-        color: #8c7a68;
-        margin-bottom: .28rem;
-    }
-
-    .ig-val {
-        font-size: .88rem;
-        font-weight: 600;
-        color: var(--D);
-        display: flex;
-        align-items: center;
-        gap: .35rem;
-        flex-wrap: wrap;
-    }
-
-        .ig-val i {
-            color: var(--G);
-            flex-shrink: 0;
-        }
-
-    .vtag {
-        background: var(--S);
-        color: #4a3728;
-        font-size: .6rem;
-        font-weight: 700;
-        letter-spacing: .07em;
-        text-transform: uppercase;
-        padding: .14rem .5rem;
-        border-radius: 3px;
-    }
-
-    .addr-full {
+    .card-sub {
         font-size: .8rem;
-        color: #5a4a3a;
-        line-height: 1.5;
-        margin-top: .5rem;
-        padding: .7rem .9rem;
-        background: var(--W);
-        border-radius: 7px;
-        border: 1px solid var(--S);
-        display: flex;
-        gap: .5rem;
+        color: #c94b2a99;
+        margin-top: .2rem;
     }
 
-        .addr-full i {
-            color: var(--G);
-            margin-top: 2px;
-            flex-shrink: 0;
+    .card-bd {
+        padding: 1.75rem;
+    }
+
+    .info-box {
+        background: var(--W);
+        border-radius: 9px;
+        padding: 1.1rem 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: .84rem;
+        padding: .35rem 0;
+        border-bottom: 1px solid var(--S);
+    }
+
+        .info-row:last-child {
+            border-bottom: none;
         }
 
-    /* ── Products ── */
-    .prod-trigger-btn {
-        width: 100%;
-        padding: .85rem 1.2rem;
-        background: var(--W);
-        border: 2px dashed var(--S);
-        border-radius: 10px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: .6rem;
-        font-family: 'Outfit',sans-serif;
-        font-size: .9rem;
-        font-weight: 600;
-        color: #6b5744;
-        transition: all .22s;
-    }
+        .info-row .lbl {
+            color: #8a7560;
+        }
 
-        .prod-trigger-btn:hover {
-            border-color: var(--G);
-            background: var(--G3);
+        .info-row .val {
+            font-weight: 600;
             color: var(--D);
         }
 
-        .prod-trigger-btn .plus-icon {
-            width: 32px;
-            height: 32px;
-            background: var(--G);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--D);
-            font-size: 1.1rem;
-            font-weight: 800;
-        }
-
-    .selected-products {
-        margin-top: .9rem;
-        display: flex;
-        flex-direction: column;
-        gap: .5rem;
-    }
-
-    .sel-prod-item {
-        display: flex;
-        align-items: center;
-        gap: .75rem;
-        padding: .6rem .9rem;
-        background: var(--G3);
-        border: 1px solid rgba(212,160,23,.25);
-        border-radius: 8px;
-    }
-
-    .sel-prod-img {
-        width: 38px;
-        height: 38px;
-        border-radius: 6px;
-        object-fit: cover;
-        background: var(--S);
-        flex-shrink: 0;
-    }
-
-    .sel-prod-info {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .sel-prod-name {
+    .warn-box {
+        background: #fff3f0;
+        border: 1px solid rgba(201,75,42,.25);
+        border-radius: 9px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
         font-size: .82rem;
-        font-weight: 600;
-        color: var(--D);
-    }
-
-    .sel-prod-price {
-        font-size: .74rem;
-        color: var(--GN);
-        font-weight: 700;
-    }
-
-    .sel-prod-qty {
+        color: var(--R);
         display: flex;
-        align-items: center;
-        gap: .35rem;
-    }
-
-    .qb {
-        width: 26px;
-        height: 26px;
-        border-radius: 5px;
-        border: 1.5px solid rgba(212,160,23,.4);
-        background: #fff;
-        font-size: .9rem;
-        font-weight: 700;
-        color: var(--D);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all .15s;
-    }
-
-        .qb:hover {
-            border-color: var(--G);
-            background: var(--G3);
-        }
-
-    .qi {
-        width: 36px;
-        text-align: center;
-        border: 1.5px solid var(--S);
-        border-radius: 4px;
-        padding: .2rem;
-        font-size: .82rem;
-        font-weight: 700;
-        color: var(--D);
-        outline: none;
-    }
-
-        .qi:focus {
-            border-color: var(--G);
-        }
-
-    .sel-prod-remove {
-        color: #c94b2a;
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: .2rem;
-        font-size: 1rem;
-        opacity: .6;
-        transition: opacity .15s;
-    }
-
-        .sel-prod-remove:hover {
-            opacity: 1;
-        }
-
-    /* ── Payment Method ── */
-    .pm-g {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: .65rem;
-    }
-
-    .pm-o {
-        position: relative;
-    }
-
-        .pm-o input {
-            position: absolute;
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-    .pm-l {
-        display: flex;
-        align-items: center;
-        gap: .65rem;
-        padding: .75rem 1rem;
-        border: 1.5px solid var(--S);
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: .82rem;
-        font-weight: 600;
-        color: #4a3728;
-        transition: all .2s;
-        height: 100%;
-    }
-
-    .pm-logo {
-        width: 28px;
-        height: 22px;
-        object-fit: contain;
-        border-radius: 3px;
-    }
-
-    .pm-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        background: var(--W);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        transition: all .2s;
-    }
-
-        .pm-icon i {
-            font-size: 1.1rem;
-            color: #8c7a68;
-            transition: color .2s;
-        }
-
-    .pm-o input:checked + .pm-l {
-        border-color: var(--G);
-        background: var(--G3);
-        color: var(--D);
-    }
-
-        .pm-o input:checked + .pm-l .pm-icon {
-            background: rgba(212,160,23,.18);
-        }
-
-            .pm-o input:checked + .pm-l .pm-icon i {
-                color: var(--G);
-            }
-
-    .pm-label-text {
-        display: flex;
-        flex-direction: column;
-        gap: .12rem;
-        flex: 1;
-    }
-
-    .pm-label-main {
-        font-size: .86rem;
-        font-weight: 700;
-        color: inherit;
-        line-height: 1.2;
-    }
-
-    .pm-label-sub {
-        font-size: .68rem;
-        color: #8c7a68;
-        font-weight: 400;
-    }
-
-    .pm-o input:checked + .pm-l .pm-label-sub {
-        color: #92660a;
-    }
-
-    .pm-tag {
-        font-size: .58rem;
-        background: #d1fae5;
-        color: #065f46;
-        padding: .12rem .42rem;
-        border-radius: 3px;
-        font-weight: 700;
-        flex-shrink: 0;
-        align-self: flex-start;
-    }
-
-        .pm-tag.bank {
-            background: rgba(37,99,235,.1);
-            color: #1d4ed8;
-        }
-
-    .pm-note {
-        font-size: .74rem;
-        color: #8c7a68;
-        margin-top: .75rem;
-        padding: .6rem .9rem;
-        background: var(--W);
-        border-radius: 6px;
-        border: 1px solid var(--S);
-        display: flex;
-        gap: .45rem;
         align-items: flex-start;
+        gap: .65rem;
     }
 
-        .pm-note i {
-            color: var(--G);
-            margin-top: 1px;
-        }
-
-    /* ── QR Transfer Panel ── */
-    .qr-panel {
-        margin-top: 1rem;
-        border: 1.5px solid rgba(37,99,235,.2);
-        border-radius: 10px;
-        background: #f0f5ff;
-        overflow: hidden;
-        display: none;
-    }
-
-        .qr-panel.show {
-            display: block;
-        }
-
-    .qr-panel-hd {
-        background: #1e40af;
-        padding: .65rem 1rem;
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-    }
-
-        .qr-panel-hd i {
-            color: #93c5fd;
-            font-size: .95rem;
-        }
-
-        .qr-panel-hd span {
-            font-size: .8rem;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: .03em;
-        }
-
-        .qr-panel-hd .qr-badge {
-            margin-left: auto;
-            font-size: .6rem;
-            background: rgba(255,255,255,.18);
-            color: #bfdbfe;
-            padding: .12rem .45rem;
-            border-radius: 3px;
-            font-weight: 700;
-        }
-
-    .qr-panel-body {
-        padding: 1.1rem 1.2rem;
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 1.2rem;
-        align-items: start;
-    }
-
-    .qr-img-wrap {
-        text-align: center;
-    }
-
-    .qr-img {
-        width: 150px;
-        height: 150px;
-        border-radius: 10px;
-        border: 3px solid #1e40af;
+    .fg-label {
+        font-size: .78rem;
+        font-weight: 700;
+        color: var(--D);
         display: block;
-        object-fit: contain;
-        background: #fff;
-        padding: 4px;
+        margin-bottom: .42rem;
     }
 
-    .qr-img-placeholder {
-        width: 150px;
-        height: 150px;
-        border-radius: 10px;
-        border: 2.5px dashed #93c5fd;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: #fff;
-        gap: .4rem;
-        color: #3b82f6;
-        font-size: .72rem;
-        font-weight: 600;
-    }
-
-        .qr-img-placeholder i {
-            font-size: 2rem;
-            opacity: .5;
-        }
-
-    .qr-scan-hint {
-        font-size: .68rem;
-        color: #1d4ed8;
-        margin-top: .4rem;
-        font-weight: 600;
-    }
-
-    .qr-info {
-        display: flex;
-        flex-direction: column;
-        gap: .6rem;
-    }
-
-    .qr-info-row {
-        display: flex;
-        flex-direction: column;
-        gap: .1rem;
-    }
-
-    .qr-info-lbl {
-        font-size: .62rem;
-        font-weight: 700;
-        letter-spacing: .1em;
-        text-transform: uppercase;
-        color: #3b82f6;
-    }
-
-    .qr-info-val {
-        font-size: .86rem;
-        font-weight: 700;
-        color: #1e3a8a;
-        display: flex;
-        align-items: center;
-        gap: .4rem;
-    }
-
-    .qr-copy-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: .3rem;
-        font-size: .65rem;
-        color: #2563eb;
-        background: rgba(37,99,235,.1);
-        border: none;
-        border-radius: 4px;
-        padding: .18rem .5rem;
-        cursor: pointer;
-        font-weight: 700;
-        transition: all .15s;
-    }
-
-        .qr-copy-btn:hover {
-            background: rgba(37,99,235,.2);
-        }
-
-    .qr-amount-display {
-        font-size: 1.2rem;
-        font-weight: 800;
-        color: #1e40af;
-        font-family: 'Outfit', sans-serif;
-    }
-
-    .qr-warn {
-        margin-top: .85rem;
-        padding: .65rem .9rem;
-        background: rgba(234,179,8,.1);
-        border: 1px solid rgba(234,179,8,.3);
-        border-radius: 7px;
-        font-size: .74rem;
-        color: #92400e;
-        display: flex;
-        gap: .45rem;
-        align-items: flex-start;
-    }
-
-        .qr-warn i {
-            color: #d97706;
-            flex-shrink: 0;
-            margin-top: 1px;
-        }
-
-    .qr-steps {
-        margin-top: .85rem;
-        display: flex;
-        flex-direction: column;
-        gap: .4rem;
-    }
-
-    .qr-step {
-        display: flex;
-        align-items: flex-start;
-        gap: .55rem;
-        font-size: .76rem;
-        color: #1e3a8a;
-    }
-
-    .qr-step-n {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: #1e40af;
-        color: #fff;
-        font-size: .65rem;
-        font-weight: 800;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        margin-top: 1px;
-    }
-
-    /* ── Voucher ── */
-    .vwrap {
-        display: flex;
-        gap: .45rem;
-    }
-
-    .vi {
-        flex: 1;
+    .fg-ta {
+        width: 100%;
         padding: .65rem .95rem;
         border: 1.5px solid var(--S);
-        border-radius: 6px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .84rem;
-        outline: none;
-        transition: border-color .2s;
-        color: var(--D);
-    }
-
-        .vi:focus {
-            border-color: var(--G);
-            box-shadow: 0 0 0 3px var(--G3);
-        }
-
-    .vbtn {
-        padding: .65rem 1.1rem;
-        background: var(--D);
-        color: var(--G2);
-        border: none;
-        border-radius: 6px;
-        font-size: .76rem;
-        font-weight: 700;
-        letter-spacing: .04em;
-        cursor: pointer;
-        transition: background .2s;
-        white-space: nowrap;
-    }
-
-        .vbtn:hover {
-            background: var(--D2);
-        }
-
-    .vmsg {
-        font-size: .76rem;
-        margin-top: .45rem;
-        padding: .38rem .75rem;
-        border-radius: 4px;
-        display: none;
-    }
-
-        .vmsg.ok {
-            background: #d1fae5;
-            color: #065f46;
-            display: block;
-        }
-
-        .vmsg.err {
-            background: #fee2e2;
-            color: #991b1b;
-            display: block;
-        }
-
-    /* ── Note ── */
-    .nta {
-        width: 100%;
-        padding: .75rem .95rem;
-        border: 1.5px solid var(--S);
         border-radius: 7px;
+        font-size: .86rem;
         font-family: 'Outfit',sans-serif;
-        font-size: .84rem;
         color: var(--D);
+        background: #fff;
+        outline: none;
         resize: vertical;
-        outline: none;
-        transition: border-color .2s;
+        min-height: 90px;
     }
 
-        .nta:focus {
-            border-color: var(--G);
-            box-shadow: 0 0 0 3px var(--G3);
+        .fg-ta:focus {
+            border-color: var(--R);
         }
 
-    /* ── Summary ── */
-    .sum {
-        background: #fff;
-        border: 1px solid var(--S);
-        border-radius: 12px;
-        overflow: hidden;
-        position: sticky;
-        top: 84px;
-        box-shadow: 0 4px 16px rgba(0,0,0,.06);
-    }
-
-    .sum-hd {
-        background: var(--D);
-        padding: .95rem 1.4rem;
-        border-bottom: 1px solid rgba(212,160,23,.18);
+    .btn-row {
         display: flex;
-        align-items: center;
-        gap: .5rem;
+        gap: .65rem;
     }
 
-    .sum-bd {
-        padding: 1.2rem 1.4rem;
-    }
-
-    .sr {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        padding: .5rem 0;
-        font-size: .83rem;
-        gap: .5rem;
-    }
-
-        .sr + .sr {
-            border-top: 1px solid #f5f0ea;
-        }
-
-    .sl {
-        color: #8c7a68;
-        flex-shrink: 0;
-    }
-
-    .sl-sub {
-        font-size: .72rem;
-        color: #a0907e;
-    }
-
-    .sv {
-        font-weight: 600;
-        color: var(--D);
-        text-align: right;
-    }
-
-        .sv.gn {
-            color: var(--GN);
-        }
-
-        .sv.gl {
-            color: var(--G);
-        }
-
-        .sv.rd {
-            color: #dc2626;
-        }
-
-    .sdiv {
-        border: none;
-        border-top: 2px solid var(--S);
-        margin: .7rem 0;
-    }
-
-    .stot {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        margin-bottom: .8rem;
-    }
-
-    .stot-l {
-        font-size: .88rem;
-        font-weight: 700;
-        color: var(--D);
-    }
-
-    .stot-v {
-        font-family: 'Outfit',sans-serif;
-        font-size: 1.55rem;
-        font-weight: 800;
-        color: var(--D);
-    }
-
-    .sum-items {
-        margin: .5rem 0;
-    }
-
-    .sum-item-row {
-        display: flex;
-        justify-content: space-between;
-        font-size: .75rem;
-        padding: .22rem 0;
-        color: #6b5744;
-    }
-
-    .sum-item-name {
+    .btn {
         flex: 1;
-    }
-
-    .sum-item-qty {
-        color: #8c7a68;
-        margin: 0 .5rem;
-    }
-
-    .snote {
-        background: rgba(16,185,129,.07);
-        border: 1px solid rgba(16,185,129,.18);
-        border-radius: 6px;
-        padding: .65rem .9rem;
-        margin-top: .9rem;
-        font-size: .74rem;
-        color: #065f46;
-        display: flex;
-        align-items: flex-start;
-        gap: .45rem;
-    }
-
-        .snote i {
-            color: var(--GN);
-            margin-top: 1px;
-            flex-shrink: 0;
-        }
-
-    .btn-sub {
-        width: 100%;
-        padding: .92rem;
-        background: linear-gradient(135deg,var(--G),var(--G2));
-        color: var(--D);
-        font-family: 'Outfit',sans-serif;
-        font-size: .94rem;
-        font-weight: 800;
-        letter-spacing: .03em;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: .45rem;
-        transition: all .22s;
-        margin-bottom: .65rem;
-    }
-
-        .btn-sub:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(212,160,23,.38);
-        }
-
-        .btn-sub:disabled {
-            opacity: .6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-    .btn-bk {
-        display: block;
-        width: 100%;
-        padding: .65rem;
-        background: none;
-        color: #8c7a68;
-        border: 1.5px solid var(--S);
-        border-radius: 8px;
-        font-size: .8rem;
-        font-weight: 600;
-        cursor: pointer;
-        text-decoration: none;
         text-align: center;
-        transition: all .2s;
-    }
-
-        .btn-bk:hover {
-            border-color: var(--D);
-            color: var(--D);
-        }
-
-    /* ── Product Modal ── */
-    .modal-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(26,18,9,.65);
-        backdrop-filter: blur(4px);
-        z-index: 900;
-        display: none;
-        opacity: 0;
-        transition: opacity .25s;
-    }
-
-        .modal-backdrop.open {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 1;
-        }
-
-    .prod-modal {
-        background: #fff;
-        border-radius: 16px;
-        width: 90%;
-        max-width: 780px;
-        max-height: 85vh;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        transform: translateY(20px);
-        transition: transform .25s;
-        box-shadow: 0 24px 64px rgba(0,0,0,.2);
-    }
-
-    .modal-backdrop.open .prod-modal {
-        transform: translateY(0);
-    }
-
-    .prod-modal-hd {
-        background: var(--D);
-        padding: 1.1rem 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: .6rem;
-        border-bottom: 1px solid rgba(212,160,23,.18);
-        flex-shrink: 0;
-    }
-
-        .prod-modal-hd i {
-            color: var(--G);
-        }
-
-    .prod-modal-title {
-        font-family: 'Playfair Display',serif;
-        font-style: italic;
-        font-size: 1rem;
-        font-weight: 700;
-        color: #fff;
-        flex: 1;
-    }
-
-    .modal-close {
-        background: rgba(255,255,255,.1);
-        border: none;
-        color: #fff;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        cursor: pointer;
-        font-size: 1.1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background .2s;
-    }
-
-        .modal-close:hover {
-            background: rgba(255,255,255,.2);
-        }
-
-    .prod-modal-body {
-        overflow-y: auto;
-        padding: 1.2rem 1.5rem;
-        flex: 1;
-    }
-
-    .prod-cat-ttl {
-        font-size: .65rem;
-        font-weight: 800;
-        letter-spacing: .12em;
-        text-transform: uppercase;
-        color: #8c7a68;
-        margin: 1rem 0 .65rem;
-        padding-bottom: .4rem;
-        border-bottom: 1px solid var(--S);
-        display: flex;
-        align-items: center;
-        gap: .4rem;
-    }
-
-        .prod-cat-ttl i {
-            color: var(--G);
-        }
-
-        .prod-cat-ttl:first-child {
-            margin-top: 0;
-        }
-
-    .prod-grid {
-        display: grid;
-        grid-template-columns: repeat(3,1fr);
-        gap: .7rem;
-    }
-
-    .prod-card {
-        border: 1.5px solid var(--S);
-        border-radius: 10px;
-        overflow: hidden;
-        cursor: pointer;
-        transition: all .2s;
-        position: relative;
-    }
-
-        .prod-card:hover {
-            border-color: var(--G);
-            box-shadow: 0 4px 12px rgba(212,160,23,.18);
-            transform: translateY(-2px);
-        }
-
-        .prod-card.selected {
-            border-color: var(--G);
-            background: var(--G3);
-        }
-
-    .prod-card-img {
-        width: 100%;
-        height: 90px;
-        object-fit: cover;
-        background: var(--S);
-    }
-
-    .prod-card-body {
-        padding: .6rem .75rem;
-    }
-
-    .prod-card-name {
-        font-size: .78rem;
-        font-weight: 600;
-        color: var(--D);
-        margin-bottom: .18rem;
-        line-height: 1.3;
-    }
-
-    .prod-card-price {
-        font-size: .8rem;
-        color: var(--GN);
-        font-weight: 700;
-    }
-
-    .prod-card-qty {
-        display: flex;
-        align-items: center;
-        gap: .3rem;
-        margin-top: .45rem;
-    }
-
-    .prod-card-detail-btn {
-        position: absolute;
-        top: 6px;
-        right: 6px;
-        background: rgba(26,18,9,.65);
-        backdrop-filter: blur(4px);
-        border: none;
-        color: #fff;
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        cursor: pointer;
-        font-size: .75rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background .2s;
-    }
-
-        .prod-card-detail-btn:hover {
-            background: rgba(26,18,9,.9);
-        }
-
-    .prod-modal-footer {
-        padding: 1rem 1.5rem;
-        border-top: 1px solid var(--S);
-        display: flex;
-        gap: .75rem;
-        flex-shrink: 0;
-        background: var(--W);
-    }
-
-    .btn-confirm-prod {
-        flex: 1;
-        padding: .75rem;
-        background: linear-gradient(135deg,var(--G),var(--G2));
-        color: var(--D);
-        font-family: 'Outfit',sans-serif;
-        font-weight: 800;
-        font-size: .88rem;
-        border: none;
+        padding: .75rem 1rem;
         border-radius: 8px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: .45rem;
-        transition: all .2s;
-    }
-
-        .btn-confirm-prod:hover {
-            box-shadow: 0 6px 20px rgba(212,160,23,.35);
-        }
-
-    /* ── Product Detail Modal ── */
-    .detail-modal {
-        background: #fff;
-        border-radius: 16px;
-        width: 90%;
-        max-width: 480px;
-        overflow: hidden;
-        transform: scale(.92);
-        transition: transform .25s;
-        box-shadow: 0 24px 64px rgba(0,0,0,.22);
-    }
-
-    .modal-backdrop.open .detail-modal {
-        transform: scale(1);
-    }
-
-    .detail-img {
-        width: 100%;
-        height: 220px;
-        object-fit: cover;
-        background: var(--S);
-    }
-
-    .detail-body {
-        padding: 1.4rem 1.5rem;
-    }
-
-    .detail-name {
-        font-family: 'Playfair Display',serif;
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: var(--D);
-        margin-bottom: .4rem;
-    }
-
-    .detail-price {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--GN);
-        margin-bottom: .9rem;
-    }
-
-        .detail-price span {
-            font-size: .8rem;
-            font-weight: 500;
-            color: #8c7a68;
-        }
-
-    .detail-desc {
         font-size: .84rem;
-        color: #5a4a3a;
-        line-height: 1.7;
-        margin-bottom: 1rem;
-    }
-
-    .detail-meta {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: .5rem;
-        margin-bottom: 1.2rem;
-    }
-
-    .detail-meta-item {
-        background: var(--W);
-        border-radius: 7px;
-        padding: .55rem .75rem;
-        border: 1px solid var(--S);
-    }
-
-    .detail-meta-lbl {
-        font-size: .6rem;
         font-weight: 700;
-        letter-spacing: .08em;
-        text-transform: uppercase;
-        color: #8c7a68;
-    }
-
-    .detail-meta-val {
-        font-size: .82rem;
-        font-weight: 600;
-        color: var(--D);
-        margin-top: .15rem;
-    }
-
-    .btn-add-to-order {
-        width: 100%;
-        padding: .8rem;
-        background: linear-gradient(135deg,var(--G),var(--G2));
-        color: var(--D);
-        font-weight: 800;
-        font-size: .9rem;
-        border: none;
-        border-radius: 8px;
         cursor: pointer;
+        border: none;
+        font-family: 'Outfit',sans-serif;
+        text-decoration: none;
+        display: block;
         transition: all .2s;
     }
 
-        .btn-add-to-order:hover {
-            box-shadow: 0 6px 20px rgba(212,160,23,.35);
-        }
-
-    @@media(max-width:900px) {
-        .pw {
-            grid-template-columns: 1fr;
-        }
-
-        .sum {
-            position: static;
-        }
-
-        .ig {
-            grid-template-columns: 1fr;
-        }
-
-        .pm-g {
-            grid-template-columns: 1fr;
-        }
-
-        .prod-grid {
-            grid-template-columns: repeat(2,1fr);
-        }
+    .btn-danger {
+        background: var(--R);
+        color: #fff;
     }
 
-    @@media(max-width:600px) {
-        .pghd, .pw {
-            padding-left: 1.2rem;
-            padding-right: 1.2rem;
+        .btn-danger:hover {
+            background: #a83520;
         }
 
-        .prod-grid {
-            grid-template-columns: 1fr 1fr;
-        }
+    .btn-outline {
+        background: #fff;
+        color: var(--D);
+        border: 1.5px solid var(--S);
     }
+
+        .btn-outline:hover {
+            border-color: var(--D);
+        }
 </style>
 
-<div class="pghd">
-    <a href="javascript:history.back()"><i class="bi bi-arrow-left"></i> Quay lại</a>
-    <span class="sep"><i class="bi bi-chevron-right"></i></span>
-    <span class="cur">Xác nhận đặt sân</span>
-</div>
+<div class="wrap">
+    <div style="margin-bottom:1.25rem;">
+        <a asp-action="Details" asp-route-id="@Model.BookingId"
+           style="display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;color:#8a7560;text-decoration:none;">
+            <i class="bi bi-arrow-left"></i> Quay lại chi tiết
+        </a>
+    </div>
 
-<div class="pw">
-    <!-- ═══ LEFT ═══ -->
-    <div>
-        <form asp-action="Create" method="post" id="bkForm">
-            @Html.AntiForgeryToken()
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" style="border-radius:8px;font-size:.84rem"></div>
+    <div class="card">
+        <div class="card-hd">
+            <div class="card-title">Hủy Đặt Sân</div>
+            <div class="card-sub">#@Model.BookingCode — @Model.FacilityName</div>
+        </div>
+        <div class="card-bd">
 
-            <!-- Hidden fields -->
-            <input type="hidden" asp-for="CourtId" />
-            <input type="hidden" asp-for="BookingDate" />
-            <input type="hidden" asp-for="StartTime" />
-            <input type="hidden" asp-for="EndTime" />
-            <input type="hidden" asp-for="Duration" />
-            <input type="hidden" asp-for="CourtPrice" />
-            <input type="hidden" asp-for="ServiceFee" />
-            <input type="hidden" name="DiscountAmount" id="hidDiscount" value="0" />
-
-            <!-- ① Court Info + Image -->
-            <div class="c">
-                <div class="c-hd"><i class="bi bi-geo-alt-fill"></i><span class="c-title">Thông tin sân &amp; cơ sở</span></div>
-                <!-- Court hero image -->
-                <div class="court-hero">
-                    @if (!string.IsNullOrEmpty(Model.CourtImageUrl))
-                    {
-                        <img src="@Model.CourtImageUrl" alt="Sân @Model.CourtNumber" />
-                    }
-                    else
-                    {
-                        <img src="/images/default-court.jpg" alt="Sân" style="filter:brightness(.7)" />
-                    }
-                    <div class="court-hero-overlay">
-                        <span class="court-badge">Sân @Model.CourtNumber</span>
-                        <span class="court-badge-outline">@Model.CourtType</span>
-                        <a href="javascript:void(0)" target="_blank" class="court-hero-link">
-                            <i class="bi bi-eye"></i> Xem chi tiết sân
-                        </a>
-                    </div>
+            <div class="info-box">
+                <div class="info-row">
+                    <span class="lbl"><i class="bi bi-building"></i> Cơ sở</span>
+                    <span class="val">@Model.FacilityName</span>
                 </div>
-                <div class="c-bd">
-                    <div class="ig">
-                        <div>
-                            <div class="ig-lbl">Cơ sở</div>
-                            <div class="ig-val"><i class="bi bi-building"></i> @Model.FacilityName</div>
-                        </div>
-                        <div>
-                            <div class="ig-lbl">Loại sân</div>
-                            <div class="ig-val"><i class="bi bi-grid-3x3-gap"></i> @Model.CourtType</div>
-                        </div>
-                        <div>
-                            <div class="ig-lbl">Ngày chơi</div>
-                            <div class="ig-val">
-                                <i class="bi bi-calendar3"></i>
-                                @Model.BookingDate.ToString("dd/MM/yyyy")
-                                <span style="color:#8c7a68;font-size:.72rem">(@Model.BookingDate.ToString("dddd", new System.Globalization.CultureInfo("vi-VN")))</span>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="ig-lbl">Khung giờ</div>
-                            <div class="ig-val">
-                                <i class="bi bi-clock"></i>
-                                @Model.StartTime.ToString(@"hh\:mm") – @Model.EndTime.ToString(@"hh\:mm")
-                                <span style="color:#8c7a68;font-size:.72rem">(@Model.Duration phút)</span>
-                            </div>
-                        </div>
-                    </div>
-                    @if (!string.IsNullOrEmpty(Model.FacilityAddress))
-                    {
-                        <div class="addr-full" style="margin-top:.9rem">
-                            <i class="bi bi-pin-map-fill"></i>
-                            <span>@Model.FacilityAddress</span>
-                        </div>
-                    }
-                    @if (!string.IsNullOrEmpty(Model.CourtDescription))
-                    {
-                        <div style="margin-top:.75rem;font-size:.82rem;color:#5a4a3a;line-height:1.6;padding:.7rem .9rem;background:var(--W);border-radius:7px;border:1px solid var(--S)">
-                            <i class="bi bi-info-circle" style="color:var(--G)"></i> @Model.CourtDescription
-                        </div>
-                    }
+                <div class="info-row">
+                    <span class="lbl"><i class="bi bi-grid-3x3-gap"></i> Sân</span>
+                    <span class="val">@Model.CourtNumber</span>
+                </div>
+                <div class="info-row">
+                    <span class="lbl"><i class="bi bi-calendar3"></i> Ngày chơi</span>
+                    <span class="val">@Model.BookingDate.ToString("dd/MM/yyyy")</span>
+                </div>
+                <div class="info-row">
+                    <span class="lbl"><i class="bi bi-clock"></i> Giờ chơi</span>
+                    <span class="val">@Model.StartTime.ToString(@"hh\:mm") – @Model.EndTime.ToString(@"hh\:mm")</span>
+                </div>
+                <div class="info-row">
+                    <span class="lbl"><i class="bi bi-cash-stack"></i> Số tiền</span>
+                    <span class="val" style="color:var(--R);">₫@Model.TotalPrice.ToString("N0")</span>
                 </div>
             </div>
 
-            <!-- ② Products -->
-            <div class="c">
-                <div class="c-hd"><i class="bi bi-bag-plus"></i><span class="c-title">Sản phẩm đi kèm <span style="font-size:.72rem;opacity:.6;font-weight:400">(tuỳ chọn)</span></span></div>
-                <div class="c-bd">
-                    <button type="button" class="prod-trigger-btn" onclick="openProdModal()">
-                        <span class="plus-icon">+</span>
-                        Chọn đồ ăn, thức uống, thiết bị...
+            <div class="warn-box">
+                <i class="bi bi-exclamation-triangle-fill" style="flex-shrink:0;margin-top:.1rem;"></i>
+                <div>
+                    <strong>Lưu ý:</strong> Sau khi hủy, lịch đặt sân sẽ không thể khôi phục.
+                    Chính sách hoàn tiền sẽ được xử lý theo quy định của cơ sở.
+                </div>
+            </div>
+
+            <form asp-action="Cancel" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.BookingId" />
+
+                <div style="margin-bottom:1.5rem;">
+                    <label class="fg-label" for="cancelReason">
+                        Lý do hủy <span style="color:var(--R);">*</span>
+                    </label>
+                    <textarea id="cancelReason" name="cancelReason" class="fg-ta"
+                              placeholder="Vui lòng cho biết lý do hủy đặt sân..." required></textarea>
+                </div>
+
+                <div class="btn-row">
+                    <a asp-action="Details" asp-route-id="@Model.BookingId" class="btn btn-outline">
+                        <i class="bi bi-arrow-left"></i> Không, quay lại
+                    </a>
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn chắc chắn muốn hủy đặt sân này?')">
+                        <i class="bi bi-x-circle"></i> Xác nhận hủy
                     </button>
-                    <div class="selected-products" id="selProds"></div>
-                    <!-- Hidden inputs for products will be injected here -->
-                    <div id="prodHiddens"></div>
                 </div>
-            </div>
+            </form>
 
-            <!-- ③ Payment Method -->
-            <div class="c">
-                <div class="c-hd"><i class="bi bi-credit-card-2-front"></i><span class="c-title">Phương thức thanh toán</span></div>
-                <div class="c-bd">
-                    <div class="pm-g">
-                        <div class="pm-o">
-                            <input type="radio" name="PaymentMethod" id="pm-cash" value="Cash" checked
-                                   onchange="onPaymentChange(this.value)" />
-                            <label class="pm-l" for="pm-cash">
-                                <span class="pm-icon"><i class="bi bi-cash-stack"></i></span>
-                                <span class="pm-label-text">
-                                    <span class="pm-label-main">Tiền mặt</span>
-                                    <span class="pm-label-sub">Thanh toán tại quầy</span>
-                                </span>
-                                <span class="pm-tag">Tại quầy</span>
-                            </label>
-                        </div>
-                        <div class="pm-o">
-                            <input type="radio" name="PaymentMethod" id="pm-tr" value="Transfer"
-                                   onchange="onPaymentChange(this.value)" />
-                            <label class="pm-l" for="pm-tr">
-                                <span class="pm-icon"><i class="bi bi-bank2"></i></span>
-                                <span class="pm-label-text">
-                                    <span class="pm-label-main">Chuyển khoản</span>
-                                    <span class="pm-label-sub">Ngân hàng / QR Code</span>
-                                </span>
-                                <span class="pm-tag bank">QR</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- QR Panel — hiển thị khi chọn Chuyển khoản -->
-                    <div class="qr-panel" id="qrPanel">
-                        <div class="qr-panel-hd">
-                            <i class="bi bi-qr-code-scan"></i>
-                            <span>Quét QR để chuyển khoản</span>
-                            <span class="qr-badge">Chờ Admin xác nhận</span>
-                        </div>
-                        <div class="qr-panel-body">
-                            <!-- QR Image -->
-                            <div class="qr-img-wrap">
-                                @if (!string.IsNullOrEmpty(ViewBag.BankQRImageUrl as string))
-                                {
-                                    <img src="@ViewBag.BankQRImageUrl" class="qr-img" alt="QR chuyển khoản" />
-                                }
-                                else
-                                {
-                                    <!-- Auto-generate QR via VietQR API -->
-                                    <img id="qrCodeImg" class="qr-img"
-                                         src="https://img.vietqr.io/image/@(ViewBag.BankCode ?? "970422")-@(ViewBag.BankAccount ?? "000000000")-compact2.png?amount=0&addInfo=DAT-SAN&accountName=@(Uri.EscapeDataString(ViewBag.BankAccountName as string ?? "CƠ SỞ SÂN CẦU LÔNG"))"
-                                         alt="QR Chuyển khoản" />
-                                }
-                                <div class="qr-scan-hint"><i class="bi bi-phone me-1"></i>Quét bằng app ngân hàng</div>
-                            </div>
-                            <!-- Bank Info -->
-                            <div class="qr-info">
-                                <div class="qr-info-row">
-                                    <div class="qr-info-lbl">Ngân hàng</div>
-                                    <div class="qr-info-val">
-                                        <i class="bi bi-bank2"></i>
-                                        @(ViewBag.BankName as string ?? "MB Bank (MBBank)")
-                                    </div>
-                                </div>
-                                <div class="qr-info-row">
-                                    <div class="qr-info-lbl">Số tài khoản</div>
-                                    <div class="qr-info-val" id="qrAccNum">
-                                        @(ViewBag.BankAccount as string ?? "0123456789")
-                                        <button type="button" class="qr-copy-btn"
-                                                onclick="copyText('@(ViewBag.BankAccount as string ?? "0123456789")', this)">
-                                            <i class="bi bi-copy"></i> Sao chép
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="qr-info-row">
-                                    <div class="qr-info-lbl">Chủ tài khoản</div>
-                                    <div class="qr-info-val">@(ViewBag.BankAccountName as string ?? "CƠ SỞ SÂN CẦU LÔNG")</div>
-                                </div>
-                                <div class="qr-info-row">
-                                    <div class="qr-info-lbl">Số tiền cần chuyển</div>
-                                    <div class="qr-info-val">
-                                        <span class="qr-amount-display" id="qrAmount">@Model.CourtPrice.ToString("N0")đ</span>
-                                        <button type="button" class="qr-copy-btn"
-                                                onclick="copyAmountText(this)">
-                                            <i class="bi bi-copy"></i> Sao chép
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="qr-info-row">
-                                    <div class="qr-info-lbl">Nội dung chuyển khoản</div>
-                                    <div class="qr-info-val" style="flex-wrap:wrap; gap:.3rem;">
-                                        <span id="qrContent">DATSAN @Model.CourtNumber @Model.BookingDate.ToString("ddMMyyyy")</span>
-                                        <button type="button" class="qr-copy-btn"
-                                                onclick="copyText(document.getElementById('qrContent').textContent.trim(), this)">
-                                            <i class="bi bi-copy"></i> Sao chép
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="padding:0 1.2rem 1rem;">
-                            <div class="qr-steps">
-                                <div class="qr-step">
-                                    <span class="qr-step-n">1</span>
-                                    <span>Mở app ngân hàng → quét mã QR hoặc chuyển khoản thủ công theo thông tin trên</span>
-                                </div>
-                                <div class="qr-step">
-                                    <span class="qr-step-n">2</span>
-                                    <span>Nhập <strong>đúng nội dung</strong> và số tiền, sau đó xác nhận chuyển khoản</span>
-                                </div>
-                                <div class="qr-step">
-                                    <span class="qr-step-n">3</span>
-                                    <span>Nhấn <strong>"Xác nhận đặt sân"</strong> bên dưới — đơn sẽ chuyển sang trạng thái <em>Chờ Admin duyệt</em></span>
-                                </div>
-                                <div class="qr-step">
-                                    <span class="qr-step-n">4</span>
-                                    <span>Admin xác nhận thanh toán → sân được giữ chỗ và thông báo gửi đến bạn</span>
-                                </div>
-                            </div>
-                            <div class="qr-warn">
-                                <i class="bi bi-exclamation-triangle-fill"></i>
-                                <span>Sân chưa được giữ chỗ cho đến khi Admin xác nhận thanh toán. Vui lòng chuyển khoản trước <strong>15 phút</strong> so với giờ chơi để tránh mất slot.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pm-note" id="pmCashNote">
-                        <i class="bi bi-info-circle-fill"></i>
-                        <span>Thanh toán <strong>tiền mặt tại quầy</strong> trước giờ chơi. Sân được giữ chỗ ngay sau khi đặt.</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ④ Voucher -->
-            <div class="c">
-                <div class="c-hd">
-                    <i class="bi bi-ticket-perforated"></i>
-                    <span class="c-title">Mã giảm giá</span>
-                    <span style="margin-left:auto;font-size:.62rem;color:rgba(255,255,255,.45);font-weight:400;font-style:italic;">Không bắt buộc</span>
-                </div>
-                <div class="c-bd">
-                    <div class="vwrap">
-                        <input type="text" asp-for="VoucherCode" class="vi" id="vci"
-                               placeholder="Nhập mã voucher nếu có..." />
-                        <button type="button" class="vbtn" onclick="applyV()">
-                            <i class="bi bi-check-circle me-1"></i> Áp dụng
-                        </button>
-                    </div>
-                    <div id="vmsg" class="vmsg"></div>
-                    <div style="margin-top:.5rem;font-size:.72rem;color:#8c7a68;display:flex;align-items:center;gap:.35rem;">
-                        <i class="bi bi-info-circle" style="color:var(--G)"></i>
-                        Bỏ qua nếu không có mã — voucher giảm trực tiếp trên giá sân
-                    </div>
-                </div>
-            </div>
-
-            <!-- ⑤ Note -->
-            <div class="c">
-                <div class="c-hd"><i class="bi bi-pencil-square"></i><span class="c-title">Ghi chú</span></div>
-                <div class="c-bd">
-                    <textarea asp-for="Note" class="nta" rows="3" placeholder="Yêu cầu đặc biệt, lưu ý..."></textarea>
-                </div>
-            </div>
-        </form>
-    </div>
-
-    <!-- ═══ RIGHT: Summary ═══ -->
-    <div>
-        <div class="sum">
-            <div class="sum-hd">
-                <i class="bi bi-receipt" style="color:var(--G)"></i>
-                <span style="font-family:'Playfair Display',serif;font-style:italic;font-size:.96rem;font-weight:700;color:#fff">Sao kê thanh toán</span>
-            </div>
-            <div class="sum-bd">
-                <!-- Court -->
-                <div class="sr">
-                    <span class="sl">
-                        Giá sân<br>
-                        <span class="sl-sub">Sân @Model.CourtNumber · @Model.StartTime.ToString(@"hh\:mm")–@Model.EndTime.ToString(@"hh\:mm")</span>
-                    </span>
-                    <span class="sv gn" id="sc">@Model.CourtPrice.ToString("N0")đ</span>
-                </div>
-                <!-- Service fee -->
-                @if (Model.ServiceFee > 0)
-                {
-                    <div class="sr">
-                        <span class="sl">
-                            Phí dịch vụ<br>
-                            <span class="sl-sub">Phụ phí cơ sở</span>
-                        </span>
-                        <span class="sv" id="sf">@Model.ServiceFee.ToString("N0")đ</span>
-                    </div>
-                }
-                <!-- Products block -->
-                <div id="sp-row" style="display:none">
-                    <div class="sr">
-                        <span class="sl">
-                            Sản phẩm đi kèm<br>
-                            <span class="sl-sub" id="sp-detail"></span>
-                        </span>
-                        <span class="sv gl" id="sp">0đ</span>
-                    </div>
-                    <div class="sum-items" id="sum-item-list"></div>
-                </div>
-                <!-- Discount -->
-                <div class="sr" id="sd-row" style="display:none">
-                    <span class="sl">Giảm giá (Voucher)</span>
-                    <span class="sv rd" id="sd">0đ</span>
-                </div>
-                <hr class="sdiv" />
-                <!-- Total -->
-                <div class="stot">
-                    <span class="stot-l">Tổng thanh toán</span>
-                    <span class="stot-v" id="st">@Model.TotalPrice.ToString("N0")đ</span>
-                </div>
-                <div style="text-align:right;font-size:.7rem;color:#8c7a68;margin-top:-.4rem;margin-bottom:.6rem">≈ @((Model.TotalPrice / 23000m).ToString("F0")) USD</div>
-                <div class="snote"><i class="bi bi-clock-history"></i><span>Có mặt trước giờ chơi <strong>15 phút</strong> để check-in tại quầy.</span></div>
-            </div>
-            <div style="padding:0 1.4rem 1.4rem">
-                <button type="submit" form="bkForm" class="btn-sub" id="btnSub">
-                    <i class="bi bi-check-circle-fill"></i> Xác nhận đặt sân
-                </button>
-                <a href="javascript:history.back()" class="btn-bk"><i class="bi bi-arrow-left me-1"></i> Quay lại</a>
-            </div>
         </div>
     </div>
 </div>
-
-<!-- ════ PRODUCT MODAL ════ -->
-<div class="modal-backdrop" id="prodModal" onclick="closeProdModalIfBg(event)">
-    <div class="prod-modal">
-        <div class="prod-modal-hd">
-            <i class="bi bi-bag-plus-fill"></i>
-            <span class="prod-modal-title">Chọn sản phẩm đi kèm</span>
-            <button class="modal-close" onclick="closeProdModal()"><i class="bi bi-x-lg"></i></button>
-        </div>
-        <div class="prod-modal-body" id="prodModalBody">
-            @{
-                var food = ViewBag.FoodItems as IEnumerable<dynamic>;
-                var bev = ViewBag.BeverageItems as IEnumerable<dynamic>;
-                var eqp = ViewBag.EquipmentItems as IEnumerable<dynamic>;
-            }
-
-            @if (food != null && food.Any())
-            {
-                <div class="prod-cat-ttl"><i class="bi bi-cup-straw"></i> Đồ ăn</div>
-                <div class="prod-grid">
-                    @foreach (var item in food)
-                    {
-                        <div class="prod-card" id="mc-@item.ProductId" onclick="toggleModalProd('@item.ProductId', '@item.ProductName', @item.Price, '@(item.ImageUrl ?? "/images/no-image.svg")')">
-                            <button type="button" class="prod-card-detail-btn" onclick="event.stopPropagation();showDetail('@item.ProductId','@item.ProductName',@item.Price,'@(item.ImageUrl ?? "/images/no-image.svg")','@item.Unit','@(item.Description ?? "")')">
-                                <i class="bi bi-info-lg"></i>
-                            </button>
-                            <img src="@(item.ImageUrl ?? "/images/no-image.svg")" class="prod-card-img" alt="@item.ProductName" onerror="this.src='/images/no-image.svg'" />
-                            <div class="prod-card-body">
-                                <div class="prod-card-name">@item.ProductName</div>
-                                <div class="prod-card-price">@(((decimal)item.Price).ToString("N0"))đ</div>
-                                <div class="prod-card-qty" id="mqc-@item.ProductId" style="display:none" onclick="event.stopPropagation()">
-                                    <button type="button" class="qb" onclick="modalQty('@item.ProductId',-1)">−</button>
-                                    <input type="number" class="qi" id="mq-@item.ProductId" value="1" min="1" max="99" data-price="@item.Price" data-name="@item.ProductName" data-img="@(item.ImageUrl ?? "/images/no-image.svg")" onchange="modalQtyChange('@item.ProductId')" />
-                                    <button type="button" class="qb" onclick="modalQty('@item.ProductId',1)">+</button>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            }
-
-            @if (bev != null && bev.Any())
-            {
-                <div class="prod-cat-ttl"><i class="bi bi-cup-hot"></i> Đồ uống</div>
-                <div class="prod-grid">
-                    @foreach (var item in bev)
-                    {
-                        <div class="prod-card" id="mc-@item.ProductId" onclick="toggleModalProd('@item.ProductId', '@item.ProductName', @item.Price, '@(item.ImageUrl ?? "/images/no-image.svg")')">
-                            <button type="button" class="prod-card-detail-btn" onclick="event.stopPropagation();showDetail('@item.ProductId','@item.ProductName',@item.Price,'@(item.ImageUrl ?? "/images/no-image.svg")','@item.Unit','@(item.Description ?? "")')">
-                                <i class="bi bi-info-lg"></i>
-                            </button>
-                            <img src="@(item.ImageUrl ?? "/images/no-image.svg")" class="prod-card-img" alt="@item.ProductName" onerror="this.src='/images/no-image.svg'" />
-                            <div class="prod-card-body">
-                                <div class="prod-card-name">@item.ProductName</div>
-                                <div class="prod-card-price">@(((decimal)item.Price).ToString("N0"))đ</div>
-                                <div class="prod-card-qty" id="mqc-@item.ProductId" style="display:none" onclick="event.stopPropagation()">
-                                    <button type="button" class="qb" onclick="modalQty('@item.ProductId',-1)">−</button>
-                                    <input type="number" class="qi" id="mq-@item.ProductId" value="1" min="1" max="99" data-price="@item.Price" data-name="@item.ProductName" data-img="@(item.ImageUrl ?? "/images/no-image.svg")" onchange="modalQtyChange('@item.ProductId')" />
-                                    <button type="button" class="qb" onclick="modalQty('@item.ProductId',1)">+</button>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            }
-
-            @if (eqp != null && eqp.Any())
-            {
-                <div class="prod-cat-ttl"><i class="bi bi-tools"></i> Thiết bị &amp; Phụ kiện</div>
-                <div class="prod-grid">
-                    @foreach (var item in eqp)
-                    {
-                        <div class="prod-card" id="mc-@item.ProductId" onclick="toggleModalProd('@item.ProductId', '@item.ProductName', @item.Price, '@(item.ImageUrl ?? "/images/no-image.svg")')">
-                            <button type="button" class="prod-card-detail-btn" onclick="event.stopPropagation();showDetail('@item.ProductId','@item.ProductName',@item.Price,'@(item.ImageUrl ?? "/images/no-image.svg")','@item.Unit','@(item.Description ?? "")')">
-                                <i class="bi bi-info-lg"></i>
-                            </button>
-                            <img src="@(item.ImageUrl ?? "/images/no-image.svg")" class="prod-card-img" alt="@item.ProductName" onerror="this.src='/images/no-image.svg'" />
-                            <div class="prod-card-body">
-                                <div class="prod-card-name">@item.ProductName</div>
-                                <div class="prod-card-price">@(((decimal)item.Price).ToString("N0"))đ</div>
-                                <div class="prod-card-qty" id="mqc-@item.ProductId" style="display:none" onclick="event.stopPropagation()">
-                                    <button type="button" class="qb" onclick="modalQty('@item.ProductId',-1)">−</button>
-                                    <input type="number" class="qi" id="mq-@item.ProductId" value="1" min="1" max="99" data-price="@item.Price" data-name="@item.ProductName" data-img="@(item.ImageUrl ?? "/images/no-image.svg")" onchange="modalQtyChange('@item.ProductId')" />
-                                    <button type="button" class="qb" onclick="modalQty('@item.ProductId',1)">+</button>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            }
-
-            @if ((food == null || !food.Any()) && (bev == null || !bev.Any()) && (eqp == null || !eqp.Any()))
-            {
-                <div style="text-align:center;padding:3rem 1rem;color:#8c7a68">
-                    <i class="bi bi-bag-x" style="font-size:2.5rem;display:block;margin-bottom:.75rem;color:var(--S)"></i>
-                    Cơ sở này chưa có sản phẩm nào.
-                </div>
-            }
-        </div>
-        <div class="prod-modal-footer">
-            <button type="button" class="btn-confirm-prod" onclick="confirmProducts()">
-                <i class="bi bi-check-circle-fill"></i>
-                Xác nhận (<span id="modalSelCount">0</span> sản phẩm)
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ════ PRODUCT DETAIL MODAL ════ -->
-<div class="modal-backdrop" id="detailModal" onclick="closeDetailModalIfBg(event)">
-    <div class="detail-modal">
-        <img id="dtImg" src="" class="detail-img" alt="" onerror="this.src='/images/no-image.svg'" />
-        <div class="detail-body">
-            <div class="detail-name" id="dtName"></div>
-            <div class="detail-price" id="dtPrice"></div>
-            <div class="detail-desc" id="dtDesc"></div>
-            <div class="detail-meta" id="dtMeta"></div>
-            <button class="btn-add-to-order" onclick="addFromDetail()">
-                <i class="bi bi-bag-plus-fill me-2"></i> Thêm vào đơn
-            </button>
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-    <script>
-        /* ─── State ─── */
-        var BASE_COURT = @Model.CourtPrice, BASE_FEE = @Model.ServiceFee;
-        var selected = {};   // { pid: { name, price, qty, img } }
-        var discAmt = 0;
-        var currentDetailPid = null;
-
-        /* ─── Format ─── */
-        function fmt(n) { return n.toLocaleString('vi-VN') + 'đ'; }
-
-        /* ─── Recalculate summary ─── */
-        function recalc() {
-            var prodTot = 0;
-            var lines = [], nameParts = [];
-            Object.keys(selected).forEach(function(pid) {
-                var p = selected[pid];
-                prodTot += p.price * p.qty;
-                lines.push('<div class="sum-item-row"><span class="sum-item-name">' + p.name + '</span><span class="sum-item-qty">×' + p.qty + '</span><span>' + fmt(p.price * p.qty) + '</span></div>');
-                nameParts.push(p.qty + '× ' + p.name);
-            });
-
-            // Tổng = giá sân + phí DV + sản phẩm kèm - giảm giá voucher
-            var total = BASE_COURT + BASE_FEE + prodTot - discAmt;
-            document.getElementById('st').textContent = fmt(Math.max(0, total));
-
-            var pr = document.getElementById('sp-row');
-            if (prodTot > 0) {
-                pr.style.display = '';
-                document.getElementById('sp').textContent = fmt(prodTot);
-                document.getElementById('sp-detail').textContent = nameParts.join(', ');
-                document.getElementById('sum-item-list').innerHTML = lines.join('');
-            } else {
-                pr.style.display = 'none';
-            }
-
-            var dr = document.getElementById('sd-row');
-            if (discAmt > 0) {
-                dr.style.display = '';
-                document.getElementById('sd').textContent = '−' + fmt(discAmt);
-            } else {
-                dr.style.display = 'none';
-            }
-
-            // Đồng bộ số tiền QR nếu đang hiển thị
-            var pmTr = document.getElementById('pm-tr');
-            if (pmTr && pmTr.checked) updateQRAmount();
-        }
-
-        /* ─── Render selected products strip ─── */
-        function renderSelected() {
-            var el = document.getElementById('selProds');
-            var hid = document.getElementById('prodHiddens');
-            el.innerHTML = ''; hid.innerHTML = '';
-            var idx = 0;
-            Object.keys(selected).forEach(function(pid) {
-                var p = selected[pid];
-                el.innerHTML += '<div class="sel-prod-item">' +
-                    '<img class="sel-prod-img" src="' + p.img + '" onerror="this.onerror=null" />' +
-                    '<div class="sel-prod-info"><div class="sel-prod-name">' + p.name + '</div><div class="sel-prod-price">' + fmt(p.price) + ' / cái</div></div>' +
-                    '<div class="sel-prod-qty">' +
-                    '<button type="button" class="qb" onclick="changeSelQty(\'' + pid + '\',-1)">−</button>' +
-                    '<input type="number" class="qi" value="' + p.qty + '" min="1" max="99" style="width:38px" onchange="setSelQty(\'' + pid + '\',this.value)" />' +
-                    '<button type="button" class="qb" onclick="changeSelQty(\'' + pid + '\',1)">+</button>' +
-                    '</div>' +
-                    '<button type="button" class="sel-prod-remove" onclick="removeSel(\'' + pid + '\')"><i class="bi bi-x-lg"></i></button>' +
-                    '</div>';
-                hid.innerHTML += '<input type="hidden" name="OrderItems[' + idx + '].ProductId" value="' + pid + '" />';
-                hid.innerHTML += '<input type="hidden" name="OrderItems[' + idx + '].Price" value="' + p.price + '" />';
-                hid.innerHTML += '<input type="hidden" id="hidQty-' + pid + '" name="OrderItems[' + idx + '].Quantity" value="' + p.qty + '" />';
-                idx++;
-            });
-
-            document.getElementById('modalSelCount').textContent = Object.keys(selected).length;
-            recalc();
-        }
-
-        function changeSelQty(pid, d) {
-            if (!selected[pid]) return;
-            selected[pid].qty = Math.max(1, Math.min(99, selected[pid].qty + d));
-            var inp = document.getElementById('mq-' + pid);
-            if (inp) inp.value = selected[pid].qty;
-            renderSelected();
-        }
-        function setSelQty(pid, v) {
-            if (!selected[pid]) return;
-            selected[pid].qty = Math.max(1, Math.min(99, parseInt(v) || 1));
-            renderSelected();
-        }
-        function removeSel(pid) {
-            delete selected[pid];
-            var card = document.getElementById('mc-' + pid);
-            if (card) { card.classList.remove('selected'); document.getElementById('mqc-' + pid).style.display = 'none'; }
-            renderSelected();
-        }
-
-        /* ─── Product Modal ─── */
-        function openProdModal() {
-            var m = document.getElementById('prodModal');
-            m.style.display = 'flex';
-            requestAnimationFrame(function() { m.classList.add('open'); });
-        }
-        function closeProdModal() {
-            var m = document.getElementById('prodModal');
-            m.classList.remove('open');
-            setTimeout(function() { m.style.display = 'none'; }, 260);
-        }
-        function closeProdModalIfBg(e) { if (e.target === document.getElementById('prodModal')) closeProdModal(); }
-
-        function toggleModalProd(pid, name, price, img) {
-            var qc = document.getElementById('mqc-' + pid);
-            var card = document.getElementById('mc-' + pid);
-            if (selected[pid]) {
-                // Deselect
-                delete selected[pid];
-                card.classList.remove('selected');
-                qc.style.display = 'none';
-            } else {
-                selected[pid] = { name: name, price: parseFloat(price), qty: 1, img: img };
-                card.classList.add('selected');
-                qc.style.display = 'flex';
-                document.getElementById('mq-' + pid).value = 1;
-            }
-            document.getElementById('modalSelCount').textContent = Object.keys(selected).length;
-        }
-
-        function modalQty(pid, d) {
-            var inp = document.getElementById('mq-' + pid);
-            if (!inp) return;
-            inp.value = Math.max(1, Math.min(99, (parseInt(inp.value) || 1) + d));
-            if (selected[pid]) { selected[pid].qty = parseInt(inp.value); document.getElementById('modalSelCount').textContent = Object.keys(selected).length; }
-        }
-        function modalQtyChange(pid) {
-            var inp = document.getElementById('mq-' + pid);
-            if (selected[pid]) selected[pid].qty = Math.max(1, parseInt(inp.value) || 1);
-        }
-        function confirmProducts() { renderSelected(); closeProdModal(); }
-
-        /* ─── Product Detail Modal ─── */
-        function showDetail(pid, name, price, img, unit, desc) {
-            currentDetailPid = pid;
-            document.getElementById('dtImg').src = img;
-            document.getElementById('dtName').textContent = name;
-            document.getElementById('dtPrice').innerHTML = price.toLocaleString('vi-VN') + 'đ <span>/ ' + (unit || 'cái') + '</span>';
-            document.getElementById('dtDesc').textContent = desc || 'Sản phẩm chất lượng tại cơ sở.';
-            document.getElementById('dtMeta').innerHTML =
-                '<div class="detail-meta-item"><div class="detail-meta-lbl">Đơn vị</div><div class="detail-meta-val">' + (unit || 'Cái') + '</div></div>' +
-                '<div class="detail-meta-item"><div class="detail-meta-lbl">Đơn giá</div><div class="detail-meta-val" style="color:var(--GN)">' + parseFloat(price).toLocaleString('vi-VN') + 'đ</div></div>';
-
-            var m = document.getElementById('detailModal');
-            m.style.display = 'flex';
-            requestAnimationFrame(function() { m.classList.add('open'); });
-        }
-        function closeDetailModal() {
-            var m = document.getElementById('detailModal');
-            m.classList.remove('open');
-            setTimeout(function() { m.style.display = 'none'; }, 260);
-        }
-        function closeDetailModalIfBg(e) { if (e.target === document.getElementById('detailModal')) closeDetailModal(); }
-        function addFromDetail() {
-            if (!currentDetailPid) return;
-            var card = document.getElementById('mc-' + currentDetailPid);
-            if (card && !selected[currentDetailPid]) card.click();
-            closeDetailModal();
-        }
-
-        /* ─── Voucher ─── */
-        function applyV() {
-            var code = document.getElementById('vci').value.trim();
-            var msg = document.getElementById('vmsg');
-            if (!code) { msg.className = 'vmsg err'; msg.textContent = 'Vui lòng nhập mã voucher!'; return; }
-            fetch('/Booking/ApplyVoucher', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: code })
-            }).then(function(r) { return r.json(); }).then(function(res) {
-                if (res.success) {
-                    discAmt = res.discountAmount || 0;
-                    document.getElementById('hidDiscount').value = discAmt;
-                    msg.className = 'vmsg ok'; msg.textContent = '✓ ' + res.message;
-                } else {
-                    discAmt = 0; document.getElementById('hidDiscount').value = 0;
-                    msg.className = 'vmsg err'; msg.textContent = res.message || 'Mã không hợp lệ!';
-                }
-                recalc();
-            }).catch(function() { msg.className = 'vmsg err'; msg.textContent = 'Chức năng đang phát triển.'; });
-        }
-
-        /* ─── Payment Method Toggle ─── */
-        function onPaymentChange(val) {
-            var qrPanel  = document.getElementById('qrPanel');
-            var cashNote = document.getElementById('pmCashNote');
-            if (val === 'Transfer') {
-                qrPanel.classList.add('show');
-                if (cashNote) cashNote.style.display = 'none';
-                updateQRAmount();
-            } else {
-                qrPanel.classList.remove('show');
-                if (cashNote) cashNote.style.display = 'flex';
-            }
-        }
-
-        /* ─── Update QR amount dynamically ─── */
-        function updateQRAmount() {
-            var prodTot = 0;
-            Object.keys(selected).forEach(function(pid) {
-                var p = selected[pid];
-                prodTot += p.price * p.qty;
-            });
-            // Tổng = giá sân + phí dịch vụ + sản phẩm - giảm giá
-            var total = Math.max(0, BASE_COURT + BASE_FEE + prodTot - discAmt);
-            var el = document.getElementById('qrAmount');
-            if (el) el.textContent = total.toLocaleString('vi-VN') + 'đ';
-
-            // Update VietQR dynamic URL if using auto QR
-            var qrImg = document.getElementById('qrCodeImg');
-            if (qrImg) {
-                var baseUrl = qrImg.src.split('?')[0];
-                var content = (document.getElementById('qrContent') || {}).textContent || 'DATSAN';
-                qrImg.src = baseUrl + '?amount=' + total + '&addInfo=' + encodeURIComponent(content.trim());
-            }
-        }
-
-        /* ─── Copy helper ─── */
-        function copyText(text, btn) {
-            navigator.clipboard.writeText(text).then(function() {
-                var orig = btn.innerHTML;
-                btn.innerHTML = '<i class="bi bi-check"></i> Đã sao chép';
-                btn.style.background = 'rgba(22,163,74,.15)';
-                btn.style.color = '#16a34a';
-                setTimeout(function() {
-                    btn.innerHTML = orig;
-                    btn.style.background = '';
-                    btn.style.color = '';
-                }, 1800);
-            }).catch(function() {
-                // Fallback for older browsers
-                var ta = document.createElement('textarea');
-                ta.value = text; document.body.appendChild(ta); ta.select();
-                document.execCommand('copy'); document.body.removeChild(ta);
-            });
-        }
-
-        function copyAmountText(btn) {
-            var el = document.getElementById('qrAmount');
-            if (el) copyText(el.textContent.replace('đ', '').replace(/\./g, '').replace(/,/g, '').trim(), btn);
-        }
-
-        /* ─── Submit ─── */
-        document.getElementById('bkForm').addEventListener('submit', function() {
-            var btn = document.getElementById('btnSub');
-            btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang xử lý...';
-        });
-
-        /* ─── Init ─── */
-        recalc();
-    </script>
-}

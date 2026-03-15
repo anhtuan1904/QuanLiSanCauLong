@@ -1,5 +1,373 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<QuanLiSanCauLong.Models.Order>
 @{
+    Layout = "~/Views/Shared/_LayoutStaff.cshtml";
+    ViewData["Title"] = "Lịch sử bán hàng";
+    var totalRev = Model.Sum(o => o.TotalAmount);
+    var paidCount = Model.Count(o => o.PaymentStatus == "Paid");
+    var today = DateTime.Today.ToString("dd/MM/yyyy");
 }
+
+<style>
+    :root {
+        --D: #1a1209;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --G3: rgba(212,160,23,.1);
+        --G4: rgba(212,160,23,.22);
+        --C: #fdf8f0;
+        --W: #f5ede0;
+        --S: #e8ddd0;
+        --M: #8a7560;
+        --GN: #10b981;
+        --BL: #3b82f6;
+        --RD: #ef4444;
+        --OR: #f97316;
+        --r: 14px;
+        --r2: 10px;
+    }
+
+    /* ── KPI ── */
+    .oh-kpi {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: .85rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .ohk {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        padding: 1.1rem 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: .9rem;
+        transition: transform .2s,box-shadow .2s;
+    }
+
+        .ohk:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(26,18,9,.1);
+        }
+
+    .ohk-ico {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .ohk-val {
+        font-family: 'Syne',sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -.02em;
+    }
+
+    .ohk-lbl {
+        font-size: .7rem;
+        color: var(--M);
+        margin-top: .18rem;
+    }
+    @@media(max - width:600px) {
+        .oh-kpi {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    /* ── TABLE CARD ── */
+    .ohc {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        overflow: hidden;
+    }
+
+    .ohc-head {
+        padding: .9rem 1.3rem;
+        border-bottom: 1px solid var(--S);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .ohc-title {
+        font-family: 'Syne',sans-serif;
+        font-size: .93rem;
+        font-weight: 800;
+        color: var(--D);
+    }
+
+    .oh-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .oh-table th {
+            background: var(--W);
+            padding: .65rem 1.1rem;
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--M);
+            border-bottom: 1px solid var(--S);
+            text-align: left;
+        }
+
+        .oh-table td {
+            padding: .82rem 1.1rem;
+            border-bottom: 1px solid var(--S);
+            font-size: .8rem;
+            vertical-align: middle;
+            color: var(--D);
+        }
+
+        .oh-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .oh-table tr:hover td {
+            background: var(--C);
+        }
+
+    /* ── ORDER CODE ── */
+    .oh-code {
+        font-family: 'Syne',sans-serif;
+        font-size: .82rem;
+        font-weight: 800;
+        color: var(--G);
+        letter-spacing: .02em;
+    }
+
+    /* ── PRODUCT LIST ── */
+    .prod-line {
+        font-size: .76rem;
+        color: var(--D);
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+        margin-bottom: .18rem;
+    }
+
+        .prod-line:last-child {
+            margin-bottom: 0;
+        }
+
+    .prod-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--S);
+        flex-shrink: 0;
+    }
+
+    .more-badge {
+        font-size: .62rem;
+        color: var(--M);
+        background: var(--W);
+        padding: .1rem .45rem;
+        border-radius: 20px;
+        display: inline-block;
+        margin-top: .18rem;
+    }
+
+    /* ── STATUS PILLS ── */
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .26rem;
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        padding: .22rem .6rem;
+        border-radius: 4px;
+    }
+
+        .pill::before {
+            content: '●';
+            font-size: .48em;
+        }
+
+    .p-paid {
+        background: rgba(16,185,129,.1);
+        color: var(--GN);
+    }
+
+    .p-pend {
+        background: rgba(212,160,23,.13);
+        color: #92660a;
+    }
+
+    /* ── AMOUNT ── */
+    .oh-amt {
+        font-family: 'Syne',sans-serif;
+        font-size: .88rem;
+        font-weight: 800;
+        color: var(--GN);
+    }
+
+    /* ── TIME ── */
+    .oh-time {
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+        font-size: .75rem;
+        color: var(--M);
+        font-weight: 500;
+    }
+
+    /* ── FOOTER TOTAL ── */
+    .oh-footer {
+        padding: .9rem 1.3rem;
+        background: var(--W);
+        border-top: 1px solid var(--S);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .oh-footer-lbl {
+        font-size: .78rem;
+        font-weight: 600;
+        color: var(--M);
+    }
+
+    .oh-footer-val {
+        font-family: 'Syne',sans-serif;
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--G);
+    }
+
+    /* ── EMPTY ── */
+    .oh-empty {
+        text-align: center;
+        padding: 3rem;
+        color: var(--M);
+    }
+</style>
+
+<!-- KPI -->
+<div class="oh-kpi">
+    <div class="ohk">
+        <div class="ohk-ico" style="background:var(--G3);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--G)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
+        </div>
+        <div>
+            <div class="ohk-val" style="color:var(--G)">@Model.Count()</div>
+            <div class="ohk-lbl">Tổng đơn hàng</div>
+        </div>
+    </div>
+    <div class="ohk">
+        <div class="ohk-ico" style="background:rgba(16,185,129,.1);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--GN)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+        </div>
+        <div>
+            <div class="ohk-val" style="color:var(--GN)">@paidCount</div>
+            <div class="ohk-lbl">Đã thanh toán</div>
+        </div>
+    </div>
+    <div class="ohk">
+        <div class="ohk-ico" style="background:var(--G3);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--G)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+        </div>
+        <div>
+            <div class="ohk-val" style="color:var(--G)">@totalRev.ToString("N0")đ</div>
+            <div class="ohk-lbl">Tổng doanh thu</div>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="ohc">
+    <div class="ohc-head">
+        <div class="ohc-title">
+            Đơn Bán Hàng —
+            <span style="font-weight:500;color:var(--M);font-size:.82rem;">@today</span>
+        </div>
+        <span style="font-size:.72rem;color:var(--M);">@Model.Count() đơn</span>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="oh-table">
+            <thead>
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Khách hàng</th>
+                    <th>Sản phẩm</th>
+                    <th style="text-align:right">Tổng tiền</th>
+                    <th>Thanh toán</th>
+                    <th>Thời gian</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var o in Model)
+                {
+                    var pmCls = o.PaymentStatus == "Paid" ? "p-paid" : "p-pend";
+                    var pmTxt = o.PaymentStatus == "Paid" ? "Đã TT" : "Chờ TT";
+                    <tr>
+                        <td><span class="oh-code">@o.OrderCode</span></td>
+                        <td>
+                            <div style="font-weight:600;font-size:.82rem;">@(o.User?.FullName ?? "Khách lẻ")</div>
+                            @if (!string.IsNullOrEmpty(o.User?.Phone))
+                            {
+                                <div style="font-size:.68rem;color:var(--M);">@o.User.Phone</div>
+                            }
+                        </td>
+                        <td>
+                            @if (o.OrderDetails != null && o.OrderDetails.Any())
+                            {
+                                @foreach (var od in o.OrderDetails.Take(2))
+                                {
+                                    <div class="prod-line">
+                                        <div class="prod-dot"></div>
+                                        <span>@od.Product?.ProductName</span>
+                                        <span style="color:var(--M);font-weight:700;">×@od.Quantity</span>
+                                    </div>
+                                }
+                                @if (o.OrderDetails.Count > 2)
+                                {
+                                    <span class="more-badge">+@(o.OrderDetails.Count - 2) sản phẩm khác</span>
+                                }
+                            }
+                        </td>
+                        <td style="text-align:right;">
+                            <span class="oh-amt">@o.TotalAmount.ToString("N0")đ</span>
+                        </td>
+                        <td><span class="pill @pmCls">@pmTxt</span></td>
+                        <td>
+                            <div class="oh-time">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                                @o.CreatedAt.ToString("HH:mm")
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6">
+                            <div class="oh-empty">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.25;margin-bottom:.6rem;"><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>
+                                <div>Chưa có đơn bán nào hôm nay</div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Any())
+    {
+        <div class="oh-footer">
+            <span class="oh-footer-lbl">Tổng doanh thu hôm nay</span>
+            <span class="oh-footer-val">@totalRev.ToString("N0")đ</span>
+        </div>
+    }
+</div>

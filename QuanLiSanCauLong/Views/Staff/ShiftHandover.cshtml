@@ -1,0 +1,643 @@
+﻿@model QuanLiSanCauLong.ViewModels.ShiftHandoverViewModel
+@{
+    Layout = "~/Views/Shared/_LayoutStaff.cshtml";
+    ViewData["Title"] = "Bàn giao ca";
+    var now = DateTime.Now;
+}
+
+<style>
+    :root {
+        --D: #1a1209;
+        --D2: #231a0e;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --G3: rgba(212,160,23,.1);
+        --G4: rgba(212,160,23,.22);
+        --C: #fdf8f0;
+        --W: #f5ede0;
+        --S: #e8ddd0;
+        --M: #8a7560;
+        --GN: #10b981;
+        --BL: #3b82f6;
+        --RD: #ef4444;
+        --OR: #f97316;
+        --PU: #8b5cf6;
+        --r: 14px;
+        --r2: 10px;
+    }
+
+    /* ── LAYOUT ── */
+    .ho-wrap {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 1.2rem;
+        align-items: start;
+    }
+    @@media(max - width:860px) {
+        .ho-wrap {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ── KPI SUMMARY ── */
+    .ho-kpi {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: .75rem;
+        margin-bottom: 1.3rem;
+    }
+
+    .hok {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        padding: 1rem 1.2rem;
+        text-align: center;
+        transition: transform .2s,box-shadow .2s;
+    }
+
+        .hok:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26,18,9,.1);
+        }
+
+    .hok-val {
+        font-family: 'Syne',sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: .25rem;
+    }
+
+    .hok-lbl {
+        font-size: .68rem;
+        color: var(--M);
+        letter-spacing: .04em;
+    }
+    @@media(max - width:600px) {
+        .ho-kpi {
+            grid-template-columns: repeat(2,1fr);
+        }
+    }
+
+    /* ── CARD ── */
+    .hc {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        overflow: hidden;
+    }
+
+    .hc-head {
+        padding: 1rem 1.4rem;
+        border-bottom: 1px solid var(--S);
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .hc-ico {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .hc-title {
+        font-family: 'Syne',sans-serif;
+        font-size: .93rem;
+        font-weight: 800;
+        color: var(--D);
+    }
+
+    .hc-sub {
+        font-size: .7rem;
+        color: var(--M);
+        margin-top: .06rem;
+    }
+
+    .hc-body {
+        padding: 1.3rem 1.4rem;
+    }
+
+    /* ── FORM ── */
+    .fg {
+        margin-bottom: 1rem;
+    }
+
+    .fl {
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .09em;
+        text-transform: uppercase;
+        color: var(--M);
+        margin-bottom: .4rem;
+    }
+
+    .fi, .fs, .fta {
+        width: 100%;
+        padding: .52rem .88rem;
+        border: 1.5px solid var(--S);
+        border-radius: 9px;
+        font-size: .83rem;
+        color: var(--D);
+        font-family: 'Space Grotesk',sans-serif;
+        background: #fff;
+        outline: none;
+        transition: border-color .18s,box-shadow .18s;
+    }
+
+        .fi:focus, .fs:focus, .fta:focus {
+            border-color: var(--G);
+            box-shadow: 0 0 0 3px rgba(212,160,23,.12);
+        }
+
+    .fta {
+        resize: vertical;
+        min-height: 90px;
+        line-height: 1.55;
+    }
+
+    .f2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .85rem;
+    }
+    @@media(max - width:500px) {
+        .f2 {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ── SHIFT TYPE CARDS ── */
+    .shift-opts {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: .55rem;
+        margin-top: .35rem;
+    }
+
+    .shift-opt {
+        position: relative;
+    }
+
+        .shift-opt input[type=radio] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .shift-opt label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .3rem;
+            padding: .75rem .5rem;
+            border-radius: 10px;
+            border: 1.5px solid var(--S);
+            cursor: pointer;
+            transition: all .18s;
+            background: #fff;
+            text-align: center;
+            font-family: 'Space Grotesk',sans-serif;
+        }
+
+            .shift-opt label:hover {
+                border-color: var(--G);
+                background: var(--G3);
+            }
+
+        .shift-opt input:checked + label {
+            border-color: var(--G);
+            background: var(--G3);
+            box-shadow: 0 0 0 3px rgba(212,160,23,.14);
+        }
+
+    .shift-ico {
+        font-size: 1.4rem;
+    }
+
+    .shift-name {
+        font-size: .76rem;
+        font-weight: 700;
+        color: var(--D);
+    }
+
+    .shift-time {
+        font-size: .62rem;
+        color: var(--M);
+    }
+
+    .shift-opt input:checked + label .shift-name {
+        color: var(--G);
+    }
+
+    /* ── MONEY INPUT ── */
+    .money-wrap {
+        position: relative;
+    }
+
+    .money-suffix {
+        position: absolute;
+        right: .88rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: .78rem;
+        color: var(--M);
+        font-weight: 600;
+        pointer-events: none;
+    }
+
+    .money-wrap .fi {
+        padding-right: 2.2rem;
+    }
+
+    /* ── RIGHT PANEL ── */
+    .right-panel {
+        position: sticky;
+        top: 72px;
+        display: flex;
+        flex-direction: column;
+        gap: .85rem;
+    }
+
+    .summary-dark {
+        background: var(--D);
+        border-radius: var(--r);
+        padding: 1.4rem 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .summary-dark::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,var(--G),var(--G2),transparent);
+        }
+
+    .sd-lbl {
+        font-size: .58rem;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        color: var(--G);
+        font-weight: 600;
+        margin-bottom: .85rem;
+    }
+
+    .sd-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: .4rem 0;
+        border-bottom: 1px solid rgba(255,255,255,.06);
+        font-size: .78rem;
+    }
+
+        .sd-row:last-child {
+            border-bottom: none;
+        }
+
+    .sd-key {
+        color: rgba(255,255,255,.45);
+    }
+
+    .sd-val {
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .sd-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-top: .8rem;
+        padding-top: .8rem;
+        border-top: 1px solid rgba(255,255,255,.1);
+    }
+
+    .sd-total-lbl {
+        font-size: .75rem;
+        color: rgba(255,255,255,.45);
+    }
+
+    .sd-total-val {
+        font-family: 'Syne',sans-serif;
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: var(--G2);
+    }
+
+    /* ── SUBMIT ── */
+    .sub-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        padding: .72rem;
+        border-radius: 10px;
+        border: none;
+        background: var(--G);
+        color: var(--D);
+        font-family: 'Syne',sans-serif;
+        font-size: .95rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .sub-btn:hover {
+            background: var(--G2);
+            box-shadow: 0 6px 18px rgba(212,160,23,.35);
+        }
+
+    .cancel-lnk {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .4rem;
+        padding: .5rem;
+        border-radius: 9px;
+        margin-top: .45rem;
+        background: transparent;
+        border: 1px solid var(--S);
+        color: var(--M);
+        font-size: .77rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all .18s;
+        font-family: 'Space Grotesk',sans-serif;
+    }
+
+        .cancel-lnk:hover {
+            border-color: var(--RD);
+            color: var(--RD);
+        }
+
+    /* ── INFO BOX ── */
+    .info-box {
+        background: var(--G3);
+        border: 1px solid var(--G4);
+        border-radius: var(--r2);
+        padding: .9rem 1.1rem;
+    }
+
+    .ib-title {
+        font-size: .65rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--G);
+        font-weight: 700;
+        margin-bottom: .5rem;
+    }
+
+    .ib-item {
+        display: flex;
+        align-items: flex-start;
+        gap: .5rem;
+        font-size: .75rem;
+        color: var(--M);
+        margin-bottom: .32rem;
+        line-height: 1.5;
+    }
+
+        .ib-item:last-child {
+            margin-bottom: 0;
+        }
+</style>
+
+<!-- KPI Summary -->
+<div class="ho-kpi">
+    <div class="hok">
+        <div class="hok-val" style="color:var(--G)">@(ViewBag.TotalBookings ?? 0)</div>
+        <div class="hok-lbl">Tổng đơn</div>
+    </div>
+    <div class="hok">
+        <div class="hok-val" style="color:var(--GN)">@(ViewBag.CompletedCount ?? 0)</div>
+        <div class="hok-lbl">Hoàn thành</div>
+    </div>
+    <div class="hok">
+        <div class="hok-val" style="color:var(--G)">
+            @(ViewBag.TotalRevenue != null ? ((decimal)ViewBag.TotalRevenue).ToString("N0") : "0")đ
+        </div>
+        <div class="hok-lbl">Tổng doanh thu</div>
+    </div>
+    <div class="hok">
+        <div class="hok-val" style="color:var(--BL)">
+            @(ViewBag.CashRevenue != null ? ((decimal)ViewBag.CashRevenue).ToString("N0") : "0")đ
+        </div>
+        <div class="hok-lbl">Tiền mặt</div>
+    </div>
+</div>
+
+<form asp-action="ShiftHandover" method="post" id="hoForm">
+    @Html.AntiForgeryToken()
+
+    <div class="ho-wrap">
+        <!-- LEFT: Form -->
+        <div style="display:flex;flex-direction:column;gap:.85rem;">
+
+            <!-- Chọn ca -->
+            <div class="hc">
+                <div class="hc-head">
+                    <div class="hc-ico" style="background:var(--G3);color:var(--G);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                    </div>
+                    <div>
+                        <div class="hc-title">Thông Tin Ca Làm Việc</div>
+                        <div class="hc-sub">Chọn ca và người nhận bàn giao</div>
+                    </div>
+                </div>
+                <div class="hc-body">
+                    <div class="fg">
+                        <div class="fl">Loại ca</div>
+                        <div class="shift-opts">
+                            <div class="shift-opt">
+                                <input type="radio" asp-for="ShiftType" value="Morning" id="sh-m" />
+                                <label for="sh-m">
+                                    <div class="shift-ico">🌅</div>
+                                    <div class="shift-name">Ca sáng</div>
+                                    <div class="shift-time">6:00 – 14:00</div>
+                                </label>
+                            </div>
+                            <div class="shift-opt">
+                                <input type="radio" asp-for="ShiftType" value="Afternoon" id="sh-a" />
+                                <label for="sh-a">
+                                    <div class="shift-ico">☀️</div>
+                                    <div class="shift-name">Ca chiều</div>
+                                    <div class="shift-time">14:00 – 22:00</div>
+                                </label>
+                            </div>
+                            <div class="shift-opt">
+                                <input type="radio" asp-for="ShiftType" value="Evening" id="sh-e" />
+                                <label for="sh-e">
+                                    <div class="shift-ico">🌙</div>
+                                    <div class="shift-name">Ca tối</div>
+                                    <div class="shift-time">18:00 – 23:00</div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fg" style="margin-bottom:0;">
+                        <div class="fl">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                            Bàn giao cho
+                        </div>
+                        <input asp-for="HandoverTo" class="fi" placeholder="Tên nhân viên ca tiếp theo..." />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tiền thực nhận -->
+            <div class="hc">
+                <div class="hc-head">
+                    <div class="hc-ico" style="background:rgba(16,185,129,.1);color:var(--GN);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+                    </div>
+                    <div>
+                        <div class="hc-title">Đối Soát Tiền</div>
+                        <div class="hc-sub">Nhập số tiền thực nhận trong ca</div>
+                    </div>
+                </div>
+                <div class="hc-body">
+                    <div class="f2">
+                        <div class="fg" style="margin-bottom:0;">
+                            <div class="fl">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2" /><path d="M12 12h.01" /></svg>
+                                Tiền mặt thực nhận
+                            </div>
+                            <div class="money-wrap">
+                                <input asp-for="CashReceived" type="number" class="fi"
+                                       placeholder="0" oninput="updateSummary()" />
+                                <span class="money-suffix">đ</span>
+                            </div>
+                        </div>
+                        <div class="fg" style="margin-bottom:0;">
+                            <div class="fl">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>
+                                Chuyển khoản thực nhận
+                            </div>
+                            <div class="money-wrap">
+                                <input asp-for="TransferReceived" type="number" class="fi"
+                                       placeholder="0" oninput="updateSummary()" />
+                                <span class="money-suffix">đ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ghi chú -->
+            <div class="hc">
+                <div class="hc-head">
+                    <div class="hc-ico" style="background:rgba(59,130,246,.1);color:var(--BL);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
+                    </div>
+                    <div>
+                        <div class="hc-title">Ghi Chú & Sự Cố</div>
+                        <div class="hc-sub">Thông tin bàn giao cho ca tiếp theo</div>
+                    </div>
+                </div>
+                <div class="hc-body">
+                    <div class="fg">
+                        <div class="fl">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+                            Sự cố trong ca
+                        </div>
+                        <textarea asp-for="Issues" class="fta"
+                                  placeholder="Mô tả các sự cố phát sinh (nếu có)..."></textarea>
+                    </div>
+                    <div class="fg" style="margin-bottom:0;">
+                        <div class="fl">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>
+                            Ghi chú bàn giao
+                        </div>
+                        <textarea asp-for="HandoverNote" class="fta"
+                                  placeholder="Các lưu ý quan trọng cho ca tiếp theo..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Summary & submit -->
+        <div class="right-panel">
+            <div class="summary-dark">
+                <div class="sd-lbl">Tóm Tắt Ca Làm Việc</div>
+                <div class="sd-row">
+                    <span class="sd-key">Ngày</span>
+                    <span class="sd-val">@now.ToString("dd/MM/yyyy")</span>
+                </div>
+                <div class="sd-row">
+                    <span class="sd-key">Giờ bàn giao</span>
+                    <span class="sd-val">@now.ToString("HH:mm")</span>
+                </div>
+                <div class="sd-row">
+                    <span class="sd-key">Tổng đơn</span>
+                    <span class="sd-val">@(ViewBag.TotalBookings ?? 0)</span>
+                </div>
+                <div class="sd-row">
+                    <span class="sd-key">Tiền mặt nhận</span>
+                    <span class="sd-val" id="sum-cash">—</span>
+                </div>
+                <div class="sd-row">
+                    <span class="sd-key">Chuyển khoản</span>
+                    <span class="sd-val" id="sum-tf">—</span>
+                </div>
+                <div class="sd-total">
+                    <span class="sd-total-lbl">Tổng thực nhận</span>
+                    <span class="sd-total-val" id="sum-total">—</span>
+                </div>
+            </div>
+
+            <button type="submit" class="sub-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>
+                Xác Nhận Bàn Giao Ca
+            </button>
+            <a asp-action="Dashboard" class="cancel-lnk">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                Hủy bỏ
+            </a>
+
+            <div class="info-box">
+                <div class="ib-title">Lưu ý bàn giao</div>
+                <div class="ib-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--G)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:.15rem;"><polyline points="20 6 9 17 4 12" /></svg>
+                    Kiểm tra toàn bộ sân trước khi bàn giao
+                </div>
+                <div class="ib-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--G)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:.15rem;"><polyline points="20 6 9 17 4 12" /></svg>
+                    Đối chiếu tiền mặt với hệ thống
+                </div>
+                <div class="ib-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--G)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:.15rem;"><polyline points="20 6 9 17 4 12" /></svg>
+                    Ghi lại mọi sự cố chưa giải quyết
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        function updateSummary() {
+            const cash = parseFloat(document.querySelector('[name="CashReceived"]').value) || 0;
+            const tf   = parseFloat(document.querySelector('[name="TransferReceived"]').value) || 0;
+            const total = cash + tf;
+            const fmt  = v => v > 0 ? v.toLocaleString('vi-VN') + 'đ' : '—';
+            document.getElementById('sum-cash').textContent  = fmt(cash);
+            document.getElementById('sum-tf').textContent    = fmt(tf);
+            document.getElementById('sum-total').textContent = total > 0 ? total.toLocaleString('vi-VN') + 'đ' : '—';
+        }
+    </script>
+}

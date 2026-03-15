@@ -1,0 +1,531 @@
+﻿@model IEnumerable<QuanLiSanCauLong.Models.Inventory>
+@{
+    Layout = "~/Views/Shared/_LayoutStaff.cshtml";
+    ViewData["Title"] = "Xem tồn kho";
+    var outOfStock = Model.Count(i => i.IsOutOfStock);
+    var lowStock = Model.Count(i => i.IsLowStock && !i.IsOutOfStock);
+    var okStock = Model.Count(i => !i.IsLowStock && !i.IsOutOfStock);
+    var total = Model.Count();
+}
+
+<style>
+    :root {
+        --D: #1a1209;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --G3: rgba(212,160,23,.1);
+        --G4: rgba(212,160,23,.22);
+        --C: #fdf8f0;
+        --W: #f5ede0;
+        --S: #e8ddd0;
+        --M: #8a7560;
+        --GN: #10b981;
+        --BL: #3b82f6;
+        --RD: #ef4444;
+        --OR: #f97316;
+        --r: 14px;
+        --r2: 10px;
+    }
+
+    /* ── KPI ROW ── */
+    .sk4 {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: .85rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .sk {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        padding: 1.1rem 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: .9rem;
+        transition: transform .2s,box-shadow .2s;
+    }
+
+        .sk:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(26,18,9,.1);
+        }
+
+    .sk-ico {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .sk-val {
+        font-family: 'Syne',sans-serif;
+        font-size: 1.6rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .sk-lbl {
+        font-size: .7rem;
+        color: var(--M);
+        margin-top: .18rem;
+    }
+    @@media(max - width:700px) {
+        .sk4 {
+            grid-template-columns: repeat(2,1fr);
+        }
+    }
+
+    /* ── TOOLBAR ── */
+    .stb {
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        flex-wrap: wrap;
+        margin-bottom: .9rem;
+    }
+
+    .stb-search {
+        flex: 1;
+        min-width: 180px;
+        max-width: 280px;
+        position: relative;
+    }
+
+    .stb-search-ico {
+        position: absolute;
+        left: .75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: var(--M);
+    }
+
+    .stb-input {
+        width: 100%;
+        padding: .44rem .8rem .44rem 2.1rem;
+        border: 1.5px solid var(--S);
+        border-radius: 8px;
+        font-size: .82rem;
+        color: var(--D);
+        font-family: 'Space Grotesk',sans-serif;
+        background: #fff;
+        outline: none;
+        transition: border-color .18s;
+    }
+
+        .stb-input:focus {
+            border-color: var(--G);
+        }
+
+    .stb-sel {
+        padding: .44rem .8rem;
+        border: 1.5px solid var(--S);
+        border-radius: 8px;
+        font-size: .82rem;
+        color: var(--D);
+        font-family: 'Space Grotesk',sans-serif;
+        background: #fff;
+        outline: none;
+        cursor: pointer;
+    }
+
+        .stb-sel:focus {
+            border-color: var(--G);
+        }
+
+    .stb-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .38rem;
+        padding: .44rem .9rem;
+        border-radius: 8px;
+        border: 1px solid var(--S);
+        background: #fff;
+        color: var(--M);
+        font-size: .76rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all .18s;
+        font-family: 'Space Grotesk',sans-serif;
+    }
+
+        .stb-btn:hover {
+            border-color: var(--G);
+            color: var(--G);
+        }
+
+    /* ── TABLE ── */
+    .stc {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        overflow: hidden;
+    }
+
+    .stc-head {
+        padding: .9rem 1.3rem;
+        border-bottom: 1px solid var(--S);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .stc-title {
+        font-family: 'Syne',sans-serif;
+        font-size: .93rem;
+        font-weight: 800;
+        color: var(--D);
+    }
+
+    .st-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .st-table th {
+            background: var(--W);
+            padding: .65rem 1.1rem;
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--M);
+            border-bottom: 1px solid var(--S);
+            text-align: left;
+        }
+
+        .st-table td {
+            padding: .82rem 1.1rem;
+            border-bottom: 1px solid var(--S);
+            font-size: .8rem;
+            vertical-align: middle;
+            color: var(--D);
+        }
+
+        .st-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .st-table tr:hover td {
+            background: var(--C);
+        }
+
+    /* ── PRODUCT CELL ── */
+    .p-name {
+        font-weight: 600;
+        font-size: .82rem;
+        color: var(--D);
+    }
+
+    .p-unit {
+        font-size: .68rem;
+        color: var(--M);
+        margin-top: .06rem;
+    }
+
+    .p-cat {
+        font-size: .7rem;
+        color: var(--M);
+    }
+
+    /* ── QTY CELL ── */
+    .qty-wrap {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+    .qty-num {
+        font-family: 'Syne',sans-serif;
+        font-size: .95rem;
+        font-weight: 800;
+    }
+
+    .qty-bar {
+        flex: 1;
+        max-width: 80px;
+        height: 5px;
+        background: var(--S);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .qty-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width .6s ease;
+    }
+
+    /* ── STATUS PILLS ── */
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .26rem;
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        padding: .22rem .6rem;
+        border-radius: 4px;
+    }
+
+        .pill::before {
+            content: '●';
+            font-size: .48em;
+        }
+
+    .p-ok {
+        background: rgba(16,185,129,.1);
+        color: var(--GN);
+    }
+
+    .p-lo {
+        background: rgba(249,115,22,.1);
+        color: var(--OR);
+    }
+
+    .p-no {
+        background: rgba(239,68,68,.1);
+        color: var(--RD);
+    }
+
+    /* ── REQUEST BUTTON ── */
+    .req-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .28rem .72rem;
+        border-radius: 7px;
+        border: 1px solid rgba(249,115,22,.25);
+        background: rgba(249,115,22,.08);
+        color: var(--OR);
+        font-size: .68rem;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: 'Space Grotesk',sans-serif;
+        transition: all .18s;
+    }
+
+        .req-btn:hover {
+            background: var(--OR);
+            color: #fff;
+            border-color: var(--OR);
+        }
+
+    /* ── EMPTY ── */
+    .st-empty {
+        text-align: center;
+        padding: 3rem;
+        color: var(--M);
+    }
+
+    /* ── FILTER TABS ── */
+    .ftabs {
+        display: flex;
+        gap: .3rem;
+    }
+
+    .ftab {
+        font-size: .7rem;
+        font-weight: 600;
+        padding: .28rem .7rem;
+        border-radius: 6px;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        color: var(--M);
+        transition: all .18s;
+        font-family: 'Space Grotesk',sans-serif;
+    }
+
+        .ftab.on {
+            background: var(--G);
+            color: var(--D);
+        }
+
+        .ftab:hover:not(.on) {
+            background: var(--W);
+        }
+</style>
+
+<!-- KPI row -->
+<div class="sk4">
+    <div class="sk">
+        <div class="sk-ico" style="background:rgba(239,68,68,.1);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--RD)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" /></svg>
+        </div>
+        <div>
+            <div class="sk-val" style="color:var(--RD)">@outOfStock</div>
+            <div class="sk-lbl">Hết hàng</div>
+        </div>
+    </div>
+    <div class="sk">
+        <div class="sk-ico" style="background:rgba(249,115,22,.1);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--OR)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+        </div>
+        <div>
+            <div class="sk-val" style="color:var(--OR)">@lowStock</div>
+            <div class="sk-lbl">Sắp hết hàng</div>
+        </div>
+    </div>
+    <div class="sk">
+        <div class="sk-ico" style="background:rgba(16,185,129,.1);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--GN)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+        </div>
+        <div>
+            <div class="sk-val" style="color:var(--GN)">@okStock</div>
+            <div class="sk-lbl">Đủ hàng</div>
+        </div>
+    </div>
+    <div class="sk">
+        <div class="sk-ico" style="background:var(--G3);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--G)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg>
+        </div>
+        <div>
+            <div class="sk-val" style="color:var(--G)">@total</div>
+            <div class="sk-lbl">Tổng mặt hàng</div>
+        </div>
+    </div>
+</div>
+
+<!-- Toolbar -->
+<div class="stb">
+    <div class="stb-search">
+        <div class="stb-search-ico">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+        </div>
+        <input type="text" class="stb-input" placeholder="Tìm sản phẩm..." oninput="filterStock(this.value)" />
+    </div>
+    <div class="ftabs">
+        <button class="ftab on" onclick="filterStatus('all',this)">Tất cả</button>
+        <button class="ftab" onclick="filterStatus('out',this)">Hết hàng</button>
+        <button class="ftab" onclick="filterStatus('low',this)">Sắp hết</button>
+        <button class="ftab" onclick="filterStatus('ok',this)">Đủ hàng</button>
+    </div>
+    <a asp-controller="Staff" asp-action="StockView" class="stb-btn" style="margin-left:auto;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>
+        Làm mới
+    </a>
+</div>
+
+<!-- Table -->
+<div class="stc">
+    <div class="stc-head">
+        <div class="stc-title">Danh Sách Tồn Kho</div>
+        <span style="font-size:.72rem;color:var(--M);">@total mặt hàng</span>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="st-table">
+            <thead>
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th>Danh mục</th>
+                    <th style="text-align:center">Tồn kho</th>
+                    <th style="text-align:center">Có thể bán</th>
+                    <th style="text-align:center">Tối thiểu</th>
+                    <th>Mức độ</th>
+                    <th>Trạng thái</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="stockBody">
+                @foreach (var inv in Model)
+                {
+                    var (pCls, pTxt) = inv.IsOutOfStock
+                    ? ("p-no", "Hết hàng")
+                    : inv.IsLowStock
+                    ? ("p-lo", "Sắp hết")
+                    : ("p-ok", "Đủ hàng");
+                    var statusKey = inv.IsOutOfStock ? "out" : inv.IsLowStock ? "low" : "ok";
+                    // bar fill %: cap at 100, based on qty vs min*3
+                    var barPct = inv.MinQuantity > 0
+                    ? (int)Math.Min(100, inv.Quantity * 100 / (inv.MinQuantity * 3))
+                    : 100;
+                    var barClr = inv.IsOutOfStock ? "var(--RD)" : inv.IsLowStock ? "var(--OR)" : "var(--GN)";
+
+                    <tr class="stock-row"
+                        data-name="@inv.Product?.ProductName?.ToLower()"
+                        data-status="@statusKey">
+                        <td>
+                            <div class="p-name">@inv.Product?.ProductName</div>
+                            <div class="p-unit">Đơn vị: @(inv.Product?.Unit ?? "—")</div>
+                        </td>
+                        <td class="p-cat">@(inv.Product?.Category?.CategoryName ?? "—")</td>
+                        <td style="text-align:center;">
+                            <span style="font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;color:var(--D);">@inv.Quantity</span>
+                        </td>
+                        <td style="text-align:center;">
+                            <span style="font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;color:@barClr;">@inv.AvailableQuantity</span>
+                        </td>
+                        <td style="text-align:center;color:var(--M);font-size:.8rem;">@inv.MinQuantity</td>
+                        <td>
+                            <div class="qty-wrap">
+                                <div class="qty-bar">
+                                    <div class="qty-fill" style="width:@barPct%;background:@barClr;"></div>
+                                </div>
+                                <span style="font-size:.68rem;color:var(--M);">@barPct%</span>
+                            </div>
+                        </td>
+                        <td><span class="pill @pCls">@pTxt</span></td>
+                        <td>
+                            @if (inv.IsLowStock || inv.IsOutOfStock)
+                            {
+                                <form method="post" asp-action="RequestRestock" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productId" value="@inv.ProductId" />
+                                    <input type="hidden" name="requestQty" value="@(inv.MinQuantity * 2)" />
+                                    <input type="hidden" name="note" value="Yêu cầu nhập hàng từ Staff" />
+                                    <button type="submit" class="req-btn">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
+                                        Yêu cầu nhập
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8">
+                            <div class="st-empty">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.25;margin-bottom:.6rem;"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>
+                                <div>Chưa có dữ liệu tồn kho</div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let curStatus = 'all', curSearch = '';
+
+        function filterStock(q) {
+            curSearch = q.toLowerCase();
+            applyFilter();
+        }
+        function filterStatus(s, btn) {
+            document.querySelectorAll('.ftab').forEach(t => t.classList.remove('on'));
+            btn.classList.add('on');
+            curStatus = s;
+            applyFilter();
+        }
+        function applyFilter() {
+            document.querySelectorAll('.stock-row').forEach(r => {
+                const nameMatch   = r.dataset.name.includes(curSearch);
+                const statusMatch = curStatus === 'all' || r.dataset.status === curStatus;
+                r.style.display   = (nameMatch && statusMatch) ? '' : 'none';
+            });
+        }
+    </script>
+}

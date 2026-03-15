@@ -1,902 +1,748 @@
 ﻿@model QuanLiSanCauLong.ViewModels.LowStockViewModel
-
 @{
-    ViewData["Title"] = "Cảnh báo tồn kho";
+    ViewData["Title"] = "Cảnh báo Tồn Kho";
     var isPartial = ViewContext.HttpContext.Request.Headers["X-Requested-With"] == "XMLHttpRequest";
-    if (!isPartial) { Layout = "~/Views/Shared/_LayoutAdmin.cshtml"; }
-    else { Layout = null; }
+    Layout = isPartial ? null : "~/Views/Shared/_LayoutAdmin.cshtml";
+    var facilities = ViewBag.Facilities as IEnumerable<QuanLiSanCauLong.Models.Facility> ?? Enumerable.Empty<QuanLiSanCauLong.Models.Facility>();
 }
 
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
     :root {
         --deep: #1a1209;
         --gold: #d4a017;
         --gold2: #f5c842;
-        --cream: #f5f4ec;
-        --warm: #f0ead8;
-        --card: #fff;
-        --border: #e4d9c8;
+        --warm: #f5ede0;
+        --cream: #fdf8f0;
+        --border: #e8ddd0;
         --muted: #8a7560;
+        --red: #c94b2a;
         --green: #15803d;
-        --green-soft: #dcfce7;
-        --red: #dc2626;
-        --red-soft: #fef2f2;
-        --yellow: #92600a;
-        --yellow-soft: #fef9ec;
-        --orange: #c2410c;
-        --orange-soft: #fff7ed;
         --blue: #1d4ed8;
-        --blue-soft: #eff6ff;
+        --orange: #c2410c;
         --purple: #7c3aed;
-        --purple-soft: #f5f3ff;
     }
 
-    .ls-wrapper {
-        padding: 1.5rem;
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    * {
         font-family: 'Outfit',sans-serif;
-        background: var(--cream);
-        min-height: 100%;
     }
 
-    /* Header (full-page only) */
-    .ls-hd {
+    .pg {
+        background: var(--warm);
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    .pg-hd {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.75rem;
         flex-wrap: wrap;
-        gap: .75rem;
+        gap: 1rem;
     }
 
-    .ls-title {
+    .pg-title {
         font-family: 'Playfair Display',serif;
-        font-size: 1.8rem;
+        font-size: 1.9rem;
         font-weight: 700;
         color: var(--deep);
-        margin: 0;
     }
 
-        .ls-title em {
+        .pg-title em {
             font-style: italic;
-            color: var(--red);
+            color: var(--gold);
         }
 
-    .ls-sub {
+    .pg-sub {
         font-size: .82rem;
         color: var(--muted);
-        margin-top: .25rem;
+        margin-top: .2rem;
     }
 
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: .38rem;
+        padding: .62rem 1.1rem;
+        border: 1.5px solid var(--border);
+        border-radius: 7px;
+        background: #fff;
+        font-size: .82rem;
+        font-weight: 600;
+        color: var(--muted);
+        text-decoration: none;
+        transition: all .18s;
+    }
+
+        .btn-back:hover {
+            border-color: var(--deep);
+            color: var(--deep);
+        }
     /* Stats */
-    .ls-stats {
-        display: grid;
-        grid-template-columns: repeat(5,1fr);
-        gap: .75rem;
+    .stats {
+        display: flex;
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
         margin-bottom: 1.4rem;
     }
 
-    @@media(max-width:900px) {
-        .ls-stats {
-            grid-template-columns: repeat(3,1fr);
-        }
-    }
-
-    @@media(max-width:560px) {
-        .ls-stats {
-            grid-template-columns: 1fr 1fr;
-        }
-    }
-
-    .ls-stat {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: .85rem 1.1rem;
-        border-left: 4px solid transparent;
+    .sb {
+        background: #fff;
+        padding: .82rem 1.1rem;
+        flex: 1;
+        min-width: 0;
         cursor: pointer;
-        transition: .15s;
+        transition: background .15s;
     }
 
-        .ls-stat:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(26,18,9,.09);
+        .sb:hover {
+            background: var(--cream);
         }
 
-        .ls-stat.s-out {
-            border-left-color: var(--red);
+        .sb.on {
+            background: var(--deep);
         }
 
-        .ls-stat.s-low {
-            border-left-color: #f59e0b;
-        }
+            .sb.on .sn {
+                color: var(--gold2);
+            }
 
-        .ls-stat.s-exp {
-            border-left-color: #ea580c;
-        }
+            .sb.on .sl {
+                color: rgba(255,255,255,.45);
+            }
 
-        .ls-stat.s-xprd {
-            border-left-color: var(--deep);
-        }
-
-        .ls-stat.s-dmg {
-            border-left-color: var(--purple);
-        }
-
-        .ls-stat.active {
-            opacity: .8;
-            box-shadow: 0 0 0 2px var(--gold2);
-        }
-
-    .ls-stat-val {
-        font-size: 1.55rem;
-        font-weight: 800;
-        line-height: 1;
-    }
-
-    .ls-stat-lbl {
-        font-size: .67rem;
+    .sn {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.6rem;
         font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .07em;
-        color: var(--muted);
-        margin-top: 3px;
-    }
-
-    .s-out .ls-stat-val {
-        color: var(--red);
-    }
-
-    .s-low .ls-stat-val {
-        color: #f59e0b;
-    }
-
-    .s-exp .ls-stat-val {
-        color: #ea580c;
-    }
-
-    .s-xprd .ls-stat-val {
+        line-height: 1;
         color: var(--deep);
     }
 
-    .s-dmg .ls-stat-val {
-        color: var(--purple);
+    .sl {
+        font-size: .62rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: .18rem;
     }
-
     /* Toolbar */
-    .ls-toolbar {
+    .toolbar {
         display: flex;
-        gap: .6rem;
+        align-items: center;
+        gap: .65rem;
         margin-bottom: 1rem;
         flex-wrap: wrap;
-        align-items: center;
     }
 
-    .ls-search-wrap {
-        position: relative;
+    .srch {
         flex: 1;
-        min-width: 180px;
-        max-width: 260px;
+        min-width: 220px;
+        position: relative;
     }
 
-        .ls-search-wrap i {
+        .srch i {
             position: absolute;
-            left: .65rem;
+            left: .75rem;
             top: 50%;
             transform: translateY(-50%);
             color: var(--muted);
             font-size: .8rem;
-            pointer-events: none;
         }
 
-    .ls-search {
-        padding: .45rem .75rem .45rem 2.1rem;
-        border: 1.5px solid var(--border);
-        border-radius: 8px;
-        font-size: .84rem;
-        width: 100%;
-        background: var(--card);
+        .srch input {
+            width: 100%;
+            padding: .58rem .85rem .58rem 2.2rem;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            font-family: 'Outfit',sans-serif;
+            font-size: .83rem;
+            color: var(--deep);
+            background: #fff;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+            .srch input:focus {
+                border-color: var(--gold);
+            }
+
+    .sel {
+        padding: .58rem .85rem;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .83rem;
+        color: var(--deep);
+        background: #fff;
         outline: none;
+        cursor: pointer;
     }
 
-        .ls-search:focus {
+        .sel:focus {
             border-color: var(--gold);
         }
-
-    .ls-sel {
-        padding: .45rem .9rem;
-        border: 1.5px solid var(--border);
-        border-radius: 8px;
-        font-size: .82rem;
-        background: var(--card);
-        cursor: pointer;
-        outline: none;
-    }
-
-    .ls-count {
-        font-size: .78rem;
-        color: var(--muted);
-        margin-left: auto;
-    }
-
-    /* Table card */
-    .ls-table-card {
-        background: var(--card);
+    /* Table */
+    .tbl-wrap {
+        background: #fff;
         border: 1px solid var(--border);
-        border-radius: 14px;
+        border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 2px 10px rgba(26,18,9,.05);
     }
 
-    .ls-tbl {
+    .lstbl {
         width: 100%;
         border-collapse: collapse;
     }
 
-        .ls-tbl thead tr {
+        .lstbl th {
+            padding: .72rem 1rem;
             background: var(--warm);
-        }
-
-        .ls-tbl th {
-            padding: .7rem 1rem;
-            font-size: .69rem;
-            font-weight: 800;
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .12em;
             text-transform: uppercase;
-            letter-spacing: .07em;
             color: var(--muted);
             text-align: left;
-            border-bottom: 2px solid var(--border);
+            border-bottom: 1px solid var(--border);
             white-space: nowrap;
         }
 
-        .ls-tbl td {
-            padding: .75rem 1rem;
-            border-bottom: 1px solid #f5f0e8;
-            vertical-align: middle;
+        .lstbl td {
+            padding: .78rem 1rem;
+            border-bottom: 1px solid var(--border);
             font-size: .83rem;
+            color: var(--deep);
+            vertical-align: middle;
         }
 
-        .ls-tbl tr:last-child td {
-            border: none;
+        .lstbl tr:last-child td {
+            border-bottom: none;
         }
 
-        .ls-tbl tr:hover td {
-            background: #fdf9f0;
+        .lstbl tr:hover td {
+            background: var(--cream);
         }
 
+        .lstbl tr.row-danger td {
+            background: #fef2f2;
+        }
     /* Product cell */
-    .prod-thumb {
-        width: 38px;
-        height: 38px;
-        border-radius: 9px;
+    .p-cell {
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+    }
+
+    .p-thumb {
+        width: 34px;
+        height: 34px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
         background: var(--warm);
         display: flex;
         align-items: center;
         justify-content: center;
-        overflow: hidden;
         flex-shrink: 0;
-        font-size: 1.1rem;
-        color: var(--muted);
+        overflow: hidden;
     }
 
-        .prod-thumb img {
+        .p-thumb img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-    .prod-name {
+        .p-thumb i {
+            font-size: .8rem;
+            color: var(--muted);
+        }
+
+    .p-name {
         font-weight: 700;
+        font-size: .84rem;
         color: var(--deep);
+        line-height: 1.2;
     }
 
-    .prod-sku {
-        font-size: .7rem;
+    .p-meta {
+        font-size: .68rem;
         color: var(--muted);
-        font-family: 'Courier New',monospace;
-        margin-top: 1px;
+        margin-top: .1rem;
     }
-
-    /* Stock cell */
-    .stk-total {
-        font-weight: 800;
-        font-size: .95rem;
-    }
-
-    .stk-avail {
-        font-size: .74rem;
+    /* Stock display */
+    .stk-main {
+        font-family: 'Playfair Display',serif;
+        font-size: 1rem;
         font-weight: 700;
-        color: var(--green);
-        margin-top: 1px;
     }
 
-    .stk-tags {
-        display: flex;
-        gap: .25rem;
-        margin-top: 3px;
-        flex-wrap: wrap;
+    .stk-zero {
+        color: var(--red);
     }
 
-    .stk-tag {
-        font-size: .6rem;
-        font-weight: 700;
-        padding: .1rem .4rem;
-        border-radius: 8px;
-    }
-
-    .tag-hold {
-        background: var(--orange-soft);
+    .stk-low {
         color: var(--orange);
-    }
-
-    .tag-rent {
-        background: var(--blue-soft);
-        color: var(--blue);
-    }
-
-    .tag-dmg {
-        background: var(--purple-soft);
-        color: var(--purple);
-    }
-
-    /* Progress bar */
-    .stk-bar-wrap {
-        background: #f0ead8;
-        border-radius: 4px;
-        height: 5px;
-        margin-top: 4px;
-        width: 100%;
     }
 
     .stk-bar {
-        height: 5px;
-        border-radius: 4px;
+        height: 4px;
+        background: var(--border);
+        border-radius: 2px;
+        overflow: hidden;
+        width: 80px;
+        margin-top: .3rem;
     }
 
-    .sb-ok {
-        background: var(--green);
+    .stk-bar-fill {
+        height: 100%;
+        border-radius: 2px;
     }
-
-    .sb-low {
-        background: #f59e0b;
-    }
-
-    .sb-out {
-        background: var(--red);
-    }
-
-    /* Status badges */
-    .sbadge {
-        display: inline-flex;
-        align-items: center;
-        gap: .25rem;
-        padding: .22rem .7rem;
-        border-radius: 20px;
-        font-size: .72rem;
-        font-weight: 700;
-        white-space: nowrap;
-    }
-
-    .sbadge-out {
-        background: var(--red-soft);
-        color: var(--red);
-    }
-
-    .sbadge-low {
-        background: var(--yellow-soft);
-        color: var(--yellow);
-    }
-
-    .sbadge-ok {
-        background: var(--green-soft);
-        color: var(--green);
-    }
-
-    .sbadge-dmg {
-        background: var(--purple-soft);
-        color: var(--purple);
-    }
-
-    /* HSD */
-    .hsd-dead {
-        color: var(--red);
-        font-weight: 700;
-        font-size: .8rem;
-    }
-
-    .hsd-soon {
-        color: var(--orange);
-        font-weight: 700;
-        font-size: .8rem;
-    }
-
-    .hsd-ok {
-        color: var(--green);
-        font-size: .8rem;
-    }
-
-    .hsd-sub {
-        font-size: .7rem;
-        color: var(--muted);
-        margin-top: 1px;
-    }
-
-    /* Variants chips */
-    .var-chip {
+    /* Alert badges */
+    .fl-badge {
         display: inline-flex;
         align-items: center;
         gap: .2rem;
-        font-size: .69rem;
+        padding: .16rem .5rem;
+        border-radius: 4px;
+        font-size: .62rem;
         font-weight: 700;
+        margin: .1rem .1rem 0 0;
+    }
+
+    .fb-out {
+        background: #fee2e2;
+        color: var(--red);
+    }
+
+    .fb-low {
+        background: #fff7ed;
+        color: var(--orange);
+    }
+
+    .fb-exp {
         background: #fef9c3;
-        border: 1px solid #fde68a;
+        color: #92600a;
+    }
+
+    .fb-xprd {
+        background: #fef2f2;
+        color: var(--red);
+    }
+
+    .fb-dmg {
+        background: #f5f3ff;
+        color: var(--purple);
+    }
+    /* Variants */
+    .var-chip {
+        display: inline-block;
         padding: .1rem .4rem;
-        border-radius: 5px;
-        color: #92400e;
-        margin: .1rem;
+        background: #f5f3ff;
+        border: 1px solid #ddd6fe;
+        border-radius: 4px;
+        font-size: .6rem;
+        color: var(--purple);
+        margin: .1rem .1rem 0 0;
     }
-
-    /* Action buttons */
-    .act-in {
-        display: inline-flex;
-        align-items: center;
-        gap: .25rem;
-        padding: .3rem .75rem;
-        background: var(--gold2);
-        border: none;
-        border-radius: 8px;
-        font-size: .74rem;
-        font-weight: 700;
-        cursor: pointer;
-        color: var(--deep);
-        transition: .15s;
-        font-family: 'Outfit',sans-serif;
-        white-space: nowrap;
-    }
-
-        .act-in:hover {
-            background: var(--gold);
-            color: #fff;
-        }
-
-    .act-view {
-        display: inline-flex;
-        align-items: center;
-        padding: .3rem .55rem;
-        border: 1.5px solid var(--border);
-        border-radius: 8px;
-        background: transparent;
+    /* Expiry */
+    .exp-ok {
         color: var(--muted);
-        font-size: .8rem;
+        font-size: .76rem;
+    }
+
+    .exp-soon {
+        color: #92600a;
+        font-weight: 700;
+        font-size: .76rem;
+    }
+
+    .exp-dead {
+        color: var(--red);
+        font-weight: 700;
+        font-size: .76rem;
+    }
+    /* Actions */
+    .act-g {
+        display: flex;
+        gap: .25rem;
+        justify-content: flex-end;
+    }
+
+    .act-b {
+        min-width: 28px;
+        height: 28px;
+        padding: 0 .5rem;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
-        transition: .15s;
+        font-size: .72rem;
+        font-weight: 600;
+        transition: all .15s;
+        white-space: nowrap;
+        gap: .25rem;
         text-decoration: none;
     }
 
-        .act-view:hover {
-            background: var(--warm);
+        .act-b.qin:hover {
+            border-color: var(--gold);
             color: var(--deep);
+            background: rgba(212,160,23,.07);
         }
 
+        .act-b.qhist:hover {
+            border-color: var(--blue);
+            color: var(--blue);
+            background: rgba(29,78,216,.07);
+        }
     /* Empty */
-    .ls-empty {
+    .empty-row td {
         text-align: center;
-        padding: 3rem 2rem;
+        padding: 4rem;
         color: var(--muted);
     }
 
-        .ls-empty i {
-            font-size: 2.4rem;
-            opacity: .35;
-            display: block;
-            margin-bottom: .75rem;
-        }
-
-    /* Toast */
-    .toast-wrap {
-        position: fixed;
-        bottom: 1.5rem;
-        right: 1.5rem;
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        gap: .5rem;
+    .empty-row i {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: .75rem;
+        opacity: .2;
     }
 
-    .toast-msg {
-        background: var(--deep);
-        color: #fff;
-        padding: .7rem 1.1rem;
-        border-radius: 9px;
-        font-size: .82rem;
+    .pager {
         display: flex;
         align-items: center;
-        gap: .5rem;
-        animation: tsIn .25s ease;
+        justify-content: space-between;
+        padding: .85rem 1.2rem;
+        border-top: 1px solid var(--border);
+        font-size: .78rem;
+        color: var(--muted);
+    }
+    /* All clear banner */
+    .all-clear {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem;
+        text-align: center;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
     }
 
-    .toast-ok {
-        background: var(--green);
-    }
-
-    .toast-err {
-        background: var(--red);
-    }
-
-    @@keyframes tsIn {
-        from {
-            opacity: 0;
-            transform: translateX(30px);
+        .all-clear i {
+            font-size: 3rem;
+            color: var(--green);
+            opacity: .4;
+            margin-bottom: .75rem;
         }
-
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
 </style>
 
-<div class="ls-wrapper">
+<div class="pg">
+    <!-- HEADER -->
+    <div class="pg-hd">
+        <div>
+            <h1 class="pg-title">Cảnh Báo <em>Tồn Kho</em></h1>
+            <div class="pg-sub">Hàng sắp hết · Hết hàng · Sắp hết hạn · Hàng hỏng</div>
+        </div>
+        <a href="@Url.Action("Index", "AdminInventory")" class="btn-back"><i class="bi bi-arrow-left"></i> Về kho</a>
+    </div>
 
-    @if (!isPartial)
+    <!-- STATS (click để filter) -->
+    <div class="stats">
+        <div class="sb on" id="sbAll" onclick="setFilter('all')">
+            <div class="sn">@Model.Items.Count</div>
+            <div class="sl">Tổng cảnh báo</div>
+        </div>
+        <div class="sb" id="sbOut" onclick="setFilter('out')">
+            <div class="sn" style="color:var(--red)">@Model.OutOfStockCount</div>
+            <div class="sl">Hết hàng</div>
+        </div>
+        <div class="sb" id="sbLow" onclick="setFilter('low')">
+            <div class="sn" style="color:var(--orange)">@Model.LowStockCount</div>
+            <div class="sl">Sắp hết</div>
+        </div>
+        <div class="sb" id="sbExp" onclick="setFilter('expiring')">
+            <div class="sn" style="color:#92600a">@Model.ExpiringCount</div>
+            <div class="sl">Sắp hết hạn</div>
+        </div>
+        <div class="sb" id="sbXprd" onclick="setFilter('expired')">
+            <div class="sn" style="color:var(--red)">@Model.ExpiredCount</div>
+            <div class="sl">Đã hết hạn</div>
+        </div>
+        <div class="sb" id="sbDmg" onclick="setFilter('damaged')">
+            <div class="sn" style="color:var(--purple)">@Model.DamagedCount</div>
+            <div class="sl">Hàng hỏng</div>
+        </div>
+    </div>
+
+    @if (!Model.Items.Any())
     {
-        <div class="ls-hd">
-            <div>
-                <h1 class="ls-title">Cảnh báo <em>Tồn Kho</em></h1>
-                <p class="ls-sub">Hàng sắp hết · Hết hàng · Sắp hết hạn · Hàng hỏng</p>
-            </div>
-            <a href="/Admin/AdminInventory/Index" class="act-view" style="padding:.55rem 1.1rem;font-size:.84rem;">
-                <i class="bi bi-arrow-left me-1"></i> Về tổng quan kho
-            </a>
+        <div class="all-clear">
+            <i class="bi bi-check-circle-fill"></i>
+            <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--deep);margin-bottom:.4rem;">Kho đang ổn định!</div>
+            <div style="font-size:.84rem;color:var(--muted);">Không có mặt hàng nào cần chú ý.</div>
         </div>
     }
+    else
+    {
+        <!-- TOOLBAR -->
+        <div class="toolbar">
+            <div class="srch">
+                <i class="bi bi-search"></i>
+                <input type="text" id="srchIn" placeholder="Tên sản phẩm, SKU, cơ sở..." oninput="applyFilter()" />
+            </div>
+            <select class="sel" id="fFac" onchange="applyFilter()">
+                <option value="">Tất cả cơ sở</option>
+                @foreach (var f in facilities)
+                {
+                    <option value="@f.FacilityName">@f.FacilityName</option>
+                }
+            </select>
+            <select class="sel" id="fBh" onchange="applyFilter()">
+                <option value="">Tất cả nhóm</option>
+                <option value="Retail">Bán lẻ</option>
+                <option value="Rental">Cho thuê</option>
+            </select>
+            <span style="font-size:.78rem;color:var(--muted);white-space:nowrap;" id="rowCount">@Model.Items.Count mặt hàng</span>
+        </div>
 
-    <!-- Stats (bấm để lọc) -->
-    <div class="ls-stats">
-        <div class="ls-stat s-out" onclick="setLsFilter('out')" id="stat-out">
-            <div class="ls-stat-val">@Model.OutOfStockCount</div>
-            <div class="ls-stat-lbl">🚫 Hết hàng</div>
-        </div>
-        <div class="ls-stat s-low" onclick="setLsFilter('low')" id="stat-low">
-            <div class="ls-stat-val">@Model.LowStockCount</div>
-            <div class="ls-stat-lbl">⚠️ Sắp hết</div>
-        </div>
-        <div class="ls-stat s-exp" onclick="setLsFilter('expiring')" id="stat-expiring">
-            <div class="ls-stat-val">@Model.ExpiringCount</div>
-            <div class="ls-stat-lbl">⏳ Sắp hết hạn</div>
-        </div>
-        <div class="ls-stat s-xprd" onclick="setLsFilter('expired')" id="stat-expired">
-            <div class="ls-stat-val">@Model.ExpiredCount</div>
-            <div class="ls-stat-lbl">🗑️ Đã hết hạn</div>
-        </div>
-        <div class="ls-stat s-dmg" onclick="setLsFilter('damaged')" id="stat-damaged">
-            <div class="ls-stat-val">@Model.DamagedCount</div>
-            <div class="ls-stat-lbl">💔 Hàng hỏng</div>
-        </div>
-    </div>
+        <!-- TABLE -->
+        <div class="tbl-wrap">
+            <table class="lstbl">
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th style="width:110px">Cơ sở</th>
+                        <th style="width:130px;text-align:right">Tồn kho</th>
+                        <th style="width:120px">Cảnh báo</th>
+                        <th style="width:120px">Hạn sử dụng</th>
+                        <th>Biến thể</th>
+                        <th style="width:100px">Nhà cung cấp</th>
+                        <th style="width:110px;text-align:right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="lsTbody">
+                    @foreach (var item in Model.Items)
+                    {
+                        var flags = new List<string>();
+                        if (item.IsOutOfStock) flags.Add("out");
+                        else if (item.IsLowStock) flags.Add("low");
+                        if (item.IsExpired) flags.Add("expired");
+                        else if (item.IsExpiringSoon) flags.Add("expiring");
+                        if (item.HasDamaged) flags.Add("damaged");
+                        var flagStr = string.Join(" ", flags);
+                        var barPct = item.MinQuantity > 0 ? Math.Min(100, item.AvailableQuantity * 100 / item.MinQuantity) : 50;
+                        var barClr = item.IsOutOfStock ? "var(--red)" : item.IsLowStock ? "var(--orange)" : "var(--green)";
+                        var stkCls = item.IsOutOfStock ? "stk-zero" : "stk-low";
+                        var isDanger = item.IsOutOfStock || item.IsExpired;
 
-    <!-- Toolbar -->
-    <div class="ls-toolbar">
-        <div class="ls-search-wrap">
-            <i class="bi bi-search"></i>
-            <input class="ls-search" id="lsSearch" placeholder="Tìm sản phẩm, SKU, cơ sở..." oninput="applyLsFilter()" />
-        </div>
-        <select class="ls-sel" id="lsFacilitySel" onchange="applyLsFilter()">
-            <option value="">Tất cả cơ sở</option>
-            @foreach (var f in (ViewBag.Facilities as List<QuanLiSanCauLong.Models.Facility>) ?? new())
-            {
-                <option value="@f.FacilityName">@f.FacilityName</option>
-            }
-        </select>
-        <select class="ls-sel" id="lsBehaviorSel" onchange="applyLsFilter()">
-            <option value="">Tất cả hành vi</option>
-            <option value="Retail">🛒 Bán lẻ</option>
-            <option value="Rental">🔄 Cho thuê</option>
-        </select>
-        <span class="ls-count" id="lsCount">@Model.Items.Count mặt hàng</span>
-    </div>
+                        <tr id="ls-@item.InventoryId"
+                            class="@(isDanger ? "row-danger" : "")"
+                            data-filter="@flagStr"
+                            data-fac="@(item.FacilityName ?? "")"
+                            data-bh="@(item.BehaviorType ?? "")"
+                            data-search="@(item.ProductName?.ToLower()) @(item.ProductCode?.ToLower()) @(item.FacilityName?.ToLower())">
+                            <td>
+                                <div class="p-cell">
+                                    <div class="p-thumb">
+                                        @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                        {
+                                            <img src="@item.ImageUrl" onerror="this.src='/images/no-image.png'" alt="" />
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-box-seam"></i>
+                                        }
+                                    </div>
+                                    <div>
+                                        <div class="p-name">@item.ProductName</div>
+                                        <div class="p-meta">@item.CategoryName · @(item.ProductCode ?? "—")</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="font-size:.78rem;color:var(--muted);">@(item.FacilityName ?? "—")</td>
+                            <td style="text-align:right;">
+                                <div class="@stkCls stk-main">
+                                    @item.AvailableQuantity
+                                    <span style="font-size:.65rem;font-weight:400;color:var(--muted)"> / @item.Quantity @item.Unit</span>
+                                </div>
+                                @if (item.MinQuantity > 0)
+                                {
+                                    <div class="stk-bar" style="margin-left:auto;">
+                                        <div class="stk-bar-fill" style="width:@(Math.Min(barPct, 100))%;background:@barClr;"></div>
+                                    </div>
+                                    <div style="font-size:.62rem;color:var(--muted);margin-top:.15rem;text-align:right;">Min: @item.MinQuantity</div>
+                                }
+                                @if (item.DamagedQuantity > 0)
+                                {
+                                    <div style="font-size:.66rem;color:var(--purple);margin-top:.1rem;">@item.DamagedQuantity hỏng</div>
+                                }
+                            </td>
+                            <td>
+                                @if (item.IsOutOfStock)
+                                {
+                                    <span class="fl-badge fb-out"><i class="bi bi-x-circle-fill"></i> Hết hàng</span>
+                                }
+                                else if (item.IsLowStock)
+                                {
 
-    <!-- Table -->
-    <div class="ls-table-card">
-        @if (Model.Items.Any())
-        {
-            <div style="overflow-x:auto;">
-                <table class="ls-tbl" id="lsTable">
-                    <thead>
-                        <tr>
-                            <th style="min-width:200px; padding-left:1.25rem;">Sản phẩm</th>
-                            <th>Cơ sở</th>
-                            <th style="text-align:center;">Tồn / Khả dụng</th>
-                            <th style="text-align:center;">Min</th>
-                            <th>Trạng thái</th>
-                            <th>Hạn sử dụng</th>
-                            <th>Biến thể sắp hết</th>
-                            <th>Nhà cung cấp</th>
-                            <th style="text-align:right; padding-right:1.25rem;"></th>
+                                    <span class="fl-badge fb-low"><i class="bi bi-exclamation-triangle-fill"></i> Sắp hết</span>
+                                }
+                                @if (item.IsExpired)
+                                {
+                                    <span class="fl-badge fb-xprd"><i class="bi bi-calendar-x-fill"></i> Hết hạn</span>
+                                }
+                                else if (item.IsExpiringSoon)
+                                {
+
+                                    <span class="fl-badge fb-exp"><i class="bi bi-clock-fill"></i> Sắp hết hạn</span>
+                                }
+                                @if (item.HasDamaged)
+                                {
+                                    <span class="fl-badge fb-dmg"><i class="bi bi-tools"></i> Hư hỏng</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.ExpiryDate.HasValue)
+                                {
+                                    var cls = item.IsExpired ? "exp-dead" : item.IsExpiringSoon ? "exp-soon" : "exp-ok";
+                                    <div class="@cls">@item.ExpiryDate.Value.ToString("dd/MM/yyyy")</div>
+                                    @if (item.DaysUntilExpiry.HasValue)
+                                    {
+                                        <div style="font-size:.64rem;color:var(--muted);">
+                                            @(item.IsExpired ? $"Đã hết hạn {-item.DaysUntilExpiry} ngày" : $"Còn {item.DaysUntilExpiry} ngày")
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <span style="color:var(--muted);font-size:.76rem;">—</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.LowVariants?.Any() == true)
+                                {
+                                    foreach (var v in item.LowVariants.Take(3))
+                                    {
+                                        <span class="var-chip">@v.DisplayName: @v.AvailableQty</span>
+                                    }
+                                    @if (item.LowVariants.Count > 3)
+                                    {
+                                        <span class="var-chip">+@(item.LowVariants.Count - 3) khác</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span style="color:var(--muted);font-size:.76rem;">—</span>
+                                }
+                            </td>
+                            <td style="font-size:.76rem;color:var(--muted);">
+                                @if (!string.IsNullOrEmpty(item.SupplierName))
+                                {
+                                    <div>@item.SupplierName</div>
+                                }
+                                @if (!string.IsNullOrEmpty(item.BatchNumber))
+                                {
+                                    <div style="font-family:monospace;font-size:.66rem;">@item.BatchNumber</div>
+                                }
+                                @if (string.IsNullOrEmpty(item.SupplierName) && string.IsNullOrEmpty(item.BatchNumber))
+                                {
+                                    <span>—</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="act-g">
+                                    <button class="act-b qin" onclick="quickStockIn(@item.InventoryId,@item.ProductId,'@Html.Raw(item.ProductName?.Replace("'", "\'"))')" title="Nhập kho ngay">
+                                        <i class="bi bi-box-arrow-in-down"></i> Nhập
+                                    </button>
+                                    <a href="@Url.Action("History", "AdminInventory", new { productId = item.ProductId })" class="act-b qhist" title="Lịch sử">
+                                        <i class="bi bi-clock-history"></i>
+                                    </a>
+                                </div>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model.Items)
-                        {
-                            // Tính filter tags cho JS
-                            var filters = new System.Collections.Generic.List<string>();
-                            if (item.IsOutOfStock) filters.Add("out");
-                            else if (item.IsLowStock) filters.Add("low");
-                            if (item.IsExpired) filters.Add("expired");
-                            else if (item.IsExpiringSoon) filters.Add("expiring");
-                            if (item.HasDamaged) filters.Add("damaged");
-                            var filterStr = string.Join(" ", filters);
-
-                            // Stock bar
-                            var barPct = item.MinQuantity > 0
-                            ? Math.Min(100, item.AvailableQuantity * 100 / item.MinQuantity)
-                            : 100;
-                            var barCls = item.IsOutOfStock ? "sb-out" : item.IsLowStock ? "sb-low" : "sb-ok";
-
-                            <tr data-filter="@filterStr"
-                                data-facility="@item.FacilityName"
-                                data-behavior="@item.BehaviorType"
-                                data-search="@item.ProductName?.ToLower() @item.ProductCode?.ToLower() @item.FacilityName?.ToLower()">
-                                <td style="padding-left:1.25rem;">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="prod-thumb">
-                                            @if (!string.IsNullOrEmpty(item.ImageUrl))
-                                            {
-                                                <img src="@item.ImageUrl" onerror="this.src='/images/no-image.png'" />
-                                            }
-                                            else
-                                            {
-
-                                                <i class="bi bi-box-seam"></i>
-                                            }
-                                        </div>
-                                        <div>
-                                            <div class="prod-name">@item.ProductName</div>
-                                            <div class="prod-sku">@item.ProductCode</div>
-                                            @if (!string.IsNullOrEmpty(item.StorageLocation))
-                                            {
-                                                <div style="font-size:.68rem;color:var(--muted);"><i class="bi bi-pin-map me-1"></i>@item.StorageLocation</div>
-                                            }
-                                            @if (!string.IsNullOrEmpty(item.BatchNumber))
-                                            {
-                                                <div style="font-size:.68rem;color:var(--muted);font-family:monospace;"><i class="bi bi-upc me-1"></i>@item.BatchNumber</div>
-                                            }
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div style="font-size:.82rem;">@item.FacilityName</div>
-                                    <div style="font-size:.7rem;color:var(--gold);font-weight:700;">@item.CategoryName</div>
-                                </td>
-                                <td style="text-align:center;">
-                                    <div class="stk-total">@item.Quantity <span style="font-size:.7rem;font-weight:400;color:var(--muted);">@item.Unit</span></div>
-                                    <div class="stk-avail">KD: @item.AvailableQuantity</div>
-                                    <div class="stk-bar-wrap">
-                                        <div class="stk-bar @barCls" style="width:@barPct%;"></div>
-                                    </div>
-                                    <div class="stk-tags">
-                                        @if (item.HoldQuantity > 0)
-                                        {
-                                            <span class="stk-tag tag-hold">🔒 @item.HoldQuantity</span>
-                                        }
-                                        @if (item.RentedQuantity > 0)
-                                        {
-                                            <span class="stk-tag tag-rent">🔄 @item.RentedQuantity</span>
-                                        }
-                                        @if (item.DamagedQuantity > 0)
-                                        {
-                                            <span class="stk-tag tag-dmg">💔 @item.DamagedQuantity</span>
-                                        }
-                                    </div>
-                                </td>
-                                <td style="text-align:center;">
-                                    <div style="font-weight:700;color:var(--muted);">@item.MinQuantity</div>
-                                    <div style="font-size:.7rem;color:var(--muted);">@item.Unit</div>
-                                </td>
-                                <td>
-                                    @if (item.IsOutOfStock)
-                                    {
-                                        <span class="sbadge sbadge-out"><i class="bi bi-x-circle-fill"></i> Hết khả dụng</span>
-                                    }
-                                    else if (item.IsLowStock)
-                                    {
-
-                                        <span class="sbadge sbadge-low"><i class="bi bi-exclamation-triangle-fill"></i> Sắp hết</span>
-                                    }
-                                    else
-                                    {
-
-                                        <span class="sbadge sbadge-ok"><i class="bi bi-check-circle-fill"></i> Ổn</span>
-                                    }
-                                    @if (item.HasDamaged)
-                                    {
-                                        <div class="mt-1"><span class="sbadge sbadge-dmg"><i class="bi bi-tools"></i> @item.DamagedQuantity hỏng</span></div>
-                                    }
-                                </td>
-                                <td>
-                                    @if (item.ExpiryDate.HasValue)
-                                    {
-                                        var cls = item.IsExpired ? "hsd-dead" : item.IsExpiringSoon ? "hsd-soon" : "hsd-ok";
-                                        <div class="@cls">@item.ExpiryDate.Value.ToString("dd/MM/yyyy")</div>
-                                        <div class="hsd-sub">
-                                            @if (item.IsExpired)
-                                            {
-                                                @($"Quá {-item.DaysUntilExpiry} ngày")
-                                            }
-                                            else
-                                            {
-
-                                                @($"Còn {item.DaysUntilExpiry} ngày")
-                                            }
-                                        </div>
-                                    }
-                                    else
-                                    {
-
-                                        <span style="color:var(--muted);">—</span>
-                                    }
-                                </td>
-                                <td>
-                                    @if (item.LowVariants.Any())
-                                    {
-                                        @foreach (var v in item.LowVariants)
-                                        {
-                                            <span class="var-chip"><i class="bi bi-exclamation-triangle"></i> @v.DisplayName: @v.AvailableQty</span>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <span style="color:var(--muted);font-size:.75rem;">—</span>
-                                    }
-                                </td>
-                                <td>
-                                    <div style="font-size:.8rem;color:var(--muted);">@(item.SupplierName ?? "—")</div>
-                                </td>
-                                <td style="text-align:right; padding-right:1.25rem;">
-                                    <div class="d-flex justify-content-end gap-1">
-                                        <button class="act-in" onclick="openStockIn(@item.ProductId)">
-                                            <i class="bi bi-box-arrow-in-down"></i> Nhập
-                                        </button>
-                                        @if (item.DamagedQuantity > 0)
-                                        {
-                                            <button class="act-view" style="color:var(--purple);border-color:#c4b5fd;"
-                                                    onclick="openWriteOff(@item.InventoryId, '@item.ProductName?.Replace("'", "\\'")', @item.DamagedQuantity)"
-                                                    title="Xoá sổ hàng hỏng">
-                                                <i class="bi bi-trash3"></i>
-                                            </button>
-                                        }
-                                        <a class="act-view" href="/Admin/AdminProduct/Details/@item.ProductId" title="Xem sản phẩm">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                    }
+                </tbody>
+            </table>
+            <div class="pager">
+                <span id="countLabel">@Model.Items.Count mặt hàng</span>
             </div>
-        }
-        else
-        {
-            <div class="ls-empty">
-                <i class="bi bi-check-circle"></i>
-                <p style="font-weight:700;font-size:1rem;color:var(--green);">Tất cả sản phẩm đang ở trạng thái tốt!</p>
-                <p style="font-size:.82rem;">Không có hàng hết, sắp hết, hoặc sắp hết hạn</p>
-            </div>
-        }
-    </div>
+        </div>
+    }
 </div>
 
-<!-- Write-off Modal -->
-<div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1055;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px);" id="writeOffModal">
-    <div style="background:#fff;border-radius:14px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.22);">
-        <div style="background:#7c3aed;color:#fff;padding:1rem 1.25rem;display:flex;justify-content:space-between;align-items:center;">
-            <h5 style="margin:0;font-size:.95rem;font-weight:800;"><i class="bi bi-trash3 me-2"></i>Xoá sổ hàng hỏng</h5>
-            <button onclick="document.getElementById('writeOffModal').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,.7);font-size:1.3rem;cursor:pointer;">&times;</button>
-        </div>
-        <div style="padding:1.25rem 1.5rem;">
-            <div style="background:#f5f3ff;border:1px solid #c4b5fd;border-radius:9px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.83rem;color:#7c3aed;">
-                <i class="bi bi-info-circle-fill me-1"></i>
-                Xoá sổ: <strong id="woProductName"></strong>. Kho sẽ bị trừ vĩnh viễn.
-            </div>
-            <div style="margin-bottom:.75rem;">
-                <label style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:.3rem;">Số lượng xoá sổ (tối đa: <span id="woMaxQty"></span>)</label>
-                <input type="number" id="woQty" min="1" style="padding:.48rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.875rem;width:100%;background:var(--cream);" />
-            </div>
-            <div>
-                <label style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:.3rem;">Lý do</label>
-                <textarea id="woNote" rows="2" style="padding:.48rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.875rem;width:100%;background:var(--cream);resize:none;" placeholder="Hàng quá hỏng, không sửa được..."></textarea>
-            </div>
-        </div>
-        <div style="padding:.85rem 1.5rem;background:var(--warm);border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.6rem;">
-            <button onclick="document.getElementById('writeOffModal').style.display='none'" style="padding:.5rem 1.1rem;border:1.5px solid var(--border);border-radius:8px;background:transparent;font-size:.84rem;font-weight:700;cursor:pointer;">Huỷ</button>
-            <button onclick="submitWriteOff()" style="padding:.5rem 1.4rem;border:none;border-radius:8px;background:#7c3aed;color:#fff;font-size:.84rem;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;">
-                <i class="bi bi-trash3 me-1"></i> Xoá sổ
-            </button>
+<!-- STOCKIN MODAL (inline mini) -->
+<div class="modal fade" id="lsModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered" style="max-width:600px">
+        <div class="modal-content" id="lsModalBody" style="border-radius:14px;border:none;">
+            <div class="p-5 text-center"><div class="spinner-border" style="color:var(--gold)"></div></div>
         </div>
     </div>
 </div>
 
-<div class="toast-wrap" id="toastWrapLS"></div>
+@section Scripts {
+    @Html.AntiForgeryToken()
+    <script>
+        let lsModal;
+        document.addEventListener('DOMContentLoaded', () => { lsModal = new bootstrap.Modal(document.getElementById('lsModal')); });
 
-<script>
-    // ── FILTER STATE ──
-    let _lsActiveFilter = '';
-
-    function setLsFilter(f) {
-        _lsActiveFilter = (_lsActiveFilter === f) ? '' : f;  // toggle
-        document.querySelectorAll('.ls-stat').forEach(s => s.classList.remove('active'));
-        if (_lsActiveFilter) document.getElementById('stat-' + _lsActiveFilter)?.classList.add('active');
-        applyLsFilter();
-    }
-
-    function applyLsFilter() {
-        const q   = document.getElementById('lsSearch')?.value.toLowerCase() ?? '';
-        const fac = document.getElementById('lsFacilitySel')?.value ?? '';
-        const beh = document.getElementById('lsBehaviorSel')?.value ?? '';
-        let cnt = 0;
-
-        document.querySelectorAll('#lsTable tbody tr').forEach(row => {
-            const filterTags = row.dataset.filter ?? '';
-            const filterMatch = !_lsActiveFilter || filterTags.includes(_lsActiveFilter);
-            const searchMatch = !q   || (row.dataset.search ?? '').includes(q);
-            const facMatch    = !fac || row.dataset.facility === fac;
-            const behMatch    = !beh || row.dataset.behavior === beh;
-            const show = filterMatch && searchMatch && facMatch && behMatch;
-            row.style.display = show ? '' : 'none';
-            if (show) cnt++;
-        });
-        const el = document.getElementById('lsCount');
-        if (el) el.textContent = cnt + ' mặt hàng';
-    }
-
-    // ── STOCK IN (mở modal từ Index nếu đang trong overlay, hoặc redirect) ──
-    function openStockIn(productId) {
-        // Nếu đang render trong modal của Index, gọi lên parent window
-        if (window.parent && window.parent !== window && typeof window.parent.openModal === 'function') {
-            window.parent.openModal('stockInModal');
-        } else {
-            window.location.href = '/Admin/AdminInventory/Index';
+        /* ── FILTER ── */
+        let activeFilter = 'all';
+        function setFilter(f) {
+            activeFilter = f;
+            const map = { all:'sbAll', out:'sbOut', low:'sbLow', expiring:'sbExp', expired:'sbXprd', damaged:'sbDmg' };
+            document.querySelectorAll('.sb').forEach(b => b.classList.remove('on'));
+            document.getElementById(map[f] || 'sbAll')?.classList.add('on');
+            applyFilter();
         }
-    }
+        function applyFilter() {
+            const q   = document.getElementById('srchIn')?.value.toLowerCase() || '';
+            const fac = document.getElementById('fFac')?.value || '';
+            const bh  = document.getElementById('fBh')?.value  || '';
+            let cnt = 0;
+            document.querySelectorAll('#lsTbody tr[id^="ls-"]').forEach(r => {
+                const matchSearch = !q   || r.dataset.search?.includes(q);
+                const matchFac    = !fac || r.dataset.fac === fac;
+                const matchBh     = !bh  || r.dataset.bh  === bh;
+                const matchFilter = activeFilter === 'all' || r.dataset.filter?.includes(activeFilter);
+                const show = matchSearch && matchFac && matchBh && matchFilter;
+                r.style.display = show ? '' : 'none';
+                if(show) cnt++;
+            });
+            document.getElementById('rowCount').textContent   = cnt + ' mặt hàng';
+            document.getElementById('countLabel').textContent = cnt + ' mặt hàng';
+        }
 
-    // ── WRITE OFF DAMAGED ──
-    let _woInventoryId = 0;
-    function openWriteOff(invId, productName, maxDmg) {
-        _woInventoryId = invId;
-        document.getElementById('woProductName').textContent = productName;
-        document.getElementById('woMaxQty').textContent      = maxDmg;
-        document.getElementById('woQty').max   = maxDmg;
-        document.getElementById('woQty').value = maxDmg;
-        document.getElementById('woNote').value = '';
-        document.getElementById('writeOffModal').style.display = 'flex';
-    }
+        /* ── QUICK STOCK IN ── */
+        async function quickStockIn(invId, productId, productName) {
+            document.getElementById('lsModalBody').innerHTML =
+                '<div class="p-5 text-center"><div class="spinner-border" style="color:var(--gold)"></div></div>';
+            lsModal.show();
+            const r = await fetch(`/AdminInventory/StockIn?invId=${invId}&preProductId=${productId}&preProductName=${encodeURIComponent(productName)}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            document.getElementById('lsModalBody').innerHTML = await r.text();
+            // Run scripts
+            document.getElementById('lsModalBody').querySelectorAll('script').forEach(s => {
+                const n = document.createElement('script'); n.text = s.text; s.replaceWith(n);
+            });
+        }
 
-    async function submitWriteOff() {
-        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
-        const body  = new FormData();
-        body.append('inventoryId', _woInventoryId);
-        body.append('quantity',    document.getElementById('woQty').value);
-        body.append('note',        document.getElementById('woNote').value);
-        body.append('__RequestVerificationToken', token);
-
-        const res  = await fetch('/AdminInventory/WriteOffDamaged', { method:'POST', body });
-        const json = await res.json();
-        document.getElementById('writeOffModal').style.display = 'none';
-        showLSToast(json.success, json.message);
-        if (json.success) setTimeout(() => location.reload(), 1000);
-    }
-
-    function showLSToast(ok, msg) {
-        const el = document.createElement('div');
-        el.className = 'toast-msg ' + (ok ? 'toast-ok' : 'toast-err');
-        el.innerHTML = (ok ? '<i class="bi bi-check-circle-fill"></i> ' : '<i class="bi bi-x-circle-fill"></i> ') + msg;
-        document.getElementById('toastWrapLS').appendChild(el);
-        setTimeout(() => el.remove(), 3500);
-    }
-
-    // click outside modal
-    document.getElementById('writeOffModal')?.addEventListener('click', e => {
-        if (e.target === document.getElementById('writeOffModal'))
-            document.getElementById('writeOffModal').style.display = 'none';
-    });
-</script>
+        // Init
+        document.addEventListener('DOMContentLoaded', () => document.getElementById('sbAll')?.classList.add('on'));
+    </script>
+}

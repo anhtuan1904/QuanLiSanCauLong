@@ -1,342 +1,927 @@
-﻿@model QuanLiSanCauLong.ViewModels.SalesViewModel
-
+﻿@using QuanLiSanCauLong.ViewModels
 @{
-    ViewData["Title"] = "Bán hàng";
     Layout = "~/Views/Shared/_LayoutStaff.cshtml";
+    ViewData["Title"] = "Bán hàng POS";
+    var products = ViewBag.Products as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var activeBookings = ViewBag.ActiveBookings as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
 }
 
-<div class="container-fluid py-4">
-    <div class="row">
-        <!-- Products Section -->
-        <div class="col-lg-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-shop"></i> Danh sách sản phẩm
-                    </h5>
-                </div>
-                <div class="card-body">
-                    @if (Model.BookingId.HasValue && ViewBag.Booking != null)
-                    {
-                        var booking = ViewBag.Booking;
-                        <div class="alert alert-info mb-3">
-                            <h6 class="alert-heading">
-                                <i class="bi bi-info-circle"></i> Đơn đặt sân: @booking.BookingCode
-                            </h6>
-                            <div class="row small">
-                                <div class="col-md-6">
-                                    <strong>Khách hàng:</strong> @booking.User.FullName<br />
-                                    <strong>Sân:</strong> @booking.Court.CourtNumber
-                                </div>
-                                <div class="col-md-6">
-                                    <strong>Giờ chơi:</strong>
-                                    @booking.StartTime.ToString(@"hh\:mm") - @booking.EndTime.ToString(@"hh\:mm")<br />
-                                    <strong>Ngày:</strong> @booking.BookingDate.ToString("dd/MM/yyyy")
-                                </div>
-                            </div>
-                        </div>
-                    }
+<style>
+    :root {
+        --D: #1a1209;
+        --D2: #231a0e;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --G3: rgba(212,160,23,.1);
+        --G4: rgba(212,160,23,.22);
+        --C: #fdf8f0;
+        --W: #f5ede0;
+        --S: #e8ddd0;
+        --M: #8a7560;
+        --GN: #10b981;
+        --BL: #3b82f6;
+        --RD: #ef4444;
+        --OR: #f97316;
+        --PU: #8b5cf6;
+        --r: 14px;
+        --r2: 10px;
+    }
 
-                    <!-- Product Categories Tabs -->
-                    <ul class="nav nav-pills mb-3" id="categoryTabs" role="tablist">
-                        @for (int i = 0; i < Model.ProductCategories.Count; i++)
-                        {
-                            var category = Model.ProductCategories[i];
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link @(i == 0 ? "active" : "")"
-                                        id="tab-@category.CategoryType"
-                                        data-bs-toggle="pill"
-                                        data-bs-target="#content-@category.CategoryType"
-                                        type="button">
-                                    @if (category.CategoryType == "Food")
-                                    {
-                                        <i class="bi bi-cup-straw"></i>
-                                    }
-                                    else if (category.CategoryType == "Beverage")
-                                    {
-                                        <i class="bi bi-droplet"></i>
-                                    }
-                                    else if (category.CategoryType == "Equipment")
-                                    {
-                                        <i class="bi bi-trophy"></i>
-                                    }
-                                    else
-                                    {
-                                        <i class="bi bi-box"></i>
-                                    }
-                                    @category.CategoryName
-                                </button>
-                            </li>
-                        }
-                    </ul>
+    /* ── POS LAYOUT ── */
+    .pos-wrap {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 1.1rem;
+        height: calc(100vh - 140px);
+        min-height: 560px;
+    }
+    @@media(max - width:900px) {
+        .pos-wrap {
+            grid-template-columns: 1fr;
+            height: auto;
+        }
+    }
 
-                    <!-- Product Grids -->
-                    <div class="tab-content" id="categoryTabsContent">
-                        @for (int i = 0; i < Model.ProductCategories.Count; i++)
-                        {
-                            var category = Model.ProductCategories[i];
-                            <div class="tab-pane fade @(i == 0 ? "show active" : "")"
-                                 id="content-@category.CategoryType"
-                                 role="tabpanel">
-                                <div class="row">
-                                    @foreach (var product in category.Products)
-                                    {
-                                        <div class="col-md-4 col-lg-3 mb-3">
-                                            <div class="product-card card h-100 @(!product.IsAvailable ? "opacity-50" : "")"
-                                                 onclick="@(product.IsAvailable ? $"addToCart({product.ProductId}, '{product.ProductName}', {product.Price}, '{product.Unit}')" : "")">
-                                                <div class="card-body text-center">
-                                                    @if (!string.IsNullOrEmpty(product.ImageUrl))
-                                                    {
-                                                        <img src="@product.ImageUrl" class="img-fluid mb-2"
-                                                             style="max-height: 80px;" alt="@product.ProductName" />
-                                                    }
-                                                    else
-                                                    {
-                                                        <i class="bi bi-box fs-1 text-muted"></i>
-                                                    }
-                                                    <h6 class="card-title mt-2 mb-1">@product.ProductName</h6>
-                                                    <p class="text-success fw-bold mb-1">@product.Price.ToString("N0")đ</p>
-                                                    <small class="text-muted">
-                                                        @if (product.IsAvailable)
-                                                        {
-                                                            <span class="text-success">
-                                                                <i class="bi bi-check-circle"></i> Còn @product.StockQuantity
-                                                            </span>
-                                                        }
-                                                        else
-                                                        {
-                                                            <span class="text-danger">
-                                                                <i class="bi bi-x-circle"></i> Hết hàng
-                                                            </span>
-                                                        }
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-                                </div>
-                            </div>
-                        }
+    /* ── LEFT: Products ── */
+    .pos-left {
+        display: flex;
+        flex-direction: column;
+        gap: .85rem;
+        min-height: 0;
+    }
+
+    .prod-panel {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: var(--r);
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .prod-panel-head {
+        padding: .9rem 1.2rem;
+        border-bottom: 1px solid var(--S);
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        flex-shrink: 0;
+    }
+
+    .prod-search-wrap {
+        flex: 1;
+        position: relative;
+    }
+
+    .prod-search-ico {
+        position: absolute;
+        left: .75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: var(--M);
+    }
+
+    .prod-search {
+        width: 100%;
+        padding: .42rem .75rem .42rem 2.1rem;
+        border: 1.5px solid var(--S);
+        border-radius: 8px;
+        font-size: .8rem;
+        color: var(--D);
+        font-family: 'Space Grotesk',sans-serif;
+        background: #fff;
+        outline: none;
+        transition: border-color .18s;
+    }
+
+        .prod-search:focus {
+            border-color: var(--G);
+        }
+
+    /* Category tabs */
+    .cat-tabs {
+        display: flex;
+        gap: .35rem;
+        padding: .65rem 1.2rem;
+        border-bottom: 1px solid var(--S);
+        flex-shrink: 0;
+        overflow-x: auto;
+    }
+
+        .cat-tabs::-webkit-scrollbar {
+            height: 0;
+        }
+
+    .cat-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: .38rem;
+        padding: .32rem .9rem;
+        border-radius: 20px;
+        font-size: .73rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1.5px solid var(--S);
+        background: #fff;
+        color: var(--M);
+        transition: all .18s;
+        white-space: nowrap;
+        font-family: 'Space Grotesk',sans-serif;
+    }
+
+        .cat-tab:hover {
+            border-color: var(--G);
+            color: var(--G);
+        }
+
+        .cat-tab.on {
+            background: var(--G);
+            border-color: var(--G);
+            color: var(--D);
+        }
+
+    .cat-tab-all {
+        background: var(--D);
+        border-color: var(--D);
+        color: #fff;
+    }
+
+        .cat-tab-all:hover, .cat-tab-all.on {
+            background: var(--D2);
+            border-color: var(--D2);
+        }
+
+        .cat-tab-all.on {
+            background: var(--D2);
+        }
+
+    /* Product grid */
+    .prod-grid-wrap {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+    }
+
+        .prod-grid-wrap::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .prod-grid-wrap::-webkit-scrollbar-thumb {
+            background: var(--S);
+            border-radius: 2px;
+        }
+
+    .prod-sec-lbl {
+        font-size: .6rem;
+        letter-spacing: .15em;
+        text-transform: uppercase;
+        color: var(--M);
+        font-weight: 700;
+        padding: .3rem 0 .5rem;
+    }
+
+    .prod-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill,minmax(130px,1fr));
+        gap: .6rem;
+        margin-bottom: 1rem;
+    }
+
+    .prod-card {
+        background: var(--C);
+        border: 1.5px solid var(--S);
+        border-radius: var(--r2);
+        padding: .85rem .75rem;
+        cursor: pointer;
+        transition: all .18s;
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+    }
+
+        .prod-card:hover {
+            border-color: var(--G);
+            background: var(--G3);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(26,18,9,.1);
+        }
+
+        .prod-card.in-cart {
+            border-color: var(--G);
+            background: var(--G3);
+        }
+
+            .prod-card.in-cart::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 2px;
+                background: linear-gradient(90deg,var(--G),var(--G2));
+            }
+
+    .prod-card-qty-badge {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        background: var(--G);
+        color: var(--D);
+        font-size: .55rem;
+        font-weight: 800;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Syne',sans-serif;
+    }
+
+    .prod-card.in-cart .prod-card-qty-badge {
+        display: flex;
+    }
+
+    .prod-ico {
+        width: 38px;
+        height: 38px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto .5rem;
+        font-size: 1.2rem;
+    }
+
+    .prod-name {
+        font-size: .76rem;
+        font-weight: 600;
+        color: var(--D);
+        line-height: 1.35;
+        margin-bottom: .3rem;
+    }
+
+    .prod-price {
+        font-family: 'Syne',sans-serif;
+        font-size: .88rem;
+        font-weight: 800;
+        color: var(--G);
+    }
+
+    .prod-unit {
+        font-size: .62rem;
+        color: var(--M);
+    }
+
+    .prod-empty {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--M);
+    }
+
+    /* ── RIGHT: Cart ── */
+    .cart-panel {
+        background: var(--D);
+        border-radius: var(--r);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    @@media(max - width:900px) {
+        .cart-panel {
+            height: auto;
+        }
+    }
+
+    .cart-head {
+        padding: .9rem 1.2rem;
+        border-bottom: 1px solid rgba(255,255,255,.07);
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        flex-shrink: 0;
+    }
+
+    .cart-title {
+        font-family: 'Syne',sans-serif;
+        font-size: .95rem;
+        font-weight: 800;
+        color: #fff;
+        flex: 1;
+    }
+
+    .cart-count {
+        background: var(--G);
+        color: var(--D);
+        font-family: 'Syne',sans-serif;
+        font-size: .72rem;
+        font-weight: 800;
+        padding: .18rem .6rem;
+        border-radius: 20px;
+    }
+
+    /* Booking attach */
+    .cart-booking {
+        padding: .75rem 1.1rem;
+        border-bottom: 1px solid rgba(255,255,255,.07);
+        flex-shrink: 0;
+    }
+
+    .cart-booking-lbl {
+        font-size: .6rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,.4);
+        font-weight: 600;
+        margin-bottom: .35rem;
+    }
+
+    .cart-booking-sel {
+        width: 100%;
+        padding: .42rem .75rem;
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 8px;
+        font-size: .78rem;
+        color: #fff;
+        font-family: 'Space Grotesk',sans-serif;
+        background: rgba(255,255,255,.08);
+        outline: none;
+        transition: border-color .18s;
+    }
+
+        .cart-booking-sel:focus {
+            border-color: var(--G);
+        }
+
+        .cart-booking-sel option {
+            background: var(--D2);
+            color: #fff;
+        }
+
+    /* Cart items */
+    .cart-items {
+        flex: 1;
+        overflow-y: auto;
+        padding: .4rem 0;
+        min-height: 0;
+    }
+
+        .cart-items::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .cart-items::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,.1);
+            border-radius: 2px;
+        }
+
+    .cart-item {
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+        padding: .62rem 1.1rem;
+        border-bottom: 1px solid rgba(255,255,255,.05);
+        transition: background .15s;
+    }
+
+        .cart-item:hover {
+            background: rgba(255,255,255,.04);
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+    .ci-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ci-name {
+        font-size: .78rem;
+        font-weight: 600;
+        color: #fff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ci-price {
+        font-size: .7rem;
+        color: var(--G2);
+    }
+
+    .ci-qty {
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+        flex-shrink: 0;
+    }
+
+    .ci-qty-btn {
+        width: 22px;
+        height: 22px;
+        border-radius: 5px;
+        border: none;
+        background: rgba(255,255,255,.1);
+        color: #fff;
+        font-size: .9rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background .15s;
+    }
+
+        .ci-qty-btn:hover {
+            background: var(--G);
+            color: var(--D);
+        }
+
+    .ci-qty-num {
+        font-family: 'Syne',sans-serif;
+        font-size: .82rem;
+        font-weight: 800;
+        color: #fff;
+        min-width: 18px;
+        text-align: center;
+    }
+
+    .ci-sub {
+        font-family: 'Syne',sans-serif;
+        font-size: .78rem;
+        font-weight: 700;
+        color: var(--G2);
+        min-width: 60px;
+        text-align: right;
+    }
+
+    .ci-del {
+        color: rgba(255,255,255,.25);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 2px;
+        transition: color .15s;
+    }
+
+        .ci-del:hover {
+            color: var(--RD);
+        }
+
+    .cart-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 120px;
+        color: rgba(255,255,255,.25);
+        font-size: .8rem;
+        gap: .5rem;
+    }
+
+    /* Cart footer */
+    .cart-total {
+        padding: .8rem 1.1rem;
+        border-top: 1px solid rgba(255,255,255,.08);
+        flex-shrink: 0;
+    }
+
+    .cart-total-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+    }
+
+    .cart-total-lbl {
+        font-size: .72rem;
+        color: rgba(255,255,255,.45);
+    }
+
+    .cart-total-val {
+        font-family: 'Syne',sans-serif;
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: var(--G2);
+    }
+
+    .cart-pay {
+        padding: .75rem 1.1rem;
+        border-top: 1px solid rgba(255,255,255,.07);
+        flex-shrink: 0;
+    }
+
+    .pay-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .5rem;
+        margin-bottom: .55rem;
+    }
+
+    .pay-lbl {
+        font-size: .62rem;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,.4);
+        font-weight: 600;
+        margin-bottom: .3rem;
+    }
+
+    .pay-sel, .pay-inp {
+        width: 100%;
+        padding: .42rem .75rem;
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 8px;
+        font-size: .8rem;
+        color: #fff;
+        font-family: 'Space Grotesk',sans-serif;
+        background: rgba(255,255,255,.08);
+        outline: none;
+    }
+
+        .pay-sel:focus, .pay-inp:focus {
+            border-color: var(--G);
+        }
+
+        .pay-sel option {
+            background: var(--D2);
+            color: #fff;
+        }
+
+        .pay-inp::placeholder {
+            color: rgba(255,255,255,.3);
+        }
+
+    .change-badge {
+        background: rgba(16,185,129,.15);
+        border: 1px solid rgba(16,185,129,.25);
+        border-radius: 8px;
+        padding: .42rem .9rem;
+        margin-bottom: .55rem;
+        display: none;
+        font-size: .78rem;
+        color: var(--GN);
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+    .pay-submit {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        padding: .7rem;
+        border-radius: 10px;
+        border: none;
+        background: var(--G);
+        color: var(--D);
+        font-family: 'Syne',sans-serif;
+        font-size: .92rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .pay-submit:hover {
+            background: var(--G2);
+            box-shadow: 0 6px 18px rgba(212,160,23,.35);
+        }
+
+        .pay-submit:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+    .pay-clear {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .4rem;
+        padding: .5rem;
+        border-radius: 8px;
+        margin-top: .4rem;
+        background: transparent;
+        border: 1px solid rgba(255,255,255,.1);
+        color: rgba(255,255,255,.4);
+        font-size: .76rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .18s;
+        font-family: 'Space Grotesk',sans-serif;
+    }
+
+        .pay-clear:hover {
+            border-color: var(--RD);
+            color: var(--RD);
+        }
+</style>
+
+<div class="pos-wrap">
+
+    <!-- ════ LEFT: PRODUCTS ════ -->
+    <div class="pos-left">
+        <div class="prod-panel">
+            <!-- Search bar -->
+            <div class="prod-panel-head">
+                <div class="prod-search-wrap">
+                    <div class="prod-search-ico">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
                     </div>
+                    <input type="text" id="prodSearch" class="prod-search" placeholder="Tìm sản phẩm nhanh..." oninput="filterProds(this.value)" />
                 </div>
+            </div>
+
+            <!-- Category tabs -->
+            <div class="cat-tabs" id="catTabs">
+                <button class="cat-tab cat-tab-all on" onclick="filterCat('',this)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
+                    Tất cả
+                </button>
+                @{
+                    var grouped = products.GroupBy(p => (string)(p.Category?.CategoryType ?? "Khác"));
+                    var catIcons = new Dictionary<string, string>{
+                                {"Food","🍜"},{"Beverage","🥤"},{"Equipment","🏸"},{"Khác","📦"}
+                                };
+                }
+                @foreach (var g in grouped)
+                {
+                    var ico = catIcons.ContainsKey(g.Key) ? catIcons[g.Key] : "📦";
+                    <button class="cat-tab" onclick="filterCat('@g.Key.Replace(" ", "-")',this)">
+                        @ico @g.Key
+                    </button>
+                }
+            </div>
+
+            <!-- Grid -->
+            <div class="prod-grid-wrap" id="prodWrap">
+                @foreach (var group in grouped)
+                {
+                    var ico = catIcons.ContainsKey(group.Key) ? catIcons[group.Key] : "📦";
+                    var gid = group.Key.Replace(" ", "-");
+                    <div class="cat-section" data-cat="@gid">
+                        <div class="prod-sec-lbl">@ico @group.Key</div>
+                        <div class="prod-grid">
+                            @foreach (var p in group)
+                            {
+                                decimal price = p.SalePrice > 0 ? p.SalePrice : p.CostPrice;
+                                <div class="prod-card prod-item"
+                                     data-name="@p.ProductName.ToString().ToLower()"
+                                     data-cat="@gid"
+                                     id="pc-@p.ProductId"
+                                     onclick="addCart(@p.ProductId,'@p.ProductName',@price)">
+                                    <span class="prod-card-qty-badge" id="qbadge-@p.ProductId">0</span>
+                                    <div class="prod-ico" style="background:var(--G3);">@ico</div>
+                                    <div class="prod-name">@p.ProductName</div>
+                                    <div class="prod-price">@price.ToString("N0")đ</div>
+                                    <div class="prod-unit">/@p.Unit</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+                @if (!products.Any())
+                {
+                    <div class="prod-empty">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.25;margin-bottom:.6rem;"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>
+                        <div>Chưa có sản phẩm nào</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- ════ RIGHT: CART ════ -->
+    <div class="cart-panel">
+        <!-- Header -->
+        <div class="cart-head">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--G)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>
+            <span class="cart-title">Đơn hàng</span>
+            <span class="cart-count" id="cartCount">0</span>
+        </div>
+
+        <!-- Attach booking -->
+        <div class="cart-booking">
+            <div class="cart-booking-lbl">Gắn vào booking (nếu có)</div>
+            <select id="bookingSel" class="cart-booking-sel">
+                <option value="">— Bán lẻ —</option>
+                @foreach (var b in activeBookings)
+                {
+                    <option value="@b.BookingId">
+                        Sân @b.Court.CourtNumber · @(b.User?.FullName ?? "Khách") · @b.StartTime.ToString(@"HH\:mm")
+                    </option>
+                }
+            </select>
+        </div>
+
+        <!-- Items -->
+        <div class="cart-items" id="cartItems">
+            <div class="cart-empty" id="cartEmpty">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>
+                Chưa có sản phẩm
             </div>
         </div>
 
-        <!-- Cart Section -->
-        <div class="col-lg-4">
-            <div class="card shadow-sm sticky-top" style="top: 20px;">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-cart"></i> Giỏ hàng
-                        <span class="badge bg-light text-dark" id="cartCount">0</span>
-                    </h5>
+        <!-- Total -->
+        <div class="cart-total">
+            <div class="cart-total-row">
+                <span class="cart-total-lbl">Tổng cộng</span>
+                <span class="cart-total-val" id="cartTotal">0đ</span>
+            </div>
+        </div>
+
+        <!-- Payment -->
+        <div class="cart-pay">
+            <div class="pay-row">
+                <div>
+                    <div class="pay-lbl">Thanh toán</div>
+                    <select id="payMethod" class="pay-sel" onchange="toggleCash()">
+                        <option value="Cash">💵 Tiền mặt</option>
+                        <option value="Transfer">🏦 Chuyển khoản</option>
+                    </select>
                 </div>
-                <div class="card-body">
-                    <form id="salesForm" asp-action="CreateOrder" method="post">
-                        <input type="hidden" name="BookingId" value="@Model.BookingId" />
-                        <input type="hidden" name="FacilityId" value="@Model.FacilityId" />
-                        <input type="hidden" name="UserId" value="@Model.UserId" />
-
-                        <div id="cartItems" class="mb-3" style="max-height: 400px; overflow-y: auto;">
-                            <div class="text-center text-muted py-5" id="emptyCart">
-                                <i class="bi bi-cart-x fs-1"></i>
-                                <p class="mt-2">Giỏ hàng trống</p>
-                            </div>
-                        </div>
-
-                        <hr />
-
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Tạm tính:</span>
-                                <strong id="subTotal">0đ</strong>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2" id="discountRow" style="display: none !important;">
-                                <span>Giảm giá:</span>
-                                <strong class="text-danger" id="discount">0đ</strong>
-                            </div>
-                            <hr />
-                            <div class="d-flex justify-content-between">
-                                <h5>Tổng cộng:</h5>
-                                <h5 class="text-success" id="totalAmount">0đ</h5>
-                            </div>
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success btn-lg" id="submitBtn" disabled>
-                                <i class="bi bi-check-circle"></i> Thanh toán
-                            </button>
-                            <button type="button" class="btn btn-outline-danger" onclick="clearCart()">
-                                <i class="bi bi-trash"></i> Xóa giỏ hàng
-                            </button>
-                        </div>
-                    </form>
+                <div id="cashWrap">
+                    <div class="pay-lbl">Tiền nhận</div>
+                    <input type="number" id="cashIn" class="pay-inp" placeholder="0" oninput="calcChange()" />
                 </div>
             </div>
+            <div class="change-badge" id="changeBadge" style="display:none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                Tiền thừa: <strong id="changeAmt"></strong>
+            </div>
+            <button class="pay-submit" id="payBtn" onclick="submitOrder()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                Thanh toán
+            </button>
+            <button class="pay-clear" onclick="clearCart()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /></svg>
+                Xóa đơn
+            </button>
         </div>
     </div>
 </div>
 
+@Html.AntiForgeryToken()
+
 @section Scripts {
     <script>
-        let cart = [];
+        let cart = {};
 
-        function addToCart(productId, productName, price, unit) {
-            const existingItem = cart.find(item => item.ProductId === productId);
+        /* ── ADD / CHANGE QTY ── */
+        function addCart(id, name, price) {
+            if (cart[id]) cart[id].qty++;
+            else cart[id] = { name, price, qty: 1 };
+            render();
+        }
+        function changeQty(id, d) {
+            if (!cart[id]) return;
+            cart[id].qty += d;
+            if (cart[id].qty <= 0) delete cart[id];
+            render();
+        }
+        function removeItem(id) { delete cart[id]; render(); }
+        function clearCart()    { cart = {}; render(); }
 
-            if (existingItem) {
-                existingItem.Quantity++;
+        /* ── RENDER CART ── */
+        function render() {
+            const keys = Object.keys(cart);
+            const total = keys.reduce((s, k) => s + cart[k].price * cart[k].qty, 0);
+            const totalQty = keys.reduce((s, k) => s + cart[k].qty, 0);
+
+            document.getElementById('cartCount').textContent = totalQty;
+            document.getElementById('cartTotal').textContent = total.toLocaleString('vi-VN') + 'đ';
+
+            const isEmpty = keys.length === 0;
+            document.getElementById('cartEmpty').style.display = isEmpty ? 'flex' : 'none';
+
+            // Remove old items (keep empty div)
+            document.querySelectorAll('.cart-item').forEach(el => el.remove());
+
+            keys.forEach(id => {
+                const item = cart[id];
+                const sub  = item.price * item.qty;
+                const el   = document.createElement('div');
+                el.className = 'cart-item';
+                el.innerHTML = `
+                    <div class="ci-info">
+                        <div class="ci-name">${item.name}</div>
+                        <div class="ci-price">${item.price.toLocaleString('vi-VN')}đ</div>
+                    </div>
+                    <div class="ci-qty">
+                        <button class="ci-qty-btn" onclick="changeQty(${id},-1)">−</button>
+                        <span class="ci-qty-num">${item.qty}</span>
+                        <button class="ci-qty-btn" onclick="changeQty(${id},1)">+</button>
+                    </div>
+                    <div class="ci-sub">${sub.toLocaleString('vi-VN')}đ</div>
+                    <button class="ci-del" onclick="removeItem(${id})">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>`;
+                document.getElementById('cartItems').insertBefore(el, document.getElementById('cartEmpty'));
+            });
+
+            // Update product card badges
+            document.querySelectorAll('.prod-card').forEach(c => {
+                const id = c.id.replace('pc-','');
+                const badge = document.getElementById('qbadge-'+id);
+                if (cart[id]) {
+                    c.classList.add('in-cart');
+                    if (badge) { badge.textContent = cart[id].qty; badge.style.display='flex'; }
+                } else {
+                    c.classList.remove('in-cart');
+                    if (badge) badge.style.display='none';
+                }
+            });
+
+            calcChange();
+        }
+
+        /* ── CHANGE CALC ── */
+        function calcChange() {
+            const total    = Object.values(cart).reduce((s,i)=>s+i.price*i.qty,0);
+            const received = parseFloat(document.getElementById('cashIn').value) || 0;
+            const badge    = document.getElementById('changeBadge');
+            if (received > 0 && received >= total) {
+                badge.style.display = 'flex';
+                document.getElementById('changeAmt').textContent = (received-total).toLocaleString('vi-VN')+'đ';
             } else {
-                cart.push({
-                    ProductId: productId,
-                    ProductName: productName,
-                    Price: price,
-                    Unit: unit,
-                    Quantity: 1
-                });
-            }
-
-            updateCart();
-            showSuccess('Đã thêm ' + productName + ' vào giỏ hàng');
-        }
-
-        function removeFromCart(productId) {
-            cart = cart.filter(item => item.ProductId !== productId);
-            updateCart();
-        }
-
-        function updateQuantity(productId, quantity) {
-            const item = cart.find(item => item.ProductId === productId);
-            if (item) {
-                item.Quantity = Math.max(1, parseInt(quantity));
-                updateCart();
+                badge.style.display = 'none';
             }
         }
 
-        function updateCart() {
-            const cartItemsDiv = $('#cartItems');
-            const emptyCart = $('#emptyCart');
-
-            if (cart.length === 0) {
-                emptyCart.show();
-                cartItemsDiv.find('.cart-item').remove();
-                $('#submitBtn').prop('disabled', true);
-            } else {
-                emptyCart.hide();
-                $('#submitBtn').prop('disabled', false);
-
-                // Clear existing items
-                cartItemsDiv.find('.cart-item').remove();
-
-                // Add items
-                cart.forEach(item => {
-                    const itemHtml = `
-                        <div class="cart-item border-bottom pb-2 mb-2">
-                            <div class="d-flex justify-content-between align-items-start mb-1">
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-0">${item.ProductName}</h6>
-                                    <small class="text-muted">${formatCurrency(item.Price)} / ${item.Unit}</small>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-danger"
-                                        onclick="removeFromCart(${item.ProductId})">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="input-group input-group-sm" style="max-width: 120px;">
-                                    <button class="btn btn-outline-secondary" type="button"
-                                            onclick="updateQuantity(${item.ProductId}, ${item.Quantity - 1})">
-                                        <i class="bi bi-dash"></i>
-                                    </button>
-                                    <input type="number" class="form-control text-center"
-                                           value="${item.Quantity}" min="1"
-                                           onchange="updateQuantity(${item.ProductId}, this.value)">
-                                    <button class="btn btn-outline-secondary" type="button"
-                                            onclick="updateQuantity(${item.ProductId}, ${item.Quantity + 1})">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </div>
-                                <strong class="text-success">${formatCurrency(item.Price * item.Quantity)}</strong>
-                            </div>
-                            <input type="hidden" name="CartItems[${item.ProductId}].ProductId" value="${item.ProductId}" />
-                            <input type="hidden" name="CartItems[${item.ProductId}].Quantity" value="${item.Quantity}" />
-                            <input type="hidden" name="CartItems[${item.ProductId}].Price" value="${item.Price}" />
-                        </div>
-                    `;
-                    cartItemsDiv.append(itemHtml);
-                });
-            }
-
-            // Update totals
-            const subTotal = cart.reduce((sum, item) => sum + (item.Price * item.Quantity), 0);
-            $('#cartCount').text(cart.length);
-            $('#subTotal').text(formatCurrency(subTotal));
-            $('#totalAmount').text(formatCurrency(subTotal));
+        /* ── TOGGLE CASH INPUT ── */
+        function toggleCash() {
+            const isCash = document.getElementById('payMethod').value === 'Cash';
+            document.getElementById('cashWrap').style.display = isCash ? 'block' : 'none';
+            if (!isCash) document.getElementById('changeBadge').style.display='none';
         }
 
-        function clearCart() {
-            if (cart.length === 0) return;
-
-            confirmDialog('Bạn có chắc chắn muốn xóa toàn bộ giỏ hàng?', function() {
-                cart = [];
-                updateCart();
-                showInfo('Đã xóa giỏ hàng');
+        /* ── FILTER ── */
+        function filterProds(q) {
+            document.querySelectorAll('.prod-item').forEach(el => {
+                el.style.display = el.dataset.name.includes(q.toLowerCase()) ? '' : 'none';
+            });
+        }
+        function filterCat(cat, btn) {
+            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('on'));
+            btn.classList.add('on');
+            document.querySelectorAll('.cat-section').forEach(s => {
+                s.style.display = (!cat || s.dataset.cat === cat) ? '' : 'none';
             });
         }
 
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
+        /* ── SUBMIT ── */
+        async function submitOrder() {
+            const keys = Object.keys(cart);
+            if (!keys.length) { alert('Chưa có sản phẩm trong đơn!'); return; }
+
+            const btn = document.getElementById('payBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Đang xử lý...';
+
+            const items   = keys.map(id => ({ productId:parseInt(id), quantity:cart[id].qty, price:cart[id].price }));
+            const payload = {
+                bookingId:     document.getElementById('bookingSel').value || null,
+                paymentMethod: document.getElementById('payMethod').value,
+                items
+            };
+            const tok = document.querySelector('input[name=__RequestVerificationToken]')?.value || '';
+
+            try {
+                const r = await fetch('/Staff/SubmitOrder', {
+                    method: 'POST',
+                    headers: { 'Content-Type':'application/json', 'RequestVerificationToken':tok },
+                    body: JSON.stringify(payload)
+                });
+                const d = await r.json();
+                if (d.success) {
+                    clearCart();
+                    // Success toast
+                    const toast = document.createElement('div');
+                    toast.style.cssText='position:fixed;bottom:24px;right:24px;background:var(--GN);color:#fff;padding:.75rem 1.3rem;border-radius:10px;font-weight:600;font-size:.85rem;z-index:9999;display:flex;align-items:center;gap:.5rem;box-shadow:0 8px 24px rgba(16,185,129,.3);';
+                    toast.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Thanh toán thành công!';
+                    document.body.appendChild(toast);
+                    setTimeout(()=>toast.remove(), 3000);
+                } else {
+                    alert('❌ ' + d.message);
+                }
+            } catch { alert('Lỗi kết nối!'); }
+
+            btn.disabled = false;
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Thanh toán';
         }
 
-        $(document).ready(function() {
-            // Handle form submit
-            $('#salesForm').on('submit', function(e) {
-                e.preventDefault();
-
-                if (cart.length === 0) {
-                    showError('Giỏ hàng trống!');
-                    return false;
-                }
-
-                const formData = {
-                    BookingId: $('input[name="BookingId"]').val(),
-                    FacilityId: $('input[name="FacilityId"]').val(),
-                    UserId: $('input[name="UserId"]').val(),
-                    CartItems: cart.map(item => ({
-                        ProductId: item.ProductId,
-                        ProductName: item.ProductName,
-                        Quantity: item.Quantity,
-                        Price: item.Price
-                    }))
-                };
-
-                ajaxPostJson('@Url.Action("CreateOrder")', formData, function(response) {
-                    if (response.success) {
-                        showSuccess(response.message);
-                        cart = [];
-                        updateCart();
-
-                        // Redirect after 1 second
-                        setTimeout(function() {
-                            window.location.href = '@Url.Action("Dashboard")';
-                        }, 1000);
-                    } else {
-                        showError(response.message);
-                    }
-                });
-            });
-
-            // Product card hover effect
-            $('.product-card').hover(
-                function() {
-                    if (!$(this).hasClass('opacity-50')) {
-                        $(this).addClass('shadow-lg').css('transform', 'scale(1.05)');
-                    }
-                },
-                function() {
-                    $(this).removeClass('shadow-lg').css('transform', 'scale(1)');
-                }
-            );
-        });
+        // Init
+        toggleCash();
     </script>
+    <style>
+        @@keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }</style>
 }

@@ -1,440 +1,345 @@
 ﻿@model QuanLiSanCauLong.ViewModels.StockTransactionViewModel
 @{
     Layout = null;
-}
+    var facilities = ViewBag.Facilities as IEnumerable<QuanLiSanCauLong.Models.Facility> ?? Enumerable.Empty<QuanLiSanCauLong.Models.Facility>();
+    var products   = ViewBag.Products   as IEnumerable<QuanLiSanCauLong.Models.Product>  ?? Enumerable.Empty<QuanLiSanCauLong.Models.Product>();
+    int    preProductId   = 0;
+    int.TryParse(Context.Request.Query["preProductId"], out preProductId);
+    string preProductName = Context.Request.Query["preProductName"].ToString() ?? "";
+    int    preFacilityId  = Model.FacilityId > 0 ? Model.FacilityId : 0;}
 
 <style>
-    :root {
-        --court-dark: #1a1a2e;
-        --court-gold: #e8c840;
-        --court-gold-h: #d4b320;
-        --court-bg: #f5f0e8;
-        --court-card: #ffffff;
-        --court-border: #e8e0d0;
-        --court-text: #2d2d2d;
-        --court-muted: #7a7060;
-        --court-green: #166534;
-        --court-green-bg: #f0fdf4;
-    }
-
-    .si-wrap { font-family: 'Outfit', sans-serif; }
-
-    /* Header */
-    .si-hd {
-        background: var(--court-dark);
-        color: #fff;
-        padding: 1.1rem 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: .85rem;
-    }
-    .si-hd-icon {
-        width: 40px; height: 40px; border-radius: 10px;
-        background: rgba(34,197,94,.25); color: #4ade80;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.15rem; flex-shrink: 0;
-    }
-    .si-hd h5  { font-weight: 800; font-size: 1rem; margin: 0; }
-    .si-hd p   { font-size: .75rem; color: rgba(255,255,255,.6); margin: 0; }
-    .si-close  { margin-left: auto; background: none; border: none; color: rgba(255,255,255,.65); font-size: 1.35rem; cursor: pointer; line-height: 1; }
-
-    /* Body */
-    .si-body { padding: 1.25rem 1.5rem; background: #fff; }
-
-    /* Section label */
-    .si-section {
-        font-size: .67rem; font-weight: 800; text-transform: uppercase;
-        letter-spacing: 1px; color: var(--court-dark);
-        display: inline-block; padding-bottom: .3rem;
-        border-bottom: 2px solid var(--court-gold);
-        margin-bottom: .9rem;
-    }
-
-    /* Fields */
-    .si-field { display: flex; flex-direction: column; gap: .28rem; margin-bottom: .8rem; }
-    .si-field label {
-        font-size: .71rem; font-weight: 700; text-transform: uppercase;
-        letter-spacing: .5px; color: var(--court-muted);
-    }
-    .si-fc {
-        border: 1.5px solid var(--court-border); border-radius: 8px;
-        background: var(--court-bg); color: var(--court-text);
-        font-size: .875rem; padding: .48rem .75rem; width: 100%;
-        outline: none; transition: .18s; font-family: 'Outfit', sans-serif;
-    }
-    .si-fc:focus {
-        border-color: var(--court-gold); background: #fff;
-        box-shadow: 0 0 0 3px rgba(232,200,64,.2);
-    }
-    .si-two   { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
-    .si-three { display: grid; grid-template-columns: 7fr 5fr; gap: .75rem; }
-
-    /* FIFO info */
-    .si-fifo-info {
-        background: #eff6ff; border: 1px solid #93c5fd; border-radius: 8px;
-        padding: .55rem .9rem; font-size: .78rem; color: #1d4ed8;
-        display: flex; align-items: flex-start; gap: .5rem; margin-bottom: .85rem;
-    }
-
-    /* Product table */
-    .si-tbl-wrap {
-        border: 1px solid var(--court-border); border-radius: 10px;
-        overflow: hidden; margin-bottom: .85rem;
-    }
-    .si-tbl { width: 100%; border-collapse: collapse; }
-    .si-tbl thead tr { background: var(--court-dark); }
-    .si-tbl th {
-        color: rgba(255,255,255,.7); font-size: .67rem; font-weight: 700;
-        text-transform: uppercase; letter-spacing: .7px; padding: .6rem .7rem;
-        border: none; white-space: nowrap;
-    }
-    .si-tbl td { padding: .5rem .6rem; border-bottom: 1px solid var(--court-border); vertical-align: middle; }
-    .si-tbl tr:last-child td { border-bottom: none; }
-    .si-tbl tr:hover td { background: #fdf9f0; }
-
-    .si-fc-sm {
-        border: 1.5px solid var(--court-border); border-radius: 7px;
-        background: var(--court-bg); font-size: .82rem; padding: .38rem .55rem;
-        width: 100%; outline: none; font-family: 'Outfit', sans-serif;
-    }
-    .si-fc-sm:focus { border-color: var(--court-gold); background: #fff; }
-
-    .row-meta { font-size: .7rem; color: var(--court-muted); margin-top: 2px; display: block; }
-
-    .btn-add-row {
-        display: inline-flex; align-items: center; gap: 4px;
-        padding: .35rem .9rem; background: var(--court-green-bg);
-        color: var(--court-green); border: 1.5px solid #86efac;
-        border-radius: 8px; font-size: .75rem; font-weight: 700;
-        cursor: pointer; transition: .18s; font-family: 'Outfit', sans-serif;
-    }
-    .btn-add-row:hover { background: #22c55e; color: #fff; border-color: #22c55e; }
-
-    .btn-remove {
-        background: none; border: none; color: #dc2626;
-        cursor: pointer; padding: .2rem .4rem; font-size: .9rem;
-        border-radius: 5px; transition: .15s;
-    }
-    .btn-remove:hover { background: #fef2f2; }
-
-    /* Footer */
-    .si-foot {
-        background: var(--court-bg); border-top: 1px solid var(--court-border);
-        padding: .9rem 1.5rem; display: flex; justify-content: flex-end;
-        align-items: center; gap: .6rem;
-    }
-    .btn-si-cancel {
-        background: var(--court-card); color: var(--court-text);
-        border: 1.5px solid var(--court-border); border-radius: 9px;
-        padding: .5rem 1.3rem; font-weight: 600; font-size: .875rem;
-        cursor: pointer; transition: .18s; font-family: 'Outfit', sans-serif;
-    }
-    .btn-si-cancel:hover { background: #ede8de; }
-    .btn-si-submit {
-        background: var(--court-gold); color: var(--court-dark);
-        border: none; border-radius: 9px; padding: .5rem 1.75rem;
-        font-weight: 800; font-size: .875rem; cursor: pointer; transition: .18s;
-        display: flex; align-items: center; gap: 6px;
-        font-family: 'Outfit', sans-serif;
-    }
-    .btn-si-submit:hover { background: var(--court-gold-h); box-shadow: 0 4px 12px rgba(232,200,64,.4); }
-    .btn-si-submit:disabled { opacity: .5; cursor: not-allowed; }
-    .spinner-sm {
-        width: 14px; height: 14px; border: 2px solid rgba(26,26,46,.2);
-        border-top-color: var(--court-dark); border-radius: 50%;
-        animation: spin .7s linear infinite;
-    }
-    @@keyframes spin { to { transform: rotate(360deg); } }
+:root{--deep:#1a1209;--gold:#d4a017;--gold2:#f5c842;--warm:#f5ede0;--border:#e8ddd0;--muted:#8a7560;--red:#c94b2a;--green:#15803d;}
+*,*::before,*::after{box-sizing:border-box;}*{font-family:'Outfit',sans-serif;}
+.md-hd{padding:1rem 1.3rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--deep);}
+.md-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#fff;}
+.md-title em{color:var(--gold2);font-style:italic;}
+.md-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:1rem;cursor:pointer;}
+.md-close:hover{color:#fff;}
+.md-body{padding:1.2rem 1.3rem;max-height:72vh;overflow-y:auto;}
+.md-ft{padding:.85rem 1.3rem;border-top:1px solid var(--border);background:var(--warm);display:flex;justify-content:flex-end;gap:.55rem;}
+.sec-hd{font-size:.62rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:.5rem 0;margin-bottom:.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.38rem;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;}
+.fg{display:flex;flex-direction:column;gap:.25rem;margin-bottom:.8rem;}
+.fg label{font-size:.72rem;font-weight:700;color:var(--deep);}
+.fg .req{color:var(--red);}
+.fg .hint{font-size:.66rem;color:var(--muted);}
+.fi{padding:.58rem .82rem;border:1px solid var(--border);border-radius:7px;font-family:'Outfit',sans-serif;font-size:.83rem;color:var(--deep);background:#fff;outline:none;transition:border-color .2s;width:100%;}
+.fi:focus{border-color:var(--gold);}
+/* Combobox */
+.combo-w{position:relative;}
+.combo-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:7px;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:200px;overflow-y:auto;display:none;}
+.combo-list.show{display:block;}
+.combo-opt{padding:.45rem .82rem;font-size:.82rem;cursor:pointer;color:var(--deep);display:flex;align-items:center;justify-content:space-between;}
+.combo-opt:hover{background:var(--warm);}
+.combo-opt .co-stock{font-size:.68rem;color:var(--muted);}
+/* Quick qty */
+.qty-presets{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.35rem;}
+.qty-pill{padding:.18rem .55rem;border:1px solid var(--border);border-radius:4px;font-size:.7rem;cursor:pointer;background:#fff;transition:all .15s;color:var(--muted);}
+.qty-pill:hover{border-color:var(--gold);background:rgba(212,160,23,.07);color:var(--deep);}
+/* Stock indicator */
+.stk-info{background:var(--warm);border:1px solid var(--border);border-radius:7px;padding:.6rem .85rem;font-size:.8rem;display:none;}
+.stk-info.show{display:flex;align-items:center;justify-content:space-between;gap:.75rem;}
+.stk-info .si-val{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;}
+/* Item rows */
+.item-row{background:var(--warm);border:1px solid var(--border);border-radius:8px;padding:.75rem .9rem;margin-bottom:.6rem;position:relative;}
+.item-del{position:absolute;top:.5rem;right:.5rem;width:22px;height:22px;border-radius:4px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:.62rem;transition:all .15s;}
+.item-del:hover{border-color:var(--red);color:var(--red);}
+.btn-add-item{padding:.38rem .85rem;border:1.5px dashed var(--border);border-radius:6px;background:#fff;font-size:.76rem;font-weight:700;cursor:pointer;color:var(--muted);transition:all .15s;display:flex;align-items:center;gap:.3rem;margin-top:.5rem;}
+.btn-add-item:hover{border-color:var(--gold);color:var(--deep);}
+/* Buttons */
+.btn-p{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--deep);border:none;padding:.62rem 1.3rem;font-size:.84rem;font-weight:700;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:.38rem;transition:all .2s;}
+.btn-p:hover{box-shadow:0 4px 14px rgba(212,160,23,.35);transform:translateY(-1px);}
+.btn-p:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.btn-s{padding:.6rem 1.1rem;border:1.5px solid var(--border);border-radius:7px;background:#fff;font-size:.82rem;font-weight:600;cursor:pointer;color:var(--muted);transition:all .18s;}
+.btn-s:hover{border-color:var(--deep);color:var(--deep);}
+/* Optional section toggle */
+.opt-toggle{display:flex;align-items:center;gap:.4rem;font-size:.74rem;font-weight:600;color:var(--muted);cursor:pointer;user-select:none;padding:.4rem 0;margin-bottom:.6rem;}
+.opt-toggle i{transition:transform .2s;}
+.opt-toggle.open i{transform:rotate(90deg);}
+.opt-section{display:none;}
+.opt-section.show{display:block;}
 </style>
 
-<div class="si-wrap">
-    <div class="si-hd">
-        <div class="si-hd-icon"><i class="bi bi-box-arrow-in-down"></i></div>
-        <div>
-            <h5>Tạo Phiếu Nhập Kho</h5>
-            <p>Cập nhật hàng hoá và tồn kho thực tế</p>
+<div class="md-hd">
+    <span class="md-title"><i class="bi bi-box-arrow-in-down me-1" style="color:#4ade80"></i> Nhập <em>Kho</em></span>
+    <button class="md-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+</div>
+
+<div class="md-body">
+
+    <!-- CƠ SỞ + NGÀY -->
+    <div class="row2">
+        <div class="fg">
+            <label>Cơ sở <span class="req">*</span></label>
+            <select id="si_fac" class="fi">
+                <option value="">-- Chọn cơ sở --</option>
+                @foreach (var f in facilities)
+                {
+                    @Html.Raw($"<option value=\"{f.FacilityId}\"{(preFacilityId==f.FacilityId?" selected":"")}>{f.FacilityName}</option>")
+                }
+            </select>
         </div>
-        <button class="si-close" onclick="$('#inventoryModal').modal('hide')">&times;</button>
+        <div class="fg">
+            <label>Ngày nhập</label>
+            <input type="date" id="si_date" class="fi" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+        </div>
     </div>
 
-    <div class="si-body">
-        <!-- Thông tin chứng từ -->
-        <div class="si-section"><i class="bi bi-info-circle me-1"></i>Thông Tin Chứng Từ</div>
+    <!-- DANH SÁCH SẢN PHẨM NHẬP -->
+    <div class="sec-hd"><i class="bi bi-list-ul"></i> Sản phẩm nhập <span class="req">*</span></div>
 
-        <div class="si-two">
-            <div class="si-field">
-                <label>Cơ sở nhập hàng <span style="color:#dc2626">*</span></label>
-                <select id="si_facilityId" class="si-fc">
-                    <option value="">-- Chọn cơ sở --</option>
-                    @foreach (var f in ViewBag.Facilities as List<QuanLiSanCauLong.Models.Facility> ?? new())
-                    {
-                        <!option value="@f.FacilityId" @(f.FacilityId == Model.FacilityId ? "selected" : "")>
-                        @f.FacilityName
-                        </!option>
-                    }
-                </select>
+    <div id="siItemList">
+        <!-- Item 1 — auto pre-fill nếu có preProductId -->
+        <div class="item-row" id="siItem0">
+            <div class="row2">
+                <div class="fg" style="margin-bottom:.5rem;">
+                    <label>Sản phẩm <span class="req">*</span></label>
+                    <div class="combo-w">
+                        <input type="text" class="fi si-prod-input" placeholder="Tìm sản phẩm..."
+                               value="@preProductName"
+                               oninput="filterProdList(this, 'siProd0')"
+                               onfocus="showProdList('siProd0')" />
+                        <input type="hidden" class="si-prod-id" value="@(preProductId > 0 ? preProductId.ToString() : "")" />
+                        <div class="combo-list" id="siProd0">
+                            @foreach (var p in products)
+                            {
+                                <div class="combo-opt" onclick="pickProd(this,'@Html.Raw(p.ProductName.Replace("'","\'"))',@p.ProductId,'siProd0')">
+                                    <span>@p.ProductName <span style="font-size:.68rem;color:var(--muted);">@p.ProductCode</span></span>
+                                    <span class="co-stock">@p.Unit</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="fg" style="margin-bottom:.5rem;">
+                    <label>Số lượng <span class="req">*</span></label>
+                    <input type="number" class="fi si-qty" min="1" value="1" placeholder="SL" oninput="calcTotal()" />
+                    <div class="qty-presets">
+                        @foreach (var q in new[]{5,10,20,50,100})
+                        {
+                            <span class="qty-pill" onclick="setQty(this.closest('.item-row').querySelector('.si-qty'),@q)">@q</span>
+                        }
+                    </div>
+                </div>
             </div>
-            <div class="si-field">
-                <label>Ngày nhập kho</label>
-                <input type="date" id="si_txDate" class="si-fc" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+            <div class="row2">
+                <div class="fg" style="margin-bottom:0;">
+                    <label>Giá nhập (đ/đơn vị)</label>
+                    <input type="number" class="fi si-cost" min="0" step="1000" placeholder="0" oninput="calcTotal()" />
+                </div>
+                <div class="fg" style="margin-bottom:0;">
+                    <label>Vị trí lưu kho</label>
+                    <div class="combo-w">
+                        <input type="text" class="fi si-loc" placeholder="Kệ A1, Tủ B2..."
+                               onfocus="showCombo('siLocList0')" oninput="filterCombo('siLocList0',this.value)" />
+                        <div class="combo-list" id="siLocList0">
+                            @foreach (var loc in new[]{"Kệ A1","Kệ A2","Kệ B1","Kệ B2","Tủ đông","Ngăn mát","Kho phụ"})
+                            {
+                                <div class="combo-opt" onclick="pickCombo(this.closest('.item-row').querySelector('.si-loc'),'@loc');hideAllCombo();">@loc</div>
+                            }
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
 
-        <div class="si-two">
-            <div class="si-field">
-                <label>Nhà cung cấp</label>
-                <select id="si_supplierId" class="si-fc">
-                    <option value="">-- Chọn nhà cung cấp --</option>
-                    @foreach (var s in ViewBag.Suppliers as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>())
-                    {
-                        <option value="@s.SupplierId">@s.SupplierName</option>
-                    }
-                </select>
-            </div>
-            <div class="si-field">
-                <label>Số phiếu / Chứng từ</label>
-                <input type="text" id="si_docRef" class="si-fc" placeholder="VD: PN-2025-001" style="font-family:monospace;" />
-            </div>
-        </div>
+    <button type="button" class="btn-add-item" onclick="addSiItem()">
+        <i class="bi bi-plus-circle"></i> Thêm sản phẩm khác
+    </button>
 
-        <div class="si-two">
-            <div class="si-field">
-                <label>
-                    Số lô (Batch/Lot)
-                    <span style="font-size:.63rem;background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;padding:1px 6px;border-radius:10px;margin-left:4px;font-weight:700;">FIFO</span>
-                </label>
-                <input type="text" id="si_batchNumber" class="si-fc" placeholder="LOT-2025-001 (nếu có)" style="font-family:monospace;" />
+    <!-- TỔNG TIỀN -->
+    <div style="background:var(--deep);border-radius:8px;padding:.7rem 1rem;margin-top:.75rem;display:flex;align-items:center;justify-content:space-between;" id="siTotalRow" style="display:none">
+        <span style="font-size:.76rem;color:rgba(255,255,255,.5);">Tổng tiền nhập</span>
+        <span style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--gold2);" id="siTotal">0đ</span>
+    </div>
+
+    <!-- THÔNG TIN PHỤ (có thể ẩn) -->
+    <div class="opt-toggle" id="siOptTgl" onclick="toggleOpt('siOpt','siOptTgl')">
+        <i class="bi bi-chevron-right"></i> Thông tin lô hàng / chứng từ (tùy chọn)
+    </div>
+    <div class="opt-section" id="siOpt">
+        <div class="row3">
+            <div class="fg">
+                <label>Số lô (Batch)</label>
+                <input type="text" id="si_batch" class="fi" placeholder="LOT-2024-001" />
             </div>
-            <div class="si-field">
-                <label>
-                    Hạn sử dụng (HSD)
-                    <span style="font-size:.63rem;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;padding:1px 6px;border-radius:10px;margin-left:4px;font-weight:700;">Đồ ăn/uống</span>
-                </label>
-                <input type="date" id="si_expiryDate" class="si-fc" />
-                <span style="font-size:.7rem;color:var(--court-muted);">Để trống nếu không có HSD</span>
+            <div class="fg">
+                <label>Hạn sử dụng</label>
+                <input type="date" id="si_expiry" class="fi" />
+            </div>
+            <div class="fg">
+                <label>Số chứng từ</label>
+                <input type="text" id="si_ref" class="fi" placeholder="PO-001, HD-002..." />
             </div>
         </div>
-
-        <!-- Chi tiết hàng nhập -->
-        <div class="d-flex justify-content-between align-items-center mb-2" style="margin-top:.25rem;">
-            <span class="si-section" style="margin-bottom:0;"><i class="bi bi-list-ul me-1"></i>Chi Tiết Hàng Nhập</span>
-            <button type="button" class="btn-add-row" id="si_addRowBtn">
-                <i class="bi bi-plus-circle"></i> Thêm dòng
-            </button>
-        </div>
-
-        <div class="si-tbl-wrap">
-            <table class="si-tbl">
-                <thead>
-                    <tr>
-                        <th style="min-width:180px;">Sản phẩm</th>
-                        <th style="min-width:130px;">Phân loại (Size/Màu)</th>
-                        <th style="width:90px;text-align:center;">Số lượng</th>
-                        <th style="width:70px;text-align:center;">ĐVT</th>
-                        <th style="width:120px;text-align:right;">Giá nhập (₫)</th>
-                        <th style="width:36px;"></th>
-                    </tr>
-                </thead>
-                <tbody id="si_tableBody">
-                    <tr class="si-product-row">
-                        <td>
-                            <select class="si-fc-sm si-product-sel" onchange="siFillUnit(this)">
-                                <option value="">-- Chọn sản phẩm --</option>
-                                @foreach (var p in ViewBag.Products as List<QuanLiSanCauLong.Models.Product> ?? new())
-                                {
-                                    <option value="@p.ProductId" data-unit="@(p.Unit ?? "")" data-sku="@(p.SKU ?? "")" data-stock="@p.StockQuantity">
-                                        @p.ProductName @(!string.IsNullOrEmpty(p.SKU) ? $"({p.SKU})" : "")
-                                    </option>
-                                }
-                            </select>
-                            <small class="row-meta"></small>
-                        </td>
-                        <td>
-                            <select class="si-fc-sm si-variant-sel" disabled>
-                                <option value="">— Chọn SP trước —</option>
-                            </select>
-                        </td>
-                        <td><input type="number" class="si-fc-sm si-qty" min="1" placeholder="0" style="text-align:center;" /></td>
-                        <td><input type="text" class="si-fc-sm si-unit" readonly placeholder="—" style="text-align:center;" /></td>
-                        <td><input type="number" class="si-fc-sm si-cost" min="0" step="1000" placeholder="0" style="text-align:right;" /></td>
-                        <td><button type="button" class="btn-remove si-remove-btn"><i class="bi bi-trash3"></i></button></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="si-field">
+        <div class="fg">
             <label>Ghi chú</label>
-            <textarea id="si_note" class="si-fc" rows="2" placeholder="Ghi chú về lần nhập hàng này..."></textarea>
+            <textarea id="si_note" class="fi" rows="2" placeholder="Nhà cung cấp, ghi chú thêm..."></textarea>
         </div>
-
-        <div class="si-fifo-info">
-            <i class="bi bi-info-circle-fill" style="flex-shrink:0;margin-top:1px;"></i>
-            <span><strong>FIFO:</strong> Hàng nhập trước sẽ được xuất trước. Nhập đúng số lô và HSD để hệ thống kiểm soát chính xác.</span>
-        </div>
-    </div>
-
-    <div class="si-foot">
-        <button type="button" class="btn-si-cancel" onclick="$('#inventoryModal').modal('hide')">Hủy bỏ</button>
-        <button type="button" class="btn-si-submit" id="si_submitBtn" onclick="submitStockIn()">
-            <i class="bi bi-check-circle-fill"></i> Xác nhận nhập kho
-        </button>
     </div>
 </div>
 
+<div class="md-ft">
+    <button class="btn-s" data-bs-dismiss="modal">Hủy</button>
+    <button class="btn-p" id="siBtnSave" onclick="submitStockIn()">
+        <i class="bi bi-check-lg"></i> Xác nhận nhập kho
+    </button>
+</div>
+
 <script>
-// ── Serialize product data từ server ──
-const _siProducts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-    (ViewBag.Products as List<QuanLiSanCauLong.Models.Product> ?? new()).Select(p => new {
-        id    = p.ProductId,
-        name  = p.ProductName ?? "",
-        unit  = p.Unit  ?? "",
-        sku   = p.SKU   ?? "",
-        stock = p.StockQuantity
-    })
-));
+const SI_PRODS = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(products.Select(p => new {
+    id = p.ProductId,
+    name = p.ProductName,
+    code = p.ProductCode ?? p.SKU ?? "",
+    unit = p.Unit ?? "",
+    cost = p.CostPrice
+})));
+const TOKEN_SI = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
 
-// ── Fill unit + load variants khi chọn sản phẩm ──
-async function siFillUnit(sel) {
-    const row        = sel.closest('tr');
-    const unitInput  = row.querySelector('.si-unit');
-    const meta       = row.querySelector('.row-meta');
-    const variantSel = row.querySelector('.si-variant-sel');
-    const pid        = sel.value;
-    const pData      = _siProducts.find(p => p.id == pid);
+let siItemCount = 1;
 
-    if (!pid || !pData) {
-        if (unitInput) unitInput.value = '';
-        if (meta) meta.textContent = '';
-        if (variantSel) { variantSel.innerHTML = '<option value="">— Chọn SP trước —</option>'; variantSel.disabled = true; }
-        return;
+// ── Combobox ──
+function showProdList(listId) {
+    document.querySelectorAll('.combo-list').forEach(l => l.classList.remove('show'));
+    document.getElementById(listId)?.classList.add('show');
+}
+function hideAllCombo() { document.querySelectorAll('.combo-list').forEach(l => l.classList.remove('show')); }
+function showCombo(id) { hideAllCombo(); document.getElementById(id)?.classList.add('show'); }
+function pickCombo(inp, val) { inp.value = val; hideAllCombo(); }
+function filterCombo(listId, q) {
+    const l = document.getElementById(listId); if(!l) return;
+    l.classList.add('show');
+    l.querySelectorAll('.combo-opt').forEach(o => { o.style.display = o.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none'; });
+}
+function filterProdList(inp, listId) {
+    const q = inp.value.toLowerCase();
+    const l = document.getElementById(listId); if(!l) return;
+    l.classList.add('show');
+    l.querySelectorAll('.combo-opt').forEach(o => { o.style.display = o.textContent.toLowerCase().includes(q) ? '' : 'none'; });
+    // Clear hidden id if user is typing manually
+    inp.closest('.combo-w')?.querySelector('.si-prod-id')?.setAttribute('value','');
+}
+function pickProd(el, name, id, listId) {
+    const row    = el.closest('.item-row');
+    const txtInp = row.querySelector('.si-prod-input');
+    const hidInp = row.querySelector('.si-prod-id');
+    txtInp.value = name;
+    hidInp.value = id;
+    // Pre-fill cost from product default
+    const prod = SI_PRODS.find(p => p.id === id);
+    if (prod && prod.cost > 0) {
+        row.querySelector('.si-cost').value = prod.cost;
     }
+    document.getElementById(listId)?.classList.remove('show');
+    calcTotal();
+}
+document.addEventListener('click', e => { if (!e.target.closest('.combo-w')) hideAllCombo(); });
 
-    if (unitInput) unitInput.value = pData.unit;
-    if (meta) meta.textContent = `SKU: ${pData.sku || '—'} · Tồn: ${pData.stock}`;
+// ── Qty presets ──
+function setQty(inp, val) { inp.value = val; calcTotal(); }
 
-    if (variantSel) {
-        variantSel.innerHTML = '<option value="">Đang tải...</option>';
-        variantSel.disabled = true;
-        try {
-            const res  = await fetch(`/Admin/AdminProduct/GetVariants?productId=${pid}`);
-            const data = await res.json();
-            if (Array.isArray(data) && data.length > 0) {
-                variantSel.innerHTML = '<option value="">-- Không chọn size --</option>' +
-                    data.map(v => `<option value="${v.variantId}">${v.displayName} (Tồn: ${v.availableQuantity ?? 0})</option>`).join('');
-                variantSel.disabled = false;
-            } else {
-                variantSel.innerHTML = '<option value="">Không có phân loại</option>';
-                variantSel.disabled = true;
-            }
-        } catch {
-            variantSel.innerHTML = '<option value="">Lỗi tải phân loại</option>';
-            variantSel.disabled  = false;
-        }
-    }
+// ── Calc total ──
+function calcTotal() {
+    let total = 0;
+    document.querySelectorAll('.item-row').forEach(row => {
+        const qty  = parseInt(row.querySelector('.si-qty')?.value) || 0;
+        const cost = parseFloat(row.querySelector('.si-cost')?.value) || 0;
+        total += qty * cost;
+    });
+    document.getElementById('siTotal').textContent = total > 0 ? total.toLocaleString('vi-VN') + 'đ' : '0đ';
 }
 
-// ── Thêm dòng sản phẩm ──
-let _siRowIdx = 1;
-function siAddRow() {
-    const opts = '<option value="">-- Chọn sản phẩm --</option>' +
-        _siProducts.map(p => `<option value="${p.id}" data-unit="${p.unit}" data-sku="${p.sku}" data-stock="${p.stock}">${p.name}${p.sku ? ' (' + p.sku + ')' : ''}</option>`).join('');
-
-    const tr = document.createElement('tr');
-    tr.className = 'si-product-row';
-    tr.innerHTML = `
-        <td>
-            <select class="si-fc-sm si-product-sel" onchange="siFillUnit(this)">${opts}</select>
-            <small class="row-meta"></small>
-        </td>
-        <td><select class="si-fc-sm si-variant-sel" disabled><option value="">— Chọn SP trước —</option></select></td>
-        <td><input type="number" class="si-fc-sm si-qty" min="1" placeholder="0" style="text-align:center;" /></td>
-        <td><input type="text" class="si-fc-sm si-unit" readonly placeholder="—" style="text-align:center;" /></td>
-        <td><input type="number" class="si-fc-sm si-cost" min="0" step="1000" placeholder="0" style="text-align:right;" /></td>
-        <td><button type="button" class="btn-remove si-remove-btn" onclick="siRemoveRow(this)"><i class="bi bi-trash3"></i></button></td>
-    `;
-    document.getElementById('si_tableBody').appendChild(tr);
-    _siRowIdx++;
+// ── Add item row ──
+function addSiItem() {
+    const idx = siItemCount++;
+    const tpl = document.getElementById('siItem0').cloneNode(true);
+    tpl.id = 'siItem' + idx;
+    // Reset values
+    tpl.querySelector('.si-prod-input').value = '';
+    tpl.querySelector('.si-prod-id').value    = '';
+    tpl.querySelector('.si-qty').value        = '1';
+    tpl.querySelector('.si-cost').value       = '';
+    tpl.querySelector('.si-loc').value        = '';
+    // Fix combo list IDs
+    const newListId = 'siProd' + idx;
+    const newLocId  = 'siLocList' + idx;
+    tpl.querySelector('.combo-list:first-of-type').id = newListId;
+    tpl.querySelector('.si-prod-input').setAttribute('oninput', `filterProdList(this,'${newListId}')`);
+    tpl.querySelector('.si-prod-input').setAttribute('onfocus', `showProdList('${newListId}')`);
+    // Add delete btn
+    const del = document.createElement('button');
+    del.type = 'button'; del.className = 'item-del';
+    del.innerHTML = '<i class="bi bi-x"></i>';
+    del.onclick = () => { tpl.remove(); calcTotal(); };
+    tpl.appendChild(del);
+    document.getElementById('siItemList').appendChild(tpl);
 }
 
-function siRemoveRow(btn) {
-    const rows = document.querySelectorAll('#si_tableBody .si-product-row');
-    if (rows.length > 1) btn.closest('tr').remove();
+// ── Optional section toggle ──
+function toggleOpt(secId, tglId) {
+    const sec = document.getElementById(secId);
+    const tgl = document.getElementById(tglId);
+    sec.classList.toggle('show');
+    tgl.classList.toggle('open');
 }
 
-document.getElementById('si_addRowBtn').addEventListener('click', siAddRow);
-
-// ── Gắn sự kiện cho dòng đầu tiên ──
-document.querySelectorAll('#si_tableBody .si-remove-btn').forEach(btn => {
-    btn.addEventListener('click', () => siRemoveRow(btn));
-});
-
-// ── Submit AJAX ──
+// ── Submit ──
 async function submitStockIn() {
-    const btn = document.getElementById('si_submitBtn');
-    const fid = document.getElementById('si_facilityId').value;
-    if (!fid) { alert('Vui lòng chọn cơ sở!'); return; }
+    const facId = document.getElementById('si_fac').value;
+    if (!facId) { alert('Vui lòng chọn cơ sở!'); return; }
 
-    // Collect items
     const items = [];
-    document.querySelectorAll('#si_tableBody .si-product-row').forEach(row => {
-        const pid  = row.querySelector('.si-product-sel').value;
-        const vid  = row.querySelector('.si-variant-sel').value;
-        const qty  = parseInt(row.querySelector('.si-qty').value);
-        const unit = row.querySelector('.si-unit').value;
-        const cost = parseFloat(row.querySelector('.si-cost').value) || 0;
-        if (pid && qty > 0) items.push({ productId: parseInt(pid), variantId: vid ? parseInt(vid) : null, quantity: qty, unit, costPrice: cost });
+    let valid = true;
+    document.querySelectorAll('.item-row').forEach(row => {
+        const prodId = row.querySelector('.si-prod-id').value;
+        const qty    = parseInt(row.querySelector('.si-qty').value) || 0;
+        if (!prodId || qty <= 0) { valid = false; return; }
+        items.push({ productId: parseInt(prodId), quantity: qty, costPrice: parseFloat(row.querySelector('.si-cost')?.value)||0 });
     });
+    if (!valid || items.length === 0) { alert('Vui lòng chọn sản phẩm và nhập số lượng!'); return; }
 
-    if (!items.length) { alert('Vui lòng chọn ít nhất 1 sản phẩm với số lượng > 0!'); return; }
+    const btn = document.getElementById('siBtnSave');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang xử lý...';
 
-    btn.disabled = true;
-    btn.innerHTML = '<div class="spinner-sm"></div> Đang xử lý...';
-
-    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
-    const form  = new FormData();
-    form.append('FacilityId',        fid);
-    form.append('TransactionType',   'StockIn');
-    form.append('TransactionDate',   document.getElementById('si_txDate').value);
-    form.append('SupplierId',        document.getElementById('si_supplierId').value);
-    form.append('DocumentReference', document.getElementById('si_docRef').value);
-    form.append('BatchNumber',       document.getElementById('si_batchNumber').value);
-    form.append('ExpiryDate',        document.getElementById('si_expiryDate').value);
-    form.append('Note',              document.getElementById('si_note').value);
-    items.forEach((it, i) => {
-        form.append(`Items[${i}].ProductId`,  it.productId);
-        form.append(`Items[${i}].VariantId`,  it.variantId ?? '');
-        form.append(`Items[${i}].Quantity`,   it.quantity);
-        form.append(`Items[${i}].Unit`,       it.unit);
-        form.append(`Items[${i}].CostPrice`,  it.costPrice);
-    });
-    form.append('__RequestVerificationToken', token);
+    const payload = {
+        facilityId:        parseInt(facId),
+        transactionDate:   document.getElementById('si_date').value,
+        batchNumber:       document.getElementById('si_batch').value,
+        expiryDate:        document.getElementById('si_expiry').value || null,
+        documentReference: document.getElementById('si_ref').value,
+        note:              document.getElementById('si_note').value,
+        items: items
+    };
 
     try {
-        const res  = await fetch('/AdminInventory/StockIn', { method: 'POST', body: form });
-        const data = await res.json();
-        if (data.success) {
-            siShowToast(true, data.message || 'Nhập kho thành công!');
-            setTimeout(() => { $('#inventoryModal').modal('hide'); location.reload(); }, 900);
+        const res = await fetch('/AdminInventory/StockIn', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': TOKEN_SI },
+            body: JSON.stringify(payload)
+        }).then(r => r.json());
+
+        if (res.success) {
+            bootstrap.Modal.getInstance(document.getElementById('invModal'))?.hide();
+            showToast(res.message, true);
+            setTimeout(() => location.reload(), 1500);
         } else {
-            siShowToast(false, data.message || 'Có lỗi xảy ra!');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Xác nhận nhập kho';
+            alert(res.message || 'Có lỗi xảy ra!');
+            btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg"></i> Xác nhận nhập kho';
         }
-    } catch {
-        siShowToast(false, 'Lỗi kết nối. Vui lòng thử lại.');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Xác nhận nhập kho';
+    } catch(e) {
+        alert('Lỗi kết nối!');
+        btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg"></i> Xác nhận nhập kho';
     }
 }
 
-function siShowToast(ok, msg) {
-    const wrap = document.getElementById('invToastWrap');
-    if (!wrap) return;
-    const d = document.createElement('div');
-    d.className = 'inv-toast ' + (ok ? 'inv-toast-ok' : 'inv-toast-err');
-    d.textContent = msg;
-    wrap.appendChild(d);
-    setTimeout(() => d.remove(), 3500);
+function showToast(msg, ok) {
+    const t = document.createElement('div');
+    t.style.cssText = `position:fixed;bottom:1.5rem;right:1.5rem;background:${ok?'#15803d':'#c94b2a'};color:#fff;padding:.75rem 1.25rem;border-radius:8px;font-size:.84rem;font-weight:700;z-index:9999;display:flex;align-items:center;gap:.5rem;box-shadow:0 4px 16px rgba(0,0,0,.2);`;
+    t.innerHTML = `<i class="bi bi-${ok?'check-circle-fill':'exclamation-circle-fill'}"></i> ${msg}`;
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(() => t.remove(), 400); }, 2000);
 }
 </script>

@@ -3,115 +3,777 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Staff Panel</title>
-
+    <title>@ViewData["Title"] — Staff Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/staff.css" asp-append-version="true" />
+    <!-- Lucide icons (open-source, MIT) -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <style>
+        /* ═══════════════ TOKENS ═══════════════ */
+        :root {
+            --sb-w: 248px;
+            --sb-col: 60px;
+            --top-h: 58px;
+            --D: #0d0a05;
+            --D2: #1a1209;
+            --D3: #231a0e;
+            --D4: #2e2011;
+            --G: #d4a017;
+            --G2: #f5c842;
+            --G3: rgba(212,160,23,.1);
+            --G4: rgba(212,160,23,.22);
+            --C: #fdf8f0;
+            --W: #f5ede0;
+            --S: #e8ddd0;
+            --M: #8a7560;
+            --GN: #10b981;
+            --BL: #3b82f6;
+            --RD: #ef4444;
+            --OR: #f97316;
+            --PU: #8b5cf6;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--C);
+            color: var(--D2);
+            min-height: 100vh;
+        }
+
+        /* ═══════════════ SIDEBAR ═══════════════ */
+        #sb {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sb-w);
+            height: 100vh;
+            background: var(--D2);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            transition: width .25s ease;
+            overflow: hidden;
+        }
+
+        body.sbc #sb {
+            width: var(--sb-col);
+        }
+
+        /* Logo */
+        .sb-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 16px;
+            height: var(--top-h);
+            border-bottom: 1px solid rgba(255,255,255,.06);
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .sb-logo-ico {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--G), var(--G2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+            .sb-logo-ico svg {
+                color: var(--D2) !important;
+            }
+
+        .sb-logo-text {
+            font-family: 'Syne', sans-serif;
+            font-size: .88rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+
+        .sb-logo-sub {
+            font-size: .6rem;
+            font-weight: 400;
+            color: var(--G2);
+            letter-spacing: .06em;
+        }
+
+        body.sbc .sb-logo-text, body.sbc .sb-logo-sub {
+            display: none;
+        }
+
+        /* Facility badge */
+        .sb-fac {
+            margin: 10px 10px 4px;
+            padding: 8px 10px;
+            background: var(--G3);
+            border: 1px solid var(--G4);
+            border-radius: 8px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .sb-fac-lbl {
+            font-size: .55rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--G);
+            margin-bottom: 2px;
+        }
+
+        .sb-fac-name {
+            font-size: .76rem;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        body.sbc .sb-fac {
+            display: none;
+        }
+
+        /* Nav */
+        .sb-nav {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 4px 0;
+        }
+
+            .sb-nav::-webkit-scrollbar {
+                width: 3px;
+            }
+
+            .sb-nav::-webkit-scrollbar-thumb {
+                background: rgba(255,255,255,.08);
+                border-radius: 2px;
+            }
+
+        .sb-sec {
+            font-size: .52rem;
+            font-weight: 800;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.24);
+            padding: 14px 18px 4px;
+            white-space: nowrap;
+        }
+
+        body.sbc .sb-sec {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .sb-link {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 8px 18px;
+            color: rgba(255,255,255,.62);
+            text-decoration: none;
+            font-size: .82rem;
+            font-weight: 500;
+            transition: all .18s;
+            position: relative;
+            white-space: nowrap;
+        }
+
+            .sb-link svg {
+                flex-shrink: 0;
+                width: 18px;
+                height: 18px;
+            }
+
+            .sb-link:hover {
+                background: rgba(255,255,255,.07);
+                color: #fff;
+            }
+
+            .sb-link.act {
+                background: var(--G3);
+                color: var(--G2);
+                font-weight: 600;
+            }
+
+                .sb-link.act::before {
+                    content: '';
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    bottom: 0;
+                    width: 3px;
+                    background: var(--G);
+                    border-radius: 0 2px 2px 0;
+                }
+
+        body.sbc .sb-link span {
+            display: none;
+        }
+
+        body.sbc .sb-link {
+            justify-content: center;
+            padding: 10px;
+        }
+
+        /* Tooltip collapsed */
+        body.sbc .sb-link {
+            position: relative;
+        }
+
+            body.sbc .sb-link::after {
+                content: attr(data-t);
+                position: absolute;
+                left: calc(100% + 8px);
+                top: 50%;
+                transform: translateY(-50%);
+                background: var(--D3);
+                color: #fff;
+                font-size: .72rem;
+                font-weight: 600;
+                padding: 4px 10px;
+                border-radius: 6px;
+                white-space: nowrap;
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity .15s;
+                z-index: 9999;
+            }
+
+            body.sbc .sb-link:hover::after {
+                opacity: 1;
+            }
+
+        /* Badge */
+        .sb-bdg {
+            margin-left: auto;
+            background: var(--RD);
+            color: #fff;
+            font-size: .55rem;
+            font-weight: 800;
+            padding: 1px 6px;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        body.sbc .sb-bdg {
+            display: none;
+        }
+
+        /* User bottom */
+        .sb-user {
+            padding: 12px 14px;
+            border-top: 1px solid rgba(255,255,255,.06);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .sb-av {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--G), var(--G2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--D2);
+            font-size: .82rem;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .sb-uname {
+            font-size: .76rem;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sb-urole {
+            font-size: .6rem;
+            color: var(--G2);
+            font-weight: 500;
+        }
+
+        body.sbc .sb-user-info {
+            display: none;
+        }
+
+        .sb-logout {
+            color: rgba(255,255,255,.35);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 4px;
+            transition: color .15s;
+            flex-shrink: 0;
+        }
+
+            .sb-logout:hover {
+                color: var(--RD);
+            }
+
+        body.sbc .sb-logout {
+            display: none;
+        }
+
+        /* ═══════════════ TOPBAR ═══════════════ */
+        #top {
+            position: fixed;
+            top: 0;
+            left: var(--sb-w);
+            right: 0;
+            height: var(--top-h);
+            background: #fff;
+            border-bottom: 1px solid var(--S);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 10px;
+            z-index: 999;
+            transition: left .25s ease;
+        }
+
+        body.sbc #top {
+            left: var(--sb-col);
+        }
+
+        .tb-tog {
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--M);
+            transition: all .15s;
+            flex-shrink: 0;
+        }
+
+            .tb-tog:hover {
+                background: var(--W);
+                color: var(--D2);
+            }
+
+        .tb-title {
+            font-family: 'Syne', sans-serif;
+            font-size: .92rem;
+            font-weight: 800;
+            color: var(--D2);
+        }
+
+        .tb-r {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tb-clk {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .76rem;
+            font-weight: 600;
+            color: var(--M);
+            background: var(--C);
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--S);
+        }
+
+            .tb-clk svg {
+                color: var(--G);
+            }
+
+        .tb-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border: none;
+            background: var(--C);
+            border: 1px solid var(--S);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--M);
+            cursor: pointer;
+            transition: all .15s;
+            text-decoration: none;
+            position: relative;
+        }
+
+            .tb-btn:hover {
+                background: var(--G);
+                border-color: var(--G);
+                color: var(--D2);
+            }
+
+            .tb-btn .ndot {
+                position: absolute;
+                top: 6px;
+                right: 6px;
+                width: 7px;
+                height: 7px;
+                background: var(--RD);
+                border-radius: 50%;
+                border: 1.5px solid #fff;
+            }
+
+        /* ═══════════════ QUICK STATS BAR ═══════════════ */
+        .qsbar {
+            display: flex;
+            gap: 10px;
+            padding: 10px 22px;
+            border-bottom: 1px solid var(--S);
+            background: #fff;
+            overflow-x: auto;
+        }
+
+            .qsbar::-webkit-scrollbar {
+                height: 0;
+            }
+
+        .qs {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 13px;
+            background: var(--C);
+            border: 1px solid var(--S);
+            border-radius: 20px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            font-size: .76rem;
+        }
+
+        .qs-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .qs-v {
+            font-weight: 800;
+            color: var(--D2);
+        }
+
+        .qs-l {
+            color: var(--M);
+        }
+
+        /* ═══════════════ MAIN ═══════════════ */
+        #main {
+            margin-left: var(--sb-w);
+            padding-top: var(--top-h);
+            min-height: 100vh;
+            transition: margin-left .25s ease;
+        }
+
+        body.sbc #main {
+            margin-left: var(--sb-col);
+        }
+
+        .mi {
+            padding: 22px;
+        }
+
+        /* ═══════════════ ALERTS ═══════════════ */
+        .staff-alert {
+            border-radius: 10px;
+            border: none;
+            font-size: .83rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            margin: 14px 22px 0;
+        }
+
+        /* ═══════════════ RESPONSIVE ═══════════════ */
+        @@media (max-width: 768px) {
+            #sb {
+                transform: translateX(-100%);
+                width: var(--sb-w) !important;
+            }
+
+                #sb.mob {
+                    transform: translateX(0);
+                }
+
+            #top {
+                left: 0 !important;
+            }
+
+            #main {
+                margin-left: 0 !important;
+            }
+
+            .qsbar {
+                padding: 8px 12px;
+            }
+
+            .mi {
+                padding: 14px;
+            }
+        }
+    </style>
 </head>
-<body class="staff-layout">
-    <!-- Top Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" asp-action="Dashboard" asp-controller="Staff">
-                <i class="bi bi-clipboard-check"></i> Staff Panel
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" asp-action="Dashboard" asp-controller="Staff">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" asp-action="BookingManagement" asp-controller="Staff">
-                            <i class="bi bi-calendar-event"></i> Quản lý đơn
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" asp-action="Sales" asp-controller="Staff">
-                            <i class="bi bi-cart"></i> Bán hàng
-                        </a>
-                    </li>
-                </ul>
+<body>
 
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <span class="navbar-text text-white me-3">
-                            <i class="bi bi-clock"></i> @DateTime.Now.ToString("HH:mm dd/MM/yyyy")
-                        </span>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i> @User.Identity.Name
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <a class="dropdown-item" asp-controller="Account" asp-action="Profile">
-                                    <i class="bi bi-person"></i> Thông tin cá nhân
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" asp-controller="Account" asp-action="Logout">
-                                    <i class="bi bi-box-arrow-right"></i> Đăng xuất
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
+    <!-- ═══════════════ SIDEBAR ═══════════════ -->
+    <aside id="sb">
+        <a class="sb-logo" asp-controller="Staff" asp-action="Dashboard">
+            <div class="sb-logo-ico">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>
             </div>
-        </div>
-    </nav>
+            <div>
+                <div class="sb-logo-text">Staff Panel</div>
+                <div class="sb-logo-sub">Badminton Manager</div>
+            </div>
+        </a>
 
-    <!-- Main Content -->
-    <main role="main">
+        <div class="sb-fac">
+            <div class="sb-fac-lbl">Cơ sở làm việc</div>
+            <div class="sb-fac-name">@(ViewBag.StaffFacilityName ?? "Chưa phân cơ sở")</div>
+        </div>
+
+        <nav class="sb-nav">
+
+            <div class="sb-sec">Tổng quan</div>
+            <a asp-controller="Staff" asp-action="Dashboard" data-t="Dashboard"
+               class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "act" : "")">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
+                <span>Dashboard</span>
+            </a>
+            <a asp-controller="Staff" asp-action="CourtMap" data-t="Sơ đồ sân"
+               class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "CourtMap" ? "act" : "")">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6z" /><line x1="9" y1="3" x2="9" y2="21" /><line x1="15" y1="3" x2="15" y2="21" /></svg>
+                <span>Sơ đồ sân</span>
+                <span class="sb-bdg" id="sb-free-count" style="display:none">0</span>
+            </a>
+
+            <a asp-controller="Staff" asp-action="CourtStatus" data-t="Trạng thái sân"
+               class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "CourtStatus" ? "act" : "")">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="9" y1="3" x2="9" y2="21" /><line x1="15" y1="3" x2="15" y2="21" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="3" y1="15" x2="21" y2="15" /></svg>
+                <span>Trạng thái sân</span>
+            </a>
+            <div class="sb-sec">Đặt sân</div>
+            <a asp-controller="Staff" asp-action="BookingManagement" data-t="Quản lý đơn"
+               class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "BookingManagement" ? "act" : "")">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><polyline points="8 14 10 16 16 12" /></svg>
+                <span>Quản lý đơn</span>
+            </a>
+            <a asp-controller="Staff" asp-action="WalkIn" data-t="Đặt sân tại chỗ"
+               class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "WalkIn" ? "act" : "")">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1" /><path d="M15 8.5a5 5 0 0 0-6 0" /><path d="M9 11l-1 4 4 1 3-2 2 3" /><path d="M10 15l-1 4" /></svg>
+                <span>Đặt sân tại chỗ</span>
+            </a>
+            <a asp-controller="Staff" asp-action="CheckIn" data-t="Check-in / Out"
+               class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "CheckIn" ? "act" : "")">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 9h.01M9 15h.01M15 9h.01M15 15h.01" /><rect x="7" y="7" width="10" height="10" rx="1" /></svg>
+                <span>Check-in / Out</span>
+            </a>
+
+            <div class="sb-sec">Khách hàng</div>
+            <a asp-controller="Staff" asp-action="CustomerInfo" data-t="Tra cứu khách"
+               class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "CustomerInfo" ? "act" : "")">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                <span>Tra cứu khách</span>
+            </a>
+            <div class="sb-sec">Bán hàng</div>
+            <a asp-controller="Staff" asp-action="Sales" data-t="Bán hàng POS"
+               class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Sales" ? "act" : "")">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>
+                <span>Bán hàng POS</span>
+            </a>
+            <a asp-controller="Staff" asp-action="OrderHistory" data-t="Lịch sử bán"
+               class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "OrderHistory" ? "act" : "")">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>
+                <span>Lịch sử bán</span>
+            </a>
+
+            <div class="sb-sec">Kho & Ca làm</div>
+            <a asp-controller="Staff" asp-action="StockView" data-t="Xem tồn kho"
+               class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "StockView" ? "act" : "")">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg>
+                <span>Xem tồn kho</span>
+            </a>
+            <a asp-controller="Staff" asp-action="ShiftHandover" data-t="Bàn giao ca"
+               class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "ShiftHandover" ? "act" : "")">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>
+                <span>Bàn giao ca</span>
+            </a>
+            <a asp-controller="Staff" asp-action="MyShift" data-t="Lịch ca của tôi"
+               class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "MyShift" ? "act" : "")">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="8" y1="15" x2="12" y2="15" /><line x1="12" y1="15" x2="12" y2="19" /></svg>
+                <span>Lịch ca của tôi</span>
+            </a>
+
+            <div class="sb-sec">Báo cáo</div>
+            <a asp-controller="Staff" asp-action="Incident" data-t="Báo sự cố"
+               class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Incident" ? "act" : "")">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+                <span>Báo sự cố sân</span>
+            </a>
+            <a asp-controller="Staff" asp-action="ShiftReport" data-t="Báo cáo ca"
+               class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "ShiftReport" ? "act" : "")">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
+                <span>Báo cáo ca</span>
+            </a>
+
+            <a asp-controller="Staff" asp-action="DailySummary" data-t="Tổng kết ngày"
+               class="sb-link @(ViewContext.RouteData.Values["action"]?.ToString() == "DailySummary" ? "act" : "")">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
+                <span>Tổng kết ngày</span>
+            </a>
+        </nav>
+
+        <div class="sb-user">
+            <div class="sb-av">@(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "S")</div>
+            <div class="sb-user-info">
+                <div class="sb-uname">@User.Identity?.Name</div>
+                <div class="sb-urole">Nhân viên</div>
+            </div>
+            <a asp-controller="Account" asp-action="Logout" class="sb-logout" title="Đăng xuất">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+            </a>
+        </div>
+    </aside>
+
+    <!-- ═══════════════ TOPBAR ═══════════════ -->
+    <header id="top">
+        <button class="tb-tog" id="sbTog">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
+        </button>
+        <span class="tb-title">@(ViewData["Title"] ?? "Staff Panel")</span>
+        <div class="tb-r">
+            <div class="tb-clk">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                <span id="clk">--:--:--</span>
+            </div>
+            <a asp-controller="Staff" asp-action="Incident" class="tb-btn" title="Báo sự cố">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+            </a>
+            <a asp-controller="Account" asp-action="Profile" class="tb-btn" title="Tài khoản">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+            </a>
+            <a asp-controller="Home" asp-action="Index" class="tb-btn" title="Trang chủ" target="_blank">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
+            </a>
+        </div>
+    </header>
+
+    <!-- ═══════════════ MAIN ═══════════════ -->
+    <div id="main">
+        <!-- Quick stats -->
+        <div class="qsbar">
+            <div class="qs"><div class="qs-dot" style="background:var(--GN)"></div><span class="qs-v" id="qs-f">—</span><span class="qs-l">Sân trống</span></div>
+            <div class="qs"><div class="qs-dot" style="background:var(--RD)"></div><span class="qs-v" id="qs-p">—</span><span class="qs-l">Đang chơi</span></div>
+            <div class="qs"><div class="qs-dot" style="background:var(--OR)"></div><span class="qs-v" id="qs-c">—</span><span class="qs-l">Chờ check-in</span></div>
+            <div class="qs"><div class="qs-dot" style="background:var(--BL)"></div><span class="qs-v" id="qs-t">—</span><span class="qs-l">Đơn hôm nay</span></div>
+            <div class="qs"><div class="qs-dot" style="background:var(--G)"></div><span class="qs-v" id="qs-r">—</span><span class="qs-l">Doanh thu ca</span></div>
+        </div>
+
+        <!-- Alerts -->
         @if (TempData["SuccessMessage"] != null)
         {
-            <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
-                <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+            <div class="alert alert-success alert-dismissible staff-alert fade show" role="alert">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="20 6 9 17 4 12" /></svg>
+                @TempData["SuccessMessage"]
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         }
-
         @if (TempData["ErrorMessage"] != null)
         {
-            <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
-                <i class="bi bi-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <div class="alert alert-danger alert-dismissible staff-alert fade show" role="alert">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["InfoMessage"] != null)
+        {
+            <div class="alert alert-info alert-dismissible staff-alert fade show" role="alert">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
+                @TempData["InfoMessage"]
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         }
 
-        @RenderBody()
-    </main>
+        <div class="mi">@RenderBody()</div>
+    </div>
 
-    <!-- Scripts -->
+    <!-- Mobile overlay -->
+    <div id="mob-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;" onclick="closeMob()"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-
     <script>
-        toastr.options = {
-            "closeButton": true,
-            "progressBar": true,
-            "positionClass": "toast-top-right",
-            "timeOut": "3000"
-        };
+        toastr.options = { closeButton:true, progressBar:true, positionClass:"toast-top-right", timeOut:3000 };
 
-        // Update clock every second
-        setInterval(function() {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('vi-VN') + ' ' + now.toLocaleDateString('vi-VN');
-            $('.navbar-text').html('<i class="bi bi-clock"></i> ' + timeStr);
-        }, 1000);
+        // Clock
+        (function tick(){
+            const n=new Date(),p=v=>String(v).padStart(2,'0');
+            document.getElementById('clk').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+            setTimeout(tick,1000);
+        })();
+
+        // Sidebar toggle
+        const sb=document.getElementById('sb');
+        const isMob=()=>window.innerWidth<=768;
+        document.getElementById('sbTog').addEventListener('click',()=>{
+            if(isMob()){sb.classList.toggle('mob');document.getElementById('mob-ov').style.display=sb.classList.contains('mob')?'block':'none';}
+            else{document.body.classList.toggle('sbc');localStorage.setItem('sbc',document.body.classList.contains('sbc'));}
+        });
+        function closeMob(){sb.classList.remove('mob');document.getElementById('mob-ov').style.display='none';}
+        if(!isMob()&&localStorage.getItem('sbc')==='true') document.body.classList.add('sbc');
+
+        // Quick stats
+        function loadQS(){
+            fetch('/Staff/QuickStats').then(r=>r.json()).then(d=>{
+                if(!d)return;
+                document.getElementById('qs-f').textContent=d.freeCourts??'—';
+                document.getElementById('qs-p').textContent=d.playingCourts??'—';
+                document.getElementById('qs-c').textContent=d.pendingCheckin??'—';
+                document.getElementById('qs-t').textContent=d.todayBookings??'—';
+                document.getElementById('qs-r').textContent=d.shiftRevenue??'—';
+                const b=document.getElementById('sb-free-count');
+                if(d.freeCourts>0){b.textContent=d.freeCourts;b.style.display='';}
+                else b.style.display='none';
+            }).catch(()=>{});
+        }
+        loadQS(); setInterval(loadQS,60000);
     </script>
-
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

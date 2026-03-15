@@ -1,0 +1,412 @@
+﻿@model QuanLiSanCauLong.ViewModels.ShiftReportViewModel
+@{
+    ViewData["Title"] = "Báo Cáo Chấm Công";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+    }
+
+    * {
+        font-family: 'Outfit',sans-serif;
+        box-sizing: border-box;
+    }
+
+    .pg-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+        .pg-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+    .btn-ov {
+        padding: .6rem 1.1rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--muted);
+        font-size: .82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+        .btn-ov:hover {
+            border-color: var(--deep);
+            color: var(--deep) !important;
+        }
+
+    .btn-gold {
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep) !important;
+        border: none;
+        padding: .65rem 1.3rem;
+        font-size: .84rem;
+        font-weight: 700;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        text-decoration: none;
+        transition: all .25s;
+    }
+
+    .sum-grid {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+    }
+
+    .sb {
+        background: #fff;
+        padding: 1.1rem 1.25rem;
+    }
+
+    .sn {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: var(--deep);
+        line-height: 1;
+    }
+
+    .sl {
+        font-size: .68rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: .3rem;
+    }
+
+    .filter-row {
+        display: flex;
+        gap: .65rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.25rem;
+        align-items: center;
+    }
+
+    .fi {
+        padding: .58rem .85rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .83rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
+        transition: border-color .2s;
+    }
+
+        .fi:focus {
+            border-color: var(--gold);
+        }
+
+    .tbl-wrap {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .tbl {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .tbl thead th {
+            padding: .75rem 1rem;
+            text-align: left;
+            font-size: .65rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            background: var(--warm);
+            border-bottom: 1px solid var(--border);
+        }
+
+            .tbl thead th:not(:first-child) {
+                text-align: center;
+            }
+
+        .tbl tbody td {
+            padding: .85rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: .84rem;
+            vertical-align: middle;
+        }
+
+            .tbl tbody td:not(:first-child) {
+                text-align: center;
+            }
+
+        .tbl tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .tbl tbody tr:hover {
+            background: rgba(212,160,23,.025);
+        }
+
+    .u-ava {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Playfair Display',serif;
+        font-weight: 700;
+        font-size: .8rem;
+        color: var(--deep);
+        flex-shrink: 0;
+    }
+
+    .u-photo {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--border);
+    }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .2rem;
+        font-size: .67rem;
+        font-weight: 700;
+        padding: .18rem .5rem;
+        border-radius: 4px;
+    }
+
+    .chip-green {
+        background: rgba(22,163,74,.1);
+        color: #16a34a;
+    }
+
+    .chip-red {
+        background: rgba(201,75,42,.1);
+        color: #c94b2a;
+    }
+
+    .chip-orange {
+        background: rgba(234,88,12,.1);
+        color: #ea580c;
+    }
+
+    .bar {
+        height: 6px;
+        border-radius: 3px;
+        background: var(--warm);
+        overflow: hidden;
+        margin-top: .3rem;
+    }
+
+    .bar-f {
+        height: 100%;
+        border-radius: 3px;
+        background: linear-gradient(90deg,var(--gold),var(--gold2));
+    }
+
+    .rt {
+        font-weight: 700;
+        font-size: .88rem;
+    }
+
+    .rt-h {
+        color: #16a34a;
+    }
+
+    .rt-m {
+        color: #d97706;
+    }
+
+    .rt-l {
+        color: #c94b2a;
+    }
+</style>
+
+<div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem;">
+        <div>
+            <div style="font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:.25rem;">BÁO CÁO</div>
+            <h1 class="pg-title">Chấm Công <em>@Model.MonthLabel</em></h1>
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+            <a asp-controller="AdminShift" asp-action="Schedule" class="btn-ov">
+                <i class="bi bi-calendar-week"></i> Lịch phân ca
+            </a>
+            <button class="btn-ov" onclick="window.print()" style="border-color:#16a34a;color:#16a34a;">
+                <i class="bi bi-printer"></i> In báo cáo
+            </button>
+        </div>
+    </div>
+
+    <form method="get" asp-action="Report">
+        <div class="filter-row">
+
+            @* ✅ FIX RZ1031 dòng 63: Tách selected ra if/else, không dùng ternary trong attribute *@
+            <select name="month" class="fi" onchange="this.form.submit()">
+                @for (int m = 1; m <= 12; m++)
+                {
+                    if (m == Model.Month)
+                    {
+                        <option value="@m" selected>Tháng @m</option>
+                    }
+                    else
+                    {
+                        <option value="@m">Tháng @m</option>
+                    }
+                }
+            </select>
+
+            @* ✅ FIX RZ1031 dòng 69 *@
+            <select name="year" class="fi" onchange="this.form.submit()">
+                @for (int y = DateTime.Today.Year - 1; y <= DateTime.Today.Year + 1; y++)
+                {
+                    if (y == Model.Year)
+                    {
+                        <option value="@y" selected>@y</option>
+                    }
+                    else
+                    {
+                        <option value="@y">@y</option>
+                    }
+                }
+            </select>
+
+            @* ✅ FIX RZ1031 dòng 76 *@
+            <select name="facilityId" class="fi" onchange="this.form.submit()">
+                <option value="">Tất cả cơ sở</option>
+                @foreach (var f in Model.Facilities)
+                {
+                    if (Model.FacilityId == f.FacilityId)
+                    {
+                        <option value="@f.FacilityId" selected>@f.FacilityName</option>
+                    }
+                    else
+                    {
+                        <option value="@f.FacilityId">@f.FacilityName</option>
+                    }
+                }
+            </select>
+
+        </div>
+    </form>
+
+    <div class="sum-grid">
+        <div class="sb"><div class="sn">@Model.TotalStaff</div><div class="sl">Nhân viên</div></div>
+        <div class="sb"><div class="sn">@Model.TotalShifts</div><div class="sl">Tổng ca phân</div></div>
+        <div class="sb"><div class="sn" style="color:#16a34a;">@Model.TotalPresent</div><div class="sl">Có mặt</div></div>
+        <div class="sb"><div class="sn" style="color:var(--gold);">@Model.TotalHours.ToString("0.0")h</div><div class="sl">Tổng giờ làm</div></div>
+    </div>
+
+    <div class="tbl-wrap">
+        @if (!Model.Rows.Any())
+        {
+            <div style="text-align:center;padding:3rem;color:var(--muted);">
+                <i class="bi bi-bar-chart" style="font-size:2rem;display:block;margin-bottom:.5rem;opacity:.3;"></i>
+                Không có dữ liệu chấm công
+            </div>
+        }
+        else
+        {
+            var maxH = Model.Rows.Max(r => r.TotalHours);
+            <table class="tbl">
+                <thead>
+                    <tr>
+                        <th>Nhân viên</th>
+                        <th>Tổng ca</th>
+                        <th>Có mặt</th>
+                        <th>Vắng</th>
+                        <th>Giờ làm</th>
+                        <th>Tỉ lệ</th>
+                        <th>Đánh giá</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Rows)
+                    {
+                        var ini = string.Join("", r.Staff.FullName.Split(' ').TakeLast(2).Select(x => x[0]));
+                        var pct = maxH > 0 ? (int)(r.TotalHours / maxH * 100) : 0;
+                        var rtc = r.AttendanceRate >= 90 ? "rt-h" : r.AttendanceRate >= 70 ? "rt-m" : "rt-l";
+                        <tr>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:.65rem;">
+                                    @if (!string.IsNullOrEmpty(r.Staff.AvatarUrl))
+                                    {
+                                        <img src="@r.Staff.AvatarUrl" alt="@r.Staff.FullName" class="u-photo" />
+                                    }
+                                    else
+                                    {
+                                        <div class="u-ava">@ini</div>
+                                    }
+                                    <div>
+                                        <div style="font-weight:700;font-size:.86rem;">@r.Staff.FullName</div>
+                                        <div style="font-size:.71rem;color:var(--muted);">@(r.Staff.Facility?.FacilityName ?? "—")</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><strong>@r.TotalShifts</strong></td>
+                            <td><span class="chip chip-green">@r.PresentShifts</span></td>
+                            <td>
+                                @if (r.AbsentShifts > 0)
+                                {
+                                    <span class="chip chip-red">@r.AbsentShifts</span>
+                                }
+                                else
+                                {
+                                    <span style="color:var(--muted);">0</span>
+                                }
+                            </td>
+                            <td>
+                                <div style="font-weight:700;">@r.TotalHours.ToString("0.0")h</div>
+                                <div class="bar" style="width:80px;"><div class="bar-f" style="width:@pct%"></div></div>
+                            </td>
+                            <td><span class="rt @rtc">@r.AttendanceRate.ToString("0")%</span></td>
+                            <td>
+                                @if (r.AttendanceRate >= 90)
+                                {
+                                    <span class="chip chip-green">● Xuất sắc</span>
+                                }
+                                else if (r.AttendanceRate >= 70)
+                                {
+                                    <span class="chip chip-orange">● Đạt</span>
+                                }
+                                else
+                                {
+                                    <span class="chip chip-red">● Cần cải thiện</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
