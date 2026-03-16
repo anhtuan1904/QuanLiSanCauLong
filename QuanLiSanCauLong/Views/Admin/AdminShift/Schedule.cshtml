@@ -173,10 +173,16 @@
                 {
                     var ini = string.Join("", s.FullName.Split(' ').TakeLast(2).Select(x => x[0]));
                     <div class="sr">
-                        <div class="sc">
+                        <div class="sc" style="cursor:pointer;position:relative;"
+                             title="Click để phân ca nhanh cả tuần"
+                             onclick="openBulkModal(@s.UserId,'@Html.Raw(s.FullName.Replace("'","\\'"))',@(Model.FacilityId ?? 0))">
                             @if (!string.IsNullOrEmpty(s.AvatarUrl)) { <img src="@s.AvatarUrl" alt="@s.FullName" class="sa-img" /> }
                             else { <div class="sa">@ini</div> }
-                            <div><div class="sn">@s.FullName</div><div class="sf">@(s.Facility?.FacilityName??"")</div></div>
+                            <div style="flex:1;min-width:0;">
+                                <div class="sn">@s.FullName</div>
+                                <div class="sf">@(s.Facility?.FacilityName??"")</div>
+                            </div>
+                            <span style="font-size:.65rem;color:var(--gold);opacity:.7;flex-shrink:0;" title="Phân ca nhanh"><i class="bi bi-lightning-fill"></i></span>
                         </div>
                         @for (int d = 0; d < 7; d++)
                         {
@@ -278,6 +284,49 @@
     </div>
 </div>
 
+
+<!-- ══ BULK ASSIGN MODAL ══════════════════════════════════════════════════ -->
+<div class="modal fade v-modal" id="bulkModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:500px">
+        <div class="modal-content">
+            <div class="v-mh">
+                <div>
+                    <div class="v-mlabel"><i class="bi bi-lightning-fill"></i> PHÂN CA NHANH</div>
+                    <div class="v-mtitle" id="bm-title">Phân ca — Nhân Viên</div>
+                </div>
+                <button type="button" class="v-mc" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="v-mb">
+                <div class="fg">
+                    <label>Chọn ca làm việc</label>
+                    <div id="bm-shift-picker" style="display:flex;flex-direction:column;gap:.35rem;"></div>
+                </div>
+                <div class="fg" style="margin-top:.9rem;">
+                    <label>Áp dụng cho ngày nào trong tuần?</label>
+                    <div style="display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.65rem;">
+                        <button type="button" class="btn-ov" onclick="selectBulkDays('week')" style="font-size:.73rem;padding:.38rem .7rem;">
+                            <i class="bi bi-calendar-week"></i> Cả tuần (T2–CN)
+                        </button>
+                        <button type="button" class="btn-ov" onclick="selectBulkDays('weekday')" style="font-size:.73rem;padding:.38rem .7rem;">
+                            <i class="bi bi-briefcase"></i> Thường (T2–T6)
+                        </button>
+                        <button type="button" class="btn-ov" onclick="selectBulkDays('weekend')" style="font-size:.73rem;padding:.38rem .7rem;">
+                            <i class="bi bi-sun"></i> Cuối tuần (T7–CN)
+                        </button>
+                        <button type="button" class="btn-ov" onclick="selectBulkDays('none')" style="font-size:.73rem;padding:.38rem .7rem;color:#c94b2a;border-color:#c94b2a;">
+                            <i class="bi bi-x"></i> Bỏ hết
+                        </button>
+                    </div>
+                    <div id="bm-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.35rem;text-align:center;"></div>
+                </div>
+            </div>
+            <div class="v-mf">
+                <button class="btn-ov" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Hủy</button>
+                <button class="btn-gold" onclick="submitBulk()"><i class="bi bi-lightning-fill"></i> Phân ca ngay</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="modal fade v-modal" id="assignModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -475,6 +524,120 @@ function saveShift(){
         else Swal.fire('Lỗi!',d.message,'error');
     });
 }
+// ── BULK ASSIGN ────────────────────────────────────────────────────────────
+var _buid = 0, _bfid = 0, _bShiftId = 0;
+var _weekDates = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+    Enumerable.Range(0, 7).Select(i => Model.WeekStart.AddDays(i).ToString("yyyy-MM-dd")).ToArray()
+));
+var _dayLabels = ['T2','T3','T4','T5','T6','T7','CN'];
+
+function openBulkModal(uid, uname, fid) {
+    _buid = uid; _bfid = fid; _bShiftId = 0;
+
+    document.getElementById('bm-title').textContent = 'Phân ca — ' + uname;
+
+    // Render shift picker
+    var sp = document.getElementById('bm-shift-picker'); sp.innerHTML = '';
+    SHIFTS.forEach(function(sh) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'bm-shift-btn';
+        btn.dataset.sid = sh.id;
+        btn.style.cssText = 'display:flex;align-items:center;gap:.65rem;padding:.55rem .85rem;border-radius:8px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:Outfit,sans-serif;width:100%;text-align:left;transition:all .15s;';
+        btn.innerHTML = '<span style="width:11px;height:11px;border-radius:50%;flex-shrink:0;background:'+sh.color+';"></span>'
+            + '<span style="font-weight:700;font-size:.84rem;color:#1a1209;flex:1;">'+sh.name+'</span>'
+            + '<span style="font-size:.72rem;color:#8a7560;">'+sh.tr+'</span>'
+            + '<span class="bm-check" style="display:none;color:var(--gold);font-size:.85rem;"><i class="bi bi-check-circle-fill"></i></span>';
+        btn.onclick = function() { selectBulkShift(sh.id, sh.color, this); };
+        sp.appendChild(btn);
+    });
+
+    // Render day checkboxes
+    var dc = document.getElementById('bm-days'); dc.innerHTML = '';
+    _weekDates.forEach(function(dt, i) {
+        var d = new Date(dt + 'T00:00:00');
+        dc.innerHTML += '<label id="bmlbl_'+i+'" style="cursor:pointer;padding:.42rem .15rem;border-radius:7px;border:1.5px solid var(--border);font-size:.68rem;font-weight:700;transition:all .15s;display:block;user-select:none;" onclick="toggleBulkDay('+i+', \''+dt+'\')">'
+            + '<input type="checkbox" id="bmcb_'+i+'" value="'+dt+'" style="display:none;">'
+            + _dayLabels[i] + '<br>'
+            + '<span style="font-size:.65rem;font-weight:400;color:var(--muted);">' + (d.getDate()+'/'+(d.getMonth()+1)) + '</span>'
+            + '</label>';
+    });
+
+    // Default: chọn cả tuần
+    selectBulkDays('week');
+
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('bulkModal')).show();
+}
+
+function selectBulkShift(sid, color, el) {
+    _bShiftId = sid;
+    document.querySelectorAll('.bm-shift-btn').forEach(function(b) {
+        b.style.borderColor = 'var(--border)';
+        b.style.background = '#fff';
+        b.querySelector('.bm-check').style.display = 'none';
+    });
+    el.style.borderColor = color;
+    el.style.background = 'rgba(212,160,23,.06)';
+    el.querySelector('.bm-check').style.display = 'inline';
+}
+
+function toggleBulkDay(i, dt) {
+    var cb = document.getElementById('bmcb_'+i);
+    cb.checked = !cb.checked;
+    syncBulkLabel(i, cb.checked);
+}
+
+function syncBulkLabel(i, checked) {
+    var lbl = document.getElementById('bmlbl_'+i);
+    if (!lbl) return;
+    lbl.style.background   = checked ? 'rgba(212,160,23,.13)' : '';
+    lbl.style.borderColor  = checked ? '#d4a017' : 'var(--border)';
+    lbl.style.color        = checked ? '#92660a' : '';
+}
+
+function selectBulkDays(mode) {
+    for (var i = 0; i < 7; i++) {
+        var cb = document.getElementById('bmcb_'+i);
+        if (!cb) continue;
+        var check = (mode==='week') ? true
+                  : (mode==='weekday') ? i < 5
+                  : (mode==='weekend') ? i >= 5
+                  : false;
+        cb.checked = check;
+        syncBulkLabel(i, check);
+    }
+}
+
+function submitBulk() {
+    if (!_bShiftId) {
+        Swal.fire({icon:'warning', title:'Vui lòng chọn ca!', confirmButtonColor:'#d4a017'});
+        return;
+    }
+    var days = Array.from(document.querySelectorAll('#bm-days input:checked')).map(function(cb){ return cb.value; });
+    if (!days.length) {
+        Swal.fire({icon:'warning', title:'Vui lòng chọn ít nhất 1 ngày!', confirmButtonColor:'#d4a017'});
+        return;
+    }
+
+    var fd = new FormData();
+    fd.append('userId', _buid);
+    fd.append('shiftId', _bShiftId);
+    fd.append('facilityId', _bfid);
+    days.forEach(function(d){ fd.append('workDates', d); });
+    fd.append('__RequestVerificationToken', _tok);
+
+    fetch('/AdminShift/BulkAssign', { method:'POST', body:fd })
+        .then(function(r){ return r.json(); })
+        .then(function(d) {
+            bootstrap.Modal.getInstance(document.getElementById('bulkModal')).hide();
+            Swal.fire({
+                icon: d.success ? 'success' : 'info',
+                title: d.message,
+                timer: 2200, showConfirmButton: false, toast: true, position: 'top-end'
+            }).then(function(){ if (d.added > 0) location.reload(); });
+        });
+}
+
 function isDark(hex){
     if(!hex) return false; hex=hex.replace('#','');
     return (parseInt(hex.substr(0,2),16)*299+parseInt(hex.substr(2,2),16)*587+parseInt(hex.substr(4,2),16)*114)/1000<128;

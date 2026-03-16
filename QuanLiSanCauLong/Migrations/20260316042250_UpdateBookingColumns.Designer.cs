@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QuanLiSanCauLong.Data;
 
@@ -11,9 +12,11 @@ using QuanLiSanCauLong.Data;
 namespace QuanLiSanCauLong.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260316042250_UpdateBookingColumns")]
+    partial class UpdateBookingColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1741,6 +1744,9 @@ namespace QuanLiSanCauLong.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryId"));
 
+                    b.Property<bool>("AllowCustomerMaterial")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("AllowPartialReturn")
                         .HasColumnType("bit");
 
@@ -1754,8 +1760,19 @@ namespace QuanLiSanCauLong.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("CategoryType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("ChargeOvertime")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DefaultCleaningFee")
+                        .HasColumnType("decimal(18,0)");
 
                     b.Property<decimal>("DefaultDepositAmount")
                         .HasColumnType("decimal(18,0)");
@@ -1772,6 +1789,7 @@ namespace QuanLiSanCauLong.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
@@ -1782,16 +1800,42 @@ namespace QuanLiSanCauLong.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("ImageUrl")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<string>("MaterialUnit")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int>("MaxRentalHours")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PricingModel")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("RequiresBatch")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("RequiresExpiry")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequiresSize")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SeparateLaborAndMaterial")
                         .HasColumnType("bit");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("UseFIFO")
+                        .HasColumnType("bit");
 
                     b.HasKey("CategoryId");
 

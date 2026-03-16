@@ -132,6 +132,7 @@
         gap: 1.5rem;
         align-items: start;
     }
+
     @@media(max - width:900px) {
         .s-body {
             grid-template-columns: 1fr;
@@ -141,6 +142,7 @@
             height: 200px;
         }
     }
+
     @@media(max - width:600px) {
         .s-body {
             padding: 1.25rem 1rem 3rem;
@@ -413,6 +415,29 @@
         .t-slot.on .t-peak {
             color: var(--G2);
         }
+
+        .t-slot.booked {
+            background: #fee2e2 !important;
+            border-color: #fca5a5 !important;
+            color: #991b1b !important;
+            cursor: not-allowed !important;
+            opacity: .8;
+            pointer-events: none;
+        }
+
+            .t-slot.booked .t-time {
+                color: #991b1b !important;
+            }
+
+            .t-slot.booked::after {
+                content: 'Đã đặt';
+                display: block;
+                font-size: .55rem;
+                font-weight: 700;
+                letter-spacing: .04em;
+                color: #991b1b;
+                margin-top: .08rem;
+            }
 
     /* Duration buttons */
     .dur-row {
@@ -882,6 +907,10 @@
             btn.onclick = function() {
                 document.querySelectorAll('.d-pill').forEach(x => x.classList.remove('on'));
                 btn.classList.add('on'); selDate = iso;
+                // Reset slot & reload booked khi đổi ngày
+                document.querySelectorAll('.t-slot').forEach(x => x.classList.remove('on','booked'));
+                selTime = null;
+                loadBookedSlotsForDate(iso);
             };
             strip.appendChild(btn);
             if (i === 0) selDate = iso;
@@ -901,6 +930,7 @@
                 const isPeak = h >= 17 && h < 21;
                 slot.innerHTML = `<div class="t-time">${t}</div>${isPeak ? '<i class="bi bi-bolt-fill t-peak"></i>' : ''}`;
                 slot.onclick = function() {
+                    if (slot.classList.contains('booked')) return;
                     document.querySelectorAll('.t-slot').forEach(x => x.classList.remove('on'));
                     slot.classList.add('on'); selTime = t;
                 };
@@ -909,9 +939,30 @@
         }
     }
 
+    // ── Load booked slots từ API ──
+    async function loadBookedSlotsForDate(dateStr) {
+        const courtId = window._selectedCourtId;
+        if (!courtId || !dateStr) return;
+        try {
+            const res  = await fetch(`/Booking/GetTimeSlots?courtId=${courtId}&date=${dateStr}`);
+            const data = await res.json();
+            if (!data.success) return;
+            document.querySelectorAll('.t-slot').forEach(slot => {
+                const info = data.slots.find(s => s.startTime === slot.dataset.time);
+                if (info && !info.isAvailable) {
+                    slot.classList.add('booked');
+                    slot.classList.remove('on');
+                } else {
+                    slot.classList.remove('booked');
+                }
+            });
+        } catch(e) { /* silent */ }
+    }
+
     // ── Duration buttons ──
     document.addEventListener('DOMContentLoaded', function() {
         initDates(); initTimes();
+        if (window._selectedCourtId && selDate) loadBookedSlotsForDate(selDate);
         document.querySelectorAll('.dur-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('on'));
@@ -997,7 +1048,9 @@
                                 <a href="/Court/Details/${c.courtId}" target="_blank" class="btn-detail">
                                     <i class="bi bi-eye"></i> Chi tiết
                                 </a>
-                                <button class="btn-book" onclick="bookNow(${c.courtId},'${selDate}','${selTime}','${endTime}')">
+                                <button class="btn-book"
+                                    onmouseenter="setActiveCourt(${c.courtId})"
+                                    onclick="setActiveCourt(${c.courtId}); bookNow(${c.courtId},'${selDate}','${selTime}','${addMins(selTime,selDur)}')">
                                     <i class="bi bi-calendar-check"></i> Đặt ngay
                                 </button>
                             </div>
@@ -1012,6 +1065,14 @@
     }
 
     function bookNow(cid, date, start, end) {
+        if (!selTime) { alert('Vui lòng chọn giờ bắt đầu!'); return; }
         window.location.href = `/Booking/Create?courtId=${cid}&bookingDate=${date}&startTime=${start}&endTime=${end}`;
+    }
+
+    // Khi user hover/focus vào court card → preload booked slots
+    function setActiveCourt(courtId) {
+        if (window._selectedCourtId === courtId) return;
+        window._selectedCourtId = courtId;
+        if (selDate) loadBookedSlotsForDate(selDate);
     }
 </script>

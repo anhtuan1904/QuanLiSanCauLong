@@ -35,7 +35,7 @@ builder.Services.AddAuthorization(options =>
 });
 
 // ===================================
-// 3. SERVICES
+// 3. SERVICES (DI)
 // ===================================
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -45,14 +45,12 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// Register Services
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IVoucherService, VoucherService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
-
-// ── FIX: AdminInventoryController inject InventoryService (concrete)
-// thay vì IInventoryService → đăng ký thêm concrete để DI resolve được cả hai
-builder.Services.AddScoped<InventoryService>();
+builder.Services.AddScoped<InventoryService>(); // Support for AdminInventoryController direct injection
 
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
@@ -60,13 +58,14 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ISmsService, SmsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
+// Register Helpers
 builder.Services.AddSingleton<IFileHelper, FileHelper>();
 builder.Services.AddSingleton<IExcelHelper, ExcelHelper>();
 builder.Services.AddSingleton<IPdfHelper, PdfHelper>();
 builder.Services.AddSingleton<IQRCodeHelper, QRCodeHelper>();
 
 // ===================================
-// 4. MVC + RAZOR
+// 4. MVC + RAZOR + API
 // ===================================
 builder.Services.AddControllersWithViews()
     .AddRazorOptions(options =>
@@ -81,6 +80,8 @@ builder.Services.AddControllersWithViews()
     });
 
 builder.Services.AddRazorPages();
+// Đảm bảo hỗ trợ các Controller API cho Webhook
+builder.Services.AddControllers();
 
 // ===================================
 // 5. BUILD
@@ -101,7 +102,6 @@ else
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles(new StaticFileOptions
 {
     OnPrepareResponse = ctx =>
@@ -116,14 +116,22 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// ===================================
+// 7. ROUTING
+// ===================================
+
+// Route cho MVC truyền thống
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+// FIX: Thêm dòng này để các ApiController (như SePay Webhook) hoạt động
+app.MapControllers();
+
 app.MapRazorPages();
 
 // ===================================
-// 7. DATABASE INIT & SEED
+// 8. DATABASE INIT & SEED
 // ===================================
 using (var scope = app.Services.CreateScope())
 {
@@ -141,7 +149,8 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-var avatarDir = Path.Combine(builder.Environment.WebRootPath, "uploads", "avatars");
-Directory.CreateDirectory(avatarDir);
+// Tạo thư mục nếu chưa tồn tại
+var avatarDir = Path.Combine(app.Environment.WebRootPath, "uploads", "avatars");
+if (!Directory.Exists(avatarDir)) Directory.CreateDirectory(avatarDir);
 
 app.Run();

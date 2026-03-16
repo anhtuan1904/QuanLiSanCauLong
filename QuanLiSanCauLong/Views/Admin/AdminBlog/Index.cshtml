@@ -895,9 +895,12 @@
             destroyEditor();
             const el = document.getElementById('modalPostContent');
             el.innerHTML = loadingHtml();
+            const modal = new bootstrap.Modal(document.getElementById('modalPost'));
+            modal.show();
             fetch('/AdminBlog/Create')
                 .then(r => r.text())
-                .then(html => { el.innerHTML = html; setTimeout(initTinyMCE, 200); });
+                .then(html => { el.innerHTML = html; setTimeout(initTinyMCE, 200); })
+                .catch(() => { el.innerHTML = errorHtml(); });
         }
 
         function openEditModal(id) {
@@ -908,7 +911,8 @@
             modal.show();
             fetch('/AdminBlog/Edit/' + id)
                 .then(r => r.text())
-                .then(html => { el.innerHTML = html; setTimeout(initTinyMCE, 200); });
+                .then(html => { el.innerHTML = html; setTimeout(initTinyMCE, 200); })
+                .catch(() => { el.innerHTML = errorHtml(); });
         }
 
         function openViewModal(id) {
@@ -919,11 +923,16 @@
             modal.show();
             fetch('/AdminBlog/Details/' + id)
                 .then(r => r.text())
-                .then(html => { el.innerHTML = html; });
+                .then(html => { el.innerHTML = html; })
+                .catch(() => { el.innerHTML = errorHtml(); });
         }
 
         function loadingHtml() {
             return '<div style="padding:3rem;text-align:center;color:var(--muted);"><div class="spinner-border" style="color:var(--gold);"></div><p style="margin-top:.75rem;font-size:.84rem;">Đang tải...</p></div>';
+        }
+
+        function errorHtml() {
+            return '<div style="padding:3rem;text-align:center;color:var(--danger);"><i class="bi bi-exclamation-triangle" style="font-size:2rem;"></i><p style="margin-top:.75rem;font-size:.9rem;font-weight:600;">Không thể tải dữ liệu. Vui lòng thử lại.</p><button class="btn btn-sm btn-outline-secondary mt-2" data-bs-dismiss="modal">Đóng</button></div>';
         }
 
         function destroyEditor() {
@@ -943,11 +952,23 @@
                     'removeformat | link image media table | code fullscreen help',
                 base_url: '/lib/tinymce', suffix: '.min',
                 content_style: 'body { font-family: Outfit, sans-serif; font-size:15px; line-height:1.75; padding:12px; }',
-                images_upload_handler: function(blobInfo, success, failure) {
-                    const reader = new FileReader();
-                    reader.onload = () => success(reader.result);
-                    reader.onerror = () => failure('Upload thất bại');
-                    reader.readAsDataURL(blobInfo.blob());
+                images_upload_handler: function(blobInfo, progress) {
+                    return new Promise((resolve, reject) => {
+                        const formData = new FormData();
+                        formData.append('file', blobInfo.blob(), blobInfo.filename());
+                        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+                        formData.append('__RequestVerificationToken', token);
+                        fetch('/AdminBlog/UploadImage', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.location) resolve(data.location);
+                            else reject({ message: data.error || 'Upload thất bại', remove: true });
+                        })
+                        .catch(() => reject({ message: 'Không thể kết nối server', remove: true }));
+                    });
                 },
                 paste_data_images: true,
                 setup: function(editor) {
@@ -984,42 +1005,43 @@
         function applyFilters() {
             const q   = (document.getElementById('searchInput').value || '').toLowerCase().trim();
             const cat = (document.getElementById('catFilter').value || '').toLowerCase();
-            const rows = document.querySelectorAll('.post-row, .post-card-item');
-            let shown = 0;
+            const tableRows = document.querySelectorAll('.post-row');
+            const cardItems = document.querySelectorAll('.post-card-item');
+            let shownTable = 0, shownCard = 0;
 
-            rows.forEach(el => {
+            tableRows.forEach(el => {
                 const title    = (el.dataset.title || '');
                 const elCat    = (el.dataset.category || '');
                 const elStatus = (el.dataset.status || '');
-
-                const matchQ   = !q   || title.includes(q);
-                const matchCat = !cat || elCat === cat;
-                const matchSt  = !activeStatus || elStatus === activeStatus;
-
-                const visible = matchQ && matchCat && matchSt;
+                const visible  = (!q || title.includes(q)) && (!cat || elCat === cat) && (!activeStatus || elStatus === activeStatus);
                 el.style.display = visible ? '' : 'none';
-                if (visible) shown++;
+                if (visible) shownTable++;
             });
 
-            // empty states
-            document.getElementById('tableEmpty')?.classList.toggle('hidden', shown > 0);
-            document.getElementById('cardEmpty')?.classList.toggle('hidden', shown > 0);
-            updateResultCount(shown, rows.length);
+            cardItems.forEach(el => {
+                const title    = (el.dataset.title || '');
+                const elCat    = (el.dataset.category || '');
+                const elStatus = (el.dataset.status || '');
+                const visible  = (!q || title.includes(q)) && (!cat || elCat === cat) && (!activeStatus || elStatus === activeStatus);
+                el.style.display = visible ? '' : 'none';
+                if (visible) shownCard++;
+            });
+
+            const shown = currentView === 'table' ? shownTable : shownCard;
+            document.getElementById('tableEmpty')?.classList.toggle('hidden', shownTable > 0);
+            document.getElementById('cardEmpty')?.classList.toggle('hidden', shownCard > 0);
+            updateResultCount(shown);
         }
 
-        function updateResultCount(shown, total) {
+        function updateResultCount(shown) {
             const el = document.getElementById('resultCount');
             if (!el) return;
             if (shown === undefined) {
-                const rows = document.querySelectorAll('.post-row, .post-card-item');
-                shown = [...rows].filter(r => r.style.display !== 'none').length;
-                total = rows.length / 2; // table + card = double
+                shown = currentView === 'table'
+                    ? document.querySelectorAll('.post-row:not([style*="none"])').length
+                    : document.querySelectorAll('.post-card-item:not([style*="none"])').length;
             }
-            // Each post appears once in table and once in card, so divide by 2
-            const actualShown = currentView === 'table'
-                ? document.querySelectorAll('.post-row:not([style*="none"])').length
-                : document.querySelectorAll('.post-card-item:not([style*="none"])').length;
-            el.innerHTML = `Hiển thị <strong>${actualShown}</strong> bài viết`;
+            el.innerHTML = `Hiển thị <strong>${shown}</strong> bài viết`;
         }
 
         /* ── DELETE ── */

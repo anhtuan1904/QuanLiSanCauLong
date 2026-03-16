@@ -2,8 +2,7 @@
 @{
     ViewData["Title"] = "Admin · Chi tiết đơn #" + Model.BookingCode;
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
-    bool isTransferUnpaid = Model.PaymentMethod == "Transfer"
-        && (Model.PaymentStatus?.ToLower() == "unpaid" || Model.PaymentStatus?.ToLower() == "pending");
+
 
     // ── Tính sẵn 1 lần, dùng lại khắp view ──
     string heroStatusClass = Model.Status.ToLower();
@@ -20,8 +19,7 @@
     string payClass2, payLabel2;
     if (Model.PaymentStatus?.ToLower() == "paid")
     { payClass2 = "paid"; payLabel2 = "Đã TT"; }
-    else if (Model.PaymentMethod == "Transfer")
-    { payClass2 = "awaiting-ck"; payLabel2 = "Chờ CK"; }
+
     else
     { payClass2 = "unpaid"; payLabel2 = "Chưa TT"; }
 
@@ -216,62 +214,6 @@
         color: var(--M);
     }
 
-    .alert-transfer {
-        background: #eff6ff;
-        border: 1.5px solid #93c5fd;
-        border-radius: 10px;
-        padding: 1.1rem 1.4rem;
-        margin-bottom: 1.4rem;
-        display: flex;
-        align-items: flex-start;
-        gap: .85rem;
-    }
-
-        .alert-transfer > i {
-            color: var(--BL);
-            font-size: 1.4rem;
-            flex-shrink: 0;
-            margin-top: .05rem;
-        }
-
-    .alert-transfer-body {
-        flex: 1;
-    }
-
-    .alert-transfer-title {
-        font-weight: 700;
-        color: var(--BL);
-        margin-bottom: .25rem;
-        font-size: .9rem;
-    }
-
-    .alert-transfer-sub {
-        font-size: .8rem;
-        color: #3b82f6;
-        line-height: 1.6;
-    }
-
-    .btn-confirm-pay {
-        display: inline-flex;
-        align-items: center;
-        gap: .45rem;
-        padding: .65rem 1.35rem;
-        background: linear-gradient(135deg,#1d4ed8,#3b82f6);
-        color: #fff;
-        border: none;
-        border-radius: 7px;
-        font-size: .82rem;
-        font-weight: 800;
-        cursor: pointer;
-        transition: all .22s;
-        flex-shrink: 0;
-        align-self: center;
-    }
-
-        .btn-confirm-pay:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(29,78,216,.35);
-        }
 
     .c {
         background: #fff;
@@ -711,24 +653,7 @@
             margin-top: 1px;
         }
 
-    .info-note {
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        border-radius: 6px;
-        padding: .65rem .9rem;
-        margin-top: .9rem;
-        font-size: .76rem;
-        color: #1d4ed8;
-        display: flex;
-        align-items: flex-start;
-        gap: .4rem;
-    }
 
-        .info-note i {
-            color: var(--BL);
-            flex-shrink: 0;
-            margin-top: 1px;
-        }
 
     .btn-modal-confirm-pay {
         padding: .6rem 1.3rem;
@@ -798,14 +723,6 @@
             padding-left: 1.2rem;
             padding-right: 1.2rem;
         }
-
-        .alert-transfer {
-            flex-direction: column;
-        }
-
-        .btn-confirm-pay {
-            align-self: flex-start;
-        }
     }
 
     @@media(max-width:600px) {
@@ -841,24 +758,6 @@
 
 <div class="pw">
 
-    @* ── Banner CK chờ xác nhận ── *@
-    @if (isTransferUnpaid)
-    {
-        <div class="alert-transfer">
-            <i class="bi bi-bank2"></i>
-            <div class="alert-transfer-body">
-                <div class="alert-transfer-title">⚡ Đơn chuyển khoản đang chờ xác nhận thanh toán</div>
-                <div class="alert-transfer-sub">
-                    Khách đã chọn <strong>Chuyển khoản</strong>.
-                    Sau khi kiểm tra tài khoản, nhấn nút xác nhận để kích hoạt đơn.<br>
-                    Nội dung CK cần khớp: <strong>@Model.BookingCode</strong>
-                </div>
-            </div>
-            <button type="button" class="btn-confirm-pay" onclick="openStatus('ConfirmCK')">
-                <i class="bi bi-check-circle-fill"></i> Xác nhận đã nhận tiền CK
-            </button>
-        </div>
-    }
 
     <!-- Hero -->
     <div class="d-hero">
@@ -1058,20 +957,7 @@
             <i class="bi bi-arrow-left"></i> Quay lại DS
         </a>
 
-        @if (isTransferUnpaid)
-        {
-            <button type="button" class="btn-a blue" onclick="openStatus('ConfirmCK')">
-                <i class="bi bi-bank"></i> Xác nhận CK
-            </button>
-        }
 
-        @if (Model.Status == "Pending"
-                && (Model.PaymentMethod != "Transfer" || Model.PaymentStatus?.ToLower() == "paid"))
-        {
-            <button type="button" class="btn-a prim" onclick="openStatus('Confirmed')">
-                <i class="bi bi-check-circle"></i> Xác nhận đơn
-            </button>
-        }
 
         @if (Model.Status == "Confirmed")
         {
@@ -1181,16 +1067,6 @@
             var date   = d.bookingDate;
 
             var cfg = {
-                ConfirmCK: {
-                    title:    'Xác nhận nhận tiền CK',
-                    desc:     'Xác nhận đã nhận tiền chuyển khoản cho đơn ' + code + '?',
-                    showNote: true
-                },
-                Confirmed: {
-                    title:    'Xác nhận đơn đặt sân',
-                    desc:     'Xác nhận đơn ' + code + ' — sân ' + court + ' ngày ' + date + '?',
-                    showNote: false
-                },
                 Playing: {
                     title:    'Chuyển sang Đang chơi',
                     desc:     'Xác nhận đơn ' + code + ' bắt đầu vào sân?',
@@ -1198,7 +1074,7 @@
                 },
                 Completed: {
                     title:    'Hoàn thành buổi chơi',
-                    desc:     'Xác nhận đơn ' + code + ' đã kết thúc và hoàn thành?',
+                    desc:     'Xác nhận đơn ' + code + ' đã kết thúc?',
                     showNote: false
                 }
             };

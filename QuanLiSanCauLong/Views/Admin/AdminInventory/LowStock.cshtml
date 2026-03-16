@@ -5,32 +5,8 @@
     Layout = isPartial ? null : "~/Views/Shared/_LayoutAdmin.cshtml";
     var facilities = ViewBag.Facilities as IEnumerable<QuanLiSanCauLong.Models.Facility> ?? Enumerable.Empty<QuanLiSanCauLong.Models.Facility>();
 }
-
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="~/css/admin-modal.css" />
 <style>
-    :root {
-        --deep: #1a1209;
-        --gold: #d4a017;
-        --gold2: #f5c842;
-        --warm: #f5ede0;
-        --cream: #fdf8f0;
-        --border: #e8ddd0;
-        --muted: #8a7560;
-        --red: #c94b2a;
-        --green: #15803d;
-        --blue: #1d4ed8;
-        --orange: #c2410c;
-        --purple: #7c3aed;
-    }
-
-    *, *::before, *::after {
-        box-sizing: border-box;
-    }
-
-    * {
-        font-family: 'Outfit',sans-serif;
-    }
-
     .pg {
         background: var(--warm);
         min-height: 100vh;
@@ -83,7 +59,7 @@
             border-color: var(--deep);
             color: var(--deep);
         }
-    /* Stats */
+    /* Stats strip */
     .stats {
         display: flex;
         gap: 1px;
@@ -198,43 +174,43 @@
         overflow: hidden;
     }
 
-    .lstbl {
+    table {
         width: 100%;
         border-collapse: collapse;
     }
 
-        .lstbl th {
-            padding: .72rem 1rem;
-            background: var(--warm);
-            font-size: .62rem;
-            font-weight: 700;
-            letter-spacing: .12em;
-            text-transform: uppercase;
-            color: var(--muted);
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-            white-space: nowrap;
-        }
+    th {
+        padding: .72rem 1rem;
+        background: var(--warm);
+        font-size: .62rem;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+    }
 
-        .lstbl td {
-            padding: .78rem 1rem;
-            border-bottom: 1px solid var(--border);
-            font-size: .83rem;
-            color: var(--deep);
-            vertical-align: middle;
-        }
+    td {
+        padding: .78rem 1rem;
+        border-bottom: 1px solid var(--border);
+        font-size: .83rem;
+        color: var(--deep);
+        vertical-align: middle;
+    }
 
-        .lstbl tr:last-child td {
-            border-bottom: none;
-        }
+    tr:last-child td {
+        border-bottom: none;
+    }
 
-        .lstbl tr:hover td {
-            background: var(--cream);
-        }
+    tr:hover td {
+        background: var(--cream);
+    }
 
-        .lstbl tr.row-danger td {
-            background: #fef2f2;
-        }
+    tr.row-danger td {
+        background: #fef2f2;
+    }
     /* Product cell */
     .p-cell {
         display: flex;
@@ -278,7 +254,7 @@
         color: var(--muted);
         margin-top: .1rem;
     }
-    /* Stock display */
+    /* Stock */
     .stk-main {
         font-family: 'Playfair Display',serif;
         font-size: 1rem;
@@ -306,7 +282,7 @@
         height: 100%;
         border-radius: 2px;
     }
-    /* Alert badges */
+    /* Badges */
     .fl-badge {
         display: inline-flex;
         align-items: center;
@@ -342,7 +318,7 @@
         background: #f5f3ff;
         color: var(--purple);
     }
-    /* Variants */
+    /* Variant chips */
     .var-chip {
         display: inline-block;
         padding: .1rem .4rem;
@@ -394,6 +370,7 @@
         white-space: nowrap;
         gap: .25rem;
         text-decoration: none;
+        color: var(--muted);
     }
 
         .act-b.qin:hover {
@@ -407,20 +384,7 @@
             color: var(--blue);
             background: rgba(29,78,216,.07);
         }
-    /* Empty */
-    .empty-row td {
-        text-align: center;
-        padding: 4rem;
-        color: var(--muted);
-    }
-
-    .empty-row i {
-        font-size: 2.5rem;
-        display: block;
-        margin-bottom: .75rem;
-        opacity: .2;
-    }
-
+    /* Misc */
     .pager {
         display: flex;
         align-items: center;
@@ -430,7 +394,7 @@
         font-size: .78rem;
         color: var(--muted);
     }
-    /* All clear banner */
+
     .all-clear {
         display: flex;
         flex-direction: column;
@@ -452,7 +416,6 @@
 </style>
 
 <div class="pg">
-    <!-- HEADER -->
     <div class="pg-hd">
         <div>
             <h1 class="pg-title">Cảnh Báo <em>Tồn Kho</em></h1>
@@ -461,50 +424,27 @@
         <a href="@Url.Action("Index", "AdminInventory")" class="btn-back"><i class="bi bi-arrow-left"></i> Về kho</a>
     </div>
 
-    <!-- STATS (click để filter) -->
     <div class="stats">
-        <div class="sb on" id="sbAll" onclick="setFilter('all')">
-            <div class="sn">@Model.Items.Count</div>
-            <div class="sl">Tổng cảnh báo</div>
-        </div>
-        <div class="sb" id="sbOut" onclick="setFilter('out')">
-            <div class="sn" style="color:var(--red)">@Model.OutOfStockCount</div>
-            <div class="sl">Hết hàng</div>
-        </div>
-        <div class="sb" id="sbLow" onclick="setFilter('low')">
-            <div class="sn" style="color:var(--orange)">@Model.LowStockCount</div>
-            <div class="sl">Sắp hết</div>
-        </div>
-        <div class="sb" id="sbExp" onclick="setFilter('expiring')">
-            <div class="sn" style="color:#92600a">@Model.ExpiringCount</div>
-            <div class="sl">Sắp hết hạn</div>
-        </div>
-        <div class="sb" id="sbXprd" onclick="setFilter('expired')">
-            <div class="sn" style="color:var(--red)">@Model.ExpiredCount</div>
-            <div class="sl">Đã hết hạn</div>
-        </div>
-        <div class="sb" id="sbDmg" onclick="setFilter('damaged')">
-            <div class="sn" style="color:var(--purple)">@Model.DamagedCount</div>
-            <div class="sl">Hàng hỏng</div>
-        </div>
+        <div class="sb on" id="sbAll" onclick="setFilter('all')"><div class="sn">@Model.Items.Count</div><div class="sl">Tổng cảnh báo</div></div>
+        <div class="sb" id="sbOut" onclick="setFilter('out')"><div class="sn" style="color:var(--red)">@Model.OutOfStockCount</div><div class="sl">Hết hàng</div></div>
+        <div class="sb" id="sbLow" onclick="setFilter('low')"><div class="sn" style="color:var(--orange)">@Model.LowStockCount</div><div class="sl">Sắp hết</div></div>
+        <div class="sb" id="sbExp" onclick="setFilter('expiring')"><div class="sn" style="color:#92600a">@Model.ExpiringCount</div><div class="sl">Sắp hết hạn</div></div>
+        <div class="sb" id="sbXprd" onclick="setFilter('expired')"><div class="sn" style="color:var(--red)">@Model.ExpiredCount</div><div class="sl">Đã hết hạn</div></div>
+        <div class="sb" id="sbDmg" onclick="setFilter('damaged')"><div class="sn" style="color:var(--purple)">@Model.DamagedCount</div><div class="sl">Hàng hỏng</div></div>
     </div>
 
     @if (!Model.Items.Any())
     {
         <div class="all-clear">
             <i class="bi bi-check-circle-fill"></i>
-            <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--deep);margin-bottom:.4rem;">Kho đang ổn định!</div>
-            <div style="font-size:.84rem;color:var(--muted);">Không có mặt hàng nào cần chú ý.</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--deep);margin-bottom:.4rem">Kho đang ổn định!</div>
+            <div style="font-size:.84rem;color:var(--muted)">Không có mặt hàng nào cần chú ý.</div>
         </div>
     }
     else
     {
-        <!-- TOOLBAR -->
         <div class="toolbar">
-            <div class="srch">
-                <i class="bi bi-search"></i>
-                <input type="text" id="srchIn" placeholder="Tên sản phẩm, SKU, cơ sở..." oninput="applyFilter()" />
-            </div>
+            <div class="srch"><i class="bi bi-search"></i><input type="text" id="srchIn" placeholder="Tên sản phẩm, SKU, cơ sở..." oninput="applyFilter()" /></div>
             <select class="sel" id="fFac" onchange="applyFilter()">
                 <option value="">Tất cả cơ sở</option>
                 @foreach (var f in facilities)
@@ -517,12 +457,11 @@
                 <option value="Retail">Bán lẻ</option>
                 <option value="Rental">Cho thuê</option>
             </select>
-            <span style="font-size:.78rem;color:var(--muted);white-space:nowrap;" id="rowCount">@Model.Items.Count mặt hàng</span>
+            <span style="font-size:.78rem;color:var(--muted);white-space:nowrap" id="rowCount">@Model.Items.Count mặt hàng</span>
         </div>
 
-        <!-- TABLE -->
         <div class="tbl-wrap">
-            <table class="lstbl">
+            <table>
                 <thead>
                     <tr>
                         <th>Sản phẩm</th>
@@ -544,18 +483,13 @@
                         if (item.IsExpired) flags.Add("expired");
                         else if (item.IsExpiringSoon) flags.Add("expiring");
                         if (item.HasDamaged) flags.Add("damaged");
-                        var flagStr = string.Join(" ", flags);
                         var barPct = item.MinQuantity > 0 ? Math.Min(100, item.AvailableQuantity * 100 / item.MinQuantity) : 50;
                         var barClr = item.IsOutOfStock ? "var(--red)" : item.IsLowStock ? "var(--orange)" : "var(--green)";
                         var stkCls = item.IsOutOfStock ? "stk-zero" : "stk-low";
-                        var isDanger = item.IsOutOfStock || item.IsExpired;
-
-                        <tr id="ls-@item.InventoryId"
-                            class="@(isDanger ? "row-danger" : "")"
-                            data-filter="@flagStr"
-                            data-fac="@(item.FacilityName ?? "")"
-                            data-bh="@(item.BehaviorType ?? "")"
-                            data-search="@(item.ProductName?.ToLower()) @(item.ProductCode?.ToLower()) @(item.FacilityName?.ToLower())">
+                        <tr id="ls-@item.InventoryId" class="@(item.IsOutOfStock || item.IsExpired ? "row-danger" : "")"
+                            data-filter="@string.Join(" ", flags)" data-fac="@item.FacilityName"
+                            data-bh="@item.BehaviorType"
+                            data-search="@item.ProductName?.ToLower() @item.ProductCode?.ToLower() @item.FacilityName?.ToLower()">
                             <td>
                                 <div class="p-cell">
                                     <div class="p-thumb">
@@ -565,31 +499,24 @@
                                         }
                                         else
                                         {
+
                                             <i class="bi bi-box-seam"></i>
                                         }
                                     </div>
-                                    <div>
-                                        <div class="p-name">@item.ProductName</div>
-                                        <div class="p-meta">@item.CategoryName · @(item.ProductCode ?? "—")</div>
-                                    </div>
+                                    <div><div class="p-name">@item.ProductName</div><div class="p-meta">@item.CategoryName · @(item.ProductCode ?? "—")</div></div>
                                 </div>
                             </td>
-                            <td style="font-size:.78rem;color:var(--muted);">@(item.FacilityName ?? "—")</td>
-                            <td style="text-align:right;">
-                                <div class="@stkCls stk-main">
-                                    @item.AvailableQuantity
-                                    <span style="font-size:.65rem;font-weight:400;color:var(--muted)"> / @item.Quantity @item.Unit</span>
-                                </div>
+                            <td style="font-size:.78rem;color:var(--muted)">@(item.FacilityName ?? "—")</td>
+                            <td style="text-align:right">
+                                <div class="@stkCls stk-main">@item.AvailableQuantity <span style="font-size:.65rem;font-weight:400;color:var(--muted)"> / @item.Quantity @item.Unit</span></div>
                                 @if (item.MinQuantity > 0)
                                 {
-                                    <div class="stk-bar" style="margin-left:auto;">
-                                        <div class="stk-bar-fill" style="width:@(Math.Min(barPct, 100))%;background:@barClr;"></div>
-                                    </div>
-                                    <div style="font-size:.62rem;color:var(--muted);margin-top:.15rem;text-align:right;">Min: @item.MinQuantity</div>
-                                }
+                                    <div class="stk-bar" style="margin-left:auto"><div class="stk-bar-fill" style="width:@(Math.Min(barPct, 100))%;background:@barClr"></div></div>
+                                    <div style="font-size:.62rem;color:var(--muted);margin-top:.15rem;text-align:right">Min: @item.MinQuantity</div>
+        }
                                 @if (item.DamagedQuantity > 0)
                                 {
-                                    <div style="font-size:.66rem;color:var(--purple);margin-top:.1rem;">@item.DamagedQuantity hỏng</div>
+                                    <div style="font-size:.66rem;color:var(--purple);margin-top:.1rem">@item.DamagedQuantity hỏng</div>
                                 }
                             </td>
                             <td>
@@ -623,20 +550,18 @@
                                     <div class="@cls">@item.ExpiryDate.Value.ToString("dd/MM/yyyy")</div>
                                     @if (item.DaysUntilExpiry.HasValue)
                                     {
-                                        <div style="font-size:.64rem;color:var(--muted);">
-                                            @(item.IsExpired ? $"Đã hết hạn {-item.DaysUntilExpiry} ngày" : $"Còn {item.DaysUntilExpiry} ngày")
-                                        </div>
+                                        <div style="font-size:.64rem;color:var(--muted)">@(item.IsExpired ? $"Đã hết hạn {-item.DaysUntilExpiry} ngày" : $"Còn {item.DaysUntilExpiry} ngày")</div>
                                     }
                                 }
                                 else
                                 {
-                                    <span style="color:var(--muted);font-size:.76rem;">—</span>
+                                    <span style="color:var(--muted);font-size:.76rem">—</span>
                                 }
                             </td>
                             <td>
                                 @if (item.LowVariants?.Any() == true)
                                 {
-                                    foreach (var v in item.LowVariants.Take(3))
+                                    @foreach (var v in item.LowVariants.Take(3))
                                     {
                                         <span class="var-chip">@v.DisplayName: @v.AvailableQty</span>
                                     }
@@ -647,17 +572,17 @@
                                 }
                                 else
                                 {
-                                    <span style="color:var(--muted);font-size:.76rem;">—</span>
+                                    <span style="color:var(--muted);font-size:.76rem">—</span>
                                 }
                             </td>
-                            <td style="font-size:.76rem;color:var(--muted);">
+                            <td style="font-size:.76rem;color:var(--muted)">
                                 @if (!string.IsNullOrEmpty(item.SupplierName))
                                 {
                                     <div>@item.SupplierName</div>
                                 }
                                 @if (!string.IsNullOrEmpty(item.BatchNumber))
                                 {
-                                    <div style="font-family:monospace;font-size:.66rem;">@item.BatchNumber</div>
+                                    <div style="font-family:monospace;font-size:.66rem">@item.BatchNumber</div>
                                 }
                                 @if (string.IsNullOrEmpty(item.SupplierName) && string.IsNullOrEmpty(item.BatchNumber))
                                 {
@@ -666,7 +591,7 @@
                             </td>
                             <td>
                                 <div class="act-g">
-                                    <button class="act-b qin" onclick="quickStockIn(@item.InventoryId,@item.ProductId,'@Html.Raw(item.ProductName?.Replace("'", "\'"))')" title="Nhập kho ngay">
+                                    <button class="act-b qin" onclick="quickStockIn(@item.InventoryId,@item.ProductId,'@Html.Raw(item.ProductName?.Replace("'", "\\'"))')" title="Nhập kho ngay">
                                         <i class="bi bi-box-arrow-in-down"></i> Nhập
                                     </button>
                                     <a href="@Url.Action("History", "AdminInventory", new { productId = item.ProductId })" class="act-b qhist" title="Lịch sử">
@@ -678,17 +603,14 @@
                     }
                 </tbody>
             </table>
-            <div class="pager">
-                <span id="countLabel">@Model.Items.Count mặt hàng</span>
-            </div>
+            <div class="pager"><span id="countLabel">@Model.Items.Count mặt hàng</span></div>
         </div>
     }
 </div>
 
-<!-- STOCKIN MODAL (inline mini) -->
 <div class="modal fade" id="lsModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg modal-dialog-centered" style="max-width:600px">
-        <div class="modal-content" id="lsModalBody" style="border-radius:14px;border:none;">
+        <div class="modal-content" id="lsModalBody" style="border-radius:14px;border:none">
             <div class="p-5 text-center"><div class="spinner-border" style="color:var(--gold)"></div></div>
         </div>
     </div>
@@ -698,51 +620,36 @@
     @Html.AntiForgeryToken()
     <script>
         let lsModal;
-        document.addEventListener('DOMContentLoaded', () => { lsModal = new bootstrap.Modal(document.getElementById('lsModal')); });
-
-        /* ── FILTER ── */
-        let activeFilter = 'all';
-        function setFilter(f) {
-            activeFilter = f;
-            const map = { all:'sbAll', out:'sbOut', low:'sbLow', expiring:'sbExp', expired:'sbXprd', damaged:'sbDmg' };
-            document.querySelectorAll('.sb').forEach(b => b.classList.remove('on'));
-            document.getElementById(map[f] || 'sbAll')?.classList.add('on');
+        document.addEventListener('DOMContentLoaded',()=>{
+            lsModal=new bootstrap.Modal(document.getElementById('lsModal'));
+            document.getElementById('sbAll')?.classList.add('on');
+        });
+        let activeFilter='all';
+        function setFilter(f){
+            activeFilter=f;
+            const map={all:'sbAll',out:'sbOut',low:'sbLow',expiring:'sbExp',expired:'sbXprd',damaged:'sbDmg'};
+            document.querySelectorAll('.sb').forEach(b=>b.classList.remove('on'));
+            document.getElementById(map[f]||'sbAll')?.classList.add('on');
             applyFilter();
         }
-        function applyFilter() {
-            const q   = document.getElementById('srchIn')?.value.toLowerCase() || '';
-            const fac = document.getElementById('fFac')?.value || '';
-            const bh  = document.getElementById('fBh')?.value  || '';
-            let cnt = 0;
-            document.querySelectorAll('#lsTbody tr[id^="ls-"]').forEach(r => {
-                const matchSearch = !q   || r.dataset.search?.includes(q);
-                const matchFac    = !fac || r.dataset.fac === fac;
-                const matchBh     = !bh  || r.dataset.bh  === bh;
-                const matchFilter = activeFilter === 'all' || r.dataset.filter?.includes(activeFilter);
-                const show = matchSearch && matchFac && matchBh && matchFilter;
-                r.style.display = show ? '' : 'none';
-                if(show) cnt++;
+        function applyFilter(){
+            const q=document.getElementById('srchIn')?.value.toLowerCase()||'';
+            const fac=document.getElementById('fFac')?.value||'';
+            const bh=document.getElementById('fBh')?.value||'';
+            let cnt=0;
+            document.querySelectorAll('#lsTbody tr[id^="ls-"]').forEach(r=>{
+                const show=(!q||r.dataset.search?.includes(q))&&(!fac||r.dataset.fac===fac)&&(!bh||r.dataset.bh===bh)&&(activeFilter==='all'||r.dataset.filter?.includes(activeFilter));
+                r.style.display=show?'':'none'; if(show)cnt++;
             });
-            document.getElementById('rowCount').textContent   = cnt + ' mặt hàng';
-            document.getElementById('countLabel').textContent = cnt + ' mặt hàng';
+            document.getElementById('rowCount').textContent=cnt+' mặt hàng';
+            document.getElementById('countLabel').textContent=cnt+' mặt hàng';
         }
-
-        /* ── QUICK STOCK IN ── */
-        async function quickStockIn(invId, productId, productName) {
-            document.getElementById('lsModalBody').innerHTML =
-                '<div class="p-5 text-center"><div class="spinner-border" style="color:var(--gold)"></div></div>';
+        async function quickStockIn(invId,productId,productName){
+            document.getElementById('lsModalBody').innerHTML='<div class="p-5 text-center"><div class="spinner-border" style="color:var(--gold)"></div></div>';
             lsModal.show();
-            const r = await fetch(`/AdminInventory/StockIn?invId=${invId}&preProductId=${productId}&preProductName=${encodeURIComponent(productName)}`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            document.getElementById('lsModalBody').innerHTML = await r.text();
-            // Run scripts
-            document.getElementById('lsModalBody').querySelectorAll('script').forEach(s => {
-                const n = document.createElement('script'); n.text = s.text; s.replaceWith(n);
-            });
+            const r=await fetch(`/AdminInventory/StockIn?invId=${invId}&preProductId=${productId}&preProductName=${encodeURIComponent(productName)}`,{headers:{'X-Requested-With':'XMLHttpRequest'}});
+            document.getElementById('lsModalBody').innerHTML=await r.text();
+            document.getElementById('lsModalBody').querySelectorAll('script').forEach(s=>{const n=document.createElement('script');n.text=s.text;s.replaceWith(n);});
         }
-
-        // Init
-        document.addEventListener('DOMContentLoaded', () => document.getElementById('sbAll')?.classList.add('on'));
     </script>
 }

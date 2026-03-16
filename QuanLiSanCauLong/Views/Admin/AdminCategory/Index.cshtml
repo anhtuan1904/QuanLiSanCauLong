@@ -1,726 +1,440 @@
 ﻿@model IEnumerable<QuanLiSanCauLong.Models.ProductCategory>
 @{
-    ViewData["Title"] = "Quản Lý Danh Mục";
+    ViewData["Title"] = "Danh mục sản phẩm";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
-
-@functions {
-    string BhIcon(string b) => b switch { "Rental" => "bi-arrow-repeat", "Service" => "bi-wrench-adjustable", _ => "bi-cart3" };
-    string BhLabel(string b) => b switch { "Rental" => "Cho thuê", "Service" => "Dịch vụ", _ => "Bán lẻ" };
-    string BhBg(string b) => b switch { "Rental" => "#eff6ff", "Service" => "#f5f3ff", _ => "#f0fdf4" };
-    string BhColor(string b) => b switch { "Rental" => "#1d4ed8", "Service" => "#7c3aed", _ => "#166534" };
-    string TypeLabel(string t) => t switch
-    {
-        "Food" => "Đồ ăn",
-        "Beverage" => "Thức uống",
-        "Equipment" => "Dụng cụ",
-        "Clothing" => "Quần áo",
-        "Accessory" => "Phụ kiện",
-        _ => "Khác"
-    };
-    string TypeIcon(string t) => t switch
-    {
-        "Food" => "bi-egg-fried",
-        "Beverage" => "bi-cup-straw",
-        "Equipment" => "bi-gear",
-        "Clothing" => "bi-bag-heart",
-        "Accessory" => "bi-watch",
-        _ => "bi-folder2-open"
-    };
-}
-
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+<link rel="stylesheet" href="~/css/admin-modal.css" />
 <style>
-    :root {
-        --deep: #1a1209;
-        --gold: #d4a017;
-        --gold2: #f5c842;
-        --cream: #fdf8f0;
-        --warm: #f5ede0;
-        --border: #e8ddd0;
-        --muted: #8a7560;
-        --red: #c94b2a;
-        --green: #15803d;
-        --blue: #1d4ed8;
-        --purple: #7c3aed;
-    }
-
-    *, *::before, *::after {
-        box-sizing: border-box;
-    }
-
-    body, * {
-        font-family: 'Outfit',sans-serif;
-    }
-
     .pg {
         background: var(--warm);
         min-height: 100vh;
         padding: 2rem;
     }
-
-    /* ── HEADER ── */
+    /* header */
     .pg-hd {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
         margin-bottom: 1.75rem;
         flex-wrap: wrap;
-        gap: 1rem;
+        gap: .75rem;
     }
 
     .pg-title {
         font-family: 'Playfair Display',serif;
-        font-size: 1.9rem;
+        font-size: 1.75rem;
         font-weight: 700;
         color: var(--deep);
     }
 
         .pg-title em {
-            font-style: italic;
             color: var(--gold);
+            font-style: italic;
         }
 
     .pg-sub {
-        font-size: .82rem;
+        font-size: .8rem;
         color: var(--muted);
-        margin-top: .2rem;
+        margin-top: .15rem;
     }
-
-    .btn-add {
-        background: linear-gradient(135deg,var(--gold),var(--gold2));
-        color: var(--deep);
-        border: none;
-        padding: .7rem 1.4rem;
-        font-size: .86rem;
-        font-weight: 700;
-        border-radius: 8px;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: .45rem;
-        transition: all .22s;
-    }
-
-        .btn-add:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 5px 16px rgba(212,160,23,.35);
-        }
-
-    /* ── ALERTS ── */
-    .sys-alert {
-        padding: .85rem 1.2rem;
-        border-radius: 8px;
-        margin-bottom: 1.2rem;
-        font-size: .84rem;
-        display: flex;
-        align-items: center;
-        gap: .65rem;
-    }
-
-        .sys-alert.ok {
-            background: rgba(21,128,61,.07);
-            border: 1px solid rgba(21,128,61,.2);
-            color: var(--green);
-        }
-
-        .sys-alert.err {
-            background: rgba(201,75,42,.06);
-            border: 1px solid rgba(201,75,42,.2);
-            color: var(--red);
-        }
-
-    /* ── STATS STRIP ── */
-    .stats {
-        display: flex;
+    /* stat strip */
+    .stat-strip {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
         gap: 1px;
         background: var(--border);
         border: 1px solid var(--border);
         border-radius: 10px;
         overflow: hidden;
-        margin-bottom: 1.4rem;
+        margin-bottom: 1.75rem;
     }
 
-    .stat-box {
+    .ss-box {
         background: #fff;
         padding: .85rem 1.2rem;
-        flex: 1;
-        min-width: 0;
     }
 
-    .stat-n {
+    .ss-n {
         font-family: 'Playfair Display',serif;
-        font-size: 1.8rem;
+        font-size: 1.6rem;
         font-weight: 700;
         color: var(--deep);
         line-height: 1;
     }
 
-    .stat-l {
-        font-size: .68rem;
+    .ss-l {
+        font-size: .62rem;
         letter-spacing: .08em;
         text-transform: uppercase;
         color: var(--muted);
-        margin-top: .2rem;
-        display: flex;
-        align-items: center;
-        gap: .3rem;
+        margin-top: .22rem;
     }
-
-    .stat-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-    }
-
-    /* ── TOOLBAR ── */
-    .toolbar {
-        display: flex;
-        align-items: center;
-        gap: .65rem;
-        margin-bottom: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .tb-search {
-        flex: 1;
-        min-width: 220px;
-        position: relative;
-    }
-
-        .tb-search i {
-            position: absolute;
-            left: .75rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--muted);
-            font-size: .8rem;
-        }
-
-        .tb-search input {
-            width: 100%;
-            padding: .58rem .85rem .58rem 2.2rem;
-            border: 1px solid var(--border);
-            border-radius: 7px;
-            font-family: 'Outfit',sans-serif;
-            font-size: .83rem;
-            color: var(--deep);
-            background: #fff;
-            outline: none;
-            transition: border-color .2s;
-        }
-
-            .tb-search input:focus {
-                border-color: var(--gold);
-            }
-
-    .tb-sel {
-        padding: .58rem .85rem;
-        border: 1px solid var(--border);
-        border-radius: 7px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .83rem;
-        color: var(--deep);
-        background: #fff;
-        outline: none;
-        cursor: pointer;
-    }
-
-        .tb-sel:focus {
-            border-color: var(--gold);
-        }
-
-    /* ── TABLE ── */
-    .tbl-wrap {
+    /* table card */
+    .tbl-card {
         background: #fff;
         border: 1px solid var(--border);
         border-radius: 12px;
         overflow: hidden;
     }
 
-    .cat-tbl {
+    .tbl-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: .85rem 1.1rem;
+        border-bottom: 1px solid var(--border);
+        gap: .6rem;
+        flex-wrap: wrap;
+    }
+
+    .srch-wrap {
+        position: relative;
+    }
+
+        .srch-wrap i {
+            position: absolute;
+            left: .7rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: .8rem;
+        }
+
+    .srch {
+        padding: .52rem 1rem .52rem 2.1rem;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        font-size: .82rem;
+        width: 220px;
+        outline: none;
+        background: #fff;
+    }
+
+        .srch:focus {
+            border-color: var(--gold);
+        }
+
+    .stat-chip {
+        font-size: .72rem;
+        color: var(--muted);
+    }
+
+        .stat-chip b {
+            color: var(--deep);
+        }
+
+    table {
         width: 100%;
         border-collapse: collapse;
     }
 
-        .cat-tbl th {
-            padding: .8rem 1rem;
-            background: var(--warm);
-            font-size: .63rem;
-            font-weight: 700;
-            letter-spacing: .12em;
-            text-transform: uppercase;
-            color: var(--muted);
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-            white-space: nowrap;
-        }
-
-        .cat-tbl td {
-            padding: .85rem 1rem;
-            border-bottom: 1px solid var(--border);
-            font-size: .84rem;
-            color: var(--deep);
-            vertical-align: middle;
-        }
-
-        .cat-tbl tr:last-child td {
-            border-bottom: none;
-        }
-
-        .cat-tbl tr:hover td {
-            background: var(--cream);
-        }
-
-    /* Icon cell */
-    .icon-cell {
-        display: flex;
-        align-items: center;
-        gap: .75rem;
-    }
-
-    .cat-icon {
-        width: 38px;
-        height: 38px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: .9rem;
-        flex-shrink: 0;
-    }
-
-    /* Name */
-    .cat-name {
+    th {
+        padding: .65rem 1rem;
+        text-align: left;
+        font-size: .64rem;
         font-weight: 700;
-        font-size: .88rem;
+        text-transform: uppercase;
+        letter-spacing: .1em;
+        color: var(--muted);
+        background: #231a0e;
+        color: var(--gold);
+        border-bottom: 1px solid var(--border);
+    }
+
+    td {
+        padding: .78rem 1rem;
+        border-bottom: 1px solid var(--border);
+        font-size: .82rem;
         color: var(--deep);
-        line-height: 1.2;
+        vertical-align: middle;
     }
 
-    .cat-desc {
-        font-size: .7rem;
-        color: var(--muted);
-        margin-top: .15rem;
-        max-width: 260px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    tr:last-child td {
+        border-bottom: none;
     }
 
-    /* Badges */
-    .bh-badge {
+    tr:hover td {
+        background: #fffbf2;
+    }
+    /* badges */
+    .bh-tag {
         display: inline-flex;
         align-items: center;
-        gap: .28rem;
-        padding: .22rem .65rem;
-        border-radius: 4px;
-        font-size: .66rem;
-        font-weight: 700;
-    }
-
-    .type-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: .25rem;
-        padding: .18rem .55rem;
-        background: var(--warm);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        font-size: .68rem;
-        color: var(--muted);
-        font-weight: 600;
-    }
-
-    /* Feature chips */
-    .feat-chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: .25rem;
-    }
-
-    .fchip {
-        padding: .14rem .45rem;
-        border-radius: 3px;
-        font-size: .6rem;
-        font-weight: 700;
-        background: var(--warm);
-        border: 1px solid var(--border);
-        color: var(--muted);
-        white-space: nowrap;
-    }
-
-        .fchip.on {
-            background: rgba(21,128,61,.08);
-            border-color: rgba(21,128,61,.2);
-            color: var(--green);
-        }
-
-    /* Product count */
-    .prod-cnt {
-        font-family: 'Playfair Display',serif;
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: var(--deep);
-    }
-
-    .prod-cnt-sub {
-        font-size: .65rem;
-        color: var(--muted);
-    }
-
-    /* Active toggle */
-    .act-toggle {
-        display: inline-flex;
-        align-items: center;
-        gap: .4rem;
-        cursor: pointer;
-        font-size: .74rem;
-        font-weight: 600;
-    }
-
-    .toggle-track {
-        width: 34px;
-        height: 18px;
-        border-radius: 9px;
-        background: #d1d5db;
-        position: relative;
-        transition: background .2s;
-        flex-shrink: 0;
-    }
-
-        .toggle-track.on {
-            background: var(--green);
-        }
-
-    .toggle-thumb {
-        position: absolute;
-        top: 2px;
-        left: 2px;
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        background: #fff;
-        transition: transform .2s;
-        box-shadow: 0 1px 3px rgba(0,0,0,.2);
-    }
-
-    .toggle-track.on .toggle-thumb {
-        transform: translateX(16px);
-    }
-
-    /* Action buttons */
-    .act-g {
-        display: flex;
-        gap: .28rem;
-    }
-
-    .act-b {
-        width: 30px;
-        height: 30px;
-        border-radius: 6px;
-        border: 1px solid var(--border);
-        background: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        color: var(--muted);
-        transition: all .18s;
-        font-size: .75rem;
-        text-decoration: none;
-    }
-
-        .act-b.edit:hover {
-            border-color: var(--gold);
-            color: var(--deep);
-            background: rgba(212,160,23,.07);
-        }
-
-        .act-b.view:hover {
-            border-color: var(--blue);
-            color: var(--blue);
-            background: rgba(29,78,216,.07);
-        }
-
-        .act-b.del:hover {
-            border-color: var(--red);
-            color: var(--red);
-            background: rgba(201,75,42,.07);
-        }
-
-    /* Empty */
-    .empty-row td {
-        text-align: center;
-        padding: 4rem;
-        color: var(--muted);
-    }
-
-    .empty-row i {
-        font-size: 2.5rem;
-        display: block;
-        margin-bottom: .75rem;
-        opacity: .2;
-    }
-
-    /* Pagination */
-    .pager {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: .9rem 1.2rem;
-        border-top: 1px solid var(--border);
-        font-size: .78rem;
-        color: var(--muted);
-    }
-
-    .pager-btns {
-        display: flex;
         gap: .3rem;
+        padding: .2rem .62rem;
+        border-radius: 20px;
+        font-size: .68rem;
+        font-weight: 700;
     }
 
-    .pg-b {
-        min-width: 32px;
-        height: 32px;
-        border-radius: 6px;
-        border: 1px solid var(--border);
-        background: #fff;
-        font-size: .78rem;
+    .bh-retail {
+        background: #f0fdf4;
+        color: #166534;
+    }
+
+    .bh-rental {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .bh-service {
+        background: #f5f3ff;
+        color: #7c3aed;
+    }
+    /* switch */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 38px;
+        height: 22px;
+    }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+    .slider {
+        position: absolute;
+        inset: 0;
+        background: #d1d5db;
+        border-radius: 22px;
         cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        transition: .25s;
+    }
+
+        .slider::before {
+            content: '';
+            position: absolute;
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            top: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: .25s;
+        }
+
+    input:checked + .slider {
+        background: var(--gold);
+    }
+
+        input:checked + .slider::before {
+            transform: translateX(16px);
+        }
+    /* action btns */
+    .act-btn {
+        background: none;
+        border: 1.5px solid var(--border);
+        border-radius: 6px;
+        padding: .3rem .62rem;
+        cursor: pointer;
+        font-size: .78rem;
         color: var(--muted);
         transition: all .15s;
     }
 
-        .pg-b:hover {
-            border-color: var(--gold);
+        .act-btn:hover {
+            border-color: var(--deep);
             color: var(--deep);
         }
 
-        .pg-b.on {
-            background: var(--deep);
-            border-color: var(--deep);
-            color: var(--gold2);
+        .act-btn.del:hover {
+            border-color: var(--red);
+            color: var(--red);
         }
+    /* empty */
+    .empty-td {
+        text-align: center;
+        padding: 3.5rem;
+        color: var(--muted);
+        font-size: .88rem;
+    }
+
+        .empty-td i {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: .75rem;
+            opacity: .2;
+        }
+    /* alert */
+    .sys-alert {
+        padding: .85rem 1.2rem;
+        border-radius: 8px;
+        margin-bottom: 1.2rem;
+        font-size: .83rem;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+
+        .sys-alert.ok {
+            background: rgba(22,163,74,.08);
+            border: 1px solid rgba(22,163,74,.25);
+            color: #15803d;
+        }
+
+        .sys-alert.err {
+            background: rgba(201,75,42,.06);
+            border: 1px solid rgba(201,75,42,.25);
+            color: #c94b2a;
+        }
+    /* cat image thumbnail */
+    .cat-thumb {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        object-fit: cover;
+        border: 1px solid var(--border);
+        flex-shrink: 0;
+    }
+
+    .cat-thumb-ph {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        background: var(--warm);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    @@media(max-width:600px) {
+        .stat-strip {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .srch {
+            width: 160px;
+        }
+    }
 </style>
 
 <div class="pg">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="sys-alert ok"><i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="sys-alert err"><i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]</div>
+    }
 
-    <!-- HEADER -->
     <div class="pg-hd">
         <div>
-            <h1 class="pg-title">Danh Mục <em>Sản Phẩm</em></h1>
-            <div class="pg-sub">Quản lý phân loại hàng hóa — bán lẻ, cho thuê, dịch vụ</div>
+            <div class="pg-title">Danh mục <em>sản phẩm</em></div>
+            <div class="pg-sub">Quản lý phân loại hàng hóa — @Model.Count() danh mục</div>
         </div>
-        <button class="btn-add" onclick="openCreateModal()">
+        <button class="btn-submit" onclick="openCreate()">
             <i class="bi bi-plus-lg"></i> Thêm danh mục
         </button>
     </div>
 
-    <!-- ALERTS -->
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="sys-alert ok"><i class="bi bi-check-circle-fill"></i>@TempData["SuccessMessage"]</div>
-    }
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="sys-alert err"><i class="bi bi-exclamation-circle-fill"></i>@TempData["ErrorMessage"]</div>
-    }
-
-    <!-- STATS -->
-    @{
-        var total = Model.Count();
-        var active = Model.Count(c => c.IsActive);
-        var retail = Model.Count(c => c.BehaviorType == "Retail");
-        var rental = Model.Count(c => c.BehaviorType == "Rental");
-        var service = Model.Count(c => c.BehaviorType == "Service");
-        var withProds = Model.Count(c => c.Products?.Any() == true);
-    }
-    <div class="stats">
-        <div class="stat-box">
-            <div class="stat-n">@total</div>
-            <div class="stat-l"><span class="stat-dot" style="background:var(--gold)"></span>Tổng danh mục</div>
+    <div class="stat-strip">
+        <div class="ss-box">
+            <div class="ss-n">@Model.Count()</div>
+            <div class="ss-l">Tổng danh mục</div>
         </div>
-        <div class="stat-box">
-            <div class="stat-n" style="color:var(--green)">@active</div>
-            <div class="stat-l"><span class="stat-dot" style="background:var(--green)"></span>Đang hoạt động</div>
+        <div class="ss-box">
+            <div class="ss-n" style="color:#15803d">@Model.Count(c => c.IsActive)</div>
+            <div class="ss-l">Đang kích hoạt</div>
         </div>
-        <div class="stat-box">
-            <div class="stat-n" style="color:#166534">@retail</div>
-            <div class="stat-l"><span class="stat-dot" style="background:#16a34a"></span>Bán lẻ</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-n" style="color:var(--blue)">@rental</div>
-            <div class="stat-l"><span class="stat-dot" style="background:var(--blue)"></span>Cho thuê</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-n" style="color:var(--purple)">@service</div>
-            <div class="stat-l"><span class="stat-dot" style="background:var(--purple)"></span>Dịch vụ</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-n">@withProds</div>
-            <div class="stat-l"><span class="stat-dot" style="background:var(--muted)"></span>Có sản phẩm</div>
+        <div class="ss-box">
+            <div class="ss-n" style="color:var(--gold)">@Model.Sum(c => c.Products?.Count ?? 0)</div>
+            <div class="ss-l">Tổng sản phẩm</div>
         </div>
     </div>
 
-    <!-- TOOLBAR -->
-    <div class="toolbar">
-        <div class="tb-search">
-            <i class="bi bi-search"></i>
-            <input type="text" id="searchInput" placeholder="Tìm tên danh mục..." oninput="filterTable()" />
+    <div class="tbl-card">
+        <div class="tbl-top">
+            <div class="srch-wrap">
+                <i class="bi bi-search"></i>
+                <input class="srch" id="srch" placeholder="Tìm danh mục..." oninput="filterTable()" />
+            </div>
+            <span class="stat-chip" id="rowCnt"><b>@Model.Count()</b> danh mục</span>
         </div>
-        <select class="tb-sel" id="filterBh" onchange="filterTable()">
-            <option value="">Tất cả loại nghiệp vụ</option>
-            <option value="Retail">Bán lẻ</option>
-            <option value="Rental">Cho thuê</option>
-            <option value="Service">Dịch vụ</option>
-        </select>
-        <select class="tb-sel" id="filterType" onchange="filterTable()">
-            <option value="">Tất cả loại hàng</option>
-            <option value="Food">Đồ ăn</option>
-            <option value="Beverage">Thức uống</option>
-            <option value="Equipment">Dụng cụ</option>
-            <option value="Clothing">Quần áo</option>
-            <option value="Accessory">Phụ kiện</option>
-            <option value="Other">Khác</option>
-        </select>
-        <select class="tb-sel" id="filterStatus" onchange="filterTable()">
-            <option value="">Tất cả trạng thái</option>
-            <option value="active">Đang hoạt động</option>
-            <option value="inactive">Đã ẩn</option>
-        </select>
-    </div>
 
-    <!-- TABLE -->
-    <div class="tbl-wrap">
-        <table class="cat-tbl" id="catTable">
+        <table>
             <thead>
                 <tr>
-                    <th style="width:40px"><input type="checkbox" id="checkAll" onchange="toggleAll(this)" /></th>
                     <th>Danh mục</th>
-                    <th>Loại nghiệp vụ</th>
-                    <th>Loại hàng</th>
-                    <th>Tính năng</th>
-                    <th style="width:90px;text-align:center">Sản phẩm</th>
-                    <th style="width:100px;text-align:center">Trạng thái</th>
-                    <th style="width:110px;text-align:right">Thao tác</th>
+                    <th>Nghiệp vụ</th>
+                    <th>Sản phẩm</th>
+                    <th>Đơn vị</th>
+                    <th style="text-align:center">Kích hoạt</th>
+                    <th style="text-align:right">Thao tác</th>
                 </tr>
             </thead>
             <tbody id="catTbody">
                 @if (!Model.Any())
                 {
-                    <tr class="empty-row">
-                        <td colspan="8">
-                            <i class="bi bi-folder-x"></i>
-                            <div style="font-weight:700;margin-bottom:.3rem;">Chưa có danh mục nào</div>
-                            <div style="font-size:.8rem;">Nhấn <strong>+ Thêm danh mục</strong> để bắt đầu</div>
+                    <tr>
+                        <td colspan="6" class="empty-td">
+                            <i class="bi bi-inbox"></i>
+                            Chưa có danh mục nào<br />
+                            <button class="btn-submit" style="margin-top:.75rem;font-size:.78rem" onclick="openCreate()">
+                                <i class="bi bi-plus-lg"></i> Thêm danh mục đầu tiên
+                            </button>
                         </td>
                     </tr>
                 }
                 @foreach (var cat in Model)
                 {
-                    var bh = cat.BehaviorType ?? "Retail";
-                    var tp = cat.CategoryType ?? "";
-                    var prodCnt = cat.Products?.Count ?? 0;
-                    <tr id="row-@cat.CategoryId"
-                        data-name="@cat.CategoryName.ToLower()"
-                        data-bh="@bh"
-                        data-type="@tp"
-                        data-active="@(cat.IsActive ? "active" : "inactive")">
-                        <td><input type="checkbox" class="row-cb" value="@cat.CategoryId" /></td>
+                    var bhClass = cat.BehaviorType switch { "Rental" => "bh-rental", "Service" => "bh-service", _ => "bh-retail" };
+                    var bhLabel = cat.BehaviorType switch { "Rental" => "Cho thuê", "Service" => "Dịch vụ", _ => "Bán lẻ" };
+                    var bhIcon = cat.BehaviorType switch { "Rental" => "bi-arrow-repeat", "Service" => "bi-wrench-adjustable", _ => "bi-cart3" };
+                    <tr data-name="@cat.CategoryName.ToLower()">
                         <td>
-                            <div class="icon-cell">
-                                <div class="cat-icon" style="background:@(tp switch { "Food" => "#fffbeb", "Beverage" => "#f0f9ff", "Equipment" => "#f0fdf4", "Clothing" => "#faf5ff", "Accessory" => "#fdf2f8", _ => "#f5f0e8" });">
-                                    <i class="bi @TypeIcon(tp)" style="color:@(tp switch { "Food" => "#b45309", "Beverage" => "#0369a1", "Equipment" => "#166534", "Clothing" => "#7e22ce", "Accessory" => "#be185d", _ => "var(--muted)" })"></i>
-                                </div>
+                            <div style="display:flex;align-items:center;gap:.7rem">
+                                @if (!string.IsNullOrEmpty(cat.ImageUrl))
+                                {
+                                    <img src="@cat.ImageUrl" class="cat-thumb" alt="" />
+                                }
+                                else
+                                {
+
+                                    <div class="cat-thumb-ph"><i class="bi @bhIcon" style="color:var(--muted);font-size:.8rem"></i></div>
+                                }
                                 <div>
-                                    <div class="cat-name">@cat.CategoryName</div>
+                                    <div style="font-weight:600">@cat.CategoryName</div>
                                     @if (!string.IsNullOrEmpty(cat.Description))
                                     {
-                                        <div class="cat-desc">@cat.Description</div>
+                                        <div style="font-size:.7rem;color:var(--muted);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">@cat.Description</div>
                                     }
                                 </div>
                             </div>
                         </td>
-                        <td>
-                            <span class="bh-badge" style="background:@BhBg(bh);color:@BhColor(bh);">
-                                <i class="bi @BhIcon(bh)"></i> @BhLabel(bh)
-                            </span>
+                        <td><span class="bh-tag @bhClass"><i class="bi @bhIcon"></i> @bhLabel</span></td>
+                        <td><span class="stat-chip"><b>@(cat.Products?.Count ?? 0)</b> SP</span></td>
+                        <td style="color:var(--muted);font-size:.8rem">@cat.DefaultUnit</td>
+                        <td style="text-align:center">
+                            <label class="switch" title="@(cat.IsActive ? "Đang kích hoạt" : "Đang ẩn")">
+                                <input type="checkbox" @(cat.IsActive ? "checked" : "") onchange="toggleActive(@cat.CategoryId,this)" />
+                                <span class="slider"></span>
+                            </label>
                         </td>
-                        <td>
-                            <span class="type-badge">
-                                <i class="bi @TypeIcon(tp)" style="font-size:.7rem"></i>
-                                @TypeLabel(tp)
-                            </span>
-                        </td>
-                        <td>
-                            <div class="feat-chips">
-                                @if (bh == "Retail")
-                                {
-                                    <span class="fchip @(cat.RequiresExpiry ? "on" : "")">HSD</span>
-                                    <span class="fchip @(cat.UseFIFO ? "on" : "")">FIFO</span>
-                                    <span class="fchip @(cat.RequiresBatch ? "on" : "")">Lô</span>
-                                    <span class="fchip @(cat.HasVariants ? "on" : "")">Biến thể</span>
-                                }
-                                else if (bh == "Rental")
-                                {
-                                    <span class="fchip @(cat.RequiresSize ? "on" : "")">Theo size</span>
-                                    <span class="fchip @(cat.DepositRequired ? "on" : "")">Đặt cọc</span>
-                                    <span class="fchip @(cat.AllowPartialReturn ? "on" : "")">Trả từng phần</span>
-                                }
-                                else
-                                {
-                                    <span class="fchip @(cat.SeparateLaborAndMaterial ? "on" : "")">Tách công/vật tư</span>
-                                    <span class="fchip">@(cat.PricingModel ?? "Fixed")</span>
-                                }
-                                <span class="fchip">@cat.DefaultUnit</span>
-                            </div>
-                        </td>
-                        <td style="text-align:center;">
-                            <div class="prod-cnt">@prodCnt</div>
-                            <div class="prod-cnt-sub">sản phẩm</div>
-                        </td>
-                        <td style="text-align:center;">
-                            <div class="act-toggle" onclick="toggleActive(@cat.CategoryId, this)">
-                                <div class="toggle-track @(cat.IsActive ? "on" : "")" id="tt-@cat.CategoryId">
-                                    <div class="toggle-thumb"></div>
-                                </div>
-                                <span id="ts-@cat.CategoryId" style="color:@(cat.IsActive ? "var(--green)" : "var(--muted)")">
-                                    @(cat.IsActive ? "Hoạt động" : "Đã ẩn")
-                                </span>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="act-g" style="justify-content:flex-end;">
-                                <button class="act-b edit" onclick="openEditModal(@cat.CategoryId)" title="Chỉnh sửa">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <a href="@Url.Action("Details", "AdminCategory", new { id = cat.CategoryId })" class="act-b view" title="Xem chi tiết">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                <button class="act-b del" onclick="deleteCat(@cat.CategoryId,'@cat.CategoryName')" title="Xóa" @(prodCnt > 0 ? "disabled title='Có sản phẩm, không thể xóa'" : "")>
-                                    <i class="bi bi-trash3"></i>
-                                </button>
-                            </div>
+                        <td style="text-align:right">
+                            <button class="act-btn" onclick="openEdit(@cat.CategoryId)" title="Chỉnh sửa">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="act-btn del" onclick="confirmDelete(@cat.CategoryId,'@Html.Raw(cat.CategoryName.Replace("'", "\\'"))')" title="Xóa">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
-        <div class="pager">
-            <span id="rowCount">@Model.Count() danh mục</span>
-            <div class="pager-btns" id="pagerBtns"></div>
-        </div>
     </div>
 </div>
 
-<!-- ═══ MODAL CREATE/EDIT ═══ -->
+@* Bootstrap Modal shell *@
 <div class="modal fade" id="catModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="max-width:820px">
-        <div class="modal-content" id="catModalBody" style="border-radius:14px;border:none;">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width:600px">
+        <div class="modal-content" id="catModalBody" style="border-radius:16px;border:none;box-shadow:0 20px 60px rgba(0,0,0,.18)">
             <div class="p-5 text-center">
                 <div class="spinner-border" style="color:var(--gold)"></div>
             </div>
@@ -738,96 +452,67 @@
             catModal = new bootstrap.Modal(document.getElementById('catModal'));
         });
 
-        /* ── OPEN MODALS ── */
-        async function openCreateModal() {
-            document.getElementById('catModalBody').innerHTML =
-                '<div class="p-5 text-center"><div class="spinner-border" style="color:var(--gold)"></div></div>';
-            catModal.show();
-            const r = await fetch('/Admin/AdminCategory/Create');
-            document.getElementById('catModalBody').innerHTML = await r.text();
-            runScripts(document.getElementById('catModalBody'));
-        }
-
-        async function openEditModal(id) {
-            document.getElementById('catModalBody').innerHTML =
-                '<div class="p-5 text-center"><div class="spinner-border" style="color:var(--gold)"></div></div>';
-            catModal.show();
-            const r = await fetch(`/Admin/AdminCategory/Edit/${id}`);
-            document.getElementById('catModalBody').innerHTML = await r.text();
-            runScripts(document.getElementById('catModalBody'));
-        }
-
-        function runScripts(container) {
-            container.querySelectorAll('script').forEach(s => {
-                const n = document.createElement('script');
-                n.text = s.text;
-                s.replaceWith(n);
+        function runScripts(el) {
+            el.querySelectorAll('script').forEach(s => {
+                const n = document.createElement('script'); n.text = s.text; s.replaceWith(n);
             });
         }
 
-        /* ── TOGGLE ACTIVE ── */
-        async function toggleActive(id, wrapper) {
-            const res = await fetch(`/Admin/AdminCategory/ToggleActive/${id}`, {
-                method: 'POST', headers: { 'RequestVerificationToken': TOKEN }
-            }).then(r => r.json());
+        function openCreate() { loadModal('/Admin/AdminCategory/CreatePartial'); }
+        function openEdit(id)  { loadModal(`/Admin/AdminCategory/EditPartial/${id}`); }
 
-            if (res.success) {
-                const track = document.getElementById(`tt-${id}`);
-                const span  = document.getElementById(`ts-${id}`);
-                track.classList.toggle('on', res.isActive);
-                span.textContent = res.isActive ? 'Hoạt động' : 'Đã ẩn';
-                span.style.color = res.isActive ? 'var(--green)' : 'var(--muted)';
-                document.querySelector(`#row-${id}`).dataset.active = res.isActive ? 'active' : 'inactive';
+        async function loadModal(url) {
+            document.getElementById('catModalBody').innerHTML =
+                '<div class="p-5 text-center"><div class="spinner-border" style="color:var(--gold)"></div></div>';
+            catModal.show();
+            try {
+                const r = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                document.getElementById('catModalBody').innerHTML = await r.text();
+                runScripts(document.getElementById('catModalBody'));
+            } catch(e) {
+                document.getElementById('catModalBody').innerHTML =
+                    `<div class="p-4 text-center text-danger"><i class="bi bi-exclamation-triangle fs-2"></i><p class="mt-2">Không tải được form: ${e.message}</p><button class="btn btn-sm btn-secondary" onclick="catModal.hide()">Đóng</button></div>`;
             }
         }
 
-        /* ── DELETE ── */
-        function deleteCat(id, name) {
-            Swal.fire({
-                title: `Xóa "${name}"?`,
-                text: 'Hành động này không thể hoàn tác.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#c94b2a',
-                cancelButtonColor: '#8a7560',
-                confirmButtonText: 'Xóa',
-                cancelButtonText: 'Hủy',
-                reverseButtons: true
-            }).then(async r => {
-                if (!r.isConfirmed) return;
-                const res = await fetch(`/Admin/AdminCategory/Delete/${id}`, {
-                    method: 'POST', headers: { 'RequestVerificationToken': TOKEN }
-                }).then(r => r.json());
-                if (res.success) {
-                    document.getElementById(`row-${id}`)?.remove();
-                    Swal.fire({ icon:'success', title: res.message, timer:1400, showConfirmButton:false, toast:true, position:'top-end' });
-                } else {
-                    Swal.fire('Không thể xóa!', res.message, 'error');
-                }
+        function closeCatModal() { catModal.hide(); }
+
+        async function toggleActive(id, cb) {
+            const res  = await fetch(`/Admin/AdminCategory/ToggleActive/${id}`, {
+                method: 'POST', headers: { 'RequestVerificationToken': TOKEN }
             });
+            const data = await res.json();
+            if (!data.success) { cb.checked = !cb.checked; alert(data.message); }
         }
 
-        /* ── FILTER ── */
+        async function confirmDelete(id, name) {
+            const r = await Swal.fire({
+                title: `Xóa "${name}"?`,
+                text: 'Không thể hoàn tác. Danh mục không được có sản phẩm.',
+                icon: 'warning', showCancelButton: true,
+                confirmButtonText: 'Xóa', cancelButtonText: 'Hủy',
+                confirmButtonColor: '#c94b2a', cancelButtonColor: '#8a7560',
+                reverseButtons: true
+            });
+            if (!r.isConfirmed) return;
+            const res  = await fetch(`/Admin/AdminCategory/Delete/${id}`, {
+                method: 'POST', headers: { 'RequestVerificationToken': TOKEN }
+            });
+            const data = await res.json();
+            if (data.success) window.location.reload();
+            else Swal.fire('Không thể xóa', data.message, 'error');
+        }
+
         function filterTable() {
-            const q   = document.getElementById('searchInput').value.toLowerCase();
-            const bh  = document.getElementById('filterBh').value;
-            const tp  = document.getElementById('filterType').value;
-            const st  = document.getElementById('filterStatus').value;
+            const q = document.getElementById('srch').value.toLowerCase();
             let cnt = 0;
-            document.querySelectorAll('#catTbody tr[id^="row-"]').forEach(r => {
-                const show = (!q || r.dataset.name?.includes(q))
-                          && (!bh || r.dataset.bh === bh)
-                          && (!tp || r.dataset.type === tp)
-                          && (!st || r.dataset.active === st);
+            document.querySelectorAll('#catTbody tr[data-name]').forEach(r => {
+                const show = !q || r.dataset.name.includes(q);
                 r.style.display = show ? '' : 'none';
                 if (show) cnt++;
             });
-            document.getElementById('rowCount').textContent = cnt + ' danh mục';
-        }
-
-        /* ── CHECKBOX ALL ── */
-        function toggleAll(el) {
-            document.querySelectorAll('.row-cb').forEach(c => c.checked = el.checked);
+            document.getElementById('rowCnt').innerHTML = `<b>${cnt}</b> danh mục`;
         }
     </script>
 }

@@ -2,68 +2,383 @@
 @{
     Layout = null;
     var facilities = ViewBag.Facilities as IEnumerable<QuanLiSanCauLong.Models.Facility> ?? Enumerable.Empty<QuanLiSanCauLong.Models.Facility>();
-    var products   = ViewBag.Products   as IEnumerable<QuanLiSanCauLong.Models.Product>  ?? Enumerable.Empty<QuanLiSanCauLong.Models.Product>();
-
-    // ✅ FIX: dùng Context.Request thay vì Request (không tồn tại trong partial view context)
-    int    preProductId   = 0;
-    int.TryParse(Context.Request.Query["preProductId"], out preProductId);
+    var products = ViewBag.Products as IEnumerable<QuanLiSanCauLong.Models.Product> ?? Enumerable.Empty<QuanLiSanCauLong.Models.Product>();
+    int preProductId = 0; int.TryParse(Context.Request.Query["preProductId"], out preProductId);
     string preProductName = Context.Request.Query["preProductName"].ToString() ?? "";
-    int    preFacilityId  = Model.FacilityId > 0 ? Model.FacilityId : 0;
-    int    preAvailable   = 0;
-    int.TryParse(Context.Request.Query["available"], out preAvailable);
+    int preFacilityId = Model.FacilityId > 0 ? Model.FacilityId : 0;
+    int preAvailable = 0; int.TryParse(Context.Request.Query["available"], out preAvailable);
 }
-
 <style>
-:root{--deep:#1a1209;--gold:#d4a017;--gold2:#f5c842;--warm:#f5ede0;--border:#e8ddd0;--muted:#8a7560;--red:#c94b2a;--green:#15803d;}
-*,*::before,*::after{box-sizing:border-box;}*{font-family:'Outfit',sans-serif;}
-.md-hd{padding:1rem 1.3rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--deep);}
-.md-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#fff;}
-.md-title em{color:#fca5a5;font-style:italic;}
-.md-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:1rem;cursor:pointer;}
-.md-close:hover{color:#fff;}
-.md-body{padding:1.2rem 1.3rem;max-height:72vh;overflow-y:auto;}
-.md-ft{padding:.85rem 1.3rem;border-top:1px solid var(--border);background:var(--warm);display:flex;justify-content:flex-end;gap:.55rem;}
-.sec-hd{font-size:.62rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:.5rem 0;margin-bottom:.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.38rem;}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
-.fg{display:flex;flex-direction:column;gap:.25rem;margin-bottom:.8rem;}
-.fg label{font-size:.72rem;font-weight:700;color:var(--deep);}
-.fg .req{color:var(--red);}
-.fg .hint{font-size:.66rem;color:var(--muted);}
-.fi{padding:.58rem .82rem;border:1px solid var(--border);border-radius:7px;font-family:'Outfit',sans-serif;font-size:.83rem;color:var(--deep);background:#fff;outline:none;transition:border-color .2s;width:100%;}
-.fi:focus{border-color:var(--gold);}
-.combo-w{position:relative;}
-.combo-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:7px;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:200px;overflow-y:auto;display:none;}
-.combo-list.show{display:block;}
-.combo-opt{padding:.45rem .82rem;font-size:.82rem;cursor:pointer;color:var(--deep);}
-.combo-opt:hover{background:var(--warm);}
-.stk-bar-box{background:var(--warm);border:1px solid var(--border);border-radius:7px;padding:.65rem .9rem;margin-bottom:.85rem;display:none;}
-.stk-bar-box.show{display:block;}
-.stk-num{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;}
-.stk-num.ok{color:var(--green);}
-.stk-num.low{color:#c2410c;}
-.stk-num.zero{color:var(--red);}
-.stk-bar-w{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:.4rem;}
-.stk-bar-f{height:100%;border-radius:3px;transition:width .3s;}
-.qty-presets{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.35rem;}
-.qty-pill{padding:.18rem .55rem;border:1px solid var(--border);border-radius:4px;font-size:.7rem;cursor:pointer;background:#fff;transition:all .15s;color:var(--muted);}
-.qty-pill:hover{border-color:var(--red);background:rgba(201,75,42,.06);color:var(--red);}
-.warn-pill{background:#fff7ed;border:1px solid #fed7aa;border-radius:7px;padding:.5rem .75rem;font-size:.76rem;color:#c2410c;display:none;align-items:center;gap:.4rem;margin-top:.4rem;}
-.warn-pill.show{display:flex;}
-.btn-p{background:linear-gradient(135deg,#dc4040,#ef5a5a);color:#fff;border:none;padding:.62rem 1.3rem;font-size:.84rem;font-weight:700;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:.38rem;transition:all .2s;}
-.btn-p:hover{box-shadow:0 4px 14px rgba(201,75,42,.35);transform:translateY(-1px);}
-.btn-p:disabled{opacity:.6;cursor:not-allowed;transform:none;}
-.btn-s{padding:.6rem 1.1rem;border:1.5px solid var(--border);border-radius:7px;background:#fff;font-size:.82rem;font-weight:600;cursor:pointer;color:var(--muted);transition:all .18s;}
-.btn-s:hover{border-color:var(--deep);color:var(--deep);}
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --warm: #f5ede0;
+        --cream: #fdf8f0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+        --red: #c94b2a;
+        --green: #15803d;
+        --blue: #1d4ed8;
+    }
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    * {
+        font-family: 'Outfit',sans-serif;
+    }
+
+    .md-hd {
+        padding: 1.1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(135deg,#7f1d1d,#b91c1c);
+    }
+
+    .md-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+    }
+
+    .md-title-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        background: rgba(255,255,255,.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .85rem;
+    }
+
+    .md-close {
+        background: none;
+        border: none;
+        color: rgba(255,255,255,.5);
+        font-size: .95rem;
+        cursor: pointer;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: .15s;
+    }
+
+        .md-close:hover {
+            background: rgba(255,255,255,.15);
+            color: #fff;
+        }
+
+    .md-body {
+        padding: 1.3rem 1.5rem;
+        max-height: 72vh;
+        overflow-y: auto;
+    }
+
+        .md-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .md-body::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+    .md-ft {
+        padding: .9rem 1.5rem;
+        border-top: 1px solid var(--border);
+        background: var(--cream);
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: .55rem;
+    }
+
+    .sec {
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        color: var(--muted);
+        padding: .45rem 0;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: .85rem;
+        display: flex;
+        align-items: center;
+        gap: .38rem;
+    }
+
+    .row2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .8rem;
+    }
+
+    .fg {
+        display: flex;
+        flex-direction: column;
+        gap: .28rem;
+        margin-bottom: .82rem;
+    }
+
+        .fg label {
+            font-size: .73rem;
+            font-weight: 700;
+            color: var(--deep);
+        }
+
+    .req {
+        color: var(--red);
+    }
+
+    .hint {
+        font-size: .67rem;
+        color: var(--muted);
+    }
+
+    .fi {
+        padding: .58rem .85rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-size: .84rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
+        width: 100%;
+        transition: all .2s;
+    }
+
+        .fi:focus {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220,38,38,.1);
+        }
+
+    .cmb-wrap {
+        position: relative;
+    }
+
+    .cmb-list {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        z-index: 200;
+        box-shadow: 0 8px 30px rgba(0,0,0,.12);
+        max-height: 210px;
+        overflow-y: auto;
+        display: none;
+    }
+
+        .cmb-list.open {
+            display: block;
+        }
+
+    .cmb-item {
+        padding: .48rem .85rem;
+        font-size: .82rem;
+        cursor: pointer;
+        color: var(--deep);
+        display: flex;
+        justify-content: space-between;
+        transition: background .1s;
+    }
+
+        .cmb-item:hover {
+            background: var(--warm);
+        }
+
+        .cmb-item small {
+            font-size: .68rem;
+            color: var(--muted);
+        }
+
+    /* stock indicator card */
+    .stk-card {
+        background: #fff;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: .85rem 1rem;
+        margin-bottom: .9rem;
+        display: none;
+    }
+
+        .stk-card.show {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+    .stk-block {
+        flex: 1;
+        text-align: center;
+    }
+
+    .stk-block-n {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .stk-block-l {
+        font-size: .6rem;
+        font-weight: 600;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: .15rem;
+    }
+
+    .stk-sep {
+        width: 1px;
+        background: var(--border);
+    }
+
+    .stk-n-ok {
+        color: var(--green);
+    }
+
+    .stk-n-low {
+        color: #c2410c;
+    }
+
+    .stk-n-zero {
+        color: var(--red);
+    }
+
+    .stk-bar-w {
+        height: 4px;
+        background: #f0ebe4;
+        border-radius: 2px;
+        margin-top: .5rem;
+        overflow: hidden;
+    }
+
+    .stk-bar-f {
+        height: 100%;
+        border-radius: 2px;
+        transition: width .4s;
+    }
+
+    /* qty presets */
+    .qty-btns {
+        display: flex;
+        gap: .28rem;
+        flex-wrap: wrap;
+        margin-top: .32rem;
+    }
+
+    .qty-btn {
+        padding: .15rem .48rem;
+        border: 1.5px solid var(--border);
+        border-radius: 5px;
+        font-size: .7rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: #fff;
+        color: var(--muted);
+        transition: .15s;
+    }
+
+        .qty-btn:hover {
+            border-color: #dc2626;
+            color: #dc2626;
+            background: rgba(220,38,38,.05);
+        }
+
+        .qty-btn.max-btn {
+            border-style: dashed;
+        }
+
+    /* warn box */
+    .warn-box {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: .6rem .85rem;
+        font-size: .77rem;
+        color: #dc2626;
+        display: none;
+        align-items: center;
+        gap: .4rem;
+        margin-top: .4rem;
+    }
+
+        .warn-box.show {
+            display: flex;
+        }
+
+    /* buttons */
+    .btn-cancel {
+        padding: .6rem 1.2rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        font-size: .83rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--muted);
+        transition: .18s;
+    }
+
+        .btn-cancel:hover {
+            border-color: var(--deep);
+            color: var(--deep);
+        }
+
+    .btn-save {
+        padding: .62rem 1.4rem;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg,#7f1d1d,#b91c1c);
+        font-size: .83rem;
+        font-weight: 700;
+        color: #fff;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        transition: .2s;
+        box-shadow: 0 2px 8px rgba(127,29,29,.3);
+    }
+
+        .btn-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 16px rgba(127,29,29,.4);
+        }
+
+        .btn-save:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
 </style>
 
 <div class="md-hd">
-    <span class="md-title"><i class="bi bi-box-arrow-up me-1" style="color:#fca5a5"></i> Xuất <em>Kho</em></span>
+    <div class="md-title">
+        <span class="md-title-icon"><i class="bi bi-box-arrow-up" style="color:#fca5a5"></i></span>
+        Xuất <em style="color:#fca5a5;font-style:italic">Kho</em>
+    </div>
     <button class="md-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
 </div>
 
 <div class="md-body">
-
-    <!-- CƠ SỞ + SẢN PHẨM -->
+    <div class="sec"><i class="bi bi-building"></i> Cơ sở & Sản phẩm</div>
     <div class="row2">
         <div class="fg">
             <label>Cơ sở <span class="req">*</span></label>
@@ -71,22 +386,22 @@
                 <option value="">-- Chọn cơ sở --</option>
                 @foreach (var f in facilities)
                 {
-                    @Html.Raw($"<option value=\"{f.FacilityId}\"{(preFacilityId==f.FacilityId?" selected":"")}>{f.FacilityName}</option>")
+                    <option value="@f.FacilityId" selected="@(preFacilityId == f.FacilityId ? "selected" : null)">@f.FacilityName</option>
                 }
             </select>
         </div>
         <div class="fg">
             <label>Sản phẩm <span class="req">*</span></label>
-            <div class="combo-w">
-                <input type="text" id="so_prod_txt" class="fi" placeholder="Tìm sản phẩm..."
-                       value="@preProductName"
-                       oninput="filterSoProd(this.value)" onfocus="showCombo('soProdList')" />
+            <div class="cmb-wrap">
+                <input type="text" id="so_prod_txt" class="fi" placeholder="Tìm tên hoặc SKU..."
+                       value="@preProductName" oninput="filterSoProd(this.value)" onfocus="showCmb('soProdList')" />
                 <input type="hidden" id="so_prod_id" value="@(preProductId > 0 ? preProductId.ToString() : "")" />
-                <div class="combo-list" id="soProdList">
+                <div class="cmb-list" id="soProdList">
                     @foreach (var p in products)
                     {
-                        <div class="combo-opt" onclick="pickSoProd('@Html.Raw(p.ProductName.Replace("'","\'"))',@p.ProductId)">
-                            @p.ProductName <span style="font-size:.66rem;color:var(--muted);">@p.ProductCode</span>
+                        <div class="cmb-item" onclick="pickSoProd('@Html.Raw(p.ProductName.Replace("'", "\\\'"))',@p.ProductId)">
+                            <span>@p.ProductName <small>· @p.ProductCode</small></span>
+                            <small>@p.Unit</small>
                         </div>
                     }
                 </div>
@@ -94,42 +409,48 @@
         </div>
     </div>
 
-    <!-- STOCK INDICATOR -->
-    <div class="stk-bar-box @(preProductId > 0 && preAvailable >= 0 ? "show" : "")" id="soStkBox">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:.72rem;color:var(--muted);">Tồn kho khả dụng</span>
-            <span class="stk-num @(preAvailable <= 0 ? "zero" : preAvailable <= 5 ? "low" : "ok")" id="soStkNum">
-                @(preAvailable > 0 ? preAvailable.ToString() : "0")
-            </span>
+    @* Stock indicator *@
+    <div class="stk-card @(preProductId > 0 && preAvailable >= 0 ? "show" : "")" id="soStkCard">
+        <div class="stk-block">
+            <div class="stk-block-n @(preAvailable <= 0 ? "stk-n-zero" : preAvailable <= 5 ? "stk-n-low" : "stk-n-ok")" id="soStkNum">@(preAvailable > 0 ? preAvailable.ToString() : "0")</div>
+            <div class="stk-block-l">Khả dụng</div>
+            <div class="stk-bar-w"><div class="stk-bar-f" id="soStkBar" style="width:60%;background:var(--green)"></div></div>
         </div>
-        <div class="stk-bar-w">
-            <div class="stk-bar-f" id="soStkBar" style="width:60%;background:var(--green);"></div>
+        <div class="stk-sep"></div>
+        <div class="stk-block" id="soHoldBlock" style="display:none">
+            <div class="stk-block-n" id="soHoldNum" style="color:#d97706">0</div>
+            <div class="stk-block-l">Đang giữ</div>
+        </div>
+        <div class="stk-sep" id="soHoldSep" style="display:none"></div>
+        <div class="stk-block" id="soRentBlock" style="display:none">
+            <div class="stk-block-n" id="soRentNum" style="color:var(--blue)">0</div>
+            <div class="stk-block-l">Đang thuê</div>
         </div>
     </div>
 
-    <!-- SỐ LƯỢNG + LÝ DO -->
+    <div class="sec"><i class="bi bi-hash"></i> Số lượng & Lý do</div>
     <div class="row2">
         <div class="fg">
             <label>Số lượng xuất <span class="req">*</span></label>
-            <input type="number" id="so_qty" class="fi" min="1" value="1" placeholder="SL" oninput="checkSoQty()" />
-            <div class="qty-presets">
-                @foreach (var q in new[]{1,2,5,10,20})
+            <input type="number" id="so_qty" class="fi" min="1" value="1" oninput="checkSoQty()" />
+            <div class="qty-btns">
+                @foreach (var q in new[] { 1, 2, 5, 10, 20 })
                 {
-                    <span class="qty-pill" onclick="document.getElementById('so_qty').value=@q;checkSoQty();">@q</span>
+                    <span class="qty-btn" onclick="document.getElementById('so_qty').value=@q;checkSoQty()">@q</span>
                 }
-                <span class="qty-pill" onclick="setSoAll()" style="border-style:dashed;">Tất cả</span>
+                <span class="qty-btn max-btn" onclick="setSoAll()">Tất cả</span>
             </div>
-            <div class="warn-pill" id="soWarn"><i class="bi bi-exclamation-triangle-fill"></i> Vượt quá tồn kho!</div>
+            <div class="warn-box" id="soWarn"><i class="bi bi-exclamation-triangle-fill"></i> Vượt quá tồn kho khả dụng!</div>
         </div>
         <div class="fg">
             <label>Lý do xuất kho <span class="req">*</span></label>
-            <div class="combo-w">
+            <div class="cmb-wrap">
                 <input type="text" id="so_reason" class="fi" placeholder="Chọn hoặc nhập lý do..."
-                       onfocus="showCombo('soReasonList')" oninput="filterCombo('soReasonList',this.value)" />
-                <div class="combo-list" id="soReasonList">
-                    @foreach (var r in new[]{"Bán hàng","Hư hỏng — viết sổ","Hàng mẫu / marketing","Kiểm kê thực tế","Xuất hủy hết hạn","Xuất nội bộ","Trả nhà cung cấp","Khác"})
+                       onfocus="showCmb('soReasonList')" oninput="filterCmb('soReasonList',this.value)" />
+                <div class="cmb-list" id="soReasonList">
+                    @foreach (var r in new[] { "Bán hàng", "Hư hỏng — viết sổ", "Hàng mẫu / marketing", "Kiểm kê thực tế", "Xuất hủy hết hạn", "Xuất nội bộ", "Trả nhà cung cấp", "Khác" })
                     {
-                        <div class="combo-opt" onclick="pickCombo2('so_reason','@r')">@r</div>
+                        <div class="cmb-item" onclick="document.getElementById('so_reason').value='@r';hideAllCmb()">@r</div>
                     }
                 </div>
             </div>
@@ -143,119 +464,75 @@
 </div>
 
 <div class="md-ft">
-    <button class="btn-s" data-bs-dismiss="modal">Hủy</button>
-    <button class="btn-p" id="soBtnSave" onclick="submitStockOut()">
+    <button class="btn-cancel" data-bs-dismiss="modal">Hủy</button>
+    <button class="btn-save" id="soBtnSave" onclick="submitStockOut()">
         <i class="bi bi-box-arrow-up"></i> Xác nhận xuất kho
     </button>
 </div>
 
 <script>
-const SO_PRODS_ALL = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(products.Select(p => new {
-    id = p.ProductId,
-    name = p.ProductName,
-    code = p.ProductCode ?? p.SKU ?? ""
-})));
-const TOKEN_SO = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
-let soMaxAvailable = @preAvailable;
+    const SO_PRODS=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(products.Select(p => new { id = p.ProductId, name = p.ProductName, code = p.ProductCode ?? p.SKU ?? "" })));
+    const TOKEN_SO=document.querySelector('input[name="__RequestVerificationToken"]')?.value??'';
+    let soMax=@preAvailable;
 
-function showCombo(id) { document.querySelectorAll('.combo-list').forEach(l=>l.classList.remove('show')); document.getElementById(id)?.classList.add('show'); }
-function filterCombo(listId, q) { const l=document.getElementById(listId); if(!l)return; l.classList.add('show'); l.querySelectorAll('.combo-opt').forEach(o=>{ o.style.display=o.textContent.toLowerCase().includes(q.toLowerCase())?'':'none'; }); }
-function pickCombo2(id, val) { document.getElementById(id).value=val; document.querySelectorAll('.combo-list').forEach(l=>l.classList.remove('show')); }
-document.addEventListener('click', e=>{ if(!e.target.closest('.combo-w')) document.querySelectorAll('.combo-list').forEach(l=>l.classList.remove('show')); });
+    function showCmb(id){hideAllCmb();document.getElementById(id)?.classList.add('open');}
+    function hideAllCmb(){document.querySelectorAll('.cmb-list').forEach(l=>l.classList.remove('open'));}
+    function filterCmb(id,q){const l=document.getElementById(id);if(!l)return;l.classList.add('open');l.querySelectorAll('.cmb-item').forEach(o=>{o.style.display=o.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});}
+    function filterSoProd(q){const l=document.getElementById('soProdList');if(!l)return;l.classList.add('open');l.querySelectorAll('.cmb-item').forEach(o=>{o.style.display=o.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});document.getElementById('so_prod_id').value='';}
+    document.addEventListener('click',e=>{if(!e.target.closest('.cmb-wrap'))hideAllCmb();});
 
-function filterSoProd(q) {
-    const l = document.getElementById('soProdList'); if(!l)return;
-    l.classList.add('show');
-    l.querySelectorAll('.combo-opt').forEach(o=>{ o.style.display=o.textContent.toLowerCase().includes(q.toLowerCase())?'':'none'; });
-    document.getElementById('so_prod_id').value='';
-}
-
-async function pickSoProd(name, id) {
-    document.getElementById('so_prod_txt').value = name;
-    document.getElementById('so_prod_id').value  = id;
-    document.getElementById('soProdList').classList.remove('show');
-    await updateStkBox();
-}
-
-async function onSoFacChange() { await updateStkBox(); }
-
-async function updateStkBox() {
-    const facId  = document.getElementById('so_fac').value;
-    const prodId = document.getElementById('so_prod_id').value;
-    if(!facId || !prodId) return;
-    try {
-        const data = await fetch(`/AdminInventory/GetProductStock?facilityId=${facId}&productId=${prodId}`).then(r=>r.json());
-        if(data.success) {
-            soMaxAvailable = data.availableQuantity;
-            const box = document.getElementById('soStkBox');
-            const num = document.getElementById('soStkNum');
-            const bar = document.getElementById('soStkBar');
-            box.classList.add('show');
-            num.textContent = soMaxAvailable;
-            num.className = 'stk-num ' + (soMaxAvailable<=0?'zero':soMaxAvailable<=5?'low':'ok');
-            const pct = data.maxQuantity>0?Math.min(soMaxAvailable/data.maxQuantity*100,100):soMaxAvailable>0?60:0;
-            bar.style.width = pct+'%';
-            bar.style.background = soMaxAvailable<=0?'var(--red)':soMaxAvailable<=5?'#c2410c':'var(--green)';
-        }
-    } catch(e){}
-}
-
-function checkSoQty() {
-    const qty = parseInt(document.getElementById('so_qty').value)||0;
-    document.getElementById('soWarn').classList.toggle('show', qty > soMaxAvailable && soMaxAvailable > 0);
-}
-
-function setSoAll() {
-    document.getElementById('so_qty').value = soMaxAvailable > 0 ? soMaxAvailable : 1;
-    checkSoQty();
-}
-
-async function submitStockOut() {
-    const facId  = document.getElementById('so_fac').value;
-    const prodId = document.getElementById('so_prod_id').value;
-    const qty    = parseInt(document.getElementById('so_qty').value)||0;
-    const reason = document.getElementById('so_reason').value.trim();
-
-    if(!facId)  { alert('Vui lòng chọn cơ sở!'); return; }
-    if(!prodId) { alert('Vui lòng chọn sản phẩm!'); return; }
-    if(qty<=0)  { alert('Số lượng phải lớn hơn 0!'); return; }
-    if(!reason) { alert('Vui lòng nhập lý do xuất kho!'); return; }
-    if(qty > soMaxAvailable && soMaxAvailable > 0) {
-        const ok = confirm(`Số lượng xuất (${qty}) vượt quá tồn kho khả dụng (${soMaxAvailable}). Tiếp tục?`);
-        if(!ok) return;
+    async function pickSoProd(name,id){
+        document.getElementById('so_prod_txt').value=name;
+        document.getElementById('so_prod_id').value=id;
+        document.getElementById('soProdList').classList.remove('open');
+        await updateStkCard();
     }
+    async function onSoFacChange(){await updateStkCard();}
 
-    const btn = document.getElementById('soBtnSave');
-    btn.disabled=true; btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span> Đang xử lý...';
-
-    const payload = {
-        facilityId: parseInt(facId),
-        reason: reason,
-        note: document.getElementById('so_note').value,
-        items: [{ productId: parseInt(prodId), quantity: qty }]
-    };
-
-    try {
-        const res = await fetch('/AdminInventory/StockOut', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': TOKEN_SO },
-            body: JSON.stringify(payload)
-        }).then(r=>r.json());
-
-        if(res.success) {
-            bootstrap.Modal.getInstance(document.getElementById('invModal'))?.hide();
-            const t=document.createElement('div');
-            t.style.cssText='position:fixed;bottom:1.5rem;right:1.5rem;background:#15803d;color:#fff;padding:.75rem 1.25rem;border-radius:8px;font-size:.84rem;font-weight:700;z-index:9999;display:flex;align-items:center;gap:.5rem;box-shadow:0 4px 16px rgba(0,0,0,.2);';
-            t.innerHTML=`<i class="bi bi-check-circle-fill"></i> ${res.message}`;
-            document.body.appendChild(t);
-            setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(()=>{ t.remove(); location.reload(); },400); },1800);
-        } else {
-            alert(res.message||'Có lỗi xảy ra!');
-            btn.disabled=false; btn.innerHTML='<i class="bi bi-box-arrow-up"></i> Xác nhận xuất kho';
-        }
-    } catch(e) {
-        alert('Lỗi kết nối!');
-        btn.disabled=false; btn.innerHTML='<i class="bi bi-box-arrow-up"></i> Xác nhận xuất kho';
+    async function updateStkCard(){
+        const fid=document.getElementById('so_fac').value;
+        const pid=document.getElementById('so_prod_id').value;
+        if(!fid||!pid)return;
+        try{
+            const d=await fetch(`/AdminInventory/GetProductStock?facilityId=${fid}&productId=${pid}`).then(r=>r.json());
+            if(d.success){
+                soMax=d.availableQuantity;
+                const card=document.getElementById('soStkCard');
+                const num=document.getElementById('soStkNum');
+                const bar=document.getElementById('soStkBar');
+                card.classList.add('show');
+                num.textContent=soMax;
+                num.className='stk-block-n '+(soMax<=0?'stk-n-zero':soMax<=5?'stk-n-low':'stk-n-ok');
+                const pct=d.maxQuantity>0?Math.min(soMax/d.maxQuantity*100,100):soMax>0?60:0;
+                bar.style.width=pct+'%';
+                bar.style.background=soMax<=0?'var(--red)':soMax<=5?'#c2410c':'var(--green)';
+                // show hold/rented if applicable
+                if(d.holdQuantity>0){document.getElementById('soHoldNum').textContent=d.holdQuantity;document.getElementById('soHoldBlock').style.display='';document.getElementById('soHoldSep').style.display='';}
+                if(d.rentedQuantity>0){document.getElementById('soRentNum').textContent=d.rentedQuantity;document.getElementById('soRentBlock').style.display='';}
+            }
+        }catch(e){}
     }
-}
+    function checkSoQty(){const qty=parseInt(document.getElementById('so_qty').value)||0;document.getElementById('soWarn').classList.toggle('show',qty>soMax&&soMax>0);}
+    function setSoAll(){document.getElementById('so_qty').value=soMax>0?soMax:1;checkSoQty();}
+
+    async function submitStockOut(){
+        const fid=document.getElementById('so_fac').value;
+        const pid=document.getElementById('so_prod_id').value;
+        const qty=parseInt(document.getElementById('so_qty').value)||0;
+        const reason=document.getElementById('so_reason').value.trim();
+        if(!fid){alert('Vui lòng chọn cơ sở!');return;}
+        if(!pid){alert('Vui lòng chọn sản phẩm!');return;}
+        if(qty<=0){alert('Số lượng phải lớn hơn 0!');return;}
+        if(!reason){alert('Vui lòng nhập lý do xuất kho!');return;}
+        if(qty>soMax&&soMax>0&&!confirm(`Số lượng xuất (${qty}) vượt tồn kho (${soMax}). Tiếp tục?`))return;
+        const btn=document.getElementById('soBtnSave');
+        btn.disabled=true;btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span> Đang xử lý...';
+        const payload={facilityId:parseInt(fid),reason,note:document.getElementById('so_note').value,items:[{productId:parseInt(pid),quantity:qty}]};
+        try{
+            const res=await fetch('/AdminInventory/StockOut',{method:'POST',headers:{'Content-Type':'application/json','RequestVerificationToken':TOKEN_SO},body:JSON.stringify(payload)}).then(r=>r.json());
+            if(res.success){bootstrap.Modal.getInstance(document.getElementById('invModal'))?.hide();showToast(res.message,true);setTimeout(()=>location.reload(),1600);}
+            else{alert(res.message||'Có lỗi xảy ra!');btn.disabled=false;btn.innerHTML='<i class="bi bi-box-arrow-up"></i> Xác nhận xuất kho';}
+        }catch(e){alert('Lỗi kết nối!');btn.disabled=false;btn.innerHTML='<i class="bi bi-box-arrow-up"></i> Xác nhận xuất kho';}
+    }
+    function showToast(msg,ok){const t=document.createElement('div');t.style.cssText=`position:fixed;bottom:1.5rem;right:1.5rem;background:${ok?'#15803d':'#c94b2a'};color:#fff;padding:.75rem 1.3rem;border-radius:10px;font-size:.84rem;font-weight:700;z-index:9999;display:flex;align-items:center;gap:.5rem;box-shadow:0 6px 24px rgba(0,0,0,.2)`;t.innerHTML=`<i class="bi bi-${ok?'check-circle-fill':'exclamation-circle-fill'}"></i> ${msg}`;document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .4s';setTimeout(()=>t.remove(),400);},2200);}
 </script>

@@ -3,14 +3,11 @@
     ViewData["Title"] = "Quản lý sản phẩm";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
     var cats = ViewBag.Categories as List<QuanLiSanCauLong.Models.ProductCategory> ?? new();
-
-    string BhLbl(string? b) => b switch { "Rental" => "Cho thuê", "Service" => "Dịch vụ", _ => "Bán lẻ" };
-    string BhBg(string? b) => b switch { "Rental" => "#eff6ff", "Service" => "#f5f3ff", _ => "#f0fdf4" };
-    string BhClr(string? b) => b switch { "Rental" => "#1d4ed8", "Service" => "#7c3aed", _ => "#166534" };
+    string BhIco(string b) => b switch { "Rental" => "bi-arrow-repeat", "Service" => "bi-wrench-adjustable", _ => "bi-cart3" };
+    string BhBg(string b) => b switch { "Rental" => "#dbeafe", "Service" => "#ede9fe", _ => "#dcfce7" };
+    string BhClr(string b) => b switch { "Rental" => "#1d4ed8", "Service" => "#6d28d9", _ => "#15803d" };
+    string BhLbl(string b) => b switch { "Rental" => "Cho thuê", "Service" => "Dịch vụ", _ => "Bán lẻ" };
 }
-
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
 <style>
     :root {
         --deep: #1a1209;
@@ -20,6 +17,11 @@
         --cream: #fdf8f0;
         --border: #e8ddd0;
         --muted: #8a7560;
+        --red: #c94b2a;
+        --green: #15803d;
+        --blue: #1d4ed8;
+        --purple: #7c3aed;
+        --orange: #c2410c;
     }
 
     *, *::before, *::after {
@@ -30,205 +32,345 @@
         font-family: 'Outfit',sans-serif;
     }
 
-    /* ── HEADER ── */
+    .pg {
+        background: var(--warm);
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    /* header */
     .pg-hd {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
-        gap: 1rem;
-        margin-bottom: 1.75rem;
+        margin-bottom: 2rem;
         flex-wrap: wrap;
+        gap: .75rem;
+    }
+
+    .pg-eyebrow {
+        font-size: .62rem;
+        font-weight: 700;
+        letter-spacing: .22em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: .28rem;
     }
 
     .pg-title {
         font-family: 'Playfair Display',serif;
-        font-size: 1.7rem;
+        font-size: 2rem;
         font-weight: 700;
         color: var(--deep);
+        line-height: 1.1;
     }
 
         .pg-title em {
-            font-style: italic;
             color: var(--gold);
+            font-style: italic;
         }
 
     .pg-sub {
         font-size: .8rem;
         color: var(--muted);
-        margin-top: .2rem;
+        margin-top: .3rem;
     }
 
-    /* ── STAT STRIP ── */
+    .btn-add {
+        display: inline-flex;
+        align-items: center;
+        gap: .42rem;
+        padding: .65rem 1.25rem;
+        border: none;
+        border-radius: 9px;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        font-size: .84rem;
+        font-weight: 700;
+        color: var(--deep);
+        cursor: pointer;
+        transition: all .2s;
+        box-shadow: 0 2px 10px rgba(212,160,23,.3);
+    }
+
+        .btn-add:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 18px rgba(212,160,23,.45);
+        }
+
+    /* stat strip */
     .stat-strip {
         display: grid;
         grid-template-columns: repeat(4,1fr);
-        gap: 1px;
-        background: var(--border);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        overflow: hidden;
+        gap: .75rem;
         margin-bottom: 1.75rem;
     }
 
-    .stat-box {
+    .sc {
         background: #fff;
-        padding: 1.1rem 1.4rem;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: .9rem 1rem;
+        cursor: pointer;
+        transition: all .2s;
+        position: relative;
+        overflow: hidden;
     }
 
-    .stat-n {
+        .sc::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--border);
+            transition: .2s;
+        }
+
+        .sc.s-all::after {
+            background: var(--gold);
+        }
+
+        .sc.s-ret::after {
+            background: var(--green);
+        }
+
+        .sc.s-ren::after {
+            background: var(--blue);
+        }
+
+        .sc.s-svc::after {
+            background: var(--purple);
+        }
+
+        .sc:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26,18,9,.1);
+        }
+
+        .sc.on.s-all {
+            background: linear-gradient(135deg,var(--deep),#2d1f0f);
+        }
+
+        .sc.on.s-ret {
+            background: linear-gradient(135deg,#14532d,#15803d);
+        }
+
+        .sc.on.s-ren {
+            background: linear-gradient(135deg,#1e3a8a,#1d4ed8);
+        }
+
+        .sc.on.s-svc {
+            background: linear-gradient(135deg,#4c1d95,#6d28d9);
+        }
+
+        .sc.on .sc-n, .sc.on .sc-l {
+            color: #fff !important;
+        }
+
+        .sc.on::after {
+            display: none;
+        }
+
+    .sc-n {
         font-family: 'Playfair Display',serif;
-        font-size: 1.9rem;
+        font-size: 1.6rem;
         font-weight: 700;
         color: var(--deep);
         line-height: 1;
     }
 
-    .stat-l {
-        font-size: .7rem;
-        letter-spacing: .08em;
+    .sc-l {
+        font-size: .62rem;
+        font-weight: 600;
+        letter-spacing: .1em;
         text-transform: uppercase;
         color: var(--muted);
-        margin-top: .3rem;
+        margin-top: .22rem;
     }
 
-    /* ── TOOLBAR ── */
+    /* layout 2-col */
+    .layout {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 1.25rem;
+        align-items: start;
+    }
+
+    /* sidebar */
+    .sidebar {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        position: sticky;
+        top: 1rem;
+    }
+
+    .sb-hd {
+        padding: .7rem 1rem;
+        background: var(--deep);
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        color: var(--gold);
+    }
+
+    .sb-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: .55rem 1rem;
+        font-size: .81rem;
+        color: var(--muted);
+        text-decoration: none;
+        transition: all .15s;
+        border-bottom: 1px solid var(--border);
+    }
+
+        .sb-link:last-child {
+            border-bottom: none;
+        }
+
+        .sb-link:hover {
+            background: var(--warm);
+            color: var(--deep);
+        }
+
+        .sb-link.on {
+            background: var(--cream);
+            color: var(--deep);
+            font-weight: 700;
+            border-left: 3px solid var(--gold);
+        }
+
+    .sb-cnt {
+        font-size: .68rem;
+        background: var(--warm);
+        border-radius: 10px;
+        padding: .06rem .42rem;
+        font-weight: 700;
+        color: var(--muted);
+    }
+
+    .sb-link.on .sb-cnt {
+        background: rgba(212,160,23,.2);
+        color: #92660a;
+    }
+
+    .sb-sec {
+        padding: .45rem 1rem .3rem;
+        font-size: .58rem;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: var(--cream);
+    }
+
+    /* main area */
     .toolbar {
         display: flex;
         align-items: center;
-        gap: .65rem;
-        margin-bottom: 1.25rem;
+        gap: .6rem;
+        margin-bottom: 1.1rem;
         flex-wrap: wrap;
     }
 
     .tab-grp {
         display: flex;
-        gap: .35rem;
+        gap: .25rem;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: .25rem;
     }
 
     .tab-btn {
-        padding: .5rem 1rem;
-        border: 1.5px solid var(--border);
-        border-radius: 7px;
-        background: #fff;
-        font-size: .8rem;
+        padding: .38rem .82rem;
+        border-radius: 6px;
+        border: none;
+        background: transparent;
+        font-size: .78rem;
         font-weight: 600;
-        color: var(--muted);
         cursor: pointer;
-        transition: all .18s;
+        color: var(--muted);
+        transition: .15s;
         white-space: nowrap;
     }
-
-        .tab-btn:hover {
-            border-color: rgba(212,160,23,.5);
-            color: var(--deep);
-        }
 
         .tab-btn.on {
             background: var(--deep);
             color: var(--gold2);
-            border-color: var(--deep);
         }
 
-    .tb-search {
+    .srch-w {
+        flex: 1;
+        min-width: 200px;
         position: relative;
-        min-width: 220px;
     }
 
-        .tb-search input {
-            width: 100%;
-            padding: .6rem 1rem .6rem 2.2rem;
-            border: 1px solid var(--border);
-            border-radius: 7px;
-            font-size: .84rem;
-            outline: none;
-            transition: border-color .2s;
-            background: #fff;
-        }
-
-            .tb-search input:focus {
-                border-color: var(--gold);
-            }
-
-        .tb-search i {
+        .srch-w i {
             position: absolute;
-            left: .75rem;
+            left: .72rem;
             top: 50%;
             transform: translateY(-50%);
             color: var(--muted);
-            font-size: .85rem;
+            font-size: .8rem;
+            pointer-events: none;
         }
 
-    .tb-sel {
-        padding: .6rem .9rem;
-        border: 1px solid var(--border);
-        border-radius: 7px;
-        font-size: .84rem;
-        background: #fff;
-        outline: none;
-        cursor: pointer;
-        color: var(--deep);
-    }
-
-        .tb-sel:focus {
-            border-color: var(--gold);
-        }
-
-    .btn-add {
-        background: linear-gradient(135deg,var(--gold),var(--gold2));
-        color: var(--deep);
-        border: none;
-        padding: .62rem 1.3rem;
-        font-size: .84rem;
-        font-weight: 700;
-        border-radius: 7px;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: .45rem;
-        transition: all .22s;
-        margin-left: auto;
-        text-decoration: none;
-    }
-
-        .btn-add:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 5px 16px rgba(212,160,23,.35);
+        .srch-w input {
+            width: 100%;
+            padding: .58rem .9rem .58rem 2.1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: .82rem;
             color: var(--deep);
+            background: #fff;
+            outline: none;
+            transition: all .2s;
         }
 
-    /* ── TABLE ── */
+            .srch-w input:focus {
+                border-color: var(--gold);
+                box-shadow: 0 0 0 3px rgba(212,160,23,.1);
+            }
+
+    /* table card */
     .tbl-card {
         background: #fff;
         border: 1px solid var(--border);
-        border-radius: 10px;
+        border-radius: 14px;
         overflow: hidden;
+        box-shadow: 0 2px 12px rgba(26,18,9,.06);
     }
 
-    .tbl-hd {
+    .tbl-top {
         background: var(--deep);
-        padding: .85rem 1.4rem;
+        padding: .85rem 1.25rem;
         display: flex;
         align-items: center;
-        gap: .5rem;
+        gap: .7rem;
     }
 
-        .tbl-hd i {
-            color: var(--gold);
-        }
-
-    .tbl-title {
+    .tbl-top-title {
         font-family: 'Playfair Display',serif;
         font-style: italic;
-        font-size: .9rem;
+        font-size: .92rem;
         font-weight: 700;
         color: #fff;
     }
 
-    .tbl-count {
+    .tbl-cnt-badge {
         margin-left: auto;
         font-size: .72rem;
         font-weight: 700;
         color: var(--gold2);
+        background: rgba(255,255,255,.1);
+        padding: .22rem .65rem;
+        border-radius: 20px;
     }
 
     table {
@@ -237,88 +379,98 @@
     }
 
     thead th {
+        padding: .68rem 1rem;
         background: #231a0e;
-        padding: .75rem 1rem;
-        font-size: .62rem;
+        font-size: .61rem;
         font-weight: 700;
-        letter-spacing: .1em;
+        letter-spacing: .12em;
         text-transform: uppercase;
-        color: var(--gold);
+        color: rgba(212,160,23,.8);
         text-align: left;
         white-space: nowrap;
     }
 
     tbody td {
-        padding: .8rem 1rem;
+        padding: .82rem 1rem;
         border-bottom: 1px solid #f5f0ea;
+        font-size: .83rem;
+        color: var(--deep);
         vertical-align: middle;
-        font-size: .84rem;
     }
 
     tbody tr:last-child td {
         border-bottom: none;
     }
 
-    tbody tr:hover td {
-        background: var(--cream);
+    tbody tr {
+        transition: background .1s;
     }
 
-    /* ── PRODUCT CELL ── */
-    .prod-img {
-        width: 44px;
-        height: 44px;
-        border-radius: 8px;
+        tbody tr:hover td {
+            background: #fffbf2;
+        }
+
+    /* product cell */
+    .p-cell {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .p-thumb {
+        width: 40px;
+        height: 40px;
+        border-radius: 9px;
         object-fit: cover;
         border: 1px solid var(--border);
         flex-shrink: 0;
     }
 
-    .prod-img-ph {
-        width: 44px;
-        height: 44px;
-        border-radius: 8px;
+    .p-ph {
+        width: 40px;
+        height: 40px;
+        border-radius: 9px;
         background: var(--warm);
         border: 1px solid var(--border);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: rgba(26,18,9,.15);
-        font-size: 1.2rem;
+        color: rgba(26,18,9,.18);
+        font-size: 1.05rem;
         flex-shrink: 0;
     }
 
-    .prod-name {
+    .p-name {
         font-weight: 700;
-        font-size: .86rem;
-        color: var(--deep);
+        font-size: .85rem;
+        line-height: 1.2;
     }
 
-    .prod-sku {
-        font-size: .7rem;
+    .p-sku {
+        font-size: .66rem;
         color: var(--muted);
         font-family: monospace;
-        margin-top: .1rem;
+        margin-top: .04rem;
     }
 
-    /* ── BADGES ── */
+    /* tags */
     .bh-tag {
         display: inline-flex;
         align-items: center;
         gap: .22rem;
-        padding: .18rem .6rem;
-        border-radius: 4px;
-        font-size: .66rem;
+        padding: .2rem .55rem;
+        border-radius: 5px;
+        font-size: .65rem;
         font-weight: 700;
-        white-space: nowrap;
     }
 
     .st-tag {
         display: inline-flex;
         align-items: center;
         gap: .22rem;
-        padding: .2rem .6rem;
-        border-radius: 4px;
-        font-size: .63rem;
+        padding: .2rem .55rem;
+        border-radius: 5px;
+        font-size: .64rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .04em;
@@ -331,7 +483,7 @@
 
     .st-outstock {
         background: #fff7ed;
-        color: #c2410c;
+        color: var(--orange);
     }
 
     .st-inactive {
@@ -339,14 +491,14 @@
         color: #6b7280;
     }
 
-    /* ── STOCK ── */
+    /* stock */
     .stk-ok {
-        color: #15803d;
+        color: var(--green);
         font-weight: 700;
     }
 
     .stk-low {
-        color: #c2410c;
+        color: var(--orange);
         font-weight: 700;
     }
 
@@ -354,422 +506,294 @@
         color: var(--muted);
     }
 
-    /* ── ACTIONS ── */
+    /* price */
+    .price-val {
+        font-weight: 700;
+        font-size: .9rem;
+    }
+
+    /* actions */
     .act-g {
         display: flex;
-        gap: .3rem;
+        gap: .2rem;
+        justify-content: flex-end;
     }
 
     .act-b {
         width: 30px;
         height: 30px;
-        border-radius: 5px;
-        border: 1px solid var(--border);
+        border-radius: 7px;
+        border: 1.5px solid var(--border);
         background: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         color: var(--muted);
-        transition: all .18s;
-        font-size: .78rem;
+        transition: all .15s;
+        font-size: .75rem;
         text-decoration: none;
     }
 
         .act-b:hover {
-            border-color: var(--gold);
-            color: var(--gold);
+            transform: translateY(-1px);
         }
 
-        .act-b.danger:hover {
-            border-color: #c94b2a;
-            color: #c94b2a;
-            background: rgba(201,75,42,.06);
-        }
-
-    /* ── SIDEBAR FILTER (left panel) ── */
-    .layout {
-        display: grid;
-        grid-template-columns: 200px 1fr;
-        gap: 1.25rem;
-        align-items: start;
+    .act-view:hover {
+        border-color: var(--blue);
+        color: var(--blue);
+        box-shadow: 0 3px 8px rgba(29,78,216,.15);
     }
 
-    .filter-panel {
-        background: #fff;
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        overflow: hidden;
-        position: sticky;
-        top: 80px;
+    .act-edit:hover {
+        border-color: var(--gold);
+        color: var(--deep);
+        box-shadow: 0 3px 8px rgba(212,160,23,.2);
     }
 
-    .fp-hd {
-        background: var(--deep);
-        padding: .75rem 1rem;
-        font-size: .65rem;
-        font-weight: 700;
-        letter-spacing: .14em;
-        text-transform: uppercase;
-        color: rgba(255,255,255,.6);
+    .act-del:hover {
+        border-color: var(--red);
+        color: var(--red);
+        background: rgba(201,75,42,.05);
     }
 
-    .fp-sec {
-        padding: .65rem 1rem .3rem;
-        font-size: .62rem;
-        font-weight: 700;
-        letter-spacing: .12em;
-        text-transform: uppercase;
-        color: var(--muted);
-    }
-
-    .fp-link {
-        display: block;
-        padding: .5rem 1rem;
-        font-size: .82rem;
-        color: #4a3728;
-        text-decoration: none;
-        transition: all .15s;
-        border-left: 2px solid transparent;
-    }
-
-        .fp-link:hover {
-            background: var(--cream);
-            color: var(--deep);
-        }
-
-        .fp-link.on {
-            background: rgba(212,160,23,.09);
-            color: var(--deep);
-            border-left-color: var(--gold);
-            font-weight: 600;
-        }
-
-    .fp-cnt {
-        margin-left: auto;
-        font-size: .68rem;
-        background: var(--warm);
-        border-radius: 3px;
-        padding: .05rem .4rem;
-        color: var(--muted);
-        float: right;
-    }
-
-    /* ── EMPTY ── */
-    .empty {
-        text-align: center;
+    /* empty */
+    .empty-wrap {
         padding: 4rem 2rem;
+        text-align: center;
         color: var(--muted);
     }
 
-        .empty i {
+        .empty-wrap i {
             font-size: 3rem;
+            opacity: .15;
             display: block;
-            margin-bottom: 1rem;
-            opacity: .2;
+            margin-bottom: .75rem;
         }
 
-        .empty h5 {
+        .empty-wrap h4 {
             font-family: 'Playfair Display',serif;
             font-style: italic;
             font-size: 1.1rem;
             color: var(--deep);
-            margin-bottom: .4rem;
+            margin-bottom: .35rem;
         }
 
-    /* ── ALERTS ── */
-    .sys-alert {
-        padding: .9rem 1.25rem;
-        border-radius: 8px;
-        margin-bottom: 1.25rem;
-        font-size: .84rem;
-        display: flex;
-        align-items: center;
-        gap: .65rem;
+    .tbl-foot {
+        padding: .75rem 1.2rem;
+        border-top: 1px solid var(--border);
+        background: var(--cream);
+        font-size: .75rem;
+        color: var(--muted);
     }
 
-        .sys-alert.success {
-            background: rgba(22,163,74,.08);
-            border: 1px solid rgba(22,163,74,.25);
-            color: #15803d;
-        }
+    /* sys alert */
+    .sys-ok {
+        padding: .85rem 1.2rem;
+        border-radius: 10px;
+        margin-bottom: 1.2rem;
+        font-size: .82rem;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        background: rgba(22,163,74,.07);
+        border: 1px solid rgba(22,163,74,.2);
+        color: #15803d;
+    }
 
-        .sys-alert.error {
-            background: rgba(201,75,42,.06);
-            border: 1px solid rgba(201,75,42,.25);
-            color: #c94b2a;
-        }
-
-    /* ── TABLE FOOTER ── */
-    .tbl-foot {
-        padding: .8rem 1.25rem;
-        border-top: 1px solid var(--border);
-        background: var(--warm);
-        font-size: .78rem;
-        color: var(--muted);
+    .sys-err {
+        padding: .85rem 1.2rem;
+        border-radius: 10px;
+        margin-bottom: 1.2rem;
+        font-size: .82rem;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        background: rgba(201,75,42,.06);
+        border: 1px solid rgba(201,75,42,.2);
+        color: var(--red);
     }
 
     @@media(max-width:960px) {
         .layout {
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr
         }
 
-        .filter-panel {
-            position: static;
+        .sidebar {
+            position: static
         }
 
         .stat-strip {
-            grid-template-columns: 1fr 1fr;
-        }
-    }
-
-    @@media(max-width:600px) {
-        .stat-strip {
-            grid-template-columns: 1fr;
-        }
-
-        .toolbar {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .btn-add {
-            margin-left: 0;
+            grid-template-columns: 1fr 1fr
         }
     }
 </style>
 
-@* Alerts *@
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="sys-alert success"><i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]</div>
-}
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="sys-alert error"><i class="bi bi-exclamation-circle"></i> @TempData["ErrorMessage"]</div>
-}
+<div class="pg">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="sys-ok"><i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="sys-err"><i class="bi bi-exclamation-circle-fill"></i> @TempData["ErrorMessage"]</div>
+    }
 
-<!-- HEADER -->
-<div class="pg-hd">
-    <div>
-        <h1 class="pg-title">Quản Lý <em>Sản Phẩm</em></h1>
-        <div class="pg-sub">Tổng cộng @Model.Count() sản phẩm trong hệ thống</div>
+    <div class="pg-hd">
+        <div>
+            <div class="pg-eyebrow">Quản trị · Hàng hóa</div>
+            <h1 class="pg-title">Sản <em>Phẩm</em></h1>
+            <div class="pg-sub">@Model.Count() sản phẩm · Bán lẻ · Cho thuê · Dịch vụ</div>
+        </div>
+        <button class="btn-add" onclick="openCreateModal()">
+            <i class="bi bi-plus-lg"></i> Thêm sản phẩm
+        </button>
     </div>
-    <button class="btn-add" onclick="openCreateModal()">
-        <i class="bi bi-plus-lg"></i> Thêm sản phẩm
-    </button>
-</div>
 
-<!-- STAT STRIP -->
-<div class="stat-strip">
-    <div class="stat-box">
-        <div class="stat-n">@(ViewBag.CountAll ?? Model.Count())</div>
-        <div class="stat-l">Tất cả</div>
+    <div class="stat-strip">
+        <div class="sc s-all on" onclick="filterBh('','sb-all')" id="sb-all">
+            <div class="sc-n">@(ViewBag.CountAll ?? Model.Count())</div>
+            <div class="sc-l">Tất cả</div>
+        </div>
+        <div class="sc s-ret" onclick="filterBh('Retail','sb-Retail')" id="sb-Retail">
+            <div class="sc-n" style="color:var(--green)">@(ViewBag.CountRetail ?? 0)</div>
+            <div class="sc-l">Bán lẻ</div>
+        </div>
+        <div class="sc s-ren" onclick="filterBh('Rental','sb-Rental')" id="sb-Rental">
+            <div class="sc-n" style="color:var(--blue)">@(ViewBag.CountRental ?? 0)</div>
+            <div class="sc-l">Cho thuê</div>
+        </div>
+        <div class="sc s-svc" onclick="filterBh('Service','sb-Service')" id="sb-Service">
+            <div class="sc-n" style="color:var(--purple)">@(ViewBag.CountService ?? 0)</div>
+            <div class="sc-l">Dịch vụ</div>
+        </div>
     </div>
-    <div class="stat-box">
-        <div class="stat-n" style="color:#15803d">@(ViewBag.CountRetail ?? 0)</div>
-        <div class="stat-l">Bán lẻ</div>
-    </div>
-    <div class="stat-box">
-        <div class="stat-n" style="color:#1d4ed8">@(ViewBag.CountRental ?? 0)</div>
-        <div class="stat-l">Cho thuê</div>
-    </div>
-    <div class="stat-box">
-        <div class="stat-n" style="color:#7c3aed">@(ViewBag.CountService ?? 0)</div>
-        <div class="stat-l">Dịch vụ</div>
-    </div>
-</div>
 
-<div class="layout">
-
-    <!-- FILTER SIDEBAR -->
-    <div class="filter-panel">
-        <div class="fp-hd">Lọc nhanh</div>
-
-        <div class="fp-sec">Loại hành vi</div>
-        <a href="@Url.Action("Index")" class="fp-link @(ViewBag.CurrentBehavior == null && ViewBag.CurrentCategory == null ? "on" : "")">
-            Tất cả <span class="fp-cnt">@(ViewBag.CountAll ?? 0)</span>
-        </a>
-        <a href="@Url.Action("Index", new { behaviorType = "Retail" })" class="fp-link @(ViewBag.CurrentBehavior == "Retail" ? "on" : "")">
-            Bán lẻ <span class="fp-cnt">@(ViewBag.CountRetail ?? 0)</span>
-        </a>
-        <a href="@Url.Action("Index", new { behaviorType = "Rental" })" class="fp-link @(ViewBag.CurrentBehavior == "Rental" ? "on" : "")">
-            Cho thuê <span class="fp-cnt">@(ViewBag.CountRental ?? 0)</span>
-        </a>
-        <a href="@Url.Action("Index", new { behaviorType = "Service" })" class="fp-link @(ViewBag.CurrentBehavior == "Service" ? "on" : "")">
-            Dịch vụ <span class="fp-cnt">@(ViewBag.CountService ?? 0)</span>
-        </a>
-
-        @if (cats.Any())
-        {
-            <div class="fp-sec" style="margin-top:.5rem;">Danh mục</div>
-            @foreach (var cat in cats)
+    <div class="layout">
+        <div class="sidebar">
+            <div class="sb-hd">Bộ lọc</div>
+            <a href="@Url.Action("Index")" class="sb-link @(ViewBag.CurrentBehavior == null && ViewBag.CurrentCategory == null ? "on" : "")">Tất cả <span class="sb-cnt">@(ViewBag.CountAll ?? 0)</span></a>
+            <a href="@Url.Action("Index", new { behaviorType = "Retail" })" class="sb-link @(ViewBag.CurrentBehavior == "Retail" ? "on" : "")">🛒 Bán lẻ <span class="sb-cnt">@(ViewBag.CountRetail ?? 0)</span></a>
+            <a href="@Url.Action("Index", new { behaviorType = "Rental" })" class="sb-link @(ViewBag.CurrentBehavior == "Rental" ? "on" : "")">🔄 Cho thuê <span class="sb-cnt">@(ViewBag.CountRental ?? 0)</span></a>
+            <a href="@Url.Action("Index", new { behaviorType = "Service" })" class="sb-link @(ViewBag.CurrentBehavior == "Service" ? "on" : "")">🔧 Dịch vụ <span class="sb-cnt">@(ViewBag.CountService ?? 0)</span></a>
+            @if (cats.Any())
             {
-                <a href="@Url.Action("Index", new { categoryId = cat.CategoryId })"
-                   class="fp-link @(ViewBag.CurrentCategory?.ToString() == cat.CategoryId.ToString() ? "on" : "")">
-                    @cat.CategoryName
-                </a>
+                <div class="sb-sec">Danh mục</div>
+                @foreach (var c in cats)
+                {
+                    <a href="@Url.Action("Index", new { categoryId = c.CategoryId })" class="sb-link @(ViewBag.CurrentCategory?.ToString() == c.CategoryId.ToString() ? "on" : "")">@c.CategoryName</a>
+                }
             }
-        }
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div>
-        <!-- TOOLBAR -->
-        <div class="toolbar">
-            <div class="tab-grp">
-                <button class="tab-btn @(ViewBag.CurrentStatus == null ? "on" : "")"
-                        onclick="filterStatus('')">
-                    Tất cả
-                </button>
-                <button class="tab-btn @(ViewBag.CurrentStatus == "Active" ? "on" : "")"
-                        onclick="filterStatus('Active')">
-                    Đang bán
-                </button>
-                <button class="tab-btn @(ViewBag.CurrentStatus == "OutOfStock" ? "on" : "")"
-                        onclick="filterStatus('OutOfStock')">
-                    Hết hàng
-                </button>
-                <button class="tab-btn @(ViewBag.CurrentStatus == "Inactive" ? "on" : "")"
-                        onclick="filterStatus('Inactive')">
-                    Ngừng bán
-                </button>
-            </div>
-            <div class="tb-search">
-                <i class="bi bi-search"></i>
-                <input type="text" id="searchBox" placeholder="Tìm tên, SKU..."
-                       value="@ViewBag.Search" oninput="liveSearch()" />
-            </div>
         </div>
 
-        <!-- TABLE -->
-        <div class="tbl-card">
-            <div class="tbl-hd">
-                <i class="bi bi-box-seam"></i>
-                <span class="tbl-title">Danh sách sản phẩm</span>
-                <span class="tbl-count" id="visCount">@Model.Count() sản phẩm</span>
+        <div>
+            <div class="toolbar">
+                <div class="tab-grp">
+                    <button class="tab-btn on" onclick="filterStatus('',this)">Tất cả</button>
+                    <button class="tab-btn" onclick="filterStatus('Active',this)">Đang bán</button>
+                    <button class="tab-btn" onclick="filterStatus('OutOfStock',this)">Hết hàng</button>
+                    <button class="tab-btn" onclick="filterStatus('Inactive',this)">Ngừng bán</button>
+                </div>
+                <div class="srch-w">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="searchBox" placeholder="Tìm tên, SKU..." value="@ViewBag.Search" oninput="runFilter()" />
+                </div>
             </div>
-            <div style="overflow-x:auto">
+
+            <div class="tbl-card">
+                <div class="tbl-top">
+                    <i class="bi bi-box-seam" style="color:var(--gold)"></i>
+                    <span class="tbl-top-title">Danh sách sản phẩm</span>
+                    <span class="tbl-cnt-badge" id="visCnt">@Model.Count() sản phẩm</span>
+                </div>
+
                 @if (!Model.Any())
                 {
-                    <div class="empty">
-                        <i class="bi bi-inbox"></i>
-                        <h5>Chưa có sản phẩm nào</h5>
-                        <p>Thêm sản phẩm đầu tiên bằng nút phía trên.</p>
-                    </div>
+                    <div class="empty-wrap"><i class="bi bi-inbox"></i><h4>Chưa có sản phẩm nào</h4><p style="font-size:.82rem">Thêm sản phẩm đầu tiên bằng nút phía trên.</p><button class="btn-add" style="margin-top:.75rem" onclick="openCreateModal()"><i class="bi bi-plus-lg"></i> Thêm ngay</button></div>
                 }
                 else
                 {
-                    <table id="prodTable">
-                        <thead>
-                            <tr>
-                                <th>Sản phẩm</th>
-                                <th>Danh mục</th>
-                                <th>Loại</th>
-                                <th style="text-align:right">Giá bán</th>
-                                <th style="text-align:right">Tồn kho</th>
-                                <th>Trạng thái</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var p in Model)
-                            {
-                                var bh = p.Category?.BehaviorType ?? "Retail";
-                                var activeVars = p.Variants?.Where(v => v.IsActive).ToList() ?? new();
-                                var stk = activeVars.Any() ? activeVars.Sum(v => v.StockQuantity) : p.StockQuantity;
-                                var isLow = bh == "Retail" && p.MinStockLevel > 0 && stk <= p.MinStockLevel;
-                                var stkCls = stk == 0 ? "stk-zero" : isLow ? "stk-low" : "stk-ok";
-                                var stCls = p.Status switch { "Active" => "st-active", "OutOfStock" => "st-outstock", _ => "st-inactive" };
-                                var stLbl = p.Status switch { "Active" => "Đang bán", "OutOfStock" => "Hết hàng", _ => "Ngừng bán" };
+                    <div style="overflow-x:auto">
+                        <table id="prodTable">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th style="width:120px">Danh mục</th>
+                                    <th style="width:90px">Loại</th>
+                                    <th style="width:120px;text-align:right">Giá</th>
+                                    <th style="width:90px;text-align:right">Tồn kho</th>
+                                    <th style="width:100px">Trạng thái</th>
+                                    <th style="width:100px;text-align:right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in Model)
+                                {
+                                    var bh = p.Category?.BehaviorType ?? "Retail";
+                                    var stk = p.Variants?.Where(v => v.IsActive).Sum(v => v.StockQuantity) is int vs && vs > 0 ? vs : p.StockQuantity;
+                                    var isLow = bh == "Retail" && p.MinStockLevel > 0 && stk <= p.MinStockLevel;
+                                    var stkCls = stk == 0 ? "stk-zero" : isLow ? "stk-low" : "stk-ok";
+                                    var stCls = p.Status switch { "Active" => "st-active", "OutOfStock" => "st-outstock", _ => "st-inactive" };
+                                    var stLbl = p.Status switch { "Active" => "Đang bán", "OutOfStock" => "Hết hàng", _ => "Ngừng bán" };
+                                    var stIco = p.Status switch { "Active" => "bi-check-circle-fill", "OutOfStock" => "bi-exclamation-circle-fill", _ => "bi-x-circle-fill" };
+                                    <tr data-name="@p.ProductName.ToLower()" data-sku="@(p.ProductCode ?? p.SKU ?? "").ToLower()" data-status="@p.Status" data-bh="@bh">
+                                        <td>
+                                            <div class="p-cell">
+                                                @if (!string.IsNullOrEmpty(p.ImageUrl) && p.ImageUrl != "/images/no-image.png")
+                                                {
+                                                    <img src="@p.ImageUrl" class="p-thumb" alt="" onerror="this.classList.add('d-none')" />
+                                                }
+                                                else
+                                                {
 
-                                <tr data-name="@p.ProductName.ToLower()"
-                                    data-sku="@(p.ProductCode ?? p.SKU ?? "")" .ToLower()"
-                                    data-status="@p.Status"
-                                    data-bh="@bh">
-                                    <td>
-                                        <div style="display:flex;align-items:center;gap:.75rem;">
-                                            @if (!string.IsNullOrEmpty(p.ImageUrl) && p.ImageUrl != "/images/no-image.png")
+                                                    <div class="p-ph"><i class="bi @BhIco(bh)"></i></div>
+                                                }
+                                                <div>
+                                                    <div class="p-name">@p.ProductName</div>
+                                                    <div class="p-sku">@(p.ProductCode ?? p.SKU ?? "—")</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td style="font-size:.78rem;color:var(--muted)">@(p.Category?.CategoryName ?? "—")</td>
+                                        <td><span class="bh-tag" style="background:@BhBg(bh);color:@BhClr(bh)"><i class="bi @BhIco(bh)"></i> @BhLbl(bh)</span></td>
+                                        <td style="text-align:right"><span class="price-val">@p.Price.ToString("N0")đ</span></td>
+                                        <td style="text-align:right">
+                                            @if (bh == "Service")
                                             {
-                                                <img src="@p.ImageUrl" class="prod-img" alt="@p.ProductName"
-                                                     onerror="this.style.display='none'" />
+                                                <span style="color:var(--muted);font-size:.76rem">—</span>
                                             }
                                             else
                                             {
-                                                <div class="prod-img-ph"><i class="bi bi-box-seam"></i></div>
+
+                                                <span class="@stkCls">@stk</span>@if(isLow){
+                                                <i class="bi bi-exclamation-triangle-fill" style="color:var(--orange);font-size:.68rem;margin-left:.22rem"></i>
                                             }
-                                            <div>
-                                                <div class="prod-name">@p.ProductName</div>
-                                                <div class="prod-sku">@(p.ProductCode ?? p.SKU ?? "—")</div>
-                                            </div>
-                                        </div>
+    }
                                     </td>
-                                    <td style="font-size:.82rem;color:var(--muted)">@(p.Category?.CategoryName ?? "—")</td>
-                                    <td>
-                                        <span class="bh-tag" style="background:@BhBg(bh);color:@BhClr(bh)">
-                                            @BhLbl(bh)
-                                        </span>
-                                    </td>
-                                    <td style="text-align:right;font-weight:700;">
-                                        @p.Price.ToString("N0")đ
-                                        @if (p.SalePrice > 0 && p.SalePrice != p.Price)
-                                        {
-                                            <div style="font-size:.7rem;color:#1d4ed8;font-weight:600;">
-                                                Sỉ: @p.SalePrice.ToString("N0")đ
-                                            </div>
-                                        }
-                                    </td>
-                                    <td style="text-align:right;">
-                                        @if (bh == "Service")
-                                        {
-                                            <span style="color:var(--muted);font-size:.78rem;">—</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="@stkCls">@stk</span>
-                                            @if (isLow)
-                                            {
-                                                <i class="bi bi-exclamation-triangle-fill" style="color:#c2410c;font-size:.72rem;margin-left:.25rem;" title="Sắp hết hàng"></i>
-                                            }
-                                        }
-                                    </td>
-                                    <td><span class="st-tag @stCls">@stLbl</span></td>
+                                    <td><span class="st-tag @stCls"><i class="bi @stIco"></i> @stLbl</span></td>
                                     <td>
                                         <div class="act-g">
-                                            <a href="@Url.Action("Details", new { id = p.ProductId })"
-                                               class="act-b" title="Chi tiết">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <button class="act-b" title="Chỉnh sửa"
-                                                    onclick="openEditModal(@p.ProductId)">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="act-b danger" title="Xóa"
-                                                    onclick="delProd(@p.ProductId, '@Html.Raw(p.ProductName.Replace("'", "\'"))')">
-                                                <i class="bi bi-trash3"></i>
-                                            </button>
+                                            <a href="@Url.Action("Details", new { id = p.ProductId })" class="act-b act-view" title="Chi tiết"><i class="bi bi-eye"></i></a>
+                                            <button class="act-b act-edit" title="Chỉnh sửa" onclick="openEditModal(@p.ProductId)"><i class="bi bi-pencil"></i></button>
+                                            <button class="act-b act-del" title="Xóa" onclick="delProd(@p.ProductId,'@Html.Raw(p.ProductName.Replace("'", "\\'"))')"><i class="bi bi-trash3"></i></button>
                                         </div>
                                     </td>
                                 </tr>
                             }
                         </tbody>
                     </table>
-                }
-            </div>
-            <div class="tbl-foot">
-                Hiển thị <strong id="visNum">@Model.Count()</strong> / @Model.Count() sản phẩm
+                </div>
+                <div class="tbl-foot">Hiển thị <strong id="visNum">@Model.Count()</strong> / @Model.Count() sản phẩm</div>
+                                }
             </div>
         </div>
     </div>
 </div>
 
-<!-- MODAL Create/Edit -->
 <div class="modal fade" id="prodModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="max-width:860px">
-        <div class="modal-content" id="prodModalBody" style="border-radius:14px;border:none;">
-            <div class="p-5 text-center">
-                <div class="spinner-border" style="color:var(--gold)"></div>
-            </div>
+        <div class="modal-content" id="prodModalBody" style="border-radius:16px;border:none;box-shadow:0 25px 80px rgba(0,0,0,.2)">
+            <div class="p-5 text-center"><div class="spinner-border" style="color:var(--gold)"></div></div>
         </div>
     </div>
 </div>
@@ -778,91 +802,45 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @Html.AntiForgeryToken()
     <script>
-        const TOKEN = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+        const TOKEN=document.querySelector('input[name="__RequestVerificationToken"]')?.value??'';
         let prodModal;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            prodModal = new bootstrap.Modal(document.getElementById('prodModal'));
-        });
-
-        function runScripts(el) {
-            el.querySelectorAll('script').forEach(s => {
-                const n = document.createElement('script');
-                n.text = s.text;
-                s.replaceWith(n);
-            });
-        }
-
-        async function openCreateModal(behaviorType = '') {
-            document.getElementById('prodModalBody').innerHTML =
-                '<div class="p-5 text-center"><div class="spinner-border" style="color:var(--gold)"></div></div>';
+        document.addEventListener('DOMContentLoaded',()=>{prodModal=new bootstrap.Modal(document.getElementById('prodModal'));});
+        function runScripts(el){el.querySelectorAll('script').forEach(s=>{const n=document.createElement('script');n.text=s.text;s.replaceWith(n);});}
+        async function loadModal(url){
+            document.getElementById('prodModalBody').innerHTML='<div class="p-5 text-center"><div class="spinner-border" style="color:var(--gold)"></div></div>';
             prodModal.show();
-            const url = behaviorType
-                ? `/Admin/AdminProduct/Create?behaviorType=${behaviorType}`
-                : '/Admin/AdminProduct/Create';
-            const r = await fetch(url);
-            document.getElementById('prodModalBody').innerHTML = await r.text();
-            runScripts(document.getElementById('prodModalBody'));
+            try{const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);document.getElementById('prodModalBody').innerHTML=await r.text();runScripts(document.getElementById('prodModalBody'));}
+            catch(e){document.getElementById('prodModalBody').innerHTML=`<div class="p-4 text-center text-danger"><i class="bi bi-exclamation-triangle fs-2 d-block mb-2"></i>Lỗi: ${e.message}<br><button class="btn btn-sm btn-secondary mt-2" onclick="prodModal.hide()">Đóng</button></div>`;}
         }
-
-        async function openEditModal(id) {
-            document.getElementById('prodModalBody').innerHTML =
-                '<div class="p-5 text-center"><div class="spinner-border" style="color:var(--gold)"></div></div>';
-            prodModal.show();
-            const r = await fetch(`/Admin/AdminProduct/Edit/${id}`);
-            document.getElementById('prodModalBody').innerHTML = await r.text();
-            runScripts(document.getElementById('prodModalBody'));
-        }
-
-        function delProd(id, name) {
-            Swal.fire({
-                title: `Xóa "${name}"?`, text: 'Không thể hoàn tác.',
-                icon: 'warning', showCancelButton: true,
-                confirmButtonColor: '#c94b2a', cancelButtonColor: '#8a7560',
-                confirmButtonText: 'Xóa', cancelButtonText: 'Hủy', reverseButtons: true
-            }).then(async r => {
-                if (!r.isConfirmed) return;
-                const res = await fetch(`/Admin/AdminProduct/Delete/${id}`, {
-                    method: 'POST',
-                    headers: { 'RequestVerificationToken': TOKEN }
-                }).then(r => r.json());
-                if (res.success) {
-                    Swal.fire({ icon:'success', title:'Đã xóa!', text: res.message,
-                        timer:1200, showConfirmButton:false })
-                        .then(() => location.reload());
-                } else {
-                    Swal.fire('Không thể xóa!', res.message, 'error');
-                }
+        function openCreateModal(bh=''){loadModal(bh?`/Admin/AdminProduct/Create?behaviorType=${bh}`:'/Admin/AdminProduct/Create');}
+        function openEditModal(id){loadModal(`/Admin/AdminProduct/Edit/${id}`);}
+        function delProd(id,name){
+            Swal.fire({title:`Xóa "${name}"?`,text:'Không thể hoàn tác.',icon:'warning',showCancelButton:true,
+                confirmButtonColor:'#c94b2a',cancelButtonColor:'#8a7560',confirmButtonText:'Xóa',cancelButtonText:'Hủy',reverseButtons:true
+            }).then(async r=>{
+                if(!r.isConfirmed)return;
+                const res=await fetch(`/Admin/AdminProduct/Delete/${id}`,{method:'POST',headers:{'RequestVerificationToken':TOKEN}}).then(r=>r.json());
+                if(res.success)Swal.fire({icon:'success',title:'Đã xóa!',text:res.message,timer:1200,showConfirmButton:false}).then(()=>location.reload());
+                else Swal.fire('Không thể xóa!',res.message,'error');
             });
         }
-
-        // ── Client-side live search ──
-        function liveSearch() {
-            const q = document.getElementById('searchBox').value.toLowerCase().trim();
-            filterTable(q, activeStatus);
+        let activeBh='',activeStatus='';
+        function filterBh(bh,cardId){
+            activeBh=bh;
+            document.querySelectorAll('.sc').forEach(c=>c.classList.remove('on'));
+            document.getElementById(cardId)?.classList.add('on');
+            runFilter();
         }
-
-        let activeStatus = '';
-        function filterStatus(st) {
-            activeStatus = st;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
-            event.target.classList.add('on');
-            filterTable(document.getElementById('searchBox').value.toLowerCase().trim(), st);
-        }
-
-        function filterTable(q, st) {
-            let vis = 0;
-            document.querySelectorAll('#prodTable tbody tr').forEach(row => {
-                const name = row.dataset.name ?? '';
-                const sku  = row.dataset.sku  ?? '';
-                const status = row.dataset.status ?? '';
-                const matchQ  = !q  || name.includes(q) || sku.includes(q);
-                const matchSt = !st || status === st;
-                row.style.display = matchQ && matchSt ? '' : 'none';
-                if (matchQ && matchSt) vis++;
+        function filterStatus(st,btn){activeStatus=st;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));btn?.classList.add('on');runFilter();}
+        function runFilter(){
+            const q=document.getElementById('searchBox').value.toLowerCase().trim();
+            let cnt=0;
+            document.querySelectorAll('#prodTable tbody tr').forEach(row=>{
+                const show=(!q||row.dataset.name?.includes(q)||row.dataset.sku?.includes(q))&&(!activeBh||row.dataset.bh===activeBh)&&(!activeStatus||row.dataset.status===activeStatus);
+                row.style.display=show?'':'none';if(show)cnt++;
             });
-            document.getElementById('visNum').textContent = vis;
-            document.getElementById('visCount').textContent = vis + ' sản phẩm';
+            document.getElementById('visNum').textContent=cnt;
+            document.getElementById('visCnt').textContent=cnt+' sản phẩm';
         }
     </script>
 }

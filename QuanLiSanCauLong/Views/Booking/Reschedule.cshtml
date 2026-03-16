@@ -137,6 +137,31 @@
         gap: .55rem;
     }
 
+    .slot-btn {
+        padding: .42rem .9rem;
+        border: 1.5px solid var(--S);
+        border-radius: 7px;
+        background: #fff;
+        font-size: .8rem;
+        font-weight: 600;
+        color: var(--D);
+        cursor: pointer;
+        transition: all .18s;
+        font-family: 'Outfit', sans-serif;
+    }
+
+        .slot-btn:hover {
+            border-color: var(--G);
+            color: var(--D);
+            background: var(--G3);
+        }
+
+        .slot-btn.on {
+            background: var(--D);
+            color: var(--G2);
+            border-color: var(--D);
+        }
+
     .btn-row {
         display: flex;
         gap: .65rem;
@@ -230,25 +255,23 @@
                            value="@Model.BookingDate.ToString("yyyy-MM-dd")" required />
                 </div>
 
-                <div class="fg-r2 fg">
-                    <div>
-                        <label class="fg-label" for="newStart">Giờ bắt đầu <span class="req">*</span></label>
-                        <input type="time" id="newStart" name="newStartTime" class="fg-input"
-                               min="@openTime" max="@closeTime"
-                               value="@Model.StartTime.ToString(@"hh\:mm")" required />
+                <div class="fg">
+                    <label class="fg-label">Khung giờ trống <span class="req">*</span></label>
+                    <div id="slotLoading" style="display:none;font-size:.8rem;color:#8a7560;padding:.5rem 0;">
+                        <i class="bi bi-hourglass-split"></i> Đang tải khung giờ...
                     </div>
-                    <div>
-                        <label class="fg-label" for="newEnd">Giờ kết thúc <span class="req">*</span></label>
-                        <input type="time" id="newEnd" name="newEndTime" class="fg-input"
-                               min="@openTime" max="@closeTime"
-                               value="@Model.EndTime.ToString(@"hh\:mm")" required />
+                    <div id="slotGrid" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.35rem;min-height:2.5rem;"></div>
+                    <div id="slotEmpty" style="display:none;font-size:.8rem;color:#c94b2a;padding:.4rem 0;">
+                        <i class="bi bi-calendar-x"></i> Không có khung giờ trống trong ngày này.
                     </div>
+                    <!-- Hidden inputs submit về controller -->
+                    <input type="hidden" id="newStart" name="newStartTime" value="@Model.StartTime.ToString(@"hh\:mm")" required />
+                    <input type="hidden" id="newEnd" name="newEndTime" value="@Model.EndTime.ToString(@"hh\:mm")" required />
                 </div>
 
-                @* Preview giá mới (JS tính toán đơn giản) *@
-                <div id="pricePreview" style="display:none;background:var(--G3);border:1px solid rgba(212,160,23,.25);border-radius:9px;padding:.9rem 1.1rem;margin-bottom:1.5rem;font-size:.84rem;color:var(--D);">
-                    <i class="bi bi-calculator" style="color:var(--G);"></i>
-                    Thời lượng mới: <strong id="durLabel">—</strong>
+                <div id="selInfo" style="display:none;background:var(--G3);border:1px solid rgba(212,160,23,.25);border-radius:9px;padding:.9rem 1.1rem;margin-bottom:1.5rem;font-size:.84rem;color:var(--D);">
+                    <i class="bi bi-clock" style="color:var(--G);"></i>
+                    Đã chọn: <strong id="selInfoText">—</strong>
                 </div>
 
                 <div class="btn-row">
@@ -266,21 +289,66 @@
 
 @section Scripts {
     <script>
-        function updatePreview() {
-            var s = document.getElementById('newStart').value;
-            var e = document.getElementById('newEnd').value;
-            if (!s || !e) return;
-            var [sh,sm] = s.split(':').map(Number);
-            var [eh,em] = e.split(':').map(Number);
-            var mins = (eh*60+em) - (sh*60+sm);
-            if (mins <= 0) { document.getElementById('pricePreview').style.display='none'; return; }
-            var h = Math.floor(mins/60), m = mins%60;
-            document.getElementById('durLabel').textContent =
-                (h > 0 ? h + ' giờ ' : '') + (m > 0 ? m + ' phút' : '');
-            document.getElementById('pricePreview').style.display='block';
-        }
-        document.getElementById('newStart').addEventListener('change', updatePreview);
-        document.getElementById('newEnd').addEventListener('change', updatePreview);
-        updatePreview();
+        const SLOT_MINS  = @Model.Duration;  // giữ nguyên thời lượng
+
+        // Khi đổi ngày → load slots trống từ API GetTimeSlots
+        document.getElementById('newDate').addEventListener('change', async function() {
+            const date = this.value;
+            if (!date) return;
+
+            // Reset selection
+            document.getElementById('newStart').value = '';
+            document.getElementById('newEnd').value   = '';
+            document.getElementById('selInfo').style.display = 'none';
+            document.getElementById('slotGrid').innerHTML = '';
+            document.getElementById('slotEmpty').style.display = 'none';
+            document.getElementById('slotLoading').style.display = 'block';
+
+            try {
+                // Lấy courtId qua API booking details
+                const res = await fetch(`/Booking/GetTimeSlots?courtId=@(ViewBag.CourtId ?? 0)&date=${date}`);
+                const data = await res.json();
+
+                document.getElementById('slotLoading').style.display = 'none';
+                if (!data.success || !data.slots?.length) {
+                    document.getElementById('slotEmpty').style.display = 'block';
+                    return;
+                }
+
+                const grid = document.getElementById('slotGrid');
+                // Nhóm các slot liên tiếp có available = true thành khung SLOT_MINS phút
+                const avail = data.slots.filter(s => s.isAvailable);
+                if (!avail.length) { document.getElementById('slotEmpty').style.display = 'block'; return; }
+
+                // Hiển thị từng slot 30 phút, cho phép chọn điểm bắt đầu
+                avail.forEach(s => {
+                    const [sh, sm] = s.startTime.split(':').map(Number);
+                    const endMins  = sh * 60 + sm + SLOT_MINS;
+                    const endH     = String(Math.floor(endMins / 60)).padStart(2,'0');
+                    const endM     = String(endMins % 60).padStart(2,'0');
+                    const endTime  = `${endH}:${endM}`;
+
+                    const btn = document.createElement('button');
+                    btn.type      = 'button';
+                    btn.className = 'slot-btn';
+                    btn.textContent = `${s.startTime} – ${endTime}`;
+                    btn.dataset.start = s.startTime;
+                    btn.dataset.end   = endTime;
+
+                    btn.onclick = function() {
+                        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('on'));
+                        btn.classList.add('on');
+                        document.getElementById('newStart').value = s.startTime;
+                        document.getElementById('newEnd').value   = endTime;
+                        document.getElementById('selInfoText').textContent = `${s.startTime} – ${endTime} (${SLOT_MINS} phút)`;
+                        document.getElementById('selInfo').style.display = 'block';
+                    };
+                    grid.appendChild(btn);
+                });
+            } catch(e) {
+                document.getElementById('slotLoading').style.display = 'none';
+                document.getElementById('slotEmpty').style.display = 'block';
+            }
+        });
     </script>
 }

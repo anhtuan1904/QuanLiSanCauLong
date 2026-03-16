@@ -5,20 +5,22 @@
     var catsJson = ViewBag.CategoriesJson as string ?? "[]";
     bool isEdit = Model?.ProductId > 0;
     string formAction = isEdit ? $"/Admin/AdminProduct/EditAjax/{Model!.ProductId}" : "/Admin/AdminProduct/CreateAjax";
+    var initBh = isEdit ? (Model?.Category?.BehaviorType ?? "Retail") : (ViewBag.DefaultBehavior as string ?? "Retail");
 }
-
 <style>
     :root {
         --deep: #1a1209;
         --gold: #d4a017;
         --gold2: #f5c842;
         --warm: #f5ede0;
+        --cream: #fdf8f0;
         --border: #e8ddd0;
         --muted: #8a7560;
         --red: #c94b2a;
         --green: #15803d;
         --blue: #1d4ed8;
         --purple: #7c3aed;
+        --orange: #c2410c;
     }
 
     *, *::before, *::after {
@@ -29,13 +31,14 @@
         font-family: 'Outfit',sans-serif;
     }
 
+    /* modal chrome */
     .md-hd {
-        padding: 1.1rem 1.4rem;
-        border-bottom: 1px solid var(--border);
+        padding: 1.1rem 1.5rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: var(--deep);
+        background: linear-gradient(135deg,var(--deep),#2d1f0f);
+        border-bottom: 1px solid rgba(255,255,255,.07);
     }
 
     .md-title {
@@ -46,74 +49,62 @@
     }
 
         .md-title em {
-            font-style: italic;
             color: var(--gold2);
+            font-style: italic;
         }
 
     .md-close {
         background: none;
         border: none;
         color: rgba(255,255,255,.4);
-        font-size: 1rem;
+        font-size: .95rem;
         cursor: pointer;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: .15s;
     }
 
         .md-close:hover {
+            background: rgba(255,255,255,.15);
             color: #fff;
         }
 
-    .md-body {
-        padding: 1.3rem 1.4rem;
-        max-height: 76vh;
-        overflow-y: auto;
-    }
-
-    .md-ft {
-        padding: .9rem 1.4rem;
-        border-top: 1px solid var(--border);
+    /* step bar */
+    .step-bar {
+        display: flex;
+        align-items: center;
+        padding: .85rem 1.5rem;
         background: var(--warm);
-        display: flex;
-        justify-content: flex-end;
-        gap: .6rem;
-        align-items: center;
-    }
-
-    /* Steps */
-    .steps {
-        display: flex;
-        align-items: center;
-        gap: 0;
-        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border);
     }
 
     .stp {
         display: flex;
         align-items: center;
-        gap: .4rem;
-        font-size: .74rem;
-        font-weight: 700;
+        gap: .42rem;
+        font-size: .78rem;
+        font-weight: 600;
         color: var(--muted);
+        cursor: default;
+        white-space: nowrap;
     }
 
-        .stp.on {
-            color: var(--deep);
-        }
-
-        .stp.done {
-            color: var(--green);
-        }
-
     .stp-n {
-        width: 22px;
-        height: 22px;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
         background: var(--border);
+        color: var(--muted);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: .62rem;
-        font-weight: 900;
-        flex-shrink: 0;
+        font-size: .7rem;
+        font-weight: 700;
+        transition: .2s;
     }
 
     .stp.on .stp-n {
@@ -121,65 +112,69 @@
         color: var(--gold2);
     }
 
+    .stp.on {
+        color: var(--deep);
+    }
+
     .stp.done .stp-n {
         background: var(--green);
         color: #fff;
+    }
+
+    .stp.done {
+        color: var(--green);
     }
 
     .stp-line {
         flex: 1;
         height: 1px;
         background: var(--border);
-        margin: 0 .4rem;
-        min-width: 18px;
+        margin: 0 .6rem;
     }
 
-    /* Form */
-    .sec-hd {
-        font-size: .62rem;
+    .md-body {
+        padding: 1.4rem 1.5rem;
+        max-height: 68vh;
+        overflow-y: auto;
+    }
+
+        .md-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .md-body::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+    .md-ft {
+        padding: .9rem 1.5rem;
+        border-top: 1px solid var(--border);
+        background: var(--cream);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* sections */
+    .sec {
+        font-size: .6rem;
         font-weight: 700;
-        letter-spacing: .15em;
+        letter-spacing: .18em;
         text-transform: uppercase;
         color: var(--muted);
-        padding: .55rem 0;
-        margin-bottom: .8rem;
+        padding: .4rem 0;
         border-bottom: 1px solid var(--border);
+        margin-bottom: .9rem;
         display: flex;
         align-items: center;
         gap: .38rem;
     }
 
-    .fg {
-        display: flex;
-        flex-direction: column;
-        gap: .28rem;
-        margin-bottom: .85rem;
-    }
-
-        .fg label {
-            font-size: .72rem;
-            font-weight: 700;
-            color: var(--deep);
-        }
-
-        .fg .req {
-            color: var(--red);
-        }
-
-        .fg .hint {
-            font-size: .67rem;
-            color: var(--muted);
-        }
-
-        .fg .err {
-            font-size: .68rem;
-            color: var(--red);
-        }
-
     .row2 {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: .85rem;
+        gap: .8rem;
     }
 
     .row3 {
@@ -188,46 +183,180 @@
         gap: .75rem;
     }
 
-    /* Inputs */
+    .fg {
+        display: flex;
+        flex-direction: column;
+        gap: .28rem;
+        margin-bottom: .82rem;
+    }
+
+        .fg label {
+            font-size: .73rem;
+            font-weight: 700;
+            color: var(--deep);
+        }
+
+    .req {
+        color: var(--red);
+    }
+
+    .hint {
+        font-size: .67rem;
+        color: var(--muted);
+    }
+
     .fi {
-        padding: .6rem .85rem;
-        border: 1px solid var(--border);
-        border-radius: 7px;
-        font-family: 'Outfit',sans-serif;
+        padding: .58rem .88rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
         font-size: .84rem;
         color: var(--deep);
         background: #fff;
         outline: none;
-        transition: border-color .2s;
         width: 100%;
+        transition: all .2s;
     }
 
         .fi:focus {
             border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(212,160,23,.1);
         }
 
-    .fi-combo {
+    textarea.fi {
+        resize: vertical;
+        min-height: 64px;
+    }
+
+    /* behavior cards */
+    .bh-row {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: .65rem;
+        margin-bottom: 1rem;
+    }
+
+    .bh-card {
+        border: 2px solid var(--border);
+        border-radius: 11px;
+        padding: .9rem .85rem;
+        cursor: pointer;
+        transition: all .2s;
+        text-align: center;
+        background: #fff;
+    }
+
+        .bh-card:hover {
+            border-color: var(--gold);
+            background: #fffbf0;
+            transform: translateY(-1px);
+        }
+
+        .bh-card.on-Retail {
+            border-color: #16a34a;
+            background: linear-gradient(135deg,#f0fdf4,#dcfce7);
+        }
+
+        .bh-card.on-Rental {
+            border-color: #1d4ed8;
+            background: linear-gradient(135deg,#eff6ff,#dbeafe);
+        }
+
+        .bh-card.on-Service {
+            border-color: #7c3aed;
+            background: linear-gradient(135deg,#f5f3ff,#ede9fe);
+        }
+
+    .bh-icon {
+        font-size: 1.5rem;
+        display: block;
+        margin-bottom: .35rem;
+    }
+
+    .bh-nm {
+        font-weight: 700;
+        font-size: .84rem;
+        color: var(--deep);
+    }
+
+    .bh-ds {
+        font-size: .65rem;
+        color: var(--muted);
+        margin-top: .08rem;
+    }
+
+    /* conditional panels */
+    .cond {
+        display: none;
+    }
+
+        .cond.show {
+            display: block;
+        }
+
+    /* money input */
+    .money-w {
         position: relative;
     }
 
-        .fi-combo select, .fi-combo input {
-            width: 100%;
+        .money-w .fi {
+            padding-right: 1.6rem;
         }
-    /* Combobox (select + custom input) */
-    .combo-wrap {
+
+    .money-sfx {
+        position: absolute;
+        right: .6rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: .72rem;
+        color: var(--muted);
+        pointer-events: none;
+    }
+
+    /* info hints */
+    .info-hint {
+        padding: .58rem .9rem;
+        border-radius: 8px;
+        font-size: .76rem;
+        line-height: 1.55;
+        display: flex;
+        align-items: flex-start;
+        gap: .45rem;
+        margin-bottom: .9rem;
+    }
+
+    .ih-retail {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #15803d;
+    }
+
+    .ih-rental {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1d4ed8;
+    }
+
+    .ih-service {
+        background: #f5f3ff;
+        border: 1px solid #ddd6fe;
+        color: #7c3aed;
+    }
+
+    /* combobox */
+    .combo-w {
         position: relative;
     }
 
     .combo-list {
         position: absolute;
-        top: 100%;
+        top: calc(100% + 3px);
         left: 0;
         right: 0;
         background: #fff;
-        border: 1px solid var(--border);
-        border-radius: 7px;
-        z-index: 50;
-        box-shadow: 0 4px 16px rgba(0,0,0,.1);
+        border: 1.5px solid var(--border);
+        border-radius: 9px;
+        z-index: 100;
+        box-shadow: 0 8px 28px rgba(0,0,0,.11);
         max-height: 180px;
         overflow-y: auto;
         display: none;
@@ -238,161 +367,37 @@
         }
 
     .combo-opt {
-        padding: .48rem .85rem;
-        font-size: .82rem;
+        padding: .44rem .88rem;
+        font-size: .83rem;
         cursor: pointer;
         color: var(--deep);
+        transition: background .1s;
     }
 
         .combo-opt:hover {
             background: var(--warm);
         }
 
-        .combo-opt.custom-opt {
-            color: var(--gold);
-            font-weight: 700;
-            border-top: 1px solid var(--border);
-        }
-
-    /* Money input */
-    .money-wrap {
-        position: relative;
-    }
-
-        .money-wrap .fi {
-            padding-right: 2.6rem;
-        }
-
-    .money-sfx {
-        position: absolute;
-        right: .75rem;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: .72rem;
-        font-weight: 700;
-        color: var(--muted);
-        pointer-events: none;
-    }
-
-    /* Behavior selector */
-    .bh-row {
-        display: grid;
-        grid-template-columns: repeat(3,1fr);
-        gap: .65rem;
-        margin-bottom: 1.2rem;
-    }
-
-    .bh-opt {
-        border: 2px solid var(--border);
-        border-radius: 10px;
-        padding: .8rem;
-        cursor: pointer;
-        background: #fff;
-        transition: all .2s;
-        text-align: center;
-    }
-
-        .bh-opt:hover {
-            border-color: var(--gold);
-        }
-
-        .bh-opt.on-Retail {
-            border-color: #16a34a;
-            background: #f0fdf4;
-        }
-
-        .bh-opt.on-Rental {
-            border-color: var(--blue);
-            background: #eff6ff;
-        }
-
-        .bh-opt.on-Service {
-            border-color: var(--purple);
-            background: #f5f3ff;
-        }
-
-    .bh-ico {
-        font-size: 1.35rem;
-        display: block;
-        margin-bottom: .4rem;
-    }
-
-    .bh-nm {
-        font-size: .82rem;
-        font-weight: 700;
-        color: var(--deep);
-    }
-
-    .bh-ds {
-        font-size: .64rem;
-        color: var(--muted);
-        margin-top: .12rem;
-    }
-
-    /* Panels */
-    .cond {
-        display: none;
-        padding: .9rem;
-        border-radius: 9px;
-        margin-bottom: .85rem;
-    }
-
-        .cond.show {
-            display: block;
-        }
-
-    .c-retail {
-        background: #f0fdf4;
-        border: 1px solid #bbf7d0;
-    }
-
-    .c-rental {
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-    }
-
-    .c-service {
-        background: #f5f3ff;
-        border: 1px solid #ddd6fe;
-    }
-
-    .c-variants {
-        background: var(--warm);
-        border: 1px solid var(--border);
-    }
-
-    .panel-label {
-        font-size: .62rem;
-        font-weight: 700;
-        letter-spacing: .14em;
-        text-transform: uppercase;
-        margin-bottom: .75rem;
-        display: flex;
-        align-items: center;
-        gap: .35rem;
-    }
-
-    /* Variants table */
+    /* variants table */
     .vtbl {
         width: 100%;
         border-collapse: collapse;
-        font-size: .8rem;
+        font-size: .81rem;
     }
 
         .vtbl th {
-            padding: .45rem .6rem;
-            background: rgba(0,0,0,.04);
-            font-size: .63rem;
+            padding: .44rem .6rem;
+            font-size: .61rem;
             font-weight: 700;
-            letter-spacing: .1em;
+            letter-spacing: .08em;
             text-transform: uppercase;
             color: var(--muted);
-            text-align: left;
+            background: var(--warm);
             border-bottom: 1px solid var(--border);
         }
 
         .vtbl td {
-            padding: .42rem .5rem;
+            padding: .38rem .55rem;
             border-bottom: 1px solid var(--border);
         }
 
@@ -400,33 +405,33 @@
             border-bottom: none;
         }
 
-        .vtbl input, .vtbl select {
-            padding: .38rem .6rem;
-            border: 1px solid var(--border);
-            border-radius: 5px;
-            font-family: 'Outfit',sans-serif;
-            font-size: .78rem;
+        .vtbl input {
             width: 100%;
+            padding: .36rem .55rem;
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            font-size: .8rem;
+            background: #fff;
             outline: none;
         }
 
-            .vtbl input:focus, .vtbl select:focus {
+            .vtbl input:focus {
                 border-color: var(--gold);
             }
 
     .vt-del {
-        width: 28px;
-        height: 28px;
+        width: 24px;
+        height: 24px;
         border-radius: 5px;
-        border: 1px solid var(--border);
+        border: 1.5px solid var(--border);
         background: #fff;
+        cursor: pointer;
+        color: var(--muted);
         display: flex;
         align-items: center;
         justify-content: center;
-        cursor: pointer;
-        color: var(--muted);
-        font-size: .7rem;
-        transition: all .15s;
+        font-size: .65rem;
+        transition: .15s;
     }
 
         .vt-del:hover {
@@ -434,20 +439,25 @@
             color: var(--red);
         }
 
+        .vt-del:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+
     .btn-add-var {
-        padding: .38rem .85rem;
+        padding: .36rem .8rem;
         border: 1.5px dashed var(--border);
-        border-radius: 6px;
-        background: #fff;
+        border-radius: 7px;
+        background: transparent;
         font-size: .76rem;
         font-weight: 700;
         cursor: pointer;
         color: var(--muted);
-        transition: all .15s;
-        display: flex;
+        transition: .18s;
+        display: inline-flex;
         align-items: center;
         gap: .3rem;
-        margin-top: .55rem;
+        margin-top: .5rem;
     }
 
         .btn-add-var:hover {
@@ -455,135 +465,73 @@
             color: var(--deep);
         }
 
-    /* Quick size picker */
-    .size-pills {
+    /* size pills */
+    .sz-pills {
         display: flex;
         flex-wrap: wrap;
-        gap: .3rem;
-        margin-bottom: .55rem;
+        gap: .28rem;
+        margin-bottom: .42rem;
     }
 
     .sz-pill {
-        padding: .22rem .6rem;
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        font-size: .7rem;
+        padding: .18rem .58rem;
+        border: 1.5px solid var(--border);
+        border-radius: 20px;
+        font-size: .72rem;
         cursor: pointer;
         background: #fff;
-        transition: all .15s;
+        color: var(--muted);
+        transition: .15s;
     }
 
-        .sz-pill:hover, .sz-pill.on {
+        .sz-pill:hover {
             border-color: var(--gold);
-            background: rgba(212,160,23,.08);
-            color: #92660a;
-            font-weight: 700;
+            color: var(--deep);
+            background: #fffbf0;
         }
 
-    /* Image upload */
+    /* image zone */
     .img-zone {
         border: 2px dashed var(--border);
-        border-radius: 8px;
-        padding: 1rem;
+        border-radius: 11px;
+        padding: 1.8rem;
         text-align: center;
         cursor: pointer;
         transition: all .2s;
+        background: #fff;
     }
 
         .img-zone:hover {
             border-color: var(--gold);
-            background: rgba(212,160,23,.04);
+            background: #fffbf0;
         }
 
-        .img-zone input {
+        .img-zone input[type=file] {
             display: none;
         }
 
         .img-zone i {
-            font-size: 1.4rem;
+            font-size: 2rem;
             color: var(--muted);
             display: block;
-            margin-bottom: .3rem;
+            margin-bottom: .45rem;
         }
 
         .img-zone p {
-            font-size: .75rem;
+            font-size: .78rem;
             color: var(--muted);
             margin: 0;
         }
 
-    /* Buttons */
-    .btn-p {
-        background: linear-gradient(135deg,var(--gold),var(--gold2));
-        color: var(--deep);
-        border: none;
-        padding: .65rem 1.4rem;
-        font-size: .86rem;
-        font-weight: 700;
-        border-radius: 7px;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: .4rem;
-        transition: all .2s;
-    }
-
-        .btn-p:hover {
-            box-shadow: 0 4px 14px rgba(212,160,23,.35);
-            transform: translateY(-1px);
-        }
-
-        .btn-p:disabled {
-            opacity: .6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-    .btn-s {
-        padding: .62rem 1.15rem;
-        border: 1.5px solid var(--border);
-        border-radius: 7px;
-        background: #fff;
-        font-size: .84rem;
-        font-weight: 600;
-        cursor: pointer;
-        color: var(--muted);
-        transition: all .18s;
-    }
-
-        .btn-s:hover {
-            border-color: var(--deep);
-            color: var(--deep);
-        }
-
-    .btn-back {
-        padding: .5rem .85rem;
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        background: #fff;
-        font-size: .76rem;
-        cursor: pointer;
-        color: var(--muted);
-        display: flex;
-        align-items: center;
-        gap: .28rem;
-        transition: all .15s;
-    }
-
-        .btn-back:hover {
-            border-color: var(--deep);
-            color: var(--deep);
-        }
-
-    /* Preview bar */
+    /* preview bar */
     .prev-bar {
         display: flex;
         align-items: center;
-        gap: .75rem;
-        padding: .65rem .9rem;
+        gap: .8rem;
+        padding: .7rem 1rem;
         background: var(--deep);
-        border-radius: 8px;
-        margin-bottom: 1rem;
+        border-radius: 9px;
+        margin-top: .8rem;
     }
 
     .prev-name {
@@ -596,104 +544,157 @@
     .prev-badge {
         display: inline-flex;
         align-items: center;
-        gap: .25rem;
-        padding: .18rem .55rem;
-        border-radius: 4px;
-        font-size: .64rem;
+        gap: .22rem;
+        padding: .2rem .55rem;
+        border-radius: 5px;
+        font-size: .65rem;
         font-weight: 700;
     }
 
-    /* Info hints */
-    .info-hint {
-        padding: .6rem .85rem;
-        border-radius: 7px;
-        font-size: .76rem;
-        line-height: 1.55;
-        display: flex;
-        align-items: flex-start;
-        gap: .5rem;
-        margin-bottom: .8rem;
+    /* summary */
+    #summaryBox {
+        background: var(--cream);
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: .9rem 1.1rem;
+        font-size: .83rem;
+        color: var(--deep);
+        line-height: 1.85;
     }
 
-    .ih-retail {
-        background: #f0fdf4;
-        border: 1px solid #bbf7d0;
-        color: var(--green);
+    /* footer nav */
+    .btn-back-step {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .55rem 1rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        font-size: .8rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--muted);
+        transition: .18s;
     }
 
-    .ih-rental {
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        color: var(--blue);
+        .btn-back-step:hover {
+            border-color: var(--deep);
+            color: var(--deep);
+        }
+
+    .btn-next {
+        display: inline-flex;
+        align-items: center;
+        gap: .38rem;
+        padding: .6rem 1.3rem;
+        border: none;
+        border-radius: 8px;
+        background: var(--deep);
+        font-size: .83rem;
+        font-weight: 700;
+        color: var(--gold2);
+        cursor: pointer;
+        transition: .18s;
     }
 
-    .ih-service {
-        background: #f5f3ff;
-        border: 1px solid #ddd6fe;
-        color: var(--purple);
+        .btn-next:hover {
+            background: #2d1f0f;
+        }
+
+    .btn-submit-final {
+        display: none;
+        align-items: center;
+        gap: .4rem;
+        padding: .62rem 1.4rem;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        font-size: .84rem;
+        font-weight: 700;
+        color: var(--deep);
+        cursor: pointer;
+        transition: .2s;
+        box-shadow: 0 2px 8px rgba(212,160,23,.3);
     }
+
+        .btn-submit-final:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 16px rgba(212,160,23,.45);
+        }
+
+        .btn-submit-final:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    .btn-cancel {
+        padding: .6rem 1.2rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        font-size: .83rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--muted);
+        transition: .18s;
+    }
+
+        .btn-cancel:hover {
+            border-color: var(--deep);
+            color: var(--deep);
+        }
 </style>
 
-<!-- HEADER -->
 <div class="md-hd">
     <span class="md-title">@(isEdit ? "Sửa" : "Thêm") <em>Sản Phẩm</em></span>
     <button class="md-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
 </div>
 
+<div class="step-bar" id="stepBar">
+    <div class="stp on" id="si1"><div class="stp-n">1</div> Cơ bản</div>
+    <div class="stp-line"></div>
+    <div class="stp" id="si2"><div class="stp-n">2</div> Giá &amp; kho</div>
+    <div class="stp-line"></div>
+    <div class="stp" id="si3"><div class="stp-n">3</div> Hình ảnh</div>
+</div>
+
 <div class="md-body">
 
-    <!-- STEPS -->
-    <div class="steps" id="stepBar">
-        <div class="stp on" id="si1"><div class="stp-n">1</div> Cơ bản</div>
-        <div class="stp-line"></div>
-        <div class="stp" id="si2"><div class="stp-n">2</div> Giá &amp; kho</div>
-        <div class="stp-line"></div>
-        <div class="stp" id="si3"><div class="stp-n">3</div> Hình ảnh</div>
-    </div>
-
-    <!-- ════ STEP 1: BASIC INFO ════ -->
+    {{-- STEP 1 --}}
     <div id="s1">
-
-        <!-- Behavior -->
-        <div class="sec-hd"><i class="bi bi-diagram-3"></i> Nhóm sản phẩm <span class="req">*</span></div>
+        <div class="sec"><i class="bi bi-diagram-3"></i> Nhóm sản phẩm <span class="req">*</span></div>
         <div class="bh-row">
-            <div class="bh-opt" id="bh-Retail" onclick="selBh('Retail')">
-                <span class="bh-ico"><i class="bi bi-cart3" style="color:#16a34a;font-size:1.35rem"></i></span>
-                <div class="bh-nm">Bán lẻ</div>
-                <div class="bh-ds">Trừ kho khi bán</div>
+            <div class="bh-card" id="bh-Retail" onclick="selBh('Retail')">
+                <span class="bh-icon"><i class="bi bi-cart3" style="color:#16a34a"></i></span>
+                <div class="bh-nm">Bán lẻ</div><div class="bh-ds">Trừ kho khi bán</div>
             </div>
-            <div class="bh-opt" id="bh-Rental" onclick="selBh('Rental')">
-                <span class="bh-ico"><i class="bi bi-arrow-repeat" style="color:var(--blue);font-size:1.35rem"></i></span>
-                <div class="bh-nm">Cho thuê</div>
-                <div class="bh-ds">Hoàn kho khi trả</div>
+            <div class="bh-card" id="bh-Rental" onclick="selBh('Rental')">
+                <span class="bh-icon"><i class="bi bi-arrow-repeat" style="color:#1d4ed8"></i></span>
+                <div class="bh-nm">Cho thuê</div><div class="bh-ds">Hoàn kho khi trả</div>
             </div>
-            <div class="bh-opt" id="bh-Service" onclick="selBh('Service')">
-                <span class="bh-ico"><i class="bi bi-wrench-adjustable" style="color:var(--purple);font-size:1.35rem"></i></span>
-                <div class="bh-nm">Dịch vụ</div>
-                <div class="bh-ds">Không kho vật lý</div>
+            <div class="bh-card" id="bh-Service" onclick="selBh('Service')">
+                <span class="bh-icon"><i class="bi bi-wrench-adjustable" style="color:#7c3aed"></i></span>
+                <div class="bh-nm">Dịch vụ</div><div class="bh-ds">Không kho vật lý</div>
             </div>
         </div>
 
-        <!-- Basic fields -->
-        <div class="sec-hd"><i class="bi bi-info-circle"></i> Thông tin cơ bản</div>
-
+        <div class="sec"><i class="bi bi-info-circle"></i> Thông tin cơ bản</div>
         <div class="fg">
             <label>Tên sản phẩm / dịch vụ <span class="req">*</span></label>
-            <input type="text" id="inp_name" class="fi" placeholder="VD: Nước Aquafina, Vợt cho thuê A1, Căng vợt..." maxlength="200"
-                   value="@(isEdit? Model!.ProductName : "")" oninput="updPrev()" />
+            <input type="text" id="inp_name" class="fi" placeholder="VD: Nước Aquafina, Vợt cho thuê, Căng vợt..." maxlength="200"
+                   value="@(isEdit? Model!.ProductName:"")" oninput="updPrev()" />
         </div>
-
         <div class="row2">
             <div class="fg">
                 <label>Mã SKU <span class="req">*</span></label>
-                <div class="combo-wrap">
-                    <input type="text" id="inp_sku" class="fi" placeholder="VD: SP-001, NUOC-001..."
+                <div class="combo-w">
+                    <input type="text" id="inp_sku" class="fi" placeholder="VD: SP-001..."
                            value="@(isEdit ? (Model!.ProductCode ?? Model.SKU ?? "") : "")"
                            oninput="filterCombo('skuList',this.value)" onfocus="showCombo('skuList')" />
                     <div class="combo-list" id="skuList">
-                        <div class="combo-opt" onclick="pickSku('SP-001')">SP-001</div>
-                        <div class="combo-opt" onclick="pickSku('SP-002')">SP-002</div>
-                        <div class="combo-opt" onclick="pickSku(genSku())" id="skuAutoOpt">Tạo tự động</div>
+                        <div class="combo-opt" id="skuAutoOpt" onclick="pickSku(genSku())">✨ Tạo tự động</div>
                     </div>
                 </div>
                 <span class="hint">Mã nội bộ, không trùng lặp</span>
@@ -704,23 +705,25 @@
                     <option value="">-- Chọn danh mục --</option>
                     @foreach (var c in cats)
                     {
-                        var bhLabel = c.BehaviorType == "Retail" ? "Bán lẻ" : c.BehaviorType == "Rental" ? "Cho thuê" : "Dịch vụ";
-                        var isSel = isEdit && Model!.CategoryId == c.CategoryId;
-                        @Html.Raw($"<option value=\"{c.CategoryId}\" data-bh=\"{c.BehaviorType}\" data-unit=\"{c.DefaultUnit}\" data-deposit=\"{c.DefaultDepositAmount}\" data-cleaning=\"{c.DefaultCleaningFee}\" data-maxhours=\"{c.MaxRentalHours}\" data-variants=\"{c.HasVariants.ToString().ToLower()}\" data-size=\"{c.RequiresSize.ToString().ToLower()}\"{(isSel ? " selected" : "")}>{c.CategoryName} ({bhLabel})</option>")
+                        var sel = isEdit && Model!.CategoryId == c.CategoryId;
+                        <option value="@c.CategoryId" data-bh="@c.BehaviorType" data-unit="@c.DefaultUnit"
+                                data-deposit="@c.DefaultDepositAmount" data-hasvariants="@c.HasVariants.ToString().ToLower()"
+                                selected="@(sel?"selected":null)">
+                            @c.CategoryName (@(c.BehaviorType == "Retail" ? "Bán lẻ" : c.BehaviorType == "Rental" ? "Cho thuê" : "Dịch vụ"))
+                        </option>
                     }
                 </select>
             </div>
         </div>
-
         <div class="row2">
             <div class="fg">
                 <label>Đơn vị tính</label>
-                <div class="combo-wrap">
-                    <input type="text" id="inp_unit" class="fi" placeholder="Chai, Cái, Đôi, Bộ..."
-                           value="@(isEdit ? (Model!.Unit ?? "") : "")"
-                           oninput="filterCombo('unitList',this.value)" onfocus="showCombo('unitList')" />
+                <div class="combo-w">
+                    <input type="text" id="inp_unit" class="fi" placeholder="Cái, Bộ, Đôi..."
+                           value="@(isEdit? Model!.Unit:"Cái")"
+                           onfocus="showCombo('unitList')" oninput="filterCombo('unitList',this.value)" />
                     <div class="combo-list" id="unitList">
-                        @foreach (var u in new[] { "Cái", "Bộ", "Chiếc", "Đôi", "Chai", "Lon", "Hộp", "Thùng", "Túi", "Kg", "Gram", "Lít", "Lần", "Buổi" })
+                        @foreach (var u in new[] { "Cái", "Bộ", "Đôi", "Hộp", "Chai", "Gói", "Lần", "Buổi" })
                         {
                             <div class="combo-opt" onclick="pickCombo('inp_unit','@u')">@u</div>
                         }
@@ -729,148 +732,62 @@
             </div>
             <div class="fg">
                 <label>Trạng thái</label>
+                @{
+                    var st = isEdit ? Model!.Status : "Active";
+                }
                 <select id="inp_status" class="fi">
-                    @{
-                        var st = isEdit ? Model!.Status : "Active";
-                    }
-                    @Html.Raw($"<option value=\"Active\"{(st == "Active" ? " selected" : "")}>Hoạt động / Còn hàng</option>")
-                    @Html.Raw($"<option value=\"OutOfStock\"{(st == "OutOfStock" ? " selected" : "")}>Hết hàng</option>")
-                    @Html.Raw($"<option value=\"Inactive\"{(st == "Inactive" ? " selected" : "")}>Ngừng kinh doanh</option>")
+                    <option value="Active" selected="@(st == "Active" ? "selected" : null)">✅ Hoạt động / Còn hàng</option>
+                    <option value="OutOfStock" selected="@(st == "OutOfStock" ? "selected" : null)">⚠ Hết hàng</option>
+                    <option value="Inactive" selected="@(st == "Inactive" ? "selected" : null)">⛔ Ngừng kinh doanh</option>
                 </select>
             </div>
         </div>
-
         <div class="fg">
-            <label>Mô tả</label>
-            <textarea id="inp_desc" class="fi" rows="2" placeholder="Mô tả ngắn về sản phẩm / dịch vụ...">@(isEdit? Model!.Description : "")</textarea>
+            <label>Mô tả <span style="font-weight:400;color:var(--muted)">(tùy chọn)</span></label>
+            <textarea id="inp_desc" class="fi" rows="2" placeholder="Mô tả ngắn...">@(isEdit? Model!.Description:"")</textarea>
         </div>
-
-        <!-- Preview bar -->
-        <div class="prev-bar" id="prevBar" style="display:none;">
+        <div class="prev-bar" id="prevBar" style="display:none">
             <div class="prev-name" id="pv-name">—</div>
-            <span class="prev-badge" id="pv-bh" style="background:#f0fdf4;color:#166534;">Bán lẻ</span>
-        </div>
-
-        <div style="display:flex;justify-content:flex-end;margin-top:.5rem;">
-            <button class="btn-p" onclick="goStep(2)">Tiếp <i class="bi bi-arrow-right"></i></button>
+            <span class="prev-badge" id="pv-bh">Bán lẻ</span>
         </div>
     </div>
 
-    <!-- ════ STEP 2: PRICE + STOCK + BEHAVIOR CONFIG ════ -->
-    <div id="s2" style="display:none;">
-        <button class="btn-back mb-3" onclick="goStep(1)"><i class="bi bi-arrow-left"></i> Quay lại</button>
-
-        <!-- RETAIL config -->
-        <div class="cond c-retail" id="c-Retail">
-            <div class="panel-label" style="color:var(--green);"><i class="bi bi-cart3"></i> Cấu hình Bán lẻ</div>
-            <div class="ih-retail info-hint">
-                <i class="bi bi-info-circle-fill" style="flex-shrink:0;margin-top:1px"></i>
-                Hàng bán lẻ: xuất kho khi bán, theo dõi tồn kho và cảnh báo hết hàng.
-            </div>
+    {{-- STEP 2 --}}
+    <div id="s2" style="display:none">
+        <div class="cond" id="c-Retail">
+            <div class="info-hint ih-retail"><i class="bi bi-info-circle-fill" style="flex-shrink:0;margin-top:1px"></i>Hàng bán lẻ — xuất kho khi bán, theo dõi tồn kho và cảnh báo hết hàng.</div>
+            <div class="sec"><i class="bi bi-currency-dollar" style="color:var(--green)"></i> Cấu hình bán lẻ</div>
             <div class="row3">
-                <div class="fg">
-                    <label>Giá bán (đ) <span class="req">*</span></label>
-                    <div class="money-wrap">
-                        <input type="number" id="inp_price" class="fi" min="0" step="1000" placeholder="0"
-                               value="@(isEdit? Model!.Price.ToString() : "")"><span class="money-sfx">₫</span>
-                    </div>
-                </div>
-                <div class="fg">
-                    <label>Giá nhập (đ)</label>
-                    <div class="money-wrap">
-                        <input type="number" id="inp_cost" class="fi" min="0" step="1000" placeholder="0"
-                               value="@(isEdit? Model!.CostPrice.ToString() : "")"><span class="money-sfx">₫</span>
-                    </div>
-                </div>
-                <div class="fg">
-                    <label>Tồn kho ban đầu</label>
-                    <input type="number" id="inp_stock" class="fi" min="0" placeholder="0"
-                           value="@(isEdit? Model!.StockQuantity.ToString() : "")" />
-                </div>
+                <div class="fg"><label>Giá bán (đ) <span class="req">*</span></label><div class="money-w"><input type="number" id="inp_price" class="fi" min="0" step="1000" placeholder="0" value="@(isEdit? Model!.Price.ToString():"")"><span class="money-sfx">₫</span></div></div>
+                <div class="fg"><label>Giá nhập (đ)</label><div class="money-w"><input type="number" id="inp_cost" class="fi" min="0" step="1000" placeholder="0" value="@(isEdit? Model!.CostPrice.ToString():"")"><span class="money-sfx">₫</span></div></div>
+                <div class="fg"><label>Tồn kho ban đầu</label><input type="number" id="inp_stock" class="fi" min="0" placeholder="0" value="@(isEdit? Model!.StockQuantity.ToString():"")" /></div>
+            </div>
+            <div class="fg"><label>Safety stock (cảnh báo khi ≤)</label><input type="number" id="inp_minstk" class="fi" min="0" placeholder="0" value="@(isEdit? Model!.MinStockLevel.ToString():"")" /><span class="hint">Để 0 = không cảnh báo</span></div>
+        </div>
+
+        <div class="cond" id="c-Rental">
+            <div class="info-hint ih-rental"><i class="bi bi-info-circle-fill" style="flex-shrink:0;margin-top:1px"></i>Đồ cho thuê — xuất → khách mang đi, thu cọc. Trả về → hoàn kho, thu phí vệ sinh.</div>
+            <div class="sec"><i class="bi bi-arrow-repeat" style="color:var(--blue)"></i> Cấu hình cho thuê</div>
+            <div class="row3">
+                <div class="fg"><label>Giá thuê / lần (đ) <span class="req">*</span></label><div class="money-w"><input type="number" id="inp_rent_price" class="fi" min="0" step="1000" placeholder="0" value="@(isEdit? Model!.Price.ToString():"")"><span class="money-sfx">₫</span></div></div>
+                <div class="fg"><label>Tiền đặt cọc (đ)</label><div class="money-w"><input type="number" id="inp_deposit" class="fi" min="0" step="1000" placeholder="0" value="@(isEdit? Model!.DepositAmount.ToString():"")"><span class="money-sfx">₫</span></div></div>
+                <div class="fg"><label>Phí vệ sinh (đ)</label><div class="money-w"><input type="number" id="inp_cleaning" class="fi" min="0" step="1000" placeholder="0" value="@(isEdit? Model!.CleaningFee.ToString():"")"><span class="money-sfx">₫</span></div><span class="hint">Thu khi nhận đồ về</span></div>
             </div>
             <div class="row2">
-                <div class="fg">
-                    <label>Safety stock (cảnh báo khi ≤)</label>
-                    <input type="number" id="inp_minstk" class="fi" min="0" placeholder="0"
-                           value="@(isEdit? Model!.MinStockLevel.ToString() : "")" />
-                    <span class="hint">Để 0 = không cảnh báo</span>
-                </div>
-                <div class="fg">
-                    <label>Giá bán sỉ (đ)</label>
-                    <div class="money-wrap">
-                        <input type="number" id="inp_saleprice" class="fi" min="0" step="1000" placeholder="0"
-                               value="@(isEdit? Model!.SalePrice.ToString() : "")"><span class="money-sfx">₫</span>
-                    </div>
-                    <span class="hint">Bỏ trống = không áp dụng giá sỉ</span>
-                </div>
+                <div class="fg"><label>Số lượng hiện có</label><input type="number" id="inp_rent_stock" class="fi" min="0" placeholder="0" value="@(isEdit? Model!.StockQuantity.ToString():"")" /></div>
+                <div class="fg"><label>Thời gian tối đa (giờ)</label><input type="number" id="inp_maxhours" class="fi" min="1" placeholder="Không giới hạn" value="@(isEdit && Model!.MaxRentalHours.HasValue ? Model.MaxRentalHours.ToString() : "")" /><span class="hint">Bỏ trống = không giới hạn</span></div>
             </div>
         </div>
 
-        <!-- RENTAL config -->
-        <div class="cond c-rental" id="c-Rental">
-            <div class="panel-label" style="color:var(--blue);"><i class="bi bi-arrow-repeat"></i> Cấu hình Cho thuê</div>
-            <div class="ih-rental info-hint">
-                <i class="bi bi-info-circle-fill" style="flex-shrink:0;margin-top:1px"></i>
-                Đồ cho thuê: xuất → khách mang đi, thu tiền cọc. Khi khách trả → hoàn kho, thu phí vệ sinh nếu có.
-            </div>
-            <div class="row3">
-                <div class="fg">
-                    <label>Giá thuê / giờ (đ) <span class="req">*</span></label>
-                    <div class="money-wrap">
-                        <input type="number" id="inp_rent_price" class="fi" min="0" step="1000" placeholder="0"
-                               value="@(isEdit? Model!.Price.ToString() : "")"><span class="money-sfx">₫/h</span>
-                    </div>
-                </div>
-                <div class="fg">
-                    <label>Tiền đặt cọc (đ)</label>
-                    <div class="money-wrap">
-                        <input type="number" id="inp_deposit" class="fi" min="0" step="1000" placeholder="0"
-                               value="@(isEdit? Model!.DepositAmount.ToString() : "")"><span class="money-sfx">₫</span>
-                    </div>
-                </div>
-                <div class="fg">
-                    <label>Phí vệ sinh (đ)</label>
-                    <div class="money-wrap">
-                        <input type="number" id="inp_cleaning" class="fi" min="0" step="1000" placeholder="0"
-                               value="@(isEdit? Model!.CleaningFee.ToString() : "")"><span class="money-sfx">₫</span>
-                    </div>
-                    <span class="hint">Thu khi nhận đồ về</span>
-                </div>
-            </div>
+        <div class="cond" id="c-Service">
+            <div class="info-hint ih-service"><i class="bi bi-info-circle-fill" style="flex-shrink:0;margin-top:1px"></i>Dịch vụ kỹ thuật — không quản lý kho vật lý. Giá = tiền công + vật tư.</div>
+            <div class="sec"><i class="bi bi-wrench-adjustable" style="color:var(--purple)"></i> Cấu hình dịch vụ</div>
             <div class="row2">
-                <div class="fg">
-                    <label>Số lượng hiện có</label>
-                    <input type="number" id="inp_rent_stock" class="fi" min="0" placeholder="0"
-                           value="@(isEdit? Model!.StockQuantity.ToString() : "")" />
-                </div>
-                <div class="fg">
-                    <label>Thời gian tối đa (giờ)</label>
-                    <input type="number" id="inp_maxhours" class="fi" min="1" placeholder="Không giới hạn"
-                           value="@(isEdit && Model!.MaxRentalHours.HasValue ? Model.MaxRentalHours.ToString() : "")" />
-                    <span class="hint">Bỏ trống = không giới hạn</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- SERVICE config -->
-        <div class="cond c-service" id="c-Service">
-            <div class="panel-label" style="color:var(--purple);"><i class="bi bi-wrench-adjustable"></i> Cấu hình Dịch vụ</div>
-            <div class="ih-service info-hint">
-                <i class="bi bi-info-circle-fill" style="flex-shrink:0;margin-top:1px"></i>
-                Dịch vụ kỹ thuật: không quản lý kho vật lý. Tính tiền = tiền công + vật tư (dây cước, keo...).
-            </div>
-            <div class="row2">
-                <div class="fg">
-                    <label>Tiền công (đ / đơn vị) <span class="req">*</span></label>
-                    <div class="money-wrap">
-                        <input type="number" id="inp_labor" class="fi" min="0" step="1000" placeholder="0"
-                               value="@(isEdit? Model!.LaborPrice.ToString() : "")"><span class="money-sfx">₫</span>
-                    </div>
-                </div>
+                <div class="fg"><label>Tiền công (đ / đơn vị) <span class="req">*</span></label><div class="money-w"><input type="number" id="inp_labor" class="fi" min="0" step="1000" placeholder="0" value="@(isEdit? Model!.LaborPrice.ToString():"")"><span class="money-sfx">₫</span></div></div>
                 <div class="fg">
                     <label>Đơn vị công</label>
-                    <div class="combo-wrap">
-                        <input type="text" id="inp_laborunit" class="fi" placeholder="bộ, chiếc, cặp..."
+                    <div class="combo-w">
+                        <input type="text" id="inp_laborunit" class="fi" placeholder="bộ, chiếc, lần..."
                                value="@(isEdit ? (Model!.LaborUnit ?? "") : "")"
                                onfocus="showCombo('laborUnitList')" oninput="filterCombo('laborUnitList',this.value)" />
                         <div class="combo-list" id="laborUnitList">
@@ -883,406 +800,232 @@
                 </div>
             </div>
             <div class="row2">
-                <div class="fg">
-                    <label>Tiền vật tư (đ / đơn vị)</label>
-                    <div class="money-wrap">
-                        <input type="number" id="inp_material" class="fi" min="0" step="1000" placeholder="0"
-                               value="@(isEdit? Model!.MaterialPrice.ToString() : "")"><span class="money-sfx">₫</span>
-                    </div>
-                    <span class="hint">Cước, keo, đế... Để 0 nếu khách tự mang</span>
-                </div>
-                <div class="fg">
-                    <label>Giá trọn gói (đ)</label>
-                    <div class="money-wrap">
-                        <input type="number" id="inp_svc_price" class="fi" min="0" step="1000" placeholder="Tự tính"
-                               value="@(isEdit && Model!.Price > 0 ? Model.Price.ToString() : "")"><span class="money-sfx">₫</span>
-                    </div>
-                    <span class="hint">Bỏ trống = tính = công + vật tư</span>
-                </div>
+                <div class="fg"><label>Tiền vật tư (đ / đơn vị)</label><div class="money-w"><input type="number" id="inp_material" class="fi" min="0" step="1000" placeholder="0" value="@(isEdit? Model!.MaterialPrice.ToString():"")"><span class="money-sfx">₫</span></div><span class="hint">Cước, keo, đế... Để 0 nếu khách tự mang</span></div>
+                <div class="fg"><label>Giá trọn gói (đ)</label><div class="money-w"><input type="number" id="inp_svc_price" class="fi" min="0" step="1000" placeholder="Tự tính" value="@(isEdit && Model!.Price > 0 ? Model.Price.ToString() : "")"><span class="money-sfx">₫</span></div><span class="hint">Bỏ trống = công + vật tư</span></div>
             </div>
         </div>
 
-        <!-- VARIANTS (Retail + Rental có size/màu) -->
-        <div class="cond c-variants" id="c-variants">
-            <div class="panel-label" style="color:var(--muted);"><i class="bi bi-layers"></i> Phân loại Size / Màu sắc <span style="font-weight:400;font-style:italic;font-size:.65rem;">(tùy chọn)</span></div>
-            <p style="font-size:.76rem;color:var(--muted);margin:0 0 .75rem;">
-                Mỗi phân loại quản lý tồn kho riêng. Bỏ qua nếu sản phẩm không có size/màu.
-            </p>
-
-            <!-- Quick size picker -->
-            <div id="quickSizeRow" style="margin-bottom:.65rem;">
-                <div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-bottom:.35rem;">Chọn nhanh size:</div>
-                <div class="size-pills" id="quickSizes">
+        <div class="cond" id="c-variants">
+            <div class="sec"><i class="bi bi-layers"></i> Size / Màu <span style="font-weight:400;font-style:italic;font-size:.65rem">(tùy chọn)</span></div>
+            <div style="margin-bottom:.55rem">
+                <div style="font-size:.66rem;font-weight:700;color:var(--muted);margin-bottom:.28rem">Chọn nhanh size:</div>
+                <div class="sz-pills">
                     @foreach (var s in new[] { "XS", "S", "M", "L", "XL", "XXL", "Free Size" })
                     {
                         <span class="sz-pill" onclick="quickAddSize('@s')">@s</span>
                     }
-                    <span class="sz-pill" style="border-color:var(--border);color:var(--muted);" onclick="quickAddSize('')">+ Tùy chỉnh</span>
+                    <span class="sz-pill" style="border-style:dashed" onclick="quickAddSize('')">+ Tùy chỉnh</span>
                 </div>
-                <div class="size-pills" id="quickColors">
+                <div class="sz-pills">
                     @foreach (var c in new[] { "Đen", "Trắng", "Xanh", "Đỏ", "Vàng", "Cam", "Tím" })
                     {
                         <span class="sz-pill" onclick="quickAddColor('@c')">@c</span>
                     }
                 </div>
             </div>
-
-            <table class="vtbl">
-                <thead>
-                    <tr>
-                        <th>Size</th>
-                        <th>Màu sắc</th>
-                        <th style="width:90px">Tồn kho</th>
-                        <th style="width:90px">Min stock</th>
-                        @if (isEdit)
+            <div style="overflow-x:auto;border:1px solid var(--border);border-radius:9px;overflow:hidden">
+                <table class="vtbl">
+                    <thead><tr><th>Size</th><th>Màu</th><th style="width:80px">Tồn kho</th><th style="width:80px">Min stock</th><th style="width:28px"></th></tr></thead>
+                    <tbody id="varTbody">
+                        @if (isEdit && Model!.Variants?.Any() == true)
                         {
-                            <th style="width:30px"></th>
+                            foreach (var v in Model.Variants.Where(x => x.IsActive).OrderBy(x => x.SizeName))
+                            {
+                                <tr class="vt-row">
+                                    <input type="hidden" name="variantId" value="@v.VariantId" />
+                                    <td><input type="text" name="variantSize" value="@v.SizeName" placeholder="S,M,L..." /></td>
+                                    <td><input type="text" name="variantColor" value="@v.ColorName" placeholder="Đen..." /></td>
+                                    <td><input type="number" name="variantStock" value="@v.StockQuantity" min="0" /></td>
+                                    <td><input type="number" name="variantMinStock" value="@v.MinStockLevel" min="0" /></td>
+                                    <td><button type="button" class="vt-del" onclick="delVarRow(this)"><i class="bi bi-x"></i></button></td>
+                                </tr>
+                            }
                         }
-                        <th style="width:32px"></th>
-                    </tr>
-                </thead>
-                <tbody id="varTbody">
-                    @if (isEdit && Model!.Variants?.Any() == true)
-                    {
-                        foreach (var v in Model.Variants.Where(x => x.IsActive))
-                        {
-                            <tr class="vt-row">
-                                <input type="hidden" name="variantId" value="@v.VariantId" />
-                                <td><input type="text" name="variantSize" class="combo-size" value="@v.SizeName" placeholder="S, M, L..." /></td>
-                                <td><input type="text" name="variantColor" class="combo-color" value="@v.ColorName" placeholder="Đen, Trắng..." /></td>
-                                <td><input type="number" name="variantStock" value="@v.StockQuantity" min="0" /></td>
-                                <td><input type="number" name="variantMinStock" value="@v.MinStockLevel" min="0" /></td>
-                                <td><button type="button" class="vt-del" onclick="delVarRow(this)" title="Xóa"><i class="bi bi-x"></i></button></td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
-            <button type="button" class="btn-add-var" onclick="addVarRow()">
-                <i class="bi bi-plus-circle"></i> Thêm phân loại
-            </button>
-        </div>
-
-        <div style="display:flex;justify-content:flex-end;margin-top:.5rem;">
-            <button class="btn-p" onclick="goStep(3)">Tiếp <i class="bi bi-arrow-right"></i></button>
+                    </tbody>
+                </table>
+            </div>
+            <button type="button" class="btn-add-var" onclick="addVarRow()"><i class="bi bi-plus-circle"></i> Thêm phân loại</button>
         </div>
     </div>
 
-    <!-- ════ STEP 3: IMAGE + CONFIRM ════ -->
-    <div id="s3" style="display:none;">
-        <button class="btn-back mb-3" onclick="goStep(2)"><i class="bi bi-arrow-left"></i> Quay lại</button>
-
-        <div class="sec-hd"><i class="bi bi-image"></i> Hình ảnh sản phẩm</div>
+    {{-- STEP 3 --}}
+    <div id="s3" style="display:none">
+        <div class="sec"><i class="bi bi-image"></i> Hình ảnh sản phẩm</div>
         <div class="img-zone" id="imgZone" onclick="document.getElementById('imgFile').click()">
             <input type="file" id="imgFile" accept="image/*" onchange="prevImg(this)" />
             <i class="bi bi-cloud-arrow-up"></i>
             <p>Nhấn để chọn ảnh · JPG, PNG, WEBP · Tối đa 5MB</p>
         </div>
-        <div id="imgPrev" style="margin-top:.6rem;"></div>
+        <div id="imgPrev" style="margin-top:.65rem"></div>
         @if (isEdit && !string.IsNullOrEmpty(Model!.ImageUrl) && Model.ImageUrl != "/images/no-image.png")
         {
-            <div style="margin-top:.55rem;display:flex;align-items:center;gap:.65rem;">
-                <img src="@Model.ImageUrl" style="height:56px;border-radius:7px;border:1px solid var(--border);" />
-                <span style="font-size:.72rem;color:var(--muted);">Ảnh hiện tại · Chọn ảnh mới để thay thế</span>
+            <div style="margin-top:.55rem;display:flex;align-items:center;gap:.65rem">
+                <img src="@Model.ImageUrl" style="height:54px;border-radius:8px;border:1px solid var(--border)" />
+                <span style="font-size:.72rem;color:var(--muted)">Ảnh hiện tại · Chọn ảnh mới để thay thế</span>
             </div>
         }
 
-        <!-- Summary before submit -->
-        <div class="sec-hd" style="margin-top:1.2rem;"><i class="bi bi-check2-all"></i> Xác nhận</div>
-        <div id="summaryBox" style="background:var(--warm);border:1px solid var(--border);border-radius:8px;padding:.85rem 1rem;font-size:.82rem;color:var(--deep);line-height:1.8;"></div>
+        <div class="sec" style="margin-top:1.3rem"><i class="bi bi-check2-all"></i> Xác nhận thông tin</div>
+        <div id="summaryBox"></div>
     </div>
 
 </div>
 
-<!-- FOOTER -->
 <div class="md-ft">
-    <button class="btn-s" data-bs-dismiss="modal">Hủy</button>
-    <button class="btn-p" id="btnSubmit" style="display:none;" onclick="submitProd()">
-        <i class="bi bi-check-lg"></i> @(isEdit ? "Lưu thay đổi" : "Tạo sản phẩm")
-    </button>
+    <div>
+        <button class="btn-cancel" data-bs-dismiss="modal">Hủy</button>
+    </div>
+    <div style="display:flex;gap:.5rem;align-items:center">
+        <button class="btn-back-step" id="btnBack" style="display:none" onclick="goBack()"><i class="bi bi-arrow-left"></i> Quay lại</button>
+        <button class="btn-next" id="btnNext" onclick="goNext()">Tiếp <i class="bi bi-arrow-right"></i></button>
+        <button class="btn-submit-final" id="btnSubmit" onclick="submitProd()">
+            <i class="bi bi-check-lg"></i> @(isEdit ? "Lưu thay đổi" : "Tạo sản phẩm")
+        </button>
+    </div>
 </div>
 
 <script>
-    const IS_EDIT   = @(isEdit ? "true" : "false");
-    const PROD_ID   = @(isEdit? Model!.ProductId : 0);
-    const FORM_URL  = '@formAction';
-    const CAT_DATA  = @Html.Raw(catsJson);
-    const TOKEN_M   = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+    const IS_EDIT=@(isEdit ? "true" : "false");
+    const PROD_ID=@(isEdit? Model!.ProductId:0);
+    const FORM_URL='@formAction';
+    const CAT_DATA=@Html.Raw(catsJson);
+    const TOKEN_M=document.querySelector('input[name="__RequestVerificationToken"]')?.value??'';
+    let curBh='@initBh', curStep=1;
 
-    let curBh = '@(isEdit ? (Model?.Category?.BehaviorType ?? "Retail") : "Retail")';
-
-    // ── STEP NAV ──
-    function goStep(n) {
-        if (n === 2 && !validateStep1()) return;
-        [1,2,3].forEach(i => {
-            document.getElementById('s'+i).style.display = i===n?'block':'none';
-            const ind = document.getElementById('si'+i);
+    function goNext(){if(curStep===1){if(!validateStep1())return;goStep(2);}else if(curStep===2)goStep(3);}
+    function goBack(){if(curStep===2)goStep(1);else if(curStep===3)goStep(2);}
+    function goStep(n){
+        curStep=n;
+        [1,2,3].forEach(i=>{
+            document.getElementById('s'+i).style.display=i===n?'block':'none';
+            const ind=document.getElementById('si'+i);
             ind.classList.remove('on','done');
-            if(i<n) ind.classList.add('done'); else if(i===n) ind.classList.add('on');
+            if(i<n)ind.classList.add('done');else if(i===n)ind.classList.add('on');
         });
-        if(n===3){ buildSummary(); document.getElementById('btnSubmit').style.display='inline-flex'; }
-        else document.getElementById('btnSubmit').style.display='none';
+        document.getElementById('btnBack').style.display=n>1?'inline-flex':'none';
+        document.getElementById('btnNext').style.display=n<3?'inline-flex':'none';
+        const bs=document.getElementById('btnSubmit');
+        bs.style.display=n===3?'inline-flex':'none';
+        if(n===3)buildSummary();
     }
-
-    function validateStep1() {
-        const name = document.getElementById('inp_name').value.trim();
-        const sku  = document.getElementById('inp_sku').value.trim();
-        const cat  = document.getElementById('inp_cat').value;
-        if(!name){ alert('Vui lòng nhập tên sản phẩm!'); return false; }
-        if(!sku) { alert('Vui lòng nhập mã SKU!'); return false; }
-        if(!cat) { alert('Vui lòng chọn danh mục!'); return false; }
-        if(!curBh){ alert('Vui lòng chọn nhóm sản phẩm!'); return false; }
+    function validateStep1(){
+        const name=document.getElementById('inp_name').value.trim();
+        const sku=document.getElementById('inp_sku').value.trim();
+        const cat=document.getElementById('inp_cat').value;
+        if(!name){alert('Vui lòng nhập tên sản phẩm!');return false;}
+        if(!sku){alert('Vui lòng nhập mã SKU!');return false;}
+        if(!cat){alert('Vui lòng chọn danh mục!');return false;}
+        if(!curBh){alert('Vui lòng chọn nhóm sản phẩm!');return false;}
         return true;
     }
 
-    // ── BEHAVIOR ──
-    function selBh(bh) {
-        curBh = bh;
-        ['Retail','Rental','Service'].forEach(b => {
-            document.getElementById('bh-'+b)?.classList.remove('on-Retail','on-Rental','on-Service');
-        });
+    function selBh(bh){
+        curBh=bh;
+        ['Retail','Rental','Service'].forEach(b=>{document.getElementById('bh-'+b)?.classList.remove('on-Retail','on-Rental','on-Service');});
         document.getElementById('bh-'+bh)?.classList.add('on-'+bh);
-        showPanels();
-        updPrev();
+        showPanels();updPrev();
     }
-
-    function showPanels() {
-        ['Retail','Rental','Service'].forEach(b => {
-            document.getElementById('c-'+b)?.classList.toggle('show', b===curBh);
-        });
-        // Variants only for Retail + Rental
-        const catSel = document.getElementById('inp_cat');
-        const opt = catSel?.selectedOptions[0];
-        const hasVar = curBh!=='Service' && (opt?.dataset.variants==='true' || opt?.dataset.size==='true');
-        document.getElementById('c-variants')?.classList.toggle('show', curBh!=='Service');
+    function showPanels(){
+        ['Retail','Rental','Service'].forEach(b=>document.getElementById('c-'+b)?.classList.toggle('show',b===curBh));
+        document.getElementById('c-variants')?.classList.toggle('show',curBh!=='Service');
     }
-
-    // ── CATEGORY CHANGE → auto-fill + switch behavior ──
-    function onCatChange(catId) {
-        const cat = CAT_DATA.find(c => c.CategoryId == catId);
-        if(!cat) return;
-        selBh(cat.BehaviorType || 'Retail');
-        if(cat.DefaultUnit) document.getElementById('inp_unit').value = cat.DefaultUnit;
-        if(cat.DefaultDepositAmount > 0) document.getElementById('inp_deposit').value = cat.DefaultDepositAmount;
-        if(cat.DefaultCleaningFee > 0)   document.getElementById('inp_cleaning').value = cat.DefaultCleaningFee;
-        if(cat.MaxRentalHours > 0)       document.getElementById('inp_maxhours').value = cat.MaxRentalHours;
+    function onCatChange(catId){
+        const cat=CAT_DATA.find(c=>c.CategoryId==catId);
+        if(!cat)return;
+        selBh(cat.BehaviorType||'Retail');
+        if(cat.DefaultUnit)document.getElementById('inp_unit').value=cat.DefaultUnit;
+        if(cat.DefaultDepositAmount>0)document.getElementById('inp_deposit').value=cat.DefaultDepositAmount;
         showPanels();
     }
-
-    // ── PREVIEW BAR ──
-    const BH_COLORS = { Retail:['#f0fdf4','#166534'], Rental:['#eff6ff','#1d4ed8'], Service:['#f5f3ff','#7c3aed'] };
-    const BH_LABELS = { Retail:'Bán lẻ', Rental:'Cho thuê', Service:'Dịch vụ' };
-    function updPrev() {
-        const name = document.getElementById('inp_name').value || '—';
-        const bar  = document.getElementById('prevBar');
-        if(!name || name==='—'){ bar.style.display='none'; return; }
+    const BH_COLORS={Retail:['#f0fdf4','#166534'],Rental:['#eff6ff','#1d4ed8'],Service:['#f5f3ff','#7c3aed']};
+    const BH_LABELS={Retail:'Bán lẻ',Rental:'Cho thuê',Service:'Dịch vụ'};
+    function updPrev(){
+        const name=document.getElementById('inp_name').value||'—';
+        const bar=document.getElementById('prevBar');
+        if(!name||name==='—'){bar.style.display='none';return;}
         bar.style.display='flex';
-        document.getElementById('pv-name').textContent = name;
-        const [bg,color] = BH_COLORS[curBh]||BH_COLORS.Retail;
-        const badge = document.getElementById('pv-bh');
-        badge.style.background=bg; badge.style.color=color;
-        badge.textContent = BH_LABELS[curBh]||'Bán lẻ';
+        document.getElementById('pv-name').textContent=name;
+        const [bg,color]=BH_COLORS[curBh]||BH_COLORS.Retail;
+        const badge=document.getElementById('pv-bh');
+        badge.style.background=bg;badge.style.color=color;
+        badge.innerHTML=`<i class="bi ${curBh==='Rental'?'bi-arrow-repeat':curBh==='Service'?'bi-wrench-adjustable':'bi-cart3'} me-1"></i>${BH_LABELS[curBh]||'Bán lẻ'}`;
     }
+    function genSku(){const name=document.getElementById('inp_name').value.trim();const prefix=name.split(' ').slice(0,2).map(w=>w[0]?.toUpperCase()||'').join('');return(prefix||'SP')+'-'+String(Date.now()).slice(-4);}
+    function pickSku(v){document.getElementById('inp_sku').value=v;hideAllCombo();}
+    function pickCombo(id,val){document.getElementById(id).value=val;hideAllCombo();}
+    function showCombo(id){hideAllCombo();document.getElementById(id)?.classList.add('show');}
+    function hideAllCombo(){document.querySelectorAll('.combo-list').forEach(l=>l.classList.remove('show'));}
+    function filterCombo(lid,q){const l=document.getElementById(lid);if(!l)return;l.classList.add('show');l.querySelectorAll('.combo-opt').forEach(o=>{o.style.display=o.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});}
+    document.addEventListener('click',e=>{if(!e.target.closest('.combo-w'))hideAllCombo();});
+    document.getElementById('inp_name')?.addEventListener('input',()=>{const o=document.getElementById('skuAutoOpt');if(o){o.textContent='✨ Tự động: '+genSku();o.onclick=()=>pickSku(genSku());}});
 
-    // ── SKU AUTO-GEN ──
-    function genSku() {
-        const name = document.getElementById('inp_name').value.trim();
-        const prefix = name.split(' ').slice(0,2).map(w=>w[0]?.toUpperCase()||'').join('');
-        return (prefix||'SP')+'-'+String(Date.now()).slice(-4);
-    }
-    function pickSku(v) {
-        const val = v==='auto' ? genSku() : v;
-        document.getElementById('inp_sku').value = val;
-        hideAllCombo();
-    }
-    function pickCombo(inputId, val) {
-        document.getElementById(inputId).value = val;
-        hideAllCombo();
-    }
-    function showCombo(id) {
-        hideAllCombo();
-        document.getElementById(id)?.classList.add('show');
-    }
-    function hideAllCombo() {
-        document.querySelectorAll('.combo-list').forEach(l=>l.classList.remove('show'));
-    }
-    function filterCombo(listId, q) {
-        const list = document.getElementById(listId);
-        if(!list) return;
-        list.classList.add('show');
-        list.querySelectorAll('.combo-opt:not(.custom-opt)').forEach(opt => {
-            opt.style.display = opt.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
-        });
-    }
-    document.addEventListener('click', e => {
-        if(!e.target.closest('.combo-wrap')) hideAllCombo();
-    });
-    // Update auto-SKU option
-    document.getElementById('inp_name')?.addEventListener('input', () => {
-        const opt = document.getElementById('skuAutoOpt');
-        if(opt) opt.textContent = 'Tự động: ' + genSku();
-        if(opt) opt.onclick = () => pickSku(genSku());
-    });
-
-    // ── VARIANTS ──
-    function addVarRow(size='', color='') {
-        const tbody = document.getElementById('varTbody');
-        const tr = document.createElement('tr');
-        tr.className = 'vt-row';
-        tr.innerHTML = `
-            ${IS_EDIT?'<input type="hidden" name="variantId" value="0" />':''}
-            <td><input type="text" name="variantSize"  value="${size}"  placeholder="S, M, L, XS..." class="combo-size" /></td>
-            <td><input type="text" name="variantColor" value="${color}" placeholder="Đen, Trắng..." class="combo-color" /></td>
-            <td><input type="number" name="variantStock"    value="0" min="0" /></td>
-            <td><input type="number" name="variantMinStock" value="0" min="0" /></td>
+    function addVarRow(size='',color=''){
+        const tr=document.createElement('tr');tr.className='vt-row';
+        tr.innerHTML=`${IS_EDIT?'<input type="hidden" name="variantId" value="0"/>':`<input type="hidden" name="variantId" value="0"/>`}
+            <td><input type="text" name="variantSize" value="${size}" placeholder="S,M,L..."/></td>
+            <td><input type="text" name="variantColor" value="${color}" placeholder="Đen..."/></td>
+            <td><input type="number" name="variantStock" value="0" min="0"/></td>
+            <td><input type="number" name="variantMinStock" value="0" min="0"/></td>
             <td><button type="button" class="vt-del" onclick="delVarRow(this)"><i class="bi bi-x"></i></button></td>`;
-        tbody.appendChild(tr);
+        document.getElementById('varTbody').appendChild(tr);
     }
-    function delVarRow(btn) { btn.closest('tr')?.remove(); }
-    function quickAddSize(s) {
-        if(!s){ addVarRow(); return; }
-        // Check not already exists
-        const existing = Array.from(document.querySelectorAll('#varTbody input[name="variantSize"]')).map(i=>i.value);
-        if(!existing.includes(s)) addVarRow(s,'');
-    }
-    function quickAddColor(c) {
-        // Add color to last row or create new
-        const rows = document.querySelectorAll('#varTbody .vt-row');
-        if(rows.length===0){ addVarRow('',c); return; }
-        const lastColorInput = rows[rows.length-1].querySelector('input[name="variantColor"]');
-        if(lastColorInput && !lastColorInput.value) lastColorInput.value = c;
-        else addVarRow('',c);
-    }
+    function delVarRow(btn){btn.closest('tr')?.remove();}
+    function quickAddSize(s){if(!s){addVarRow();return;}const ex=Array.from(document.querySelectorAll('#varTbody input[name="variantSize"]')).map(i=>i.value);if(!ex.includes(s))addVarRow(s,'');}
+    function quickAddColor(c){const rows=document.querySelectorAll('#varTbody .vt-row');if(!rows.length){addVarRow('',c);return;}const last=rows[rows.length-1].querySelector('input[name="variantColor"]');if(last&&!last.value)last.value=c;else addVarRow('',c);}
 
-    // ── IMAGE ──
-    function prevImg(input) {
-        const file = input.files[0]; if(!file) return;
-        const reader = new FileReader();
-        reader.onload = e => {
-            document.getElementById('imgPrev').innerHTML =
-                `<div style="position:relative;display:inline-block;">
-                    <img src="${e.target.result}" style="max-height:90px;border-radius:7px;border:1px solid var(--border);" />
-                    <button type="button" onclick="clearImg()" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;border:none;cursor:pointer;font-size:.6rem;display:flex;align-items:center;justify-content:center;"><i class="bi bi-x"></i></button>
-                </div>`;
-        };
-        reader.readAsDataURL(file);
+    function prevImg(input){
+        const file=input.files[0];if(!file)return;
+        const r=new FileReader();
+        r.onload=e=>{document.getElementById('imgPrev').innerHTML=`<div style="position:relative;display:inline-block"><img src="${e.target.result}" style="max-height:90px;border-radius:9px;border:1px solid var(--border)"/><button type="button" onclick="clearImg()" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;border:none;cursor:pointer;font-size:.65rem;display:flex;align-items:center;justify-content:center"><i class="bi bi-x"></i></button></div>`;};
+        r.readAsDataURL(file);
     }
-    function clearImg() {
-        document.getElementById('imgFile').value='';
-        document.getElementById('imgPrev').innerHTML='';
+    function clearImg(){document.getElementById('imgFile').value='';document.getElementById('imgPrev').innerHTML='';}
+
+    function buildSummary(){
+        const name=document.getElementById('inp_name').value;
+        const sku=document.getElementById('inp_sku').value;
+        const cat=document.getElementById('inp_cat').selectedOptions[0]?.text||'—';
+        const unit=document.getElementById('inp_unit').value||'—';
+        const vars=document.querySelectorAll('#varTbody .vt-row').length;
+        let pi='';
+        if(curBh==='Retail')pi=`Giá bán: <b>${Number(document.getElementById('inp_price').value||0).toLocaleString('vi-VN')}đ</b> · Tồn kho: <b>${document.getElementById('inp_stock').value||0}</b>`;
+        if(curBh==='Rental')pi=`Giá thuê: <b>${Number(document.getElementById('inp_rent_price').value||0).toLocaleString('vi-VN')}đ</b> · Cọc: <b>${Number(document.getElementById('inp_deposit').value||0).toLocaleString('vi-VN')}đ</b>`;
+        if(curBh==='Service')pi=`Công: <b>${Number(document.getElementById('inp_labor').value||0).toLocaleString('vi-VN')}đ</b> · Vật tư: <b>${Number(document.getElementById('inp_material').value||0).toLocaleString('vi-VN')}đ</b>`;
+        document.getElementById('summaryBox').innerHTML=`<b>${name}</b> · <span style="color:var(--muted);font-family:monospace">${sku}</span><br>Danh mục: ${cat} · Nhóm: <b>${BH_LABELS[curBh]}</b> · Đơn vị: ${unit}<br>${pi}<br>${vars>0?`Phân loại: <b>${vars} biến thể</b>`:'<span style="color:var(--muted)">Không có biến thể</span>'}`;
     }
 
-    // ── SUMMARY ──
-    function buildSummary() {
-        const name = document.getElementById('inp_name').value;
-        const sku  = document.getElementById('inp_sku').value;
-        const cat  = document.getElementById('inp_cat').selectedOptions[0]?.text || '—';
-        const unit = document.getElementById('inp_unit').value || '—';
-        const varRows = document.querySelectorAll('#varTbody .vt-row').length;
-        let priceInfo = '';
-        if(curBh==='Retail')  priceInfo = `Giá bán: <strong>${Number(document.getElementById('inp_price').value||0).toLocaleString('vi-VN')}đ</strong> &nbsp;|&nbsp; Tồn kho: <strong>${document.getElementById('inp_stock').value||0}</strong>`;
-        if(curBh==='Rental')  priceInfo = `Giá thuê: <strong>${Number(document.getElementById('inp_rent_price').value||0).toLocaleString('vi-VN')}đ/h</strong> &nbsp;|&nbsp; Cọc: <strong>${Number(document.getElementById('inp_deposit').value||0).toLocaleString('vi-VN')}đ</strong>`;
-        if(curBh==='Service') priceInfo = `Tiền công: <strong>${Number(document.getElementById('inp_labor').value||0).toLocaleString('vi-VN')}đ</strong> &nbsp;|&nbsp; Vật tư: <strong>${Number(document.getElementById('inp_material').value||0).toLocaleString('vi-VN')}đ</strong>`;
-        document.getElementById('summaryBox').innerHTML =
-            `<b>${name}</b> · <span style="color:var(--muted)">${sku}</span><br>
-             Danh mục: ${cat} · Nhóm: <strong>${BH_LABELS[curBh]}</strong> · Đơn vị: ${unit}<br>
-             ${priceInfo}<br>
-             ${varRows>0?`Phân loại: <strong>${varRows} biến thể</strong>`:' Không có biến thể'}`;
-    }
-
-    // ── SUBMIT ──
-    async function submitProd() {
-        if(!validateStep1()) { goStep(1); return; }
-        const btn = document.getElementById('btnSubmit');
-        btn.disabled=true; btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span> Đang lưu...';
-
-        const fd = new FormData();
-        // Basic
-        fd.append('ProductName', document.getElementById('inp_name').value.trim());
-        fd.append('ProductCode', document.getElementById('inp_sku').value.trim());
-        fd.append('SKU',         document.getElementById('inp_sku').value.trim());
-        fd.append('CategoryId',  document.getElementById('inp_cat').value);
-        fd.append('Unit',        document.getElementById('inp_unit').value);
-        fd.append('Status',      document.getElementById('inp_status').value);
-        fd.append('Description', document.getElementById('inp_desc').value);
-        if(IS_EDIT) fd.append('ProductId', PROD_ID);
-
-        // Price/stock by behavior
-        if(curBh==='Retail'){
-            fd.append('Price',        document.getElementById('inp_price').value||'0');
-            fd.append('CostPrice',    document.getElementById('inp_cost').value||'0');
-            fd.append('SalePrice',    document.getElementById('inp_saleprice').value||'0');
-            fd.append('StockQuantity',document.getElementById('inp_stock').value||'0');
-            fd.append('MinStockLevel',document.getElementById('inp_minstk').value||'0');
-        } else if(curBh==='Rental'){
-            fd.append('Price',        document.getElementById('inp_rent_price').value||'0');
-            fd.append('StockQuantity',document.getElementById('inp_rent_stock').value||'0');
-            fd.append('depositAmount',document.getElementById('inp_deposit').value||'0');
-            fd.append('cleaningFee',  document.getElementById('inp_cleaning').value||'0');
-            fd.append('maxRentalHours',document.getElementById('inp_maxhours').value||'');
-        } else {
-            fd.append('Price',        document.getElementById('inp_svc_price').value||'0');
-            fd.append('laborPrice',   document.getElementById('inp_labor').value||'0');
-            fd.append('laborUnit',    document.getElementById('inp_laborunit').value);
-            fd.append('materialPrice',document.getElementById('inp_material').value||'0');
-            fd.append('StockQuantity','0');
-        }
-
-        // Variants
-        document.querySelectorAll('#varTbody .vt-row').forEach(row => {
-            const vid  = row.querySelector('input[name="variantId"]')?.value;
-            const size = row.querySelector('input[name="variantSize"]')?.value.trim();
-            const color= row.querySelector('input[name="variantColor"]')?.value.trim();
-            const stk  = row.querySelector('input[name="variantStock"]')?.value||'0';
-            const min  = row.querySelector('input[name="variantMinStock"]')?.value||'0';
-            if(size||color){
-                if(vid) fd.append('variantId',   vid);
-                fd.append('variantSize',  size||'');
-                fd.append('variantColor', color||'');
-                fd.append('variantStock', stk);
-                fd.append('variantMinStock', min);
-            }
+    async function submitProd(){
+        if(!validateStep1()){goStep(1);return;}
+        const btn=document.getElementById('btnSubmit');
+        btn.disabled=true;btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span> Đang lưu...';
+        const fd=new FormData();
+        fd.append('ProductName',document.getElementById('inp_name').value.trim());
+        fd.append('ProductCode',document.getElementById('inp_sku').value.trim());
+        fd.append('CategoryId',document.getElementById('inp_cat').value);
+        fd.append('Unit',document.getElementById('inp_unit').value);
+        fd.append('Status',document.getElementById('inp_status').value);
+        fd.append('Description',document.getElementById('inp_desc').value);
+        if(IS_EDIT)fd.append('ProductId',PROD_ID);
+        if(curBh==='Retail'){fd.append('Price',document.getElementById('inp_price').value||'0');fd.append('CostPrice',document.getElementById('inp_cost').value||'0');fd.append('StockQuantity',document.getElementById('inp_stock').value||'0');fd.append('MinStockLevel',document.getElementById('inp_minstk').value||'0');}
+        else if(curBh==='Rental'){fd.append('Price',document.getElementById('inp_rent_price').value||'0');fd.append('StockQuantity',document.getElementById('inp_rent_stock').value||'0');fd.append('depositAmount',document.getElementById('inp_deposit').value||'0');fd.append('cleaningFee',document.getElementById('inp_cleaning').value||'0');fd.append('maxRentalHours',document.getElementById('inp_maxhours').value||'');}
+        else{fd.append('Price',document.getElementById('inp_svc_price').value||'0');fd.append('laborPrice',document.getElementById('inp_labor').value||'0');fd.append('laborUnit',document.getElementById('inp_laborunit').value);fd.append('materialPrice',document.getElementById('inp_material').value||'0');fd.append('StockQuantity','0');}
+        document.querySelectorAll('#varTbody .vt-row').forEach(row=>{
+            const vid=row.querySelector('input[name="variantId"]')?.value;
+            const size=row.querySelector('input[name="variantSize"]')?.value.trim();
+            const color=row.querySelector('input[name="variantColor"]')?.value.trim();
+            if(size||color){if(vid)fd.append('variantId',vid);fd.append('variantSize',size||'');fd.append('variantColor',color||'');fd.append('variantStock',row.querySelector('input[name="variantStock"]')?.value||'0');fd.append('variantMinStock',row.querySelector('input[name="variantMinStock"]')?.value||'0');}
         });
-
-        // Image
-        const imgFile = document.getElementById('imgFile').files[0];
-        if(imgFile) fd.append('ImageFile', imgFile);
-
-        try {
-            const res = await fetch(FORM_URL, {
-                method: 'POST',
-                headers: { 'RequestVerificationToken': TOKEN_M },
-                body: fd
-            }).then(r=>r.json());
-
+        const imgFile=document.getElementById('imgFile').files[0];
+        if(imgFile)fd.append('ImageFile',imgFile);
+        try{
+            const res=await fetch(FORM_URL,{method:'POST',headers:{'RequestVerificationToken':TOKEN_M},body:fd}).then(r=>r.json());
             if(res.success){
                 bootstrap.Modal.getInstance(document.getElementById('prodModal'))?.hide();
-                // Show toast then reload
-                const t = document.createElement('div');
-                t.style.cssText='position:fixed;bottom:1.5rem;right:1.5rem;background:#15803d;color:#fff;padding:.75rem 1.25rem;border-radius:8px;font-size:.84rem;font-weight:700;z-index:9999;display:flex;align-items:center;gap:.5rem;box-shadow:0 4px 16px rgba(0,0,0,.2);';
-                t.innerHTML=`<i class="bi bi-check-circle-fill"></i> ${res.message}`;
-                document.body.appendChild(t);
-                setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(()=>{ t.remove(); location.reload(); },400); },1800);
-            } else {
-                alert(res.message||'Có lỗi xảy ra!');
-                btn.disabled=false; btn.innerHTML='<i class="bi bi-check-lg"></i> @(isEdit ? "Lưu thay đổi" : "Tạo sản phẩm")';
-            }
-        } catch(e){
-            alert('Lỗi kết nối!');
-            btn.disabled=false; btn.innerHTML='<i class="bi bi-check-lg"></i> @(isEdit ? "Lưu thay đổi" : "Tạo sản phẩm")';
-        }
+                const t=document.createElement('div');t.style.cssText='position:fixed;bottom:1.5rem;right:1.5rem;background:#15803d;color:#fff;padding:.75rem 1.3rem;border-radius:10px;font-size:.84rem;font-weight:700;z-index:9999;display:flex;align-items:center;gap:.5rem;box-shadow:0 6px 24px rgba(0,0,0,.2)';
+                t.innerHTML=`<i class="bi bi-check-circle-fill"></i> ${res.message}`;document.body.appendChild(t);
+                setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .4s';setTimeout(()=>{t.remove();location.reload();},400);},1800);
+            }else{alert(res.message||'Có lỗi xảy ra!');btn.disabled=false;btn.innerHTML='<i class="bi bi-check-lg"></i> @(isEdit ? "Lưu thay đổi" : "Tạo sản phẩm")';}
+        }catch(e){alert('Lỗi kết nối!');btn.disabled=false;btn.innerHTML='<i class="bi bi-check-lg"></i> @(isEdit ? "Lưu thay đổi" : "Tạo sản phẩm")';}
     }
-
-    // ── INIT ──
-    document.addEventListener('DOMContentLoaded', ()=>{
-        // Init behavior from model or default
-        const initBh = '@(isEdit ? (Model?.Category?.BehaviorType ?? "Retail") : "Retail")';
-        if(initBh) selBh(initBh);
-        // Init cat dropdown
-        const catSel = document.getElementById('inp_cat');
-        if(catSel?.value) onCatChange(catSel.value);
-        // Auto-SKU hint
-        const skuAuto = document.getElementById('skuAutoOpt');
-        if(skuAuto){ skuAuto.textContent='Tạo tự động'; skuAuto.onclick=()=>pickSku(genSku()); }
-    });
+    document.addEventListener('DOMContentLoaded',()=>{selBh('@initBh');const cs=document.getElementById('inp_cat');if(cs?.value)onCatChange(cs.value);});
 </script>

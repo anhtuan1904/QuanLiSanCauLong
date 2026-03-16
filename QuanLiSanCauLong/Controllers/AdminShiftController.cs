@@ -368,6 +368,65 @@ namespace QuanLiSanCauLong.Controllers
             return View(assignments);
         }
 
+        // ── PHÂN CA HÀNG LOẠT (AJAX) ──────────────────────────────────────
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> BulkAssign(
+            int userId, int shiftId, int facilityId, string[] workDates)
+        {
+            if (workDates == null || workDates.Length == 0)
+                return Json(new { success = false, message = "Chưa chọn ngày!" });
+
+            var user = await _context.Users.FindAsync(userId);
+            var shift = await _context.Shifts.FindAsync(shiftId);
+            if (user == null || shift == null)
+                return Json(new { success = false, message = "Nhân viên hoặc ca không tồn tại!" });
+
+            var dates = new List<DateOnly>();
+            foreach (var d in workDates)
+                if (DateOnly.TryParse(d, out var parsed)) dates.Add(parsed);
+
+            if (!dates.Any())
+                return Json(new { success = false, message = "Ngày không hợp lệ!" });
+
+            int added = 0, skipped = 0;
+            foreach (var date in dates)
+            {
+                bool exists = await _context.ShiftAssignments.AnyAsync(a =>
+                    a.UserId == userId && a.WorkDate == date && a.ShiftId == shiftId);
+
+                if (exists) { skipped++; continue; }
+
+                _context.ShiftAssignments.Add(new ShiftAssignment
+                {
+                    UserId = userId,
+                    ShiftId = shiftId,
+                    FacilityId = facilityId,
+                    WorkDate = date,
+                    Status = "Scheduled",
+                    CreatedByUserId = GetCurrentUserId(),
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                });
+                added++;
+            }
+
+            await _context.SaveChangesAsync();
+
+            string msg = added > 0
+                ? $"Đã phân ca {added} ngày!" + (skipped > 0 ? $" ({skipped} ngày đã có, bỏ qua)" : "")
+                : "Tất cả ngày đã được phân ca rồi!";
+
+            return Json(new
+            {
+                success = added > 0,
+                message = msg,
+                added,
+                skipped,
+                shiftName = shift.ShiftName,
+                color = shift.Color
+            });
+        }
+
         // ── HELPER ────────────────────────────────────────────────────────
         private int GetCurrentUserId()
         {

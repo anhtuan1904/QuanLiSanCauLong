@@ -3,18 +3,19 @@
     Layout = null;
     var committed = Model.HoldQuantity + Model.RentedQuantity + Model.DamagedQuantity;
 }
-
 <style>
     :root {
         --deep: #1a1209;
         --gold: #d4a017;
         --gold2: #f5c842;
         --warm: #f5ede0;
+        --cream: #fdf8f0;
         --border: #e8ddd0;
         --muted: #8a7560;
         --red: #c94b2a;
         --green: #15803d;
         --orange: #c2410c;
+        --purple: #7c3aed;
     }
 
     *, *::before, *::after {
@@ -26,53 +27,146 @@
     }
 
     .md-hd {
-        padding: 1rem 1.3rem;
+        padding: 1.1rem 1.5rem;
         border-bottom: 1px solid var(--border);
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: #78350f;
+        background: linear-gradient(135deg,#4c1d95,#6d28d9);
     }
 
     .md-title {
         font-family: 'Playfair Display',serif;
-        font-size: 1rem;
+        font-size: 1.05rem;
         font-weight: 700;
         color: #fff;
+        display: flex;
+        align-items: center;
+        gap: .55rem;
     }
 
-        .md-title em {
-            color: var(--gold2);
-            font-style: italic;
-        }
+    .md-title-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        background: rgba(255,255,255,.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .85rem;
+    }
 
     .md-close {
         background: none;
         border: none;
-        color: rgba(255,255,255,.4);
-        font-size: 1rem;
+        color: rgba(255,255,255,.5);
+        font-size: .95rem;
         cursor: pointer;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: .15s;
     }
 
         .md-close:hover {
+            background: rgba(255,255,255,.15);
             color: #fff;
         }
 
     .md-body {
-        padding: 1.2rem 1.3rem;
-        max-height: 70vh;
+        padding: 1.3rem 1.5rem;
+        max-height: 72vh;
         overflow-y: auto;
     }
 
+        .md-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .md-body::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
     .md-ft {
-        padding: .85rem 1.3rem;
+        padding: .9rem 1.5rem;
         border-top: 1px solid var(--border);
-        background: var(--warm);
+        background: var(--cream);
         display: flex;
-        justify-content: flex-end;
-        gap: .55rem;
+        justify-content: space-between;
+        align-items: center;
     }
-    /* Stock cards */
+
+    .sec {
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        color: var(--muted);
+        padding: .45rem 0;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: .85rem;
+        display: flex;
+        align-items: center;
+        gap: .38rem;
+    }
+
+    .row2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .8rem;
+    }
+
+    .row4 {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: .6rem;
+    }
+
+    .fg {
+        display: flex;
+        flex-direction: column;
+        gap: .28rem;
+        margin-bottom: .82rem;
+    }
+
+        .fg label {
+            font-size: .73rem;
+            font-weight: 700;
+            color: var(--deep);
+        }
+
+    .hint {
+        font-size: .67rem;
+        color: var(--muted);
+    }
+
+    .fi {
+        padding: .58rem .85rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-size: .84rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
+        width: 100%;
+        transition: all .2s;
+    }
+
+        .fi:focus {
+            border-color: var(--purple);
+            box-shadow: 0 0 0 3px rgba(109,40,217,.1);
+        }
+
+    textarea.fi {
+        resize: vertical;
+        min-height: 60px;
+    }
+
+    /* current stock cards */
     .stk-grid {
         display: grid;
         grid-template-columns: repeat(4,1fr);
@@ -82,485 +176,418 @@
 
     .stk-c {
         background: #fff;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: .65rem .75rem;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: .7rem .85rem;
         text-align: center;
     }
 
-        .stk-c.highlight {
-            border-color: var(--gold);
-            background: rgba(212,160,23,.04);
+        .stk-c.main {
+            border-top: 3px solid var(--gold);
         }
 
-    .stk-n {
+        .stk-c.committed {
+            border-top: 3px solid var(--orange);
+        }
+
+        .stk-c.avail {
+            border-top: 3px solid var(--green);
+        }
+
+        .stk-c.info {
+            border-top: 3px solid var(--purple);
+        }
+
+    .stk-c-n {
         font-family: 'Playfair Display',serif;
-        font-size: 1.2rem;
+        font-size: 1.4rem;
         font-weight: 700;
-        line-height: 1;
         color: var(--deep);
+        line-height: 1;
     }
 
-    .stk-l {
+    .stk-c-l {
         font-size: .58rem;
-        letter-spacing: .08em;
+        font-weight: 600;
+        letter-spacing: .1em;
         text-transform: uppercase;
         color: var(--muted);
-        margin-top: .18rem;
+        margin-top: .2rem;
     }
-    /* Mode tabs */
-    .mode-tabs {
+
+    /* mode switcher */
+    .mode-sw {
         display: flex;
-        gap: 0;
         background: var(--warm);
-        border: 1px solid var(--border);
-        border-radius: 7px;
-        padding: .3rem;
+        border-radius: 9px;
+        padding: .25rem;
+        gap: .25rem;
         margin-bottom: 1rem;
     }
 
-    .mode-tab {
+    .mode-btn {
         flex: 1;
-        padding: .45rem;
-        border: none;
-        background: none;
-        border-radius: 5px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .78rem;
-        font-weight: 600;
-        color: var(--muted);
+        text-align: center;
+        padding: .5rem;
+        border-radius: 7px;
+        font-size: .8rem;
+        font-weight: 700;
         cursor: pointer;
-        transition: all .18s;
+        color: var(--muted);
+        transition: all .2s;
+        border: none;
+        background: transparent;
+    }
+
+        .mode-btn.on {
+            background: #fff;
+            color: var(--purple);
+            box-shadow: 0 2px 8px rgba(0,0,0,.1);
+        }
+
+    /* diff preview */
+    .diff-box {
+        background: linear-gradient(135deg,#f5f3ff,#ede9fe);
+        border: 1.5px solid #c4b5fd;
+        border-radius: 10px;
+        padding: .9rem 1.1rem;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+        .diff-box.show {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+    .diff-item {
         text-align: center;
     }
 
-        .mode-tab.on {
-            background: var(--deep);
-            color: var(--gold2);
-        }
-    /* Warning */
-    .warn-box {
-        background: #fff7ed;
-        border: 1px solid #fed7aa;
-        border-radius: 7px;
-        padding: .6rem .85rem;
-        font-size: .76rem;
-        color: var(--orange);
-        display: none;
-        align-items: center;
-        gap: .45rem;
-        margin-bottom: .85rem;
-    }
-
-        .warn-box.show {
-            display: flex;
-        }
-    /* Form */
-    .fg {
-        display: flex;
-        flex-direction: column;
-        gap: .25rem;
-        margin-bottom: .85rem;
-    }
-
-        .fg label {
-            font-size: .72rem;
-            font-weight: 700;
-            color: var(--deep);
-        }
-
-    .fi {
-        padding: .6rem .85rem;
-        border: 1px solid var(--border);
-        border-radius: 7px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .84rem;
-        color: var(--deep);
-        background: #fff;
-        outline: none;
-        transition: border-color .2s;
-        width: 100%;
-    }
-
-        .fi:focus {
-            border-color: var(--gold);
-        }
-
-    .hint {
-        font-size: .66rem;
-        color: var(--muted);
-    }
-    /* Preview diff */
-    .diff-preview {
-        display: flex;
-        align-items: center;
-        gap: .75rem;
-        padding: .65rem .9rem;
-        background: var(--deep);
-        border-radius: 8px;
-        margin-top: .35rem;
-        margin-bottom: .85rem;
-        display: none;
-    }
-
-        .diff-preview.show {
-            display: flex;
-        }
-
-    .diff-old {
+    .diff-val {
         font-family: 'Playfair Display',serif;
-        font-size: 1rem;
+        font-size: 1.3rem;
         font-weight: 700;
-        color: rgba(255,255,255,.45);
-        text-decoration: line-through;
+        color: var(--deep);
+    }
+
+    .diff-lbl {
+        font-size: .58rem;
+        font-weight: 600;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--purple);
+        margin-top: .12rem;
     }
 
     .diff-arrow {
-        color: var(--gold2);
-        font-size: .9rem;
-    }
-
-    .diff-new {
-        font-family: 'Playfair Display',serif;
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: var(--gold2);
+        font-size: 1.2rem;
+        color: var(--purple);
+        opacity: .5;
     }
 
     .diff-delta {
-        font-size: .75rem;
-        margin-left: auto;
-        white-space: nowrap;
+        font-family: 'Playfair Display',serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        padding: .18rem .6rem;
+        border-radius: 8px;
     }
 
         .diff-delta.up {
-            color: #4ade80;
+            color: #15803d;
+            background: #f0fdf4;
         }
 
         .diff-delta.down {
-            color: #fca5a5;
+            color: var(--red);
+            background: #fef2f2;
         }
 
         .diff-delta.same {
             color: var(--muted);
+            background: var(--warm);
         }
-    /* Qty presets */
-    .qty-presets {
-        display: flex;
-        gap: .3rem;
-        flex-wrap: wrap;
-        margin-top: .35rem;
-    }
 
-    .qty-pill {
-        padding: .18rem .55rem;
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        font-size: .7rem;
-        cursor: pointer;
-        background: #fff;
-        transition: all .15s;
-        color: var(--muted);
-    }
-
-        .qty-pill:hover {
-            border-color: var(--orange);
-            background: rgba(194,65,12,.06);
-            color: var(--orange);
-        }
-    /* Reasons */
+    /* quick reasons */
     .reason-pills {
         display: flex;
         flex-wrap: wrap;
-        gap: .3rem;
-        margin-top: .35rem;
+        gap: .35rem;
+        margin-bottom: .6rem;
     }
 
-    .reason-pill {
-        padding: .2rem .6rem;
-        border: 1px solid var(--border);
-        border-radius: 5px;
-        font-size: .71rem;
-        cursor: pointer;
-        background: #fff;
-        transition: all .15s;
-        color: var(--muted);
-    }
-
-        .reason-pill:hover, .reason-pill.on {
-            border-color: var(--orange);
-            background: #fff7ed;
-            color: var(--orange);
-        }
-    /* Buttons */
-    .btn-p {
-        background: linear-gradient(135deg,#c2410c,#ea580c);
-        color: #fff;
-        border: none;
-        padding: .62rem 1.3rem;
-        font-size: .84rem;
-        font-weight: 700;
-        border-radius: 7px;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: .38rem;
-        transition: all .2s;
-    }
-
-        .btn-p:hover {
-            box-shadow: 0 4px 14px rgba(194,65,12,.3);
-            transform: translateY(-1px);
-        }
-
-        .btn-p:disabled {
-            opacity: .6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-    .btn-s {
-        padding: .6rem 1.1rem;
+    .r-pill {
+        padding: .22rem .65rem;
         border: 1.5px solid var(--border);
-        border-radius: 7px;
+        border-radius: 20px;
+        font-size: .74rem;
+        cursor: pointer;
         background: #fff;
-        font-size: .82rem;
+        color: var(--muted);
+        transition: .15s;
+    }
+
+        .r-pill:hover {
+            border-color: var(--purple);
+            color: var(--purple);
+        }
+
+        .r-pill.on {
+            border-color: var(--purple);
+            background: #ede9fe;
+            color: var(--purple);
+        }
+
+    /* delta inputs */
+    .delta-grid {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: .7rem;
+    }
+
+    .delta-sep {
+        font-size: .8rem;
+        color: var(--muted);
+        text-align: center;
+        padding-top: 1.4rem;
+    }
+
+    /* buttons */
+    .btn-cancel {
+        padding: .6rem 1.2rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        font-size: .83rem;
         font-weight: 600;
         cursor: pointer;
         color: var(--muted);
-        transition: all .18s;
+        transition: .18s;
     }
 
-        .btn-s:hover {
+        .btn-cancel:hover {
             border-color: var(--deep);
             color: var(--deep);
         }
+
+    .btn-save {
+        padding: .62rem 1.4rem;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg,#4c1d95,#6d28d9);
+        font-size: .83rem;
+        font-weight: 700;
+        color: #fff;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        transition: .2s;
+        box-shadow: 0 2px 8px rgba(76,29,149,.3);
+    }
+
+        .btn-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 16px rgba(76,29,149,.4);
+        }
+
+        .btn-save:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+    .footer-note {
+        font-size: .72rem;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
 </style>
 
 <div class="md-hd">
-    <span class="md-title"><i class="bi bi-sliders me-1" style="color:#fdba74"></i> Điều Chỉnh <em>Tồn Kho</em></span>
+    <div class="md-title">
+        <span class="md-title-icon"><i class="bi bi-sliders" style="color:#c4b5fd"></i></span>
+        Điều chỉnh <em style="color:#c4b5fd;font-style:italic">Tồn kho</em>
+    </div>
     <button class="md-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
 </div>
 
 <div class="md-body">
-    <!-- Sản phẩm info -->
-    <div style="background:var(--warm);border:1px solid var(--border);border-radius:8px;padding:.65rem .9rem;margin-bottom:1rem;display:flex;align-items:center;gap:.65rem;">
-        <i class="bi bi-box-seam" style="font-size:1rem;color:var(--muted);flex-shrink:0;"></i>
+
+    @* Product info *@
+    <div style="display:flex;align-items:center;gap:.75rem;background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:.75rem 1rem;margin-bottom:1rem">
+        <div style="width:36px;height:36px;border-radius:8px;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="bi bi-boxes" style="color:var(--purple)"></i>
+        </div>
         <div>
-            <div style="font-weight:700;font-size:.86rem;color:var(--deep);">@Model.Product?.ProductName</div>
-            <div style="font-size:.68rem;color:var(--muted);">@(Model.Facility?.FacilityName ?? "—") · @(Model.Product?.Unit ?? "")</div>
+            <div style="font-weight:700;font-size:.9rem">@(Model.Product?.ProductName ?? "—")</div>
+            <div style="font-size:.72rem;color:var(--muted)">@(Model.Facility?.FacilityName ?? "—") · #@Model.InventoryId</div>
         </div>
     </div>
 
-    <!-- Tồn kho hiện tại -->
+    @* Current stock *@
+    <div class="sec"><i class="bi bi-bar-chart-line"></i> Tồn kho hiện tại</div>
     <div class="stk-grid">
-        <div class="stk-c highlight">
-            <div class="stk-n">@Model.Quantity</div>
-            <div class="stk-l">Tổng kho</div>
+        <div class="stk-c main">
+            <div class="stk-c-n">@Model.Quantity</div>
+            <div class="stk-c-l">Tổng</div>
         </div>
-        <div class="stk-c">
-            <div class="stk-n" style="color:var(--green);">@Model.AvailableQuantity</div>
-            <div class="stk-l">Khả dụng</div>
+        <div class="stk-c committed">
+            <div class="stk-c-n" style="color:var(--orange)">@committed</div>
+            <div class="stk-c-l">Đang dùng</div>
         </div>
-        @if (committed > 0)
-        {
-            <div class="stk-c">
-                <div class="stk-n" style="color:var(--orange);">@committed</div>
-                <div class="stk-l">Đang dùng</div>
-            </div>
-        }
-        <div class="stk-c">
-            <div class="stk-n">@Model.MinQuantity</div>
-            <div class="stk-l">Safety min</div>
+        <div class="stk-c avail">
+            <div class="stk-c-n" style="color:var(--green)">@(Model.AvailableQuantity)</div>
+            <div class="stk-c-l">Khả dụng</div>
+        </div>
+        <div class="stk-c info">
+            <div class="stk-c-n" style="color:var(--purple)">@Model.MinQuantity</div>
+            <div class="stk-c-l">Min stock</div>
         </div>
     </div>
 
-    @if (committed > 0)
-    {
-        <div class="warn-box show">
-            <i class="bi bi-exclamation-triangle-fill" style="flex-shrink:0;"></i>
-            <span>Có <strong>@committed</strong> đơn vị đang được giữ (đặt cọc/cho thuê/hư hỏng) — không thể điều chỉnh phần này. Chỉ điều chỉnh được <strong>@Model.AvailableQuantity</strong> khả dụng.</span>
-        </div>
-    }
-
-    <!-- Mode: Đặt thẳng vs Điều chỉnh delta -->
-    <div class="mode-tabs">
-        <button class="mode-tab on" id="modeAbs" onclick="setMode('abs')">
-            <i class="bi bi-bullseye me-1"></i> Đặt số lượng mới
+    @* Mode switcher *@
+    <div class="sec"><i class="bi bi-pencil-square"></i> Điều chỉnh</div>
+    <div class="mode-sw">
+        <button class="mode-btn on" id="modeAbs" onclick="setMode('abs')">
+            <i class="bi bi-input-cursor-text me-1"></i> Đặt số tuyệt đối
         </button>
-        <button class="mode-tab" id="modeDelta" onclick="setMode('delta')">
-            <i class="bi bi-plus-slash-minus me-1"></i> Cộng / Trừ
+        <button class="mode-btn" id="modeDelta" onclick="setMode('delta')">
+            <i class="bi bi-plus-slash-minus me-1"></i> Tăng / Giảm
         </button>
     </div>
 
-    <!-- Mode: Absolute -->
+    @* Absolute mode *@
     <div id="panelAbs">
         <div class="fg">
-            <label>Số lượng tổng mới <span style="color:var(--red)">*</span></label>
-            <input type="number" id="adjNewQty" class="fi" min="@committed" value="@Model.Quantity"
-                   oninput="calcAbsDiff()" />
-            <span class="hint">Tối thiểu @committed (phần đang sử dụng không thể giảm)</span>
-            <div class="qty-presets">
-                @foreach (var q in new[] { 0, 5, 10, 20, 50, 100 })
-                {
-                    <span class="qty-pill" onclick="document.getElementById('adjNewQty').value=@q+@committed;calcAbsDiff();">@(q + committed)</span>
-                }
+            <label>Số lượng mới <span style="color:var(--red)">*</span></label>
+            <input type="number" id="adjNewQty" class="fi" min="@committed" value="@Model.Quantity" oninput="calcAbsDiff()" />
+            <span class="hint">Tối thiểu @committed (phần đang được sử dụng)</span>
+        </div>
+    </div>
+
+    @* Delta mode *@
+    <div id="panelDelta" style="display:none">
+        <div class="delta-grid">
+            <div class="fg" style="margin-bottom:0">
+                <label><i class="bi bi-plus-circle me-1" style="color:var(--green)"></i>Thêm vào</label>
+                <input type="number" id="adjDeltaPlus" class="fi" min="0" value="0" oninput="calcDeltaDiff()" />
+            </div>
+            <div class="delta-sep">—</div>
+            <div class="fg" style="margin-bottom:0">
+                <label><i class="bi bi-dash-circle me-1" style="color:var(--red)"></i>Bớt đi</label>
+                <input type="number" id="adjDeltaMinus" class="fi" min="0" value="0" oninput="calcDeltaDiff()" />
             </div>
         </div>
     </div>
 
-    <!-- Mode: Delta -->
-    <div id="panelDelta" style="display:none;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">
-            <div class="fg">
-                <label>Thêm (+)</label>
-                <input type="number" id="adjDeltaPlus" class="fi" min="0" value="0" placeholder="0"
-                       oninput="calcDeltaDiff()" />
-                <div class="qty-presets">
-                    @foreach (var q in new[] { 1, 5, 10, 20 })
-                    {
-                        <span class="qty-pill" onclick="document.getElementById('adjDeltaPlus').value=@q;document.getElementById('adjDeltaMinus').value=0;calcDeltaDiff();">+@q</span>
-                    }
-                </div>
-            </div>
-            <div class="fg">
-                <label>Giảm (−)</label>
-                <input type="number" id="adjDeltaMinus" class="fi" min="0" value="0" placeholder="0"
-                       oninput="calcDeltaDiff()" />
-                <div class="qty-presets">
-                    @foreach (var q in new[] { 1, 5, 10, 20 })
-                    {
-                        <span class="qty-pill" onclick="document.getElementById('adjDeltaMinus').value=@q;document.getElementById('adjDeltaPlus').value=0;calcDeltaDiff();" style="border-color:rgba(201,75,42,.3);color:var(--red);">−@q</span>
-                    }
-                </div>
-            </div>
+    @* Diff preview *@
+    <div class="diff-box" id="diffPreview">
+        <div class="diff-item">
+            <div class="diff-val" id="dpOld">@Model.Quantity</div>
+            <div class="diff-lbl">Trước</div>
+        </div>
+        <div class="diff-arrow"><i class="bi bi-arrow-right"></i></div>
+        <div class="diff-item">
+            <div class="diff-val" id="dpNew">@Model.Quantity</div>
+            <div class="diff-lbl">Sau</div>
+        </div>
+        <div class="diff-item">
+            <div class="diff-delta same" id="dpDelta">±0</div>
+            <div class="diff-lbl">Thay đổi</div>
         </div>
     </div>
 
-    <!-- Diff preview -->
-    <div class="diff-preview" id="diffPreview">
-        <span class="diff-old" id="dpOld">@Model.Quantity</span>
-        <span class="diff-arrow"><i class="bi bi-arrow-right"></i></span>
-        <span class="diff-new" id="dpNew">@Model.Quantity</span>
-        <span id="dpUnit" style="font-size:.72rem;color:rgba(255,255,255,.45);">@(Model.Product?.Unit ?? "")</span>
-        <span class="diff-delta same" id="dpDelta">±0</span>
+    @* Lý do *@
+    <div class="sec"><i class="bi bi-chat-left-text"></i> Lý do điều chỉnh <span style="color:var(--red)">*</span></div>
+    <div class="reason-pills">
+        @foreach (var r in new[] { "Kiểm kê thực tế", "Hàng hỏng/mất", "Nhầm lẫn nhập liệu", "Điều chỉnh FIFO", "Khác" })
+        {
+            <span class="r-pill" onclick="pickReason(this,'@r')">@r</span>
+        }
     </div>
-
-    <!-- Lý do -->
     <div class="fg">
-        <label>Lý do điều chỉnh <span style="color:var(--red)">*</span></label>
-        <input type="text" id="adjNote" class="fi" placeholder="Chọn hoặc nhập lý do..." />
-        <div class="reason-pills" id="reasonPills">
-            @foreach (var r in new[] { "Kiểm kê thực tế", "Hàng bị thất lạc", "Điều chỉnh nhầm trước đó", "Nhập thêm ngoài hệ thống", "Thanh lý hàng tồn", "Khác" })
-            {
-                <span class="reason-pill" onclick="pickReason(this,'@r')">@r</span>
-            }
-        </div>
+        <textarea id="adjNote" class="fi" rows="2" placeholder="Nhập lý do điều chỉnh..."></textarea>
     </div>
+
 </div>
 
 <div class="md-ft">
-    <button class="btn-s" data-bs-dismiss="modal">Hủy</button>
-    <button class="btn-p" id="adjBtnSave" onclick="submitAdj()">
-        <i class="bi bi-check-lg"></i> Xác nhận điều chỉnh
-    </button>
+    <span class="footer-note"><i class="bi bi-lock-fill"></i> Tối thiểu @committed (đang dùng)</span>
+    <div style="display:flex;gap:.55rem">
+        <button class="btn-cancel" data-bs-dismiss="modal">Hủy</button>
+        <button class="btn-save" id="adjBtnSave" onclick="submitAdj()">
+            <i class="bi bi-check-lg"></i> Xác nhận điều chỉnh
+        </button>
+    </div>
 </div>
 
 <script>
-    const ADJ_INV_ID  = @Model.InventoryId;
-    const ADJ_CURRENT = @Model.Quantity;
-    const ADJ_MIN     = @committed;
-    const TOKEN_ADJ   = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
-    let adjMode = 'abs';
+    const ADJ_INV_ID=@Model.InventoryId;
+    const ADJ_CURRENT=@Model.Quantity;
+    const ADJ_MIN=@committed;
+    const TOKEN_ADJ=document.querySelector('input[name="__RequestVerificationToken"]')?.value??'';
+    let adjMode='abs';
 
-    function setMode(m) {
-        adjMode = m;
-        document.getElementById('modeAbs').classList.toggle('on',   m === 'abs');
-        document.getElementById('modeDelta').classList.toggle('on', m === 'delta');
-        document.getElementById('panelAbs').style.display   = m === 'abs'   ? 'block' : 'none';
-        document.getElementById('panelDelta').style.display = m === 'delta' ? 'block' : 'none';
-        m === 'abs' ? calcAbsDiff() : calcDeltaDiff();
+    function setMode(m){
+        adjMode=m;
+        document.getElementById('modeAbs').classList.toggle('on',m==='abs');
+        document.getElementById('modeDelta').classList.toggle('on',m==='delta');
+        document.getElementById('panelAbs').style.display=m==='abs'?'block':'none';
+        document.getElementById('panelDelta').style.display=m==='delta'?'block':'none';
+        m==='abs'?calcAbsDiff():calcDeltaDiff();
     }
-
-    function calcAbsDiff() {
-        const newVal = parseInt(document.getElementById('adjNewQty').value) || 0;
-        showDiff(ADJ_CURRENT, newVal);
+    function calcAbsDiff(){
+        const nv=parseInt(document.getElementById('adjNewQty').value)||0;
+        showDiff(ADJ_CURRENT,nv);
     }
-
-    function calcDeltaDiff() {
-        const plus  = parseInt(document.getElementById('adjDeltaPlus').value)  || 0;
-        const minus = parseInt(document.getElementById('adjDeltaMinus').value) || 0;
-        showDiff(ADJ_CURRENT, ADJ_CURRENT + plus - minus);
+    function calcDeltaDiff(){
+        const plus=parseInt(document.getElementById('adjDeltaPlus').value)||0;
+        const minus=parseInt(document.getElementById('adjDeltaMinus').value)||0;
+        showDiff(ADJ_CURRENT,ADJ_CURRENT+plus-minus);
     }
-
-    function showDiff(oldVal, newVal) {
-        const box = document.getElementById('diffPreview');
-        const delta = newVal - oldVal;
-        document.getElementById('dpOld').textContent   = oldVal;
-        document.getElementById('dpNew').textContent   = newVal;
-        const dEl = document.getElementById('dpDelta');
-        dEl.textContent  = delta >= 0 ? '+' + delta : String(delta);
-        dEl.className    = 'diff-delta ' + (delta > 0 ? 'up' : delta < 0 ? 'down' : 'same');
-        box.classList.toggle('show', newVal !== oldVal || true);
+    function showDiff(old,nv){
+        const box=document.getElementById('diffPreview');
+        const delta=nv-old;
+        document.getElementById('dpOld').textContent=old;
+        document.getElementById('dpNew').textContent=nv;
+        const d=document.getElementById('dpDelta');
+        d.textContent=delta>0?'+'+delta:String(delta);
+        d.className='diff-delta '+(delta>0?'up':delta<0?'down':'same');
+        box.classList.toggle('show',true);
     }
-
-    function pickReason(el, val) {
-        document.querySelectorAll('.reason-pill').forEach(p => p.classList.remove('on'));
+    function pickReason(el,val){
+        document.querySelectorAll('.r-pill').forEach(p=>p.classList.remove('on'));
         el.classList.add('on');
-        document.getElementById('adjNote').value = val;
+        document.getElementById('adjNote').value=val;
     }
-
-    // Init
     calcAbsDiff();
 
-    async function submitAdj() {
-        const note = document.getElementById('adjNote').value.trim();
-        if (!note) { alert('Vui lòng nhập lý do điều chỉnh!'); return; }
-
+    async function submitAdj(){
+        const note=document.getElementById('adjNote').value.trim();
+        if(!note){alert('Vui lòng nhập lý do điều chỉnh!');return;}
         let newQty;
-        if (adjMode === 'abs') {
-            newQty = parseInt(document.getElementById('adjNewQty').value);
-        } else {
-            const plus  = parseInt(document.getElementById('adjDeltaPlus').value)  || 0;
-            const minus = parseInt(document.getElementById('adjDeltaMinus').value) || 0;
-            newQty = ADJ_CURRENT + plus - minus;
-        }
-
-        if (isNaN(newQty) || newQty < ADJ_MIN) {
-            alert(`Số lượng tối thiểu là ${ADJ_MIN} (phần đang được sử dụng).`);
-            return;
-        }
-        if (newQty === ADJ_CURRENT) {
-            alert('Số lượng không thay đổi!');
-            return;
-        }
-
-        const btn = document.getElementById('adjBtnSave');
-        btn.disabled=true; btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span>...';
-
-        const fd = new FormData();
-        fd.append('inventoryId', ADJ_INV_ID);
-        fd.append('newQuantity', newQty);
-        fd.append('note',        note);
-
-        try {
-            const res = await fetch('/AdminInventory/Adjustment', {
-                method:'POST', headers:{'RequestVerificationToken':TOKEN_ADJ}, body:fd
-            }).then(r=>r.json());
-            if (res.success) {
+        if(adjMode==='abs'){newQty=parseInt(document.getElementById('adjNewQty').value);}
+        else{newQty=ADJ_CURRENT+(parseInt(document.getElementById('adjDeltaPlus').value)||0)-(parseInt(document.getElementById('adjDeltaMinus').value)||0);}
+        if(isNaN(newQty)||newQty<ADJ_MIN){alert(`Số lượng tối thiểu là ${ADJ_MIN} (phần đang được sử dụng).`);return;}
+        if(newQty===ADJ_CURRENT){alert('Số lượng không thay đổi!');return;}
+        const btn=document.getElementById('adjBtnSave');
+        btn.disabled=true;btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span>...';
+        const fd=new FormData();fd.append('inventoryId',ADJ_INV_ID);fd.append('newQuantity',newQty);fd.append('note',note);
+        try{
+            const res=await fetch('/AdminInventory/Adjustment',{method:'POST',headers:{'RequestVerificationToken':TOKEN_ADJ},body:fd}).then(r=>r.json());
+            if(res.success){
                 bootstrap.Modal.getInstance(document.getElementById('invModal'))?.hide();
-                const t=document.createElement('div');
-                t.style.cssText='position:fixed;bottom:1.5rem;right:1.5rem;background:#15803d;color:#fff;padding:.75rem 1.25rem;border-radius:8px;font-size:.84rem;font-weight:700;z-index:9999;display:flex;align-items:center;gap:.5rem;box-shadow:0 4px 16px rgba(0,0,0,.2);';
-                t.innerHTML=`<i class="bi bi-check-circle-fill"></i> ${res.message}`;
-                document.body.appendChild(t);
-                setTimeout(()=>{ t.style.opacity='0';t.style.transition='opacity .4s';setTimeout(()=>{t.remove();location.reload();},400); },1800);
-            } else {
-                alert(res.message||'Có lỗi xảy ra!');
-                btn.disabled=false; btn.innerHTML='<i class="bi bi-check-lg"></i> Xác nhận điều chỉnh';
-            }
-        } catch(e) {
-            alert('Lỗi kết nối!');
-            btn.disabled=false; btn.innerHTML='<i class="bi bi-check-lg"></i> Xác nhận điều chỉnh';
-        }
+                const t=document.createElement('div');t.style.cssText='position:fixed;bottom:1.5rem;right:1.5rem;background:#15803d;color:#fff;padding:.75rem 1.3rem;border-radius:10px;font-size:.84rem;font-weight:700;z-index:9999;display:flex;align-items:center;gap:.5rem;box-shadow:0 6px 24px rgba(0,0,0,.2)';t.innerHTML=`<i class="bi bi-check-circle-fill"></i> ${res.message}`;document.body.appendChild(t);
+                setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .4s';setTimeout(()=>{t.remove();location.reload();},400);},1800);
+            }else{alert(res.message||'Có lỗi xảy ra!');btn.disabled=false;btn.innerHTML='<i class="bi bi-check-lg"></i> Xác nhận điều chỉnh';}
+        }catch(e){alert('Lỗi kết nối!');btn.disabled=false;btn.innerHTML='<i class="bi bi-check-lg"></i> Xác nhận điều chỉnh';}
     }
 </script>

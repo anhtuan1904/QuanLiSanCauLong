@@ -1,7 +1,4 @@
-﻿// ===================================================================
-// FILE: Controllers/AdminInventoryController.cs  (v3 — Modal AJAX)
-// ===================================================================
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLiSanCauLong.Data;
@@ -69,8 +66,9 @@ namespace QuanLiSanCauLong.Controllers
                     ProductId = i.ProductId,
                     ProductName = i.Product.ProductName,
                     ProductCode = i.Product.ProductCode ?? i.Product.SKU,
+                    ImageUrl = i.Product.ImageUrl,                     // ✅ THÊM
                     CategoryName = i.Product.Category?.CategoryName,
-                    CategoryType = i.Product.Category?.CategoryType,
+                    // ✅ FIX: CategoryType đã bị xóa — dùng BehaviorType thay thế
                     BehaviorType = i.Product.Category?.BehaviorType ?? "Retail",
                     FacilityName = i.Facility?.FacilityName,
                     FacilityId = i.FacilityId,
@@ -88,8 +86,9 @@ namespace QuanLiSanCauLong.Controllers
                 }).ToList()
             };
 
+            // Stats tính từ items đã load (không query thêm lần nữa)
             ViewBag.Facilities = await _db.Facilities.ToListAsync();
-            ViewBag.Categories = await _db.ProductCategories.ToListAsync();
+            ViewBag.Categories = await _db.ProductCategories.Where(c => c.IsActive).ToListAsync();
             ViewBag.LowStockCount = items.Count(i => i.IsLowStock);
             ViewBag.OutOfStockCount = items.Count(i => i.IsOutOfStock);
             ViewBag.HoldCount = items.Count(i => i.HasHold);
@@ -100,7 +99,7 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         // ═══════════════════════════════════════════════════════
-        //  STOCK IN — GET (partial view cho modal)
+        //  STOCK IN — GET
         // ═══════════════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> StockIn(int? facilityId)
@@ -116,14 +115,13 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         // ═══════════════════════════════════════════════════════
-        //  STOCK IN — POST (JSON, hỗ trợ cả form-data lẫn JSON body)
+        //  STOCK IN — POST
         // ═══════════════════════════════════════════════════════
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> StockIn(StockTransactionViewModel model)
         {
             if (model.FacilityId <= 0)
                 return Json(new { success = false, message = "Vui lòng chọn cơ sở!" });
-
             if (model.Items?.Any(i => i.Quantity > 0) != true)
                 return Json(new { success = false, message = "Vui lòng nhập ít nhất một sản phẩm!" });
 
@@ -140,7 +138,7 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         // ═══════════════════════════════════════════════════════
-        //  STOCK OUT — GET (partial view cho modal)
+        //  STOCK OUT — GET
         // ═══════════════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> StockOut(int? facilityId)
@@ -163,7 +161,6 @@ namespace QuanLiSanCauLong.Controllers
         {
             if (model.FacilityId <= 0)
                 return Json(new { success = false, message = "Vui lòng chọn cơ sở!" });
-
             if (model.Items?.Any(i => i.Quantity > 0) != true)
                 return Json(new { success = false, message = "Vui lòng nhập ít nhất một sản phẩm!" });
 
@@ -179,7 +176,7 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         // ═══════════════════════════════════════════════════════
-        //  ADJUSTMENT — GET (partial view)
+        //  ADJUSTMENT — GET
         // ═══════════════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> Adjustment(int inventoryId)
@@ -200,13 +197,12 @@ namespace QuanLiSanCauLong.Controllers
         {
             if (string.IsNullOrWhiteSpace(note))
                 return Json(new { success = false, message = "Vui lòng nhập lý do điều chỉnh!" });
-
             var (ok, msg) = await _svc.AdjustAsync(inventoryId, newQuantity, User.Identity?.Name, note);
             return Json(new { success = ok, message = msg });
         }
 
         // ═══════════════════════════════════════════════════════
-        //  TRANSFER — GET (partial view)
+        //  TRANSFER — GET
         // ═══════════════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> Transfer(int? fromInventoryId)
@@ -217,7 +213,7 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         // ═══════════════════════════════════════════════════════
-        //  TRANSFER — POST (resolve inv ID from facilityId+productId)
+        //  TRANSFER — POST
         // ═══════════════════════════════════════════════════════
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Transfer(
@@ -227,7 +223,6 @@ namespace QuanLiSanCauLong.Controllers
             if (fromFacilityId == targetFacilityId)
                 return Json(new { success = false, message = "Cơ sở xuất và nhận phải khác nhau!" });
 
-            // Resolve fromInventoryId if not provided
             if (fromInventoryId <= 0 && fromFacilityId > 0 && productId > 0)
             {
                 var inv = await _db.Inventories
@@ -276,11 +271,9 @@ namespace QuanLiSanCauLong.Controllers
         //  RENT LOST — POST
         // ═══════════════════════════════════════════════════════
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> RentLost(
-            int rentalItemId, int lostQuantity, string? note)
+        public async Task<IActionResult> RentLost(int rentalItemId, int lostQuantity, string? note)
         {
-            var (ok, msg) = await _svc.RentalLostAsync(
-                rentalItemId, lostQuantity, User.Identity?.Name, note);
+            var (ok, msg) = await _svc.RentalLostAsync(rentalItemId, lostQuantity, User.Identity?.Name, note);
             return Json(new { success = ok, message = msg });
         }
 
@@ -305,11 +298,10 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         // ═══════════════════════════════════════════════════════
-        //  HOLD — POST (gọi từ Order system)
+        //  HOLD — POST (từ Order system)
         // ═══════════════════════════════════════════════════════
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Hold(
-            int facilityId, int productId, int quantity, int orderId)
+        public async Task<IActionResult> Hold(int facilityId, int productId, int quantity, int orderId)
         {
             var (ok, msg) = await _svc.HoldAsync(facilityId, productId, quantity, orderId, User.Identity?.Name);
             return Json(new { success = ok, message = msg });
@@ -328,7 +320,7 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         // ═══════════════════════════════════════════════════════
-        //  CONFIRM SALE — POST (gọi từ Order system)
+        //  CONFIRM SALE — POST (từ Order system)
         // ═══════════════════════════════════════════════════════
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> ConfirmSale(
@@ -418,6 +410,29 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         // ═══════════════════════════════════════════════════════
+        //  BATCH LIST
+        // ═══════════════════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> BatchList(int inventoryId)
+        {
+            var inv = await _db.Inventories
+                .Include(i => i.Product)
+                .Include(i => i.Facility)
+                .Include(i => i.Batches)
+                .FirstOrDefaultAsync(i => i.InventoryId == inventoryId);
+            if (inv == null) return NotFound();
+
+            ViewBag.ProductName = inv.Product?.ProductName;
+            ViewBag.ProductCode = inv.Product?.ProductCode;
+            ViewBag.FacilityName = inv.Facility?.FacilityName;
+            ViewBag.ProductId = inv.ProductId;
+
+            return Request.Headers["X-Requested-With"] == "XMLHttpRequest"
+                ? PartialView(inv.Batches?.OrderBy(b => b.ExpiryDate ?? DateTime.MaxValue).ThenBy(b => b.ReceivedDate).ToList() ?? new())
+                : View(inv.Batches?.OrderBy(b => b.ExpiryDate ?? DateTime.MaxValue).ThenBy(b => b.ReceivedDate).ToList() ?? new());
+        }
+
+        // ═══════════════════════════════════════════════════════
         //  ACTIVE RENTALS
         // ═══════════════════════════════════════════════════════
         [HttpGet]
@@ -432,8 +447,7 @@ namespace QuanLiSanCauLong.Controllers
                     || ((r.Status == "Lost" || r.Status == "Damaged") && r.ReturnedAt >= DateTime.Now.AddDays(-7)))
                 .AsQueryable();
 
-            if (facilityId.HasValue)
-                q = q.Where(r => r.Inventory.FacilityId == facilityId.Value);
+            if (facilityId.HasValue) q = q.Where(r => r.Inventory.FacilityId == facilityId.Value);
 
             var list = await q
                 .OrderByDescending(r => r.Status == "Active")
@@ -480,7 +494,7 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         // ═══════════════════════════════════════════════════════
-        //  HISTORY — GET (partial or full page)
+        //  HISTORY — GET
         // ═══════════════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> History(int productId, int? facilityId)

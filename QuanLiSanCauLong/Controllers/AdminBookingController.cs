@@ -36,12 +36,7 @@ namespace QuanLiSanCauLong.Controllers
                 .AsQueryable();
 
             // Tab filter
-            if (filter == "awaiting-transfer")
-                query = query.Where(b =>
-                    b.PaymentMethod == "Transfer" &&
-                    b.PaymentStatus != "Paid" &&
-                    b.Status != "Cancelled");
-            else if (!string.IsNullOrEmpty(filter))
+            if (!string.IsNullOrEmpty(filter))
                 query = query.Where(b => b.Status == filter);
 
             // Search: ma don / ten / SDT
@@ -67,19 +62,14 @@ namespace QuanLiSanCauLong.Controllers
                 .Select(g => new
                 {
                     Total = g.Count(),
-                    Pending = g.Count(b => b.Status == "Pending"),
                     Confirmed = g.Count(b => b.Status == "Confirmed"),
-                    AwaitCk = g.Count(b =>
-                        b.PaymentMethod == "Transfer" &&
-                        b.PaymentStatus != "Paid" &&
-                        b.Status != "Cancelled")
+                    Playing = g.Count(b => b.Status == "Playing"),
                 })
                 .FirstOrDefaultAsync();
 
             ViewBag.TotalCount = counts?.Total ?? 0;
-            ViewBag.PendingCount = counts?.Pending ?? 0;
             ViewBag.ConfirmedCount = counts?.Confirmed ?? 0;
-            ViewBag.AwaitingTransferCount = counts?.AwaitCk ?? 0;
+            ViewBag.PlayingCount = counts?.Playing ?? 0;
 
             int total = await query.CountAsync();
             var bookings = await query
@@ -116,94 +106,40 @@ namespace QuanLiSanCauLong.Controllers
                 .Select(v => v.Voucher != null ? v.Voucher.VoucherCode : null)
                 .FirstOrDefaultAsync();
 
-            SetBankViewBag(b.BookingCode);
             var cancelHours = await GetSetting("BookingCancellationHours", 2m);
             var vm = Map(b, cancelHours);
             vm.VoucherCode = voucherCode;
             return View(vm);
         }
 
-        // ═════════════════════════════════════════════════════════════════════
-        // SET STATUS  <-- gop: ConfirmPayment + ConfirmOrder + UpdateStatus
-        //
-        //  newStatus  | Hanh dong
-        // ────────────┼──────────────────────────────────────────────────────
-        //  ConfirmCK  | PaymentStatus -> Paid (chua doi Status don)
-        //  Confirmed  | Pending -> Confirmed, PaymentStatus -> Paid
-        //  Playing    | Confirmed -> Playing
-        //  Completed  | Playing -> Completed, tu Paid neu chua
-        // ═════════════════════════════════════════════════════════════════════
+        // Staff/Admin chỉ cần chuyển Playing / Completed
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SetStatus(int id, string newStatus, string? note)
+        public async Task<IActionResult> SetStatus(int id, string newStatus)
         {
+            if (newStatus is not ("Playing" or "Completed"))
+                return BadRequest();
+
             var booking = await _context.Bookings.FindAsync(id);
             if (booking == null) return NotFound();
 
             if (booking.Status is "Cancelled" or "Completed")
             {
-                TempData["ErrorMessage"] = $"Khong the thay doi don da {booking.Status}.";
+                TempData["ErrorMessage"] = $"Không thể thay đổi đơn đã {booking.Status}.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
             string old = booking.Status;
-
-            switch (newStatus)
-            {
-                case "ConfirmCK":
-                    if (booking.PaymentStatus == "Paid")
-                    {
-                        TempData["ErrorMessage"] = "Don nay da xac nhan CK truoc do!";
-                        return RedirectToAction(nameof(Details), new { id });
-                    }
-                    booking.PaymentStatus = "Paid";
-                    break;
-
-                case "Confirmed":
-                    if (booking.Status != "Pending")
-                    {
-                        TempData["ErrorMessage"] = "Chi xac nhan duoc don dang Cho xac nhan!";
-                        return RedirectToAction(nameof(Details), new { id });
-                    }
-                    if (booking.PaymentMethod == "Transfer" && booking.PaymentStatus != "Paid")
-                    {
-                        TempData["ErrorMessage"] = "Vui long xac nhan CK truoc!";
-                        return RedirectToAction(nameof(Details), new { id });
-                    }
-                    booking.Status = "Confirmed";
-                    booking.PaymentStatus = "Paid";
-                    break;
-
-                case "Playing":
-                case "Completed":
-                    booking.Status = newStatus;
-                    if (newStatus == "Completed" && booking.PaymentStatus != "Paid")
-                        booking.PaymentStatus = "Paid";
-                    break;
-
-                default:
-                    TempData["ErrorMessage"] = "Trang thai khong hop le!";
-                    return RedirectToAction(nameof(Details), new { id });
-            }
-
-            if (!string.IsNullOrWhiteSpace(note))
-                booking.Note = note.Trim();
-
+            booking.Status = newStatus;
             booking.UpdatedAt = DateTime.Now;
-            await _context.SaveChangesAsync();
-            await Log(GetAdminId(), "SetStatus", booking.BookingId, old,
-                newStatus + (note != null ? $"|{note}" : ""));
+            if (newStatus == "Completed") booking.PaymentStatus = "Paid";
 
-            string label = newStatus switch
-            {
-                "ConfirmCK" => "Xac nhan CK",
-                "Confirmed" => "Da xac nhan",
-                "Playing" => "Dang choi",
-                "Completed" => "Hoan thanh",
-                _ => newStatus
-            };
-            TempData["SuccessMessage"] =
-                $"Don <strong>{booking.BookingCode}</strong> &rarr; <strong>{label}</strong>.";
+            await _context.SaveChangesAsync();
+            await Log(GetAdminId(), "SetStatus", booking.BookingId, old, newStatus);
+
+            TempData["SuccessMessage"] = newStatus == "Playing"
+                ? $"Đơn <strong>{booking.BookingCode}</strong> → <strong>Đang chơi</strong>."
+                : $"Đơn <strong>{booking.BookingCode}</strong> → <strong>Hoàn thành</strong>.";
 
             return RedirectToAction(nameof(Details), new { id });
         }
@@ -257,12 +193,7 @@ namespace QuanLiSanCauLong.Controllers
                 .Include(b => b.User)
                 .AsQueryable();
 
-            if (filter == "awaiting-transfer")
-                query = query.Where(b =>
-                    b.PaymentMethod == "Transfer" &&
-                    b.PaymentStatus != "Paid" &&
-                    b.Status != "Cancelled");
-            else if (!string.IsNullOrEmpty(filter))
+            if (!string.IsNullOrEmpty(filter))
                 query = query.Where(b => b.Status == filter);
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -368,21 +299,6 @@ namespace QuanLiSanCauLong.Controllers
                 }).ToList() ?? new()
             }).ToList() ?? new()
         };
-
-        private void SetBankViewBag(string? bookingCode = null)
-        {
-            const string code = "MB", acc = "0123456789",
-                         name = "CONG TY QUAN LI SAN CAU LONG";
-            ViewBag.BankCode = code;
-            ViewBag.BankAccount = acc;
-            ViewBag.BankAccountName = name;
-            ViewBag.BankName = "MB Bank";
-            if (!string.IsNullOrEmpty(bookingCode))
-                ViewBag.QrUrl =
-                    $"https://img.vietqr.io/image/{code}-{acc}-compact2.png" +
-                    $"?addInfo={Uri.EscapeDataString(bookingCode)}" +
-                    $"&accountName={Uri.EscapeDataString(name)}";
-        }
 
         private async Task<decimal> GetSetting(string key, decimal def)
         {

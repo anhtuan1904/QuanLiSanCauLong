@@ -1,0 +1,832 @@
+﻿@model QuanLiSanCauLong.Models.ProductCategory
+@{
+    Layout = null;
+    bool isEdit = Model != null && Model.CategoryId > 0;
+    string actionUrl = isEdit
+        ? $"/Admin/AdminCategory/EditAjax/{Model!.CategoryId}"
+        : "/Admin/AdminCategory/CreateAjax";
+    var bh = Model?.BehaviorType ?? "Retail";
+}
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --warm: #f5ede0;
+        --cream: #fdf8f0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+        --red: #c94b2a;
+        --green: #15803d;
+        --blue: #1d4ed8;
+        --purple: #7c3aed;
+    }
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    * {
+        font-family: 'Outfit',sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+    /* ── header ── */
+    .fm-hd {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.4rem 1.6rem 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .fm-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+        .fm-title em {
+            color: var(--gold);
+            font-style: italic;
+        }
+
+    .fm-close {
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: var(--warm);
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        font-size: .85rem;
+        transition: all .15s;
+    }
+
+        .fm-close:hover {
+            background: var(--deep);
+            color: #fff;
+        }
+    /* ── body ── */
+    .fm-body {
+        padding: 1.4rem 1.6rem;
+        max-height: 72vh;
+        overflow-y: auto;
+    }
+
+        .fm-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .fm-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .fm-body::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+    /* ── section divider ── */
+    .sec {
+        font-size: .62rem;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        padding: .5rem 0;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: .9rem;
+        display: flex;
+        align-items: center;
+        gap: .38rem;
+    }
+    /* ── field ── */
+    .fg {
+        display: flex;
+        flex-direction: column;
+        gap: .28rem;
+        margin-bottom: .9rem;
+    }
+
+        .fg label {
+            font-size: .75rem;
+            font-weight: 700;
+            color: var(--deep);
+        }
+
+    .fi {
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        padding: .58rem .85rem;
+        font-size: .84rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
+        width: 100%;
+        transition: border-color .2s;
+    }
+
+        .fi:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(212,160,23,.12);
+        }
+
+    textarea.fi {
+        resize: vertical;
+        min-height: 70px;
+    }
+
+    .req {
+        color: var(--red);
+    }
+
+    .hint {
+        font-size: .68rem;
+        color: var(--muted);
+    }
+
+    .row2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .85rem;
+    }
+    /* ── behavior tabs ── */
+    .bh-tabs {
+        display: flex;
+        gap: .5rem;
+        margin-bottom: 1rem;
+    }
+
+    .bh-tab {
+        flex: 1;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        padding: .65rem .75rem;
+        cursor: pointer;
+        transition: all .2s;
+        background: #fff;
+        text-align: center;
+        position: relative;
+    }
+
+        .bh-tab:hover {
+            border-color: var(--gold);
+            background: #fffbf0;
+        }
+
+        .bh-tab.on-Retail {
+            border-color: #16a34a;
+            background: #f0fdf4;
+        }
+
+        .bh-tab.on-Rental {
+            border-color: #1d4ed8;
+            background: #eff6ff;
+        }
+
+        .bh-tab.on-Service {
+            border-color: #7c3aed;
+            background: #f5f3ff;
+        }
+
+    .bh-tab-ico {
+        font-size: 1.3rem;
+        display: block;
+        margin-bottom: .22rem;
+    }
+
+    .bh-tab-nm {
+        font-weight: 700;
+        font-size: .78rem;
+        color: var(--deep);
+        display: block;
+    }
+
+    .bh-tab-ds {
+        font-size: .64rem;
+        color: var(--muted);
+        display: block;
+        margin-top: .08rem;
+    }
+
+    .on-Retail .bh-tab-nm {
+        color: #166534;
+    }
+
+    .on-Rental .bh-tab-nm {
+        color: #1d4ed8;
+    }
+
+    .on-Service .bh-tab-nm {
+        color: #7c3aed;
+    }
+
+    .bh-tab .check {
+        display: none;
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        font-size: .75rem;
+    }
+
+    .on-Retail .check {
+        display: block;
+        color: #16a34a;
+    }
+
+    .on-Rental .check {
+        display: block;
+        color: #1d4ed8;
+    }
+
+    .on-Service .check {
+        display: block;
+        color: #7c3aed;
+    }
+    /* ── config panels ── */
+    .bh-panel {
+        display: none;
+        border-radius: 10px;
+        padding: .9rem 1rem;
+        margin-bottom: .9rem;
+        border: 1.5px solid transparent;
+    }
+
+        .bh-panel.show {
+            display: block;
+        }
+
+    .panel-retail {
+        background: #f0fdf4;
+        border-color: #86efac;
+    }
+
+    .panel-rental {
+        background: #eff6ff;
+        border-color: #93c5fd;
+    }
+
+    .panel-service {
+        background: #f5f3ff;
+        border-color: #c4b5fd;
+    }
+
+    .panel-lbl {
+        font-size: .68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: .7rem;
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+    }
+
+    .panel-retail .panel-lbl {
+        color: #166534;
+    }
+
+    .panel-rental .panel-lbl {
+        color: #1d4ed8;
+    }
+
+    .panel-service .panel-lbl {
+        color: #7c3aed;
+    }
+    /* ── toggle rows ── */
+    .rule-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .55rem;
+        margin-bottom: .7rem;
+    }
+
+    .rule-toggle {
+        border: 1.5px solid var(--border);
+        border-radius: 9px;
+        padding: .6rem .8rem;
+        cursor: pointer;
+        transition: all .18s;
+        background: rgba(255,255,255,.8);
+        user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .5rem;
+    }
+
+        .rule-toggle input {
+            display: none;
+        }
+
+        .rule-toggle:hover {
+            border-color: var(--muted);
+        }
+
+    .rt-on {
+        border-color: var(--gold) !important;
+        background: #fffbf0 !important;
+    }
+
+    .rt-lbl {
+        font-size: .76rem;
+        font-weight: 600;
+        color: var(--deep);
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+    .tdot {
+        width: 28px;
+        height: 15px;
+        border-radius: 10px;
+        background: #d1d5db;
+        position: relative;
+        transition: .25s;
+        flex-shrink: 0;
+    }
+
+        .tdot::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            background: #fff;
+            transition: .25s;
+        }
+
+    .rt-on .tdot {
+        background: var(--gold);
+    }
+
+        .rt-on .tdot::after {
+            left: 15px;
+        }
+    /* ── money input ── */
+    .money-wrap {
+        position: relative;
+    }
+
+        .money-wrap .fi {
+            padding-right: 2.2rem;
+        }
+
+    .money-sfx {
+        position: absolute;
+        right: .6rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: .72rem;
+        font-weight: 700;
+        color: var(--muted);
+    }
+    /* ── image upload ── */
+    .img-drop {
+        border: 2px dashed var(--border);
+        border-radius: 9px;
+        padding: 1.4rem;
+        text-align: center;
+        cursor: pointer;
+        transition: .2s;
+        background: #fff;
+    }
+
+        .img-drop:hover {
+            border-color: var(--gold);
+            background: #fffbf0;
+        }
+
+        .img-drop i {
+            font-size: 1.5rem;
+            color: var(--muted);
+            display: block;
+            margin-bottom: .3rem;
+        }
+
+        .img-drop p {
+            font-size: .74rem;
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .img-drop input {
+            display: none;
+        }
+    /* ── active badge ── */
+    .active-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .38rem;
+        padding: .28rem .75rem;
+        border-radius: 20px;
+        font-size: .74rem;
+        font-weight: 700;
+        cursor: pointer;
+        border: 1.5px solid;
+        user-select: none;
+        transition: .18s;
+    }
+
+        .active-badge.on {
+            background: #f0fdf4;
+            color: #166534;
+            border-color: #86efac;
+        }
+
+        .active-badge.off {
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #fca5a5;
+        }
+    /* ── footer ── */
+    .fm-ft {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: .65rem;
+        padding: 1rem 1.6rem;
+        border-top: 1px solid var(--border);
+        background: var(--warm);
+    }
+
+    .btn-cancel {
+        padding: .58rem 1.2rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        font-size: .82rem;
+        font-weight: 600;
+        color: var(--muted);
+        cursor: pointer;
+        transition: .18s;
+    }
+
+        .btn-cancel:hover {
+            border-color: var(--deep);
+            color: var(--deep);
+        }
+
+    .btn-save {
+        padding: .6rem 1.4rem;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        font-size: .82rem;
+        font-weight: 700;
+        color: var(--deep);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        transition: .2s;
+    }
+
+        .btn-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 16px rgba(212,160,23,.35);
+        }
+
+        .btn-save:disabled {
+            opacity: .6;
+            transform: none;
+            box-shadow: none;
+        }
+    /* ── alert ── */
+    .fm-alert {
+        padding: .65rem 1rem;
+        border-radius: 7px;
+        font-size: .8rem;
+        margin-bottom: .8rem;
+        display: none;
+        align-items: center;
+        gap: .5rem;
+        border: 1px solid #fca5a5;
+        background: #fee2e2;
+        color: #c94b2a;
+    }
+
+        .fm-alert.show {
+            display: flex;
+        }
+    /* ── preview bar ── */
+    .prev-bar {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        padding: .55rem .8rem;
+        background: var(--deep);
+        border-radius: 8px;
+        margin-bottom: .9rem;
+    }
+
+    .prev-name {
+        font-weight: 700;
+        font-size: .82rem;
+        color: #fff;
+        flex: 1;
+    }
+
+    .prev-bh {
+        display: inline-flex;
+        align-items: center;
+        gap: .22rem;
+        padding: .15rem .5rem;
+        border-radius: 4px;
+        font-size: .62rem;
+        font-weight: 700;
+    }
+</style>
+
+<div class="fm-hd">
+    <div>
+        <div class="fm-title">@(isEdit ? "Chỉnh sửa" : "Thêm") <em>danh mục</em></div>
+        @if (isEdit)
+        {
+            <div style="font-size:.72rem;color:var(--muted);margin-top:.1rem">ID #@Model!.CategoryId — @Model.CategoryName</div>
+        }
+    </div>
+    <button class="fm-close" onclick="closeCatModal()" type="button"><i class="bi bi-x-lg"></i></button>
+</div>
+
+<form id="catForm" enctype="multipart/form-data" onsubmit="submitCat(event)">
+    @Html.AntiForgeryToken()
+    @if (isEdit)
+    {
+        <input type="hidden" name="CategoryId" value="@Model!.CategoryId" />
+    }
+
+    <div class="fm-body">
+        <div class="fm-alert" id="catAlert"><i class="bi bi-exclamation-circle-fill"></i><span id="catAlertMsg"></span></div>
+
+        @* Preview bar — hiện khi có tên *@
+        <div class="prev-bar" id="prevBar" style="display:none">
+            <div class="prev-name" id="prevName">—</div>
+            <span class="prev-bh" id="prevBh" style="background:#f0fdf4;color:#166534">Bán lẻ</span>
+        </div>
+
+        @* ── Thông tin cơ bản ── *@
+        <div class="sec"><i class="bi bi-info-circle"></i> Thông tin cơ bản</div>
+        <div class="row2">
+            <div class="fg">
+                <label>Tên danh mục <span class="req">*</span></label>
+                <input class="fi" id="inp_name" name="CategoryName" value="@(Model?.CategoryName ?? "")"
+                       placeholder="VD: Vợt cầu lông, Dịch vụ căng vợt..." required
+                       oninput="updPrev()" />
+            </div>
+            <div class="fg">
+                <label>Đơn vị mặc định</label>
+                <input class="fi" name="DefaultUnit" value="@(Model?.DefaultUnit ?? "Cái")" placeholder="Cái, Bộ, Đôi..." />
+            </div>
+        </div>
+        <div class="fg">
+            <label>Mô tả <span style="font-weight:400;color:var(--muted)">(tùy chọn)</span></label>
+            <textarea class="fi" name="Description" placeholder="Mô tả ngắn về danh mục...">@(Model?.Description ?? "")</textarea>
+        </div>
+
+        @* ── Nghiệp vụ ── *@
+        <div class="sec"><i class="bi bi-diagram-3"></i> Loại nghiệp vụ <span class="req">*</span></div>
+        <input type="hidden" name="BehaviorType" id="bhInput" value="@bh" />
+        <div class="bh-tabs">
+            <div class="bh-tab @(bh == "Retail" ? "on-Retail" : "")" data-val="Retail" onclick="selBh('Retail')">
+                <span class="check"><i class="bi bi-check-circle-fill"></i></span>
+                <span class="bh-tab-ico">🛒</span>
+                <span class="bh-tab-nm">Bán lẻ</span>
+                <span class="bh-tab-ds">Trừ kho thẳng</span>
+            </div>
+            <div class="bh-tab @(bh == "Rental" ? "on-Rental" : "")" data-val="Rental" onclick="selBh('Rental')">
+                <span class="check"><i class="bi bi-check-circle-fill"></i></span>
+                <span class="bh-tab-ico">🔄</span>
+                <span class="bh-tab-nm">Cho thuê</span>
+                <span class="bh-tab-ds">Hoàn kho khi trả</span>
+            </div>
+            <div class="bh-tab @(bh == "Service" ? "on-Service" : "")" data-val="Service" onclick="selBh('Service')">
+                <span class="check"><i class="bi bi-check-circle-fill"></i></span>
+                <span class="bh-tab-ico">🔧</span>
+                <span class="bh-tab-nm">Dịch vụ</span>
+                <span class="bh-tab-ds">Không kho vật lý</span>
+            </div>
+        </div>
+
+        @* ── Panel Retail ── *@
+        <div class="bh-panel panel-retail @(bh == "Retail" ? "show" : "")" id="panelRetail">
+            <div class="panel-lbl"><i class="bi bi-boxes"></i> Quy tắc kho</div>
+            <div class="fg" style="max-width:200px">
+                <label>Safety stock (cảnh báo khi ≤)</label>
+                <input class="fi" type="number" name="DefaultMinStock" min="0" value="@(Model?.DefaultMinStock ?? 0)" />
+                <span class="hint">Để 0 = không cảnh báo</span>
+            </div>
+            <div class="rule-grid">
+                <label class="rule-toggle @(Model?.RequiresExpiry == true ? "rt-on" : "")" id="rtExpiry"
+                       onclick="toggleRule('RequiresExpiry','rtExpiry')">
+                    <input type="checkbox" name="RequiresExpiry" value="true" id="RequiresExpiry"
+                           @(Model?.RequiresExpiry == true ? "checked" : "") />
+                    <span class="rt-lbl"><i class="bi bi-calendar-x"></i> Theo dõi HSD</span>
+                    <div class="tdot"></div>
+                </label>
+                <label class="rule-toggle @(Model?.HasVariants == true ? "rt-on" : "")" id="rtVariants"
+                       onclick="toggleRule('HasVariants','rtVariants')">
+                    <input type="checkbox" name="HasVariants" value="true" id="HasVariants"
+                           @(Model?.HasVariants == true ? "checked" : "") />
+                    <span class="rt-lbl"><i class="bi bi-layers"></i> Biến thể (màu/size)</span>
+                    <div class="tdot"></div>
+                </label>
+            </div>
+        </div>
+
+        @* ── Panel Rental ── *@
+        <div class="bh-panel panel-rental @(bh == "Rental" ? "show" : "")" id="panelRental">
+            <div class="panel-lbl"><i class="bi bi-arrow-repeat"></i> Cấu hình cho thuê</div>
+            <div class="row2">
+                <div class="fg">
+                    <label>Tiền đặt cọc mặc định</label>
+                    <div class="money-wrap">
+                        <input class="fi" type="number" name="DefaultDepositAmount" min="0"
+                               value="@(Model?.DefaultDepositAmount ?? 0)" placeholder="0" />
+                        <span class="money-sfx">₫</span>
+                    </div>
+                </div>
+                <div class="rule-grid" style="grid-template-columns:1fr;gap:.5rem;">
+                    <label class="rule-toggle @(Model?.DepositRequired == true ? "rt-on" : "")" id="rtDeposit"
+                           onclick="toggleRule('DepositRequired','rtDeposit')">
+                        <input type="checkbox" name="DepositRequired" value="true" id="DepositRequired"
+                               @(Model?.DepositRequired == true ? "checked" : "") />
+                        <span class="rt-lbl"><i class="bi bi-cash-coin"></i> Yêu cầu đặt cọc</span>
+                        <div class="tdot"></div>
+                    </label>
+                    <label class="rule-toggle @(Model?.AllowPartialReturn == true ? "rt-on" : "")" id="rtPartial"
+                           onclick="toggleRule('AllowPartialReturn','rtPartial')">
+                        <input type="checkbox" name="AllowPartialReturn" value="true" id="AllowPartialReturn"
+                               @(Model?.AllowPartialReturn == true ? "checked" : "") />
+                        <span class="rt-lbl"><i class="bi bi-box-arrow-in-left"></i> Trả từng phần</span>
+                        <div class="tdot"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        @* ── Panel Service ── *@
+        <div class="bh-panel panel-service @(bh == "Service" ? "show" : "")" id="panelService">
+            <div class="panel-lbl"><i class="bi bi-wrench-adjustable"></i> Dịch vụ kỹ thuật</div>
+            <p style="font-size:.8rem;color:var(--muted);margin:0">
+                Không quản lý tồn kho vật lý. Giá & chi tiết cấu hình tại từng sản phẩm (căng vợt, sửa chữa...).
+            </p>
+        </div>
+
+        @* ── Ảnh + cài đặt ── *@
+        <div class="sec"><i class="bi bi-gear"></i> Cài đặt & hình ảnh</div>
+        <div class="row2">
+            <div class="fg">
+                <label>Thứ tự hiển thị</label>
+                <input class="fi" type="number" name="DisplayOrder" min="0" value="@(Model?.DisplayOrder ?? 0)" />
+                <span class="hint">Số nhỏ hơn hiển thị trước</span>
+            </div>
+            <div class="fg" style="justify-content:flex-end;padding-bottom:.25rem">
+                <label style="font-size:.75rem;font-weight:700;color:var(--deep);margin-bottom:.4rem">Trạng thái</label>
+                <span class="active-badge @(Model?.IsActive != false ? "on" : "off")" id="activeBadge"
+                      onclick="toggleActive()">
+                    <i class="bi @(Model?.IsActive != false ? "bi-eye" : "bi-eye-slash")"></i>
+                    @(Model?.IsActive != false ? "Đang kích hoạt" : "Đã ẩn")
+                </span>
+                <input type="hidden" name="IsActive" id="isActiveInput" value="@(Model?.IsActive != false ? "true" : "false")" />
+            </div>
+        </div>
+
+        <div class="fg">
+            <label>Ảnh đại diện <span style="font-weight:400;color:var(--muted)">(tùy chọn)</span></label>
+            @if (!string.IsNullOrEmpty(Model?.ImageUrl))
+            {
+                <div style="margin-bottom:.5rem;display:flex;align-items:center;gap:.6rem">
+                    <img src="@Model.ImageUrl" style="height:52px;border-radius:6px;border:1px solid var(--border)" />
+                    <span style="font-size:.7rem;color:var(--muted)">Ảnh hiện tại · Chọn ảnh mới để thay</span>
+                </div>
+            }
+            <div class="img-drop" onclick="document.getElementById('imgFileInput').click()">
+                <input type="file" id="imgFileInput" name="CategoryImage" accept=".jpg,.jpeg,.png,.webp"
+                       onchange="previewImg(this)" />
+                <i class="bi bi-cloud-arrow-up"></i>
+                <p>Nhấn để tải ảnh · JPG · PNG · WEBP · Tối đa 5MB</p>
+            </div>
+            <div id="imgPreview" style="margin-top:.4rem"></div>
+        </div>
+
+    </div>@* /fm-body *@
+
+    <div class="fm-ft">
+        <button type="button" class="btn-cancel" onclick="closeCatModal()">Hủy</button>
+        <button type="submit" class="btn-save" id="catSubmitBtn">
+            <i class="bi @(isEdit ? "bi-check-lg" : "bi-plus-lg")"></i>
+            @(isEdit ? "Lưu thay đổi" : "Tạo danh mục")
+        </button>
+    </div>
+</form>
+
+<script>
+    // ── Behavior tabs ──
+    const BH_BG  = {Retail:'#f0fdf4',Rental:'#eff6ff',Service:'#f5f3ff'};
+    const BH_CLR = {Retail:'#166534',Rental:'#1d4ed8',Service:'#7c3aed'};
+    const BH_LBL = {Retail:'🛒 Bán lẻ',Rental:'🔄 Cho thuê',Service:'🔧 Dịch vụ'};
+
+    function selBh(val) {
+        document.getElementById('bhInput').value = val;
+        document.querySelectorAll('.bh-tab').forEach(t => {
+            t.classList.remove('on-Retail','on-Rental','on-Service');
+            if (t.dataset.val === val) t.classList.add('on-' + val);
+        });
+        ['Retail','Rental','Service'].forEach(b => {
+            const p = document.getElementById('panel'+b);
+            if (p) p.classList.toggle('show', b === val);
+        });
+        updPrev();
+    }
+
+    // ── Preview bar ──
+    function updPrev() {
+        const name = document.getElementById('inp_name')?.value?.trim();
+        const bar  = document.getElementById('prevBar');
+        if (!name) { bar.style.display='none'; return; }
+        bar.style.display = 'flex';
+        document.getElementById('prevName').textContent = name;
+        const bh  = document.getElementById('bhInput').value;
+        const pb  = document.getElementById('prevBh');
+        pb.style.background = BH_BG[bh]  || '#f0fdf4';
+        pb.style.color      = BH_CLR[bh] || '#166534';
+        pb.textContent      = BH_LBL[bh] || 'Bán lẻ';
+    }
+    updPrev();
+
+    // ── Rule toggles ──
+    function toggleRule(cbId, divId) {
+        const cb = document.getElementById(cbId);
+        cb.checked = !cb.checked;
+        document.getElementById(divId).classList.toggle('rt-on', cb.checked);
+    }
+
+    // ── Active toggle ──
+    let _isActive = @(Model?.IsActive != false ? "true" : "false");
+    function toggleActive() {
+        _isActive = !_isActive;
+        const badge = document.getElementById('activeBadge');
+        badge.className = 'active-badge ' + (_isActive ? 'on' : 'off');
+        badge.innerHTML = `<i class="bi bi-${_isActive?'eye':'eye-slash'}"></i> ${_isActive?'Đang kích hoạt':'Đã ẩn'}`;
+        document.getElementById('isActiveInput').value = _isActive;
+    }
+
+    // ── Image preview ──
+    function previewImg(input) {
+        if (!input.files[0]) return;
+        const url = URL.createObjectURL(input.files[0]);
+        document.getElementById('imgPreview').innerHTML =
+            `<img src="${url}" style="height:60px;border-radius:6px;border:1px solid var(--border);margin-top:.3rem" />`;
+    }
+
+    // ── Submit ──
+    async function submitCat(e) {
+        e.preventDefault();
+        const btn   = document.getElementById('catSubmitBtn');
+        const alert = document.getElementById('catAlert');
+        const msg   = document.getElementById('catAlertMsg');
+        alert.classList.remove('show');
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang lưu...';
+
+        try {
+            const fd = new FormData(document.getElementById('catForm'));
+            // Fix: checkbox không gửi khi unchecked
+            ['RequiresExpiry','HasVariants','DepositRequired','AllowPartialReturn'].forEach(k => {
+                if (!document.querySelector(`[name="${k}"]:checked`)) fd.set(k, 'false');
+            });
+
+            const res  = await fetch('@actionUrl', { method: 'POST', body: fd });
+            const data = await res.json();
+
+            if (data.success) {
+                closeCatModal();
+                // Toast then reload
+                const t = document.createElement('div');
+                t.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;background:#15803d;color:#fff;padding:.75rem 1.25rem;border-radius:8px;font-size:.84rem;font-weight:700;z-index:9999;display:flex;align-items:center;gap:.5rem;box-shadow:0 4px 16px rgba(0,0,0,.2)';
+                t.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${data.message}`;
+                document.body.appendChild(t);
+                setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(() => { t.remove(); location.reload(); }, 400); }, 1600);
+            } else {
+                msg.textContent = data.message || 'Có lỗi xảy ra!';
+                alert.classList.add('show');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-@(isEdit ? "check-lg" : "plus-lg")"></i> @(isEdit ? "Lưu thay đổi" : "Tạo danh mục")';
+            }
+        } catch(err) {
+            msg.textContent = 'Lỗi kết nối: ' + err.message;
+            alert.classList.add('show');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-@(isEdit ? "check-lg" : "plus-lg")"></i> @(isEdit ? "Lưu thay đổi" : "Tạo danh mục")';
+        }
+    }
+</script>

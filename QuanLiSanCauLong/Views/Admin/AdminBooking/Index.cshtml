@@ -3,7 +3,6 @@
     ViewData["Title"] = "Admin · Quản lý đặt sân";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
     string currentFilter = ViewBag.FilterType as string ?? "";
-    int awaitingCount = ViewBag.AwaitingTransferCount ?? 0;
 }
 
 <style>
@@ -115,15 +114,6 @@
             color: var(--D);
             border-bottom-color: var(--G);
         }
-
-        .tab-item.tab-ck {
-            color: var(--BL);
-        }
-
-            .tab-item.tab-ck.active {
-                border-bottom-color: var(--BL);
-                color: var(--BL);
-            }
 
     .tab-badge {
         font-size: .6rem;
@@ -605,13 +595,6 @@
             <h1 class="pg-title">Danh sách đặt sân</h1>
             <div class="pg-sub">Quản lý toàn bộ đơn đặt sân — xác nhận, theo dõi &amp; hủy</div>
         </div>
-        @if (awaitingCount > 0)
-        {
-            <div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:.75rem 1.1rem;display:flex;align-items:center;gap:.55rem;font-size:.82rem;color:#1d4ed8;font-weight:700">
-                <i class="bi bi-bank" style="font-size:1.1rem"></i>
-                @awaitingCount đơn CK chờ xác nhận
-            </div>
-        }
     </div>
 </div>
 
@@ -622,19 +605,6 @@
            href="@Url.Action("Index", "AdminBooking")">
             <i class="bi bi-list-ul"></i> Tất cả
             <span class="tab-badge gray">@ViewBag.TotalCount</span>
-        </a>
-        <a class="tab-item tab-ck @(currentFilter == "awaiting-transfer" ? "active" : "")"
-           href="@Url.Action("Index", "AdminBooking", new { filter = "awaiting-transfer" })">
-            <i class="bi bi-bank"></i> Chờ Duyệt CK
-            @if (awaitingCount > 0)
-            {
-                <span class="tab-badge blue pulse">@awaitingCount</span>
-            }
-        </a>
-        <a class="tab-item @(currentFilter == "Pending" ? "active" : "")"
-           href="@Url.Action("Index", "AdminBooking", new { filter = "Pending" })">
-            <i class="bi bi-hourglass"></i> Chờ xác nhận
-            <span class="tab-badge orange">@ViewBag.PendingCount</span>
         </a>
         <a class="tab-item @(currentFilter == "Confirmed" ? "active" : "")"
            href="@Url.Action("Index", "AdminBooking", new { filter = "Confirmed" })">
@@ -667,19 +637,6 @@
     {
         <div class="sys-alert error"><i class="bi bi-exclamation-circle"></i> @TempData["ErrorMessage"]</div>
     }
-
-    @* Banner nhắc CK *@
-    @if (currentFilter == "awaiting-transfer" && Model.Any())
-    {
-        <div class="ck-banner">
-            <i class="bi bi-info-circle-fill"></i>
-            <span>
-                Đây là các đơn khách đã chọn <strong>Chuyển khoản</strong> nhưng chưa xác nhận.
-                Vào chi tiết từng đơn để nhấn <strong>"Xác nhận CK"</strong> sau khi kiểm tra tài khoản.
-            </span>
-        </div>
-    }
-
     <!-- Filter Form -->
     <div class="fc">
         <div class="fc-hd"><i class="bi bi-funnel"></i><span class="fc-title">Bộ lọc nâng cao</span></div>
@@ -693,27 +650,6 @@
                                placeholder="Mã đơn, tên khách..."
                                value="@ViewBag.Search" />
                     </div>
-                    <div>
-                        <div class="fl">Phương thức TT</div>
-                        <select name="paymentMethod" class="fi">
-                            <option value="">Tất cả</option>
-                            <option value="Cash" selected="@(ViewBag.PaymentMethod == "Cash" ? "selected" : null)">Tiền mặt</option>
-                            <option value="Transfer" selected="@(ViewBag.PaymentMethod == "Transfer" ? "selected" : null)">Chuyển khoản</option>
-                        </select>
-                    </div>
-                    <div>
-                        <div class="fl">Từ ngày</div>
-                        <input type="date" name="fromDate" class="fi" value="@ViewBag.FromDate" />
-                    </div>
-                    <div>
-                        <div class="fl">Đến ngày</div>
-                        <input type="date" name="toDate" class="fi" value="@ViewBag.ToDate" />
-                    </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
-                        <button type="submit" class="btn-filter"><i class="bi bi-search"></i> Lọc</button>
-                        <a href="@Url.Action("Index", "AdminBooking")" class="btn-reset"><i class="bi bi-x"></i> Reset</a>
-                    </div>
-                </div>
             </form>
         </div>
     </div>
@@ -723,8 +659,7 @@
         <div class="tbl-hd">
             <i class="bi bi-table"></i>
             <span class="tbl-title">
-                @(currentFilter == "awaiting-transfer" ? "Đơn chuyển khoản chờ duyệt" :
-                                currentFilter != "" ? $"Lọc: {currentFilter}" : "Tất cả đơn đặt sân")
+                @(currentFilter != "" ? $"Lọc: {currentFilter}" : "Tất cả đơn đặt sân")
             </span>
             <span class="tbl-count">@Model.Count() đơn</span>
         </div>
@@ -756,18 +691,14 @@
                     <tbody>
                         @foreach (var b in Model)
                         {
-                            bool isCkPending = b.PaymentMethod == "Transfer"
-                            && b.PaymentStatus?.ToLower() != "paid"
-                            && b.Status == "Pending";
-
                             string stClass = b.Status.ToLower();
                             string stLabel = b.Status switch
                             {
-                                            "Pending" => "Chờ xác nhận",
-                                            "Confirmed" => "Đã xác nhận",
-                                            "Playing" => "Đang chơi",
-                                            "Completed" => "Hoàn thành",
-                                            "Cancelled" => "Đã hủy",
+                                                        "Pending" => "Chờ xác nhận",
+                                                        "Confirmed" => "Đã xác nhận",
+                                                        "Playing" => "Đang chơi",
+                                                        "Completed" => "Hoàn thành",
+                                                        "Cancelled" => "Đã hủy",
                                 _ => b.Status
                             };
 
@@ -779,7 +710,7 @@
                             else
                             { payClass = "unpaid"; payLabel = "Chưa TT"; }
 
-                            <tr class="@(isCkPending ? "tr-ck" : "")">
+                            <tr>
                                 <td>
                                     <div style="font-weight:700;font-size:.82rem;color:var(--D)">@b.BookingCode</div>
                                     <div style="font-size:.7rem;color:#8c7a68">@b.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
@@ -823,19 +754,6 @@
                                            asp-route-id="@b.BookingId" class="btn-tbl det">
                                             <i class="bi bi-eye"></i> Chi tiết
                                         </a>
-                                        @if (isCkPending)
-                                        {
-                                            <form asp-controller="AdminBooking" asp-action="SetStatus"
-                                                  method="post" style="display:inline">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="id" value="@b.BookingId" />
-                                                <input type="hidden" name="newStatus" value="ConfirmCK" />
-                                                <button type="submit" class="btn-tbl ck"
-                                                        onclick="return confirm('Xác nhận đã nhận tiền CK cho đơn @b.BookingCode?')">
-                                                    <i class="bi bi-bank"></i> Xác nhận CK
-                                                </button>
-                                            </form>
-                                        }
                                     </div>
                                 </td>
                             </tr>

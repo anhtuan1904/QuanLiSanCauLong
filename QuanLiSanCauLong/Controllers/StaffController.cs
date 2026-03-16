@@ -18,9 +18,6 @@ namespace QuanLiSanCauLong.Controllers
             _context = context;
         }
 
-        // ══════════════════════════════════════════
-        // HELPERS
-        // ══════════════════════════════════════════
         private int GetCurrentUserId()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -67,9 +64,6 @@ namespace QuanLiSanCauLong.Controllers
             return guest.UserId;
         }
 
-        // ══════════════════════════════════════════
-        // DASHBOARD
-        // ══════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> Dashboard()
         {
@@ -109,7 +103,6 @@ namespace QuanLiSanCauLong.Controllers
             return View("~/Views/Staff/Dashboard.cshtml");
         }
 
-        // ── Quick Stats API (sidebar polling) ──
         [HttpGet]
         public async Task<IActionResult> QuickStats()
         {
@@ -145,9 +138,6 @@ namespace QuanLiSanCauLong.Controllers
             });
         }
 
-        // ══════════════════════════════════════════
-        // SƠ ĐỒ SÂN
-        // ══════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> CourtMap()
         {
@@ -217,9 +207,6 @@ namespace QuanLiSanCauLong.Controllers
             return View("~/Views/Staff/CourtMap.cshtml", courtStatusList);
         }
 
-        // ══════════════════════════════════════════
-        // QUẢN LÝ ĐƠN
-        // ══════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> BookingManagement(string? status, string? search)
         {
@@ -250,9 +237,6 @@ namespace QuanLiSanCauLong.Controllers
             return View("~/Views/Staff/BookingManagement.cshtml", list);
         }
 
-        // ══════════════════════════════════════════
-        // WALK-IN BOOKING
-        // ══════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> WalkIn()
         {
@@ -328,9 +312,6 @@ namespace QuanLiSanCauLong.Controllers
             return RedirectToAction(nameof(BookingManagement));
         }
 
-        // ══════════════════════════════════════════
-        // CHECK-IN / CHECK-OUT
-        // ══════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> CheckIn()
         {
@@ -376,10 +357,8 @@ namespace QuanLiSanCauLong.Controllers
         public async Task<IActionResult> DoCheckIn(int bookingId)
         {
             var booking = await _context.Bookings.FindAsync(bookingId);
-            if (booking == null)
-                return Json(new { success = false, message = "Không tìm thấy đơn!" });
-            if (booking.Status != "Confirmed")
-                return Json(new { success = false, message = "Đơn không ở trạng thái Confirmed!" });
+            if (booking == null) return Json(new { success = false, message = "Không tìm thấy đơn!" });
+            if (booking.Status != "Confirmed") return Json(new { success = false, message = "Đơn không ở trạng thái Confirmed!" });
 
             booking.Status = "Playing";
             booking.CheckInTime = DateTime.Now;
@@ -394,10 +373,8 @@ namespace QuanLiSanCauLong.Controllers
         public async Task<IActionResult> DoCheckOut(int bookingId)
         {
             var booking = await _context.Bookings.FindAsync(bookingId);
-            if (booking == null)
-                return Json(new { success = false, message = "Không tìm thấy đơn!" });
-            if (booking.Status != "Playing")
-                return Json(new { success = false, message = "Sân chưa check-in!" });
+            if (booking == null) return Json(new { success = false, message = "Không tìm thấy đơn!" });
+            if (booking.Status != "Playing") return Json(new { success = false, message = "Sân chưa check-in!" });
 
             booking.Status = "Completed";
             booking.CheckOutTime = DateTime.Now;
@@ -411,10 +388,8 @@ namespace QuanLiSanCauLong.Controllers
         public async Task<IActionResult> ExtendBooking(int bookingId, int extraMinutes)
         {
             var booking = await _context.Bookings.FindAsync(bookingId);
-            if (booking == null)
-                return Json(new { success = false, message = "Không tìm thấy đơn!" });
-            if (booking.Status != "Playing")
-                return Json(new { success = false, message = "Sân chưa check-in!" });
+            if (booking == null) return Json(new { success = false, message = "Không tìm thấy đơn!" });
+            if (booking.Status != "Playing") return Json(new { success = false, message = "Sân chưa check-in!" });
 
             var newEnd = booking.EndTime.Add(TimeSpan.FromMinutes(extraMinutes));
             var conflict = await _context.Bookings.AnyAsync(b =>
@@ -448,10 +423,12 @@ namespace QuanLiSanCauLong.Controllers
             var facilityId = await GetStaffFacilityId();
             var today = DateTime.Today;
 
+            // ✅ FIX line 454: Xóa .OrderBy(p => p.Category.CategoryType)
+            // Đổi sang OrderBy BehaviorType (còn tồn tại) hoặc CategoryName
             ViewBag.Products = await _context.Products
                 .Include(p => p.Category)
                 .Where(p => p.IsActive)
-                .OrderBy(p => p.Category.CategoryType)
+                .OrderBy(p => p.Category.BehaviorType)   // ✅ dùng BehaviorType
                 .ThenBy(p => p.ProductName)
                 .ToListAsync();
 
@@ -484,9 +461,6 @@ namespace QuanLiSanCauLong.Controllers
             return View("~/Views/Staff/OrderHistory.cshtml", orders);
         }
 
-        // ══════════════════════════════════════════
-        // TỒN KHO (chỉ đọc)
-        // ══════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> StockView()
         {
@@ -504,9 +478,6 @@ namespace QuanLiSanCauLong.Controllers
             return View("~/Views/Staff/StockView.cshtml", inventories);
         }
 
-        // ══════════════════════════════════════════
-        // LỊCH CA — dùng ShiftAssignments (DB có Shifts + ShiftAssignments)
-        // ══════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> MyShift()
         {
@@ -514,16 +485,12 @@ namespace QuanLiSanCauLong.Controllers
             ViewData["Title"] = "Lịch ca của tôi";
 
             var userId = GetCurrentUserId();
-            var from = DateTime.Today;
-            var to = DateTime.Today.AddDays(14);
 
-            // Load tất cả ca của user, filter in-memory để tránh lỗi type mismatch
             var assignments = await _context.ShiftAssignments
                 .Include(sa => sa.Shift)
                 .Where(sa => sa.UserId == userId && sa.Shift != null)
                 .ToListAsync();
 
-            // Filter 14 ngày tới in-memory
             assignments = assignments
                 .Where(sa => sa.Shift != null)
                 .OrderBy(sa => sa.Shift.StartTime)
@@ -532,9 +499,6 @@ namespace QuanLiSanCauLong.Controllers
             return View("~/Views/Staff/MyShift.cshtml", assignments);
         }
 
-        // ══════════════════════════════════════════
-        // BÀN GIAO CA
-        // ══════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> ShiftHandover()
         {
@@ -560,14 +524,10 @@ namespace QuanLiSanCauLong.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> ShiftHandover(ShiftHandoverViewModel model)
         {
-            // TODO: lưu vào bảng ShiftHandover sau
             TempData["SuccessMessage"] = "Bàn giao ca thành công!";
             return RedirectToAction(nameof(Dashboard));
         }
 
-        // ══════════════════════════════════════════
-        // BÁO CÁO CA
-        // ══════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> ShiftReport()
         {
@@ -590,9 +550,6 @@ namespace QuanLiSanCauLong.Controllers
             return View("~/Views/Staff/ShiftReport.cshtml", bookings);
         }
 
-        // ══════════════════════════════════════════
-        // BÁO SỰ CỐ
-        // ══════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> Incident()
         {
@@ -620,7 +577,6 @@ namespace QuanLiSanCauLong.Controllers
                 return View("~/Views/Staff/Incident.cshtml", model);
             }
 
-            // Sự cố nghiêm trọng → tự set bảo trì
             if (model.Severity == "Critical" && model.CourtId.HasValue)
             {
                 var court = await _context.Courts.FindAsync(model.CourtId.Value);
@@ -632,7 +588,6 @@ namespace QuanLiSanCauLong.Controllers
         }
     }
 
-    // ── Request model cho SubmitOrder ──
     public class SubmitOrderRequest
     {
         public int? BookingId { get; set; }
@@ -645,5 +600,4 @@ namespace QuanLiSanCauLong.Controllers
         public int Quantity { get; set; }
         public decimal Price { get; set; }
     }
-
 }

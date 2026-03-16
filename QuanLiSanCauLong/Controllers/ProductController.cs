@@ -20,25 +20,21 @@ namespace QuanLiSanCauLong.Controllers
         public async Task<IActionResult> Index(int? categoryId, string search, string sortBy,
                                                int page = 1, int pageSize = 12)
         {
-            // 1. Truy vấn cơ bản
             var query = _context.Products
                 .Include(p => p.Category)
                 .Where(p => p.IsActive)
                 .AsQueryable();
 
-            // 2. Tìm kiếm
             if (!string.IsNullOrEmpty(search))
             {
                 query = query.Where(p => p.ProductName.Contains(search) ||
-                                         p.ProductCode.Contains(search) ||
-                                         p.Description.Contains(search));
+                                         (p.ProductCode != null && p.ProductCode.Contains(search)) ||
+                                         (p.Description != null && p.Description.Contains(search)));
             }
 
-            // 3. Lọc danh mục
             if (categoryId.HasValue)
                 query = query.Where(p => p.CategoryId == categoryId.Value);
 
-            // 4. Sắp xếp
             query = sortBy switch
             {
                 "price_asc" => query.OrderBy(p => p.Price),
@@ -49,14 +45,12 @@ namespace QuanLiSanCauLong.Controllers
                 _ => query.OrderByDescending(p => p.CreatedAt)
             };
 
-            // 5. Tổng số & phân trang
             var totalCount = await query.CountAsync();
             var products = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
-            // 6. Nhóm theo danh mục cho sidebar
             var allProducts = await _context.Products
                 .Include(p => p.Category)
                 .Where(p => p.IsActive)
@@ -69,7 +63,9 @@ namespace QuanLiSanCauLong.Controllers
                 {
                     CategoryId = g.Key!.CategoryId,
                     CategoryName = g.Key.CategoryName,
-                    CategoryType = g.Key.CategoryType,
+                    // ✅ FIX: Xóa CategoryType (không còn trong model)
+                    // CategoryType = g.Key.CategoryType, ← ĐÃ XÓA
+                    BehaviorType = g.Key.BehaviorType,   // dùng BehaviorType thay thế
                     Products = g.Select(p => new ProductCardViewModel
                     {
                         ProductId = p.ProductId,
@@ -87,14 +83,13 @@ namespace QuanLiSanCauLong.Controllers
                     }).ToList()
                 }).ToList();
 
-            // 7. Gán model
             var model = new ProductListViewModel
             {
                 SearchKeyword = search,
                 CurrentSort = sortBy ?? "newest",
                 Categories = categoriesGroup,
                 Products = products,
-                TotalCount = totalCount,   // <-- dùng TotalCount, không phải TotalProducts
+                TotalCount = totalCount,
                 CurrentPage = page,
                 PageSize = pageSize
             };
@@ -145,7 +140,8 @@ namespace QuanLiSanCauLong.Controllers
                 ImageUrls = imageUrls,
                 CategoryId = product.CategoryId,
                 CategoryName = product.Category?.CategoryName,
-                CategoryType = product.Category?.CategoryType,
+                // ✅ FIX: Xóa CategoryType (không còn trong model)
+                // CategoryType = product.Category?.CategoryType,  ← ĐÃ XÓA
                 BehaviorType = product.Category?.BehaviorType ?? "Retail",
                 IsAvailable = product.IsActive && stockQty > 0,
                 StockQuantity = stockQty,
@@ -164,7 +160,6 @@ namespace QuanLiSanCauLong.Controllers
                 MaterialPrice = product.MaterialPrice,
             };
 
-            // Sản phẩm liên quan cùng danh mục
             model.RelatedProducts = await _context.Products
                 .Where(p => p.CategoryId == product.CategoryId
                          && p.ProductId != id

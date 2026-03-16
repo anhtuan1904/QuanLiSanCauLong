@@ -1,0 +1,704 @@
+﻿@model QuanLiSanCauLong.ViewModels.BookingHistoryViewModel
+@{
+    ViewData["Title"] = "Thanh toán đặt sân";
+    string qrUrl = ViewBag.QrUrl ?? "";
+    string bankAcc = ViewBag.BankAccount ?? "";
+    string bankName = ViewBag.BankName ?? "";
+    string accName = ViewBag.BankAccountName ?? "";
+    decimal amount = Model.GrandTotal > 0 ? Model.GrandTotal : Model.TotalPrice;
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --D: #1a1209;
+        --G: #d4a017;
+        --G2: #f5c842;
+        --W: #f5ede0;
+        --S: #ede5d8;
+        --BL: #2563eb;
+        --GN: #10b981;
+    }
+
+    *, body {
+        font-family: 'Outfit',sans-serif;
+        box-sizing: border-box;
+        margin: 0;
+    }
+
+    body {
+        background: var(--W);
+    }
+
+    .wrap {
+        max-width: 520px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 4rem;
+    }
+
+    /* ── HEADER ── */
+    .pg-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: var(--D);
+        text-align: center;
+        margin-bottom: .35rem;
+    }
+
+    .pg-sub {
+        font-size: .82rem;
+        color: #8a7560;
+        text-align: center;
+        margin-bottom: 1.75rem;
+    }
+
+    /* ── STATUS BANNER ── */
+    .status-banner {
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        margin-bottom: 1.5rem;
+        font-size: .86rem;
+        font-weight: 600;
+    }
+
+        .status-banner.waiting {
+            background: #eff6ff;
+            border: 1.5px solid #93c5fd;
+            color: #1d4ed8;
+        }
+
+        .status-banner.success {
+            background: #d1fae5;
+            border: 1.5px solid #6ee7b7;
+            color: #065f46;
+            display: none;
+        }
+
+        .status-banner i {
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+    /* ── QR CARD ── */
+    .qr-card {
+        background: #fff;
+        border: 1px solid var(--S);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 4px 24px rgba(26,18,9,.07);
+        margin-bottom: 1.25rem;
+    }
+
+    .qr-hd {
+        background: var(--D);
+        padding: .85rem 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+        .qr-hd i {
+            color: var(--G);
+        }
+
+    .qr-hd-title {
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        font-size: .9rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .qr-body {
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .qr-img-wrap {
+        width: 220px;
+        height: 220px;
+        margin: 0 auto 1rem;
+        border: 3px solid var(--G);
+        border-radius: 12px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        position: relative;
+    }
+
+        .qr-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .qr-amount {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: var(--D);
+        margin-bottom: .25rem;
+    }
+
+        .qr-amount span {
+            color: var(--G);
+        }
+
+    .qr-content-lbl {
+        font-size: .72rem;
+        color: #8a7560;
+        margin-bottom: .2rem;
+    }
+
+    .qr-code {
+        font-family: monospace;
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--D);
+        background: rgba(212,160,23,.1);
+        border: 1.5px dashed var(--G);
+        border-radius: 7px;
+        padding: .45rem 1.2rem;
+        display: inline-block;
+        letter-spacing: .08em;
+        margin-bottom: 1rem;
+    }
+
+    /* ── BANK INFO ── */
+    .bank-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: .55rem 0;
+        border-bottom: 1px solid var(--S);
+        font-size: .84rem;
+    }
+
+        .bank-row:last-child {
+            border-bottom: none;
+        }
+
+    .bank-lbl {
+        color: #8a7560;
+    }
+
+    .bank-val {
+        font-weight: 700;
+        color: var(--D);
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+    .qr-save-btn {
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+        margin: .75rem auto 0;
+        padding: .5rem 1.3rem;
+        background: var(--D);
+        color: var(--G2);
+        border: none;
+        border-radius: 7px;
+        font-size: .82rem;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: 'Outfit', sans-serif;
+        transition: all .2s;
+    }
+
+        .qr-save-btn:hover {
+            background: #000;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(26,18,9,.25);
+        }
+
+    .copy-btn {
+        width: 26px;
+        height: 26px;
+        border-radius: 5px;
+        border: 1px solid var(--S);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #8a7560;
+        font-size: .75rem;
+        transition: all .18s;
+    }
+
+        .copy-btn:hover {
+            border-color: var(--G);
+            color: var(--G);
+        }
+
+        .copy-btn.copied {
+            border-color: var(--GN);
+            color: var(--GN);
+        }
+
+    /* ── STEPS ── */
+    .steps {
+        margin-bottom: 1.25rem;
+    }
+
+    .step {
+        display: flex;
+        align-items: flex-start;
+        gap: .75rem;
+        padding: .65rem 0;
+        border-bottom: 1px solid var(--S);
+        font-size: .84rem;
+    }
+
+        .step:last-child {
+            border-bottom: none;
+        }
+
+    .step-num {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--D);
+        color: var(--G2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .7rem;
+        font-weight: 800;
+        flex-shrink: 0;
+        margin-top: .05rem;
+    }
+
+    .step-text {
+        color: #4a3728;
+        line-height: 1.5;
+    }
+
+        .step-text strong {
+            color: var(--D);
+        }
+
+    /* ── PROGRESS DOTS ── */
+    .polling-dots {
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+        justify-content: center;
+        margin: .75rem 0;
+    }
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--G);
+        opacity: .25;
+        animation: dot-pulse 1.4s ease-in-out infinite;
+    }
+
+        .dot:nth-child(2) {
+            animation-delay: .22s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: .44s;
+        }
+
+    @@keyframes dot-pulse {
+        0%, 100% {
+            opacity: .25
+        }
+
+        50% {
+            opacity: 1
+        }
+    }
+
+    .poll-lbl {
+        font-size: .76rem;
+        color: #8a7560;
+        text-align: center;
+    }
+
+    /* ── SUCCESS OVERLAY ── */
+    .success-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(26,18,9,.55);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .success-overlay.show {
+            display: flex;
+        }
+
+    .success-box {
+        background: #fff;
+        border-radius: 16px;
+        padding: 2.5rem 2rem;
+        text-align: center;
+        max-width: 340px;
+        width: 90%;
+        animation: pop-in .3s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    @@keyframes pop-in {
+        from {
+            transform: scale(.7);
+            opacity: 0
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1
+        }
+    }
+
+    .success-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: linear-gradient(135deg,#10b981,#34d399);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #fff;
+        margin: 0 auto 1rem;
+    }
+
+    .success-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--D);
+        margin-bottom: .4rem;
+    }
+
+    .success-sub {
+        font-size: .84rem;
+        color: #8a7560;
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-go {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        background: linear-gradient(135deg,var(--G),var(--G2));
+        color: var(--D);
+        border: none;
+        padding: .8rem 2rem;
+        font-size: .9rem;
+        font-weight: 800;
+        border-radius: 9px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all .2s;
+    }
+
+        .btn-go:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(212,160,23,.4);
+            color: var(--D);
+        }
+
+    /* ── CANCEL LINK ── */
+    .cancel-link {
+        text-align: center;
+        margin-top: 1.25rem;
+        font-size: .78rem;
+        color: #8a7560;
+    }
+
+        .cancel-link a {
+            color: #8a7560;
+            text-decoration: underline;
+        }
+
+            .cancel-link a:hover {
+                color: var(--D);
+            }
+
+    /* ── EXPIRED ── */
+    .expired-banner {
+        display: none;
+        background: #fee2e2;
+        border: 1.5px solid #fca5a5;
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1rem;
+        font-size: .84rem;
+        color: #991b1b;
+        text-align: center;
+    }
+</style>
+
+<div class="wrap">
+    <h1 class="pg-title">Quét QR để thanh toán</h1>
+    <div class="pg-sub">Đơn <strong>#@Model.BookingCode</strong> — @Model.FacilityName, sân @Model.CourtNumber</div>
+
+    <!-- Status banners -->
+    <div class="status-banner waiting" id="bannerWaiting">
+        <i class="bi bi-hourglass-split"></i>
+        <span>Đang chờ thanh toán — hệ thống tự xác nhận ngay khi nhận tiền</span>
+    </div>
+    <div class="status-banner success" id="bannerSuccess">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>Thanh toán thành công! Đang chuyển hướng...</span>
+    </div>
+    <div class="expired-banner" id="bannerExpired">
+        <i class="bi bi-clock me-1"></i>
+        Mã QR đã hết hạn. <a href="javascript:location.reload()">Tải lại trang</a> để lấy mã mới.
+    </div>
+
+    <!-- QR Card -->
+    <div class="qr-card">
+        <div class="qr-hd">
+            <i class="bi bi-qr-code"></i>
+            <span class="qr-hd-title">Mã QR thanh toán</span>
+        </div>
+        <div class="qr-body">
+            <div class="qr-img-wrap">
+                @if (!string.IsNullOrEmpty(qrUrl))
+                {
+                    <img src="@qrUrl" alt="QR Code" id="qrImg" />
+                }
+                else
+                {
+                    <i class="bi bi-qr-code" style="font-size:4rem;color:rgba(26,18,9,.1);"></i>
+                }
+            </div>
+            @if (!string.IsNullOrEmpty(qrUrl))
+            {
+                <button type="button" class="qr-save-btn" id="saveQrBtn" onclick="saveQR()">
+                    <i class="bi bi-download"></i> Lưu QR về máy
+                </button>
+            }
+
+            <div class="qr-amount">₫<span>@amount.ToString("N0")</span></div>
+            <div class="qr-content-lbl">Nội dung chuyển khoản:</div>
+            <div class="qr-code" id="bookingCode">@Model.BookingCode</div>
+
+            <!-- Bank info -->
+            <div style="text-align:left;border-top:1px solid var(--S);padding-top:1rem;">
+                <div class="bank-row">
+                    <span class="bank-lbl">Ngân hàng</span>
+                    <span class="bank-val">@bankName</span>
+                </div>
+                <div class="bank-row">
+                    <span class="bank-lbl">Số tài khoản</span>
+                    <span class="bank-val">
+                        @bankAcc
+                        <button class="copy-btn" id="copyAccBtn" onclick="copyText('@bankAcc', 'copyAccBtn')" title="Sao chép">
+                            <i class="bi bi-copy"></i>
+                        </button>
+                    </span>
+                </div>
+                <div class="bank-row">
+                    <span class="bank-lbl">Tên tài khoản</span>
+                    <span class="bank-val" style="font-size:.78rem;">@accName</span>
+                </div>
+                <div class="bank-row">
+                    <span class="bank-lbl">Số tiền</span>
+                    <span class="bank-val" style="color:var(--G);">
+                        ₫@amount.ToString("N0")
+                        <button class="copy-btn" onclick="copyText('@((long)amount)', 'copAmtBtn')" id="copAmtBtn" title="Sao chép">
+                            <i class="bi bi-copy"></i>
+                        </button>
+                    </span>
+                </div>
+                <div class="bank-row">
+                    <span class="bank-lbl">Nội dung CK</span>
+                    <span class="bank-val">
+                        @Model.BookingCode
+                        <button class="copy-btn" onclick="copyText('@Model.BookingCode', 'copyCodeBtn')" id="copyCodeBtn" title="Sao chép">
+                            <i class="bi bi-copy"></i>
+                        </button>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hướng dẫn -->
+    <div class="qr-card">
+        <div class="qr-hd"><i class="bi bi-list-ol"></i><span class="qr-hd-title">Hướng dẫn thanh toán</span></div>
+        <div style="padding:1rem 1.4rem;">
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-text">Mở ứng dụng ngân hàng, chọn <strong>Quét QR</strong> hoặc chuyển khoản</div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-text">Nhập đúng số tiền <strong>₫@amount.ToString("N0")</strong></div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-text">Nội dung chuyển khoản nhập đúng: <strong>@Model.BookingCode</strong></div>
+                </div>
+                <div class="step">
+                    <div class="step-num">4</div>
+                    <div class="step-text">Hệ thống <strong>tự động xác nhận</strong> ngay khi nhận được tiền</div>
+                </div>
+            </div>
+
+            <!-- Polling indicator -->
+            <div id="pollSection">
+                <div class="polling-dots">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+                <div class="poll-lbl" id="pollLabel">Đang kiểm tra thanh toán...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nút fallback thủ công -->
+    <form asp-action="ConfirmPayment" asp-route-id="@Model.BookingId" method="post" id="manualForm" style="display:none;">
+        @Html.AntiForgeryToken()
+        <button type="submit"
+                style="width:100%;padding:.85rem;background:#fff;border:1.5px solid var(--S);border-radius:10px;font-size:.84rem;font-weight:600;color:#4a3728;cursor:pointer;transition:all .2s;margin-bottom:.75rem;">
+            <i class="bi bi-check2 me-1"></i> Tôi đã chuyển khoản xong
+        </button>
+    </form>
+
+    <div class="cancel-link">
+        <a asp-action="Cancel" asp-route-id="@Model.BookingId">Hủy đặt sân này</a>
+        &nbsp;·&nbsp;
+        <a asp-action="MyBookings">Lịch đặt của tôi</a>
+    </div>
+</div>
+
+<!-- Success overlay -->
+<div class="success-overlay" id="successOverlay">
+    <div class="success-box">
+        <div class="success-icon"><i class="bi bi-check-lg"></i></div>
+        <div class="success-title">Thanh toán thành công!</div>
+        <div class="success-sub">Đơn <strong>@Model.BookingCode</strong> đã được xác nhận.<br>Sân của bạn đã sẵn sàng.</div>
+        <a href="/Booking/Details/@Model.BookingId" class="btn-go">
+            <i class="bi bi-calendar-check"></i> Xem đặt sân
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const BOOKING_CODE  = '@Model.BookingCode';
+            const BOOKING_ID    = @Model.BookingId;
+            const CHECK_URL     = '/api/sepay/check/' + BOOKING_CODE;
+            const DETAILS_URL   = '/Booking/Details/' + BOOKING_ID;
+
+            let pollCount    = 0;
+            const MAX_POLLS  = 200;   // 10 phút (200 × 3s)
+            const INTERVAL   = 3000;  // 3 giây / lần check
+
+            let timer;
+
+            function onPaid() {
+                clearInterval(timer);
+                document.getElementById('bannerWaiting').style.display = 'none';
+                document.getElementById('bannerSuccess').style.display = 'flex';
+                document.getElementById('pollSection').style.display   = 'none';
+                document.getElementById('successOverlay').classList.add('show');
+
+                // Tự redirect sau 3s
+                setTimeout(() => { window.location.href = DETAILS_URL; }, 3000);
+            }
+
+            async function poll() {
+                pollCount++;
+
+                if (pollCount > MAX_POLLS) {
+                    clearInterval(timer);
+                    document.getElementById('pollSection').style.display = 'none';
+                    document.getElementById('bannerExpired').style.display = 'block';
+                    document.getElementById('manualForm').style.display = 'block';
+                    document.getElementById('pollLabel').textContent = 'Hết thời gian tự động kiểm tra.';
+                    return;
+                }
+
+                document.getElementById('pollLabel').textContent =
+                    `Đang kiểm tra... (${pollCount}/${MAX_POLLS})`;
+
+                try {
+                    const res  = await fetch(CHECK_URL);
+                    const data = await res.json();
+
+                    if (data.isPaid) {
+                        onPaid();
+                        return;
+                    }
+                } catch (e) {
+                    // Network error — tiếp tục polling
+                }
+
+                // Hiện nút thủ công sau 2 phút không tự duyệt
+                if (pollCount === 20) {
+                    document.getElementById('manualForm').style.display = 'block';
+                }
+            }
+
+            // Bắt đầu polling ngay
+            poll();
+            timer = setInterval(poll, INTERVAL);
+        })();
+
+        // Save QR image
+        function saveQR() {
+            const img = document.getElementById('qrImg');
+            const btn = document.getElementById('saveQrBtn');
+            if (!img) return;
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang tải...';
+            btn.disabled = true;
+            fetch(img.src)
+                .then(r => r.blob())
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a   = document.createElement('a');
+                    a.href     = url;
+                    a.download = 'QR-' + '@Model.BookingCode' + '.png';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    btn.innerHTML = '<i class="bi bi-check-lg"></i> Đã lưu!';
+                    setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2200);
+                })
+                .catch(() => {
+                    window.open(img.src, '_blank');
+                    btn.innerHTML = '<i class="bi bi-box-arrow-up-right"></i> Đã mở';
+                    setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2000);
+                });
+        }
+
+        // Copy to clipboard
+        function copyText(text, btnId) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById(btnId);
+                btn.classList.add('copied');
+                btn.innerHTML = '<i class="bi bi-check-lg"></i>';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = '<i class="bi bi-copy"></i>';
+                }, 1500);
+            });
+        }
+    </script>
+}

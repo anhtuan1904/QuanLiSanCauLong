@@ -775,8 +775,8 @@
     }
 
     /* ═══════════════════════════════════════════════════════
-               CALENDAR — MONTHLY VIEW (inspired by Lịch Phân Ca)
-            ════════════════════════════════════════════════════════ */
+                   CALENDAR — MONTHLY VIEW (inspired by Lịch Phân Ca)
+                ════════════════════════════════════════════════════════ */
     .cal-layout {
         display: grid;
         grid-template-columns: 1fr 260px;
@@ -949,6 +949,24 @@
             background: rgba(212,160,23,.07);
         }
 
+        /* Ngày còn ít slot (duoi 30% trống) */
+        .cal-day.day-low:not(.selected-day) {
+            background: rgba(254,226,226,.45);
+        }
+        /* Ngày đặt hết */
+        .cal-day.day-full:not(.selected-day) {
+            background: rgba(254,202,202,.6);
+            cursor: not-allowed;
+        }
+
+            .cal-day.day-full:not(.selected-day):hover {
+                background: rgba(254,202,202,.6) !important;
+            }
+        /* Ngày còn nhiều slot */
+        .cal-day.day-open:not(.selected-day):not(.today-day) {
+            background: rgba(209,250,229,.3);
+        }
+
     .cal-day-num {
         font-family: 'Playfair Display', serif;
         font-size: 1.05rem;
@@ -1048,8 +1066,8 @@
         }
 
     /* ═══════════════════════════════════════════════════════
-               SIDEBAR — Stats + Legend
-            ════════════════════════════════════════════════════════ */
+                   SIDEBAR — Stats + Legend
+                ════════════════════════════════════════════════════════ */
     .cal-sidebar {
         display: flex;
         flex-direction: column;
@@ -1160,8 +1178,8 @@
         }
 
     /* ═══════════════════════════════════════════════════════
-               TIME SLOTS PANEL — appears below calendar on day click
-            ════════════════════════════════════════════════════════ */
+                   TIME SLOTS PANEL — appears below calendar on day click
+                ════════════════════════════════════════════════════════ */
     .slots-panel {
         margin-top: 1.2rem;
         border: 1.5px solid var(--G4);
@@ -2275,40 +2293,40 @@
 
         @foreach (var court in Model.Courts)
         {
-                    var imgs = (court.CourtImages?
-                                                    .OrderBy(i => i.IsPrimary ? 0 : 1)
-                                                    .ThenBy(i => i.DisplayOrder)
-                                                    .Select(i => i.ImagePath)
-                                                    .ToList()) ?? new List<string>();
-                    if (!imgs.Any() && !string.IsNullOrEmpty(court.ImagePath))
-                                    imgs.Add(court.ImagePath);
+                        var imgs = (court.CourtImages?
+                                                                                        .OrderBy(i => i.IsPrimary ? 0 : 1)
+                                                                                        .ThenBy(i => i.DisplayOrder)
+                                                                                        .Select(i => i.ImagePath)
+                                                                                        .ToList()) ?? new List<string>();
+                        if (!imgs.Any() && !string.IsNullOrEmpty(court.ImagePath))
+                                            imgs.Add(court.ImagePath);
 
-                    var cJson = System.Text.Json.JsonSerializer.Serialize(new
-                    {
-                                    id = court.CourtId,
-                                    name = court.CourtNumber ?? "",
-                                    images = imgs,
-                                    courtType = court.CourtType,
-                                    courtTypeLabel = court.CourtTypeLabel,
-                                    surfaceType = court.SurfaceType,
-                                    surfaceTypeLabel = court.SurfaceTypeLabel,
-                                    floorNumber = court.FloorNumber,
-                                    hasLighting = court.HasLighting,
-                                    hasAC = court.HasAC,
-                                    hourlyRate = court.HourlyRate,
-                                    status = court.Status,
-                                    statusLabel = court.StatusLabel,
-                                    description = court.Description,
-                                    detailUrl = Url.Action("Details", "Court", new { id = court.CourtId }),
-                                    slots = court.Slots.Select(s => new
-                                    {
-                                                    st = s.StartTime.ToString(@"hh\:mm"),
-                                                    et = s.EndTime.ToString(@"hh\:mm"),
-                                                    price = (int)s.Price,
-                                                    isBooked = s.IsBooked
-                                    }).ToArray()
-                    });
-                    @:COURTS_DATA[@court.CourtId] = @Html.Raw(cJson);
+                        var cJson = System.Text.Json.JsonSerializer.Serialize(new
+                        {
+                                            id = court.CourtId,
+                                            name = court.CourtNumber ?? "",
+                                            images = imgs,
+                                            courtType = court.CourtType,
+                                            courtTypeLabel = court.CourtTypeLabel,
+                                            surfaceType = court.SurfaceType,
+                                            surfaceTypeLabel = court.SurfaceTypeLabel,
+                                            floorNumber = court.FloorNumber,
+                                            hasLighting = court.HasLighting,
+                                            hasAC = court.HasAC,
+                                            hourlyRate = court.HourlyRate,
+                                            status = court.Status,
+                                            statusLabel = court.StatusLabel,
+                                            description = court.Description,
+                                            detailUrl = Url.Action("Details", "Court", new { id = court.CourtId }),
+                                            slots = court.Slots.Select(s => new
+                                            {
+                                                                st = s.StartTime.ToString(@"hh\:mm"),
+                                                                et = s.EndTime.ToString(@"hh\:mm"),
+                                                                price = (int)s.Price,
+                                                                isBooked = s.IsBooked
+                                            }).ToArray()
+                        });
+                        @:COURTS_DATA[@court.CourtId] = @Html.Raw(cJson);
         }
 
         var TODAY_STR    = '@DateTime.Today.ToString("yyyy-MM-dd")';
@@ -2318,6 +2336,28 @@
         var activeCid = null;
         var calYear, calMonth;   // 0-based month
         var selDate = null;      // currently expanded date ISO string
+
+        // ── Month slot cache: key = "cid_yyyy_mm" → { date: {total,booked,free} } ──
+        var _monthCache = {};
+
+        async function loadMonthSlots(cid, year, month) {
+            var key = cid + '_' + year + '_' + month;
+            if (_monthCache[key]) { renderCalendar(); return; }
+            try {
+                var r    = await fetch('/Booking/GetMonthSlots?courtId=' + cid + '&year=' + year + '&month=' + (month + 1));
+                var data = await r.json();
+                if (data.success) {
+                    var map = {};
+                    (data.days || []).forEach(function(d) { map[d.date] = d; });
+                    _monthCache[key] = map;
+                }
+            } catch(e) { _monthCache[key] = {}; }
+            renderCalendar();
+        }
+
+        function _getMonthMap(cid, year, month) {
+            return _monthCache[cid + '_' + year + '_' + month] || {};
+        }
         var sel = [];
 
         // ── Date utils ──
@@ -2374,7 +2414,8 @@
             selDate = null;
             updateMonthLabel();
             document.getElementById('jumpMonth').value = calYear+'-'+p2(calMonth+1);
-            renderCalendar();
+            if(activeCid) loadMonthSlots(activeCid, calYear, calMonth);
+            else renderCalendar();
             hideSlotsPanel();
         }
         function goToday(){
@@ -2391,7 +2432,8 @@
             var p=v.split('-'); calYear=+p[0]; calMonth=+p[1]-1;
             selDate=null;
             updateMonthLabel();
-            renderCalendar();
+            if(activeCid) loadMonthSlots(activeCid, calYear, calMonth);
+            else renderCalendar();
             hideSlotsPanel();
         }
         function updateMonthLabel(){
@@ -2406,6 +2448,13 @@
             if(!activeCid){ return; }
             document.getElementById('calPlaceholder').style.display='none';
             document.getElementById('calInner').style.display='block';
+
+            // Trigger API load nếu chưa có cache cho tháng này
+            var cacheKey = activeCid+'_'+calYear+'_'+calMonth;
+            if(!_monthCache[cacheKey]){
+                loadMonthSlots(activeCid, calYear, calMonth); // async, sẽ gọi renderCalendar() lại khi xong
+                return;
+            }
 
             var today = parseLocal(TODAY_STR);
             var cd = COURTS_DATA[activeCid] || {};
@@ -2426,10 +2475,18 @@
             var freeCount = rawSlots.filter(function(s){ return !s.isBooked; }).length;
             var bkCount   = rawSlots.filter(function(s){ return s.isBooked; }).length;
 
-            // Update sidebar stats
-            document.getElementById('statTotal').textContent  = rawSlots.length || '—';
-            document.getElementById('statBooked').textContent = bkCount || '0';
-            document.getElementById('statFree').textContent   = freeCount || '0';
+            // Update sidebar stats — dùng data ngày được chọn (hoặc hôm nay) từ monthMap
+            var mMap    = _getMonthMap(activeCid, calYear, calMonth);
+            var statDay = selDate ? mMap[selDate] : mMap[TODAY_STR];
+            if(statDay){
+                document.getElementById('statTotal').textContent  = statDay.total  || '—';
+                document.getElementById('statBooked').textContent = statDay.booked || '0';
+                document.getElementById('statFree').textContent   = statDay.free   || '0';
+            } else {
+                document.getElementById('statTotal').textContent  = rawSlots.length || '—';
+                document.getElementById('statBooked').textContent = bkCount || '0';
+                document.getElementById('statFree').textContent   = freeCount || '0';
+            }
             document.getElementById('statPrice').textContent  = cd.hourlyRate ? cd.hourlyRate.toLocaleString('vi-VN')+'đ/h' : '—';
 
             var H = '';
@@ -2447,19 +2504,33 @@
                 else if(isToday) cls+=' today-day';
                 if(isPast && inMonth) cls+=' past-day';
 
+                // Màu ngày theo trạng thái slot (chỉ ngày tương lai trong tháng)
+                if(inMonth && !isPast && !isSel){
+                    var mMap2 = _getMonthMap(activeCid, calYear, calMonth);
+                    var dInfo2 = mMap2[iso];
+                    if(dInfo2 && dInfo2.total > 0){
+                        if(dInfo2.free === 0)
+                            cls += ' day-full';
+                        else if(dInfo2.free / dInfo2.total < 0.3)
+                            cls += ' day-low';
+                        else
+                            cls += ' day-open';
+                    }
+                }
+
                 var numCls = 'cal-day-num'+(isToday?' today-num':'');
                 var numColor = isSel ? 'color:var(--G2)' : (isToday ? 'color:var(--G)' : '');
 
-                // Slot indicators (only for today since server only returns today's slots)
+                // Slot indicators từ API GetMonthSlots — mọi ngày trong tháng
                 var slotsH = '';
-                if(inMonth && !isPast && isToday && rawSlots.length){
-                    var freeSlots = rawSlots.filter(function(s){return !s.isBooked;});
-                    var bkSlots   = rawSlots.filter(function(s){return s.isBooked;});
-                    if(freeSlots.length){
-                        slotsH += '<div class="cal-slot-bar free"><i class="bi bi-circle-fill" style="font-size:.4rem;margin-right:.2rem"></i>'+freeSlots.length+' trống</div>';
-                    }
-                    if(bkSlots.length){
-                        slotsH += '<div class="cal-slot-bar full"><i class="bi bi-circle-fill" style="font-size:.4rem;margin-right:.2rem"></i>'+bkSlots.length+' đặt</div>';
+                if(inMonth && !isPast){
+                    var mMap  = _getMonthMap(activeCid, calYear, calMonth);
+                    var dInfo = mMap[iso];
+                    if(dInfo){
+                        if(dInfo.free > 0)
+                            slotsH += '<div class="cal-slot-bar free"><i class="bi bi-circle-fill" style="font-size:.4rem;margin-right:.2rem"></i>'+dInfo.free+' trống</div>';
+                        if(dInfo.booked > 0)
+                            slotsH += '<div class="cal-slot-bar full"><i class="bi bi-circle-fill" style="font-size:.4rem;margin-right:.2rem"></i>'+dInfo.booked+' đặt</div>';
                     }
                 }
                 // Show selection badges in day cell
@@ -2483,10 +2554,22 @@
         // ══════════════════════════════════════════════════════
         // DAY CLICK — show time slots panel
         // ══════════════════════════════════════════════════════
-        function clickDay(iso, label){
+        async function clickDay(iso, label){
             if(!activeCid) return;
             selDate = iso;
             renderCalendar(); // re-render to update selected highlight
+
+            // Load day slots từ API nếu chưa có cache
+            var _dayKey = activeCid + '_day_' + iso;
+            if(!window._daySlotCache) window._daySlotCache = {};
+            if(!window._daySlotCache[_dayKey]){
+                try {
+                    var r    = await fetch('/Booking/GetTimeSlots?courtId=' + activeCid + '&date=' + iso);
+                    var data = await r.json();
+                    if(data.success) window._daySlotCache[_dayKey] = data.slots || [];
+                } catch(e) {}
+            }
+
             renderSlotsPanel(iso, label);
             // Scroll to slots panel
             setTimeout(function(){
@@ -2509,6 +2592,36 @@
         function minToHHMM(m){ return p2(Math.floor(m/60))+':'+p2(m%60); }
         function hhmmToMin(s){ var p=s.split(':'); return +p[0]*60+(+p[1]||0); }
 
+        // Day slot cache: key = "cid_iso" → array of {startTime, endTime, isAvailable, price}
+        var _daySlotCache = {};
+
+        function _loadDaySlots(cid, iso, cb) {
+            var key = cid + '_' + iso;
+            if (_daySlotCache[key]) { cb(_daySlotCache[key]); return; }
+            fetch('/Booking/GetTimeSlots?courtId=' + cid + '&date=' + iso)
+                .then(function(r){ return r.json(); })
+                .then(function(data){
+                    if(data.success) _daySlotCache[key] = data.slots || [];
+                    cb(_daySlotCache[key] || []);
+                })
+                .catch(function(){ cb([]); });
+        }
+
+        function _refreshTimelineCells(iso, bookedRanges) {
+            for(var i = 0; i < TL_SLOTS; i++){
+                var el = document.getElementById('tlc_'+iso+'_'+i);
+                if(!el) continue;
+                var m = TL_START + i*TL_STEP;
+                var isBooked = bookedRanges.some(function(r){ return m >= r.st && m < r.et; });
+                if(isBooked && !el.classList.contains('past') && !el.classList.contains('sel')){
+                    el.classList.add('booked');
+                    // Remove drag handlers from booked cells
+                    el.onmousedown  = null;
+                    el.onmouseenter = null;
+                }
+            }
+        }
+
         // dragState
         var _drag = { active:false, downIdx:null, date:null };
 
@@ -2521,15 +2634,17 @@
             var d = parseLocal(iso);
             var isPast = d < today;
 
-            // Build booked ranges for this date (only today's slots from server; other days = none booked)
+            // Dùng GetTimeSlots API để lấy booked ranges cho ngày bất kỳ
             var bookedRanges = [];
-            if(iso === SEL_DATE_STR && rawSlots.length){
-                rawSlots.filter(function(s){return s.isBooked;}).forEach(function(s){
-                    bookedRanges.push({st: hhmmToMin(s.st), et: hhmmToMin(s.et)});
-                });
-            }
-            // Also use server price slots for pricing lookup
-            var priceSlots = rawSlots.length ? rawSlots : [];
+            var priceSlots   = rawSlots.length ? rawSlots : [];
+            // Load async — hiển thị panel trước, cập nhật booked sau
+            _loadDaySlots(activeCid, iso, function(slots){
+                bookedRanges = slots
+                    .filter(function(s){ return !s.isAvailable; })
+                    .map(function(s){ return { st: hhmmToMin(s.startTime), et: hhmmToMin(s.endTime) }; });
+                // Re-render cells với booked data
+                _refreshTimelineCells(iso, bookedRanges);
+            });
 
             // Duration preset selector
             var presets = [
@@ -2698,12 +2813,11 @@
             var cd = COURTS_DATA[activeCid]||{};
             var rawSlots = cd.slots||[];
             // Check if any booked cell overlaps
-            var bookedRanges = [];
-            if(iso===SEL_DATE_STR && rawSlots.length){
-                rawSlots.filter(function(s){return s.isBooked;}).forEach(function(s){
-                    bookedRanges.push({st:hhmmToMin(s.st),et:hhmmToMin(s.et)});
-                });
-            }
+            // Dùng cache từ _daySlotCache
+            var cachedDay   = _daySlotCache[activeCid+'_'+iso] || [];
+            var bookedRanges = cachedDay
+                .filter(function(s){ return !s.isAvailable; })
+                .map(function(s){ return { st: hhmmToMin(s.startTime), et: hhmmToMin(s.endTime) }; });
             var hasConflict = bookedRanges.some(function(r){ return startMin<r.et && endMin>r.st; });
             if(hasConflict){ alert('Khoảng giờ bạn chọn có ô đã được đặt. Vui lòng chọn lại.'); return; }
 
@@ -2751,6 +2865,18 @@
         }
 
         function _calcPrice(cd, rawSlots, iso, startMin, endMin){
+            // Ưu tiên dùng slot từ API cache per-day
+            var _dk = activeCid + '_day_' + iso;
+            var apiSlots = (window._daySlotCache && window._daySlotCache[_dk]) || [];
+            if(apiSlots.length){
+                var total = 0;
+                for(var m = startMin; m < endMin; m += TL_STEP){
+                    var hhmm = minToHHMM(m);
+                    var slot = apiSlots.find(function(s){ return s.startTime <= hhmm && s.endTime > hhmm; });
+                    total += slot ? slot.price * TL_STEP / 60 : 0;
+                }
+                return Math.round(total);
+            }
             // If server gave price slots, use them for prorated pricing
             if(rawSlots.length){
                 var total=0;

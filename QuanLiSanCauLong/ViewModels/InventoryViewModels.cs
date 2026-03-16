@@ -13,37 +13,32 @@ namespace QuanLiSanCauLong.ViewModels
         public List<InventoryItemViewModel> Items { get; set; } = new();
     }
 
-    public class InventoryItemViewModel
-    {
-        public int InventoryId { get; set; }
-        public int FacilityId { get; set; }
-        public int ProductId { get; set; }
-        public string? ProductName { get; set; }
-        public string? ProductCode { get; set; }
-        public string? CategoryName { get; set; }
-        public string? CategoryType { get; set; }
-        public string BehaviorType { get; set; } = "Retail";
-        public string? FacilityName { get; set; }
-        public string? Unit { get; set; }
-        public decimal Price { get; set; }
-        public DateTime LastUpdated { get; set; }
-        public int Quantity { get; set; }
-        public int HoldQuantity { get; set; }
-        public int RentedQuantity { get; set; }
-        public int DamagedQuantity { get; set; }
-        public int AvailableQuantity { get; set; }
-        public int MinQuantity { get; set; }
-        public int MaxQuantity { get; set; }
+        public class InventoryItemViewModel
+        {
+            public int InventoryId { get; set; }
+            public int ProductId { get; set; }
+            public string ProductName { get; set; } = "";
+            public string? ProductCode { get; set; }
+            public string? ImageUrl { get; set; }   // ✅ THÊM — fix CS0117
+            public string? CategoryName { get; set; }
+            // CategoryType đã xóa — dùng BehaviorType
+            public string BehaviorType { get; set; } = "Retail";
+            public string? FacilityName { get; set; }
+            public int FacilityId { get; set; }
+            public string? Unit { get; set; }
+            public decimal Price { get; set; }
+            public DateTime LastUpdated { get; set; }
 
-        // ✅ Dùng { get; set; } để controller có thể gán giá trị từ entity
-        public bool IsLowStock { get; set; }
-
-        // Computed helpers — chỉ đọc, không cần set
-        public bool IsOutOfStock => AvailableQuantity == 0;
-        public bool HasHold => HoldQuantity > 0;
-        public bool HasRented => RentedQuantity > 0;
-        public bool HasDamaged => DamagedQuantity > 0;
-    }
+            public int Quantity { get; set; }
+            public int HoldQuantity { get; set; }
+            public int RentedQuantity { get; set; }
+            public int DamagedQuantity { get; set; }
+            public int AvailableQuantity { get; set; }
+            public int MinQuantity { get; set; }
+            public int MaxQuantity { get; set; }
+            public bool IsLowStock { get; set; }
+        }
+    
 
     public class StockTransactionViewModel
     {

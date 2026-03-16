@@ -15,39 +15,77 @@ namespace QuanLiSanCauLong.Controllers
             _context = context;
         }
 
-        // Trang danh sách tin tức (khớp với file Blog/Index.cshtml)
-        public async Task<IActionResult> Index()
+        // FIX 1: Dùng BlogPosts thay vì Posts
+        // FIX 3: Lọc Status == "Published" thay vì IsActive
+        // FIX 5: Include Category để tránh NullReferenceException
+        // FIX 6: Set Categories cho ViewModel để filter hiện đúng
+        // FIX 7: Nhận và xử lý query param ?category=
+        public async Task<IActionResult> Index(string? category = null)
         {
-            var posts = await _context.Posts.Where(p => p.IsActive).ToListAsync();
+            var query = _context.BlogPosts
+                .Include(p => p.Category)
+                .Where(p => p.Status == "Published")
+                .AsQueryable();
+
+            // FIX 7: Lọc theo category nếu có
+            if (!string.IsNullOrWhiteSpace(category))
+            {
+                query = query.Where(p => p.Category != null && p.Category.CategoryName == category);
+            }
+
+            var posts = await query
+                .OrderByDescending(p => p.PublishedAt ?? p.CreatedAt)
+                .ToListAsync();
+
+            // FIX 6: Lấy danh sách category từ các bài đã Published để hiện filter pills
+            var categories = await _context.BlogPosts
+                .Include(p => p.Category)
+                .Where(p => p.Status == "Published" && p.Category != null)
+                .Select(p => p.Category!.CategoryName)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToListAsync();
 
             var viewModel = new BlogViewModel
             {
-                FeaturedPosts = posts.Where(p => p.IsFeatured).Select(p => MapToPostItem(p)).ToList(),
-                OtherPosts = posts.Where(p => !p.IsFeatured).Select(p => MapToPostItem(p)).ToList()
+                FeaturedPosts = posts.Where(p => p.IsFeatured).Select(MapToPostItem).ToList(),
+                OtherPosts = posts.Where(p => !p.IsFeatured).Select(MapToPostItem).ToList(),
+                Categories = categories,
+                ActiveCategory = category
             };
-            return View(viewModel); // ASP.NET sẽ tự tìm Views/Blog/Index.cshtml
+
+            return View(viewModel);
         }
 
-        // Trang chi tiết bài viết
+        // FIX 4: Tăng ViewCount mỗi lần xem chi tiết
+        // FIX 5: Include Category để tránh null
         public async Task<IActionResult> Details(int id)
         {
-            var post = await _context.Posts.FirstOrDefaultAsync(p => p.PostId == id);
+            var post = await _context.BlogPosts
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(p => p.PostId == id && p.Status == "Published");
+
             if (post == null) return NotFound();
 
-            return View(post); // Sẽ tạo file Views/Blog/Details.cshtml
+            // Tăng lượt xem
+            post.ViewCount++;
+            await _context.SaveChangesAsync();
+
+            return View(post);
         }
 
-        private PostItemViewModel MapToPostItem(Models.Post p)
+        // FIX 2: Dùng FeaturedImage thay vì ImageUrl
+        private static PostItemViewModel MapToPostItem(Models.BlogPost p)
         {
             return new PostItemViewModel
             {
                 PostId = p.PostId,
                 Title = p.Title,
-                Summary = p.Summary,
-                ImageUrl = p.ImageUrl ?? "/images/blog-default.jpg",
-                Category = p.Category,
-                Author = p.Author,
-                PublishDate = p.CreatedAt.ToString("dd 'Tháng' MM, yyyy")
+                Summary = p.Excerpt ?? string.Empty,
+                ImageUrl = p.FeaturedImage ?? "/images/blog-default.jpg",
+                Category = p.Category?.CategoryName ?? string.Empty,
+                Author = string.Empty,
+                PublishDate = (p.PublishedAt ?? p.CreatedAt).ToString("dd 'Tháng' MM, yyyy")
             };
         }
     }

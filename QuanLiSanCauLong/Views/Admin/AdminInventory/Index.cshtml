@@ -9,9 +9,11 @@
     int damagedCnt = ViewBag.DamagedCount ?? 0;
     var facilities = ViewBag.Facilities as IEnumerable<QuanLiSanCauLong.Models.Facility> ?? Enumerable.Empty<QuanLiSanCauLong.Models.Facility>();
     var categories = ViewBag.Categories as IEnumerable<QuanLiSanCauLong.Models.ProductCategory> ?? Enumerable.Empty<QuanLiSanCauLong.Models.ProductCategory>();
+    string BhIco(string b) => b switch { "Rental" => "bi-arrow-repeat", "Service" => "bi-wrench-adjustable", _ => "bi-cart3" };
+    string BhBg(string b) => b switch { "Rental" => "#dbeafe", "Service" => "#ede9fe", _ => "#dcfce7" };
+    string BhClr(string b) => b switch { "Rental" => "#1d4ed8", "Service" => "#6d28d9", _ => "#15803d" };
+    string BhLbl(string b) => b switch { "Rental" => "Cho thuê", "Service" => "Dịch vụ", _ => "Bán lẻ" };
 }
-
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
     :root {
         --deep: #1a1209;
@@ -41,161 +43,251 @@
         min-height: 100vh;
         padding: 2rem;
     }
-    /* Header */
+
+    /* ── HEADER ── */
     .pg-hd {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        margin-bottom: 1.75rem;
+        margin-bottom: 2rem;
         flex-wrap: wrap;
-        gap: 1rem;
+        gap: .75rem;
+    }
+
+    .pg-eyebrow {
+        font-size: .62rem;
+        font-weight: 700;
+        letter-spacing: .22em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: .3rem;
     }
 
     .pg-title {
         font-family: 'Playfair Display',serif;
-        font-size: 1.9rem;
+        font-size: 2rem;
         font-weight: 700;
         color: var(--deep);
+        line-height: 1.1;
     }
 
         .pg-title em {
-            font-style: italic;
             color: var(--gold);
+            font-style: italic;
         }
 
     .pg-sub {
-        font-size: .82rem;
+        font-size: .8rem;
         color: var(--muted);
-        margin-top: .2rem;
+        margin-top: .3rem;
     }
 
     .hd-btns {
         display: flex;
         gap: .5rem;
         flex-wrap: wrap;
+        align-items: center;
     }
 
+    /* Action buttons */
     .btn-in {
-        background: linear-gradient(135deg,var(--gold),var(--gold2));
-        color: var(--deep);
-        border: none;
-        padding: .65rem 1.2rem;
-        font-size: .84rem;
-        font-weight: 700;
-        border-radius: 7px;
-        cursor: pointer;
         display: inline-flex;
         align-items: center;
         gap: .4rem;
+        padding: .6rem 1.1rem;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        font-size: .82rem;
+        font-weight: 700;
+        color: var(--deep);
+        cursor: pointer;
         transition: all .2s;
-        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(212,160,23,.25);
     }
 
         .btn-in:hover {
-            box-shadow: 0 4px 14px rgba(212,160,23,.35);
             transform: translateY(-1px);
-            color: var(--deep);
+            box-shadow: 0 5px 16px rgba(212,160,23,.4);
         }
 
     .btn-out {
-        background: rgba(201,75,42,.07);
-        color: var(--red);
-        border: 1.5px solid rgba(201,75,42,.25);
-        padding: .62rem 1.15rem;
-        font-size: .84rem;
-        font-weight: 700;
-        border-radius: 7px;
-        cursor: pointer;
         display: inline-flex;
         align-items: center;
         gap: .4rem;
+        padding: .6rem 1.1rem;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg,#b91c1c,#dc2626);
+        font-size: .82rem;
+        font-weight: 700;
+        color: #fff;
+        cursor: pointer;
         transition: all .2s;
+        box-shadow: 0 2px 8px rgba(185,28,28,.25);
     }
 
         .btn-out:hover {
-            background: var(--red);
-            color: #fff;
-            border-color: var(--red);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 16px rgba(185,28,28,.4);
         }
 
     .btn-sec {
-        padding: .62rem 1.1rem;
-        border: 1.5px solid var(--border);
-        border-radius: 7px;
-        background: #fff;
-        font-size: .82rem;
-        font-weight: 600;
-        color: var(--muted);
-        cursor: pointer;
         display: inline-flex;
         align-items: center;
         gap: .38rem;
-        transition: all .18s;
+        padding: .58rem 1rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: rgba(255,255,255,.8);
+        backdrop-filter: blur(8px);
+        font-size: .8rem;
+        font-weight: 600;
+        color: var(--muted);
         text-decoration: none;
+        transition: all .18s;
     }
 
         .btn-sec:hover {
             border-color: var(--deep);
             color: var(--deep);
+            background: #fff;
         }
-    /* Alerts */
-    .alert-banner {
-        padding: .75rem 1.1rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-        font-size: .82rem;
-        display: flex;
+
+        .btn-sec.warn {
+            border-color: #fed7aa;
+            color: var(--orange);
+            background: #fff7ed;
+        }
+
+            .btn-sec.warn:hover {
+                border-color: var(--orange);
+            }
+
+    /* ── HOLD ALERT ── */
+    .hold-alert {
+        display: none;
         align-items: center;
         gap: .6rem;
-        display: none;
+        background: linear-gradient(135deg,#fff7ed,#fef3c7);
+        border: 1px solid #fed7aa;
+        border-radius: 10px;
+        padding: .75rem 1.1rem;
+        margin-bottom: 1.25rem;
+        font-size: .82rem;
+        color: var(--orange);
     }
 
-        .alert-banner.show {
+        .hold-alert.show {
             display: flex;
         }
 
-    .ab-warn {
-        background: #fff7ed;
-        border: 1px solid #fed7aa;
-        color: #c2410c;
-    }
-    /* Stats strip */
-    .stats {
-        display: flex;
-        gap: 1px;
-        background: var(--border);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        overflow: hidden;
-        margin-bottom: 1.4rem;
+    .hold-alert-link {
+        margin-left: auto;
+        font-weight: 700;
+        font-size: .76rem;
+        color: var(--blue);
+        text-decoration: none;
+        white-space: nowrap;
     }
 
-    .sb {
+    /* ── STAT CARDS ── */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(6,1fr);
+        gap: .75rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .scard {
         background: #fff;
-        padding: .82rem 1.1rem;
-        flex: 1;
-        min-width: 0;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: .9rem 1rem;
         cursor: pointer;
-        transition: background .15s;
+        transition: all .2s;
+        position: relative;
+        overflow: hidden;
     }
 
-        .sb:hover {
-            background: var(--cream);
+        .scard::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--border);
+            border-radius: 3px 0 0 3px;
+            transition: .2s;
         }
 
-        .sb.on {
-            background: var(--deep);
+        .scard:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26,18,9,.1);
         }
 
-            .sb.on .sn {
-                color: var(--gold2);
+        .scard.on {
+            box-shadow: 0 4px 16px rgba(26,18,9,.12);
+        }
+
+            .scard.on::before {
+                width: 4px;
             }
 
-            .sb.on .sl {
-                color: rgba(255,255,255,.45);
-            }
+        .scard.s-all::before {
+            background: var(--gold);
+        }
 
-    .sn {
+        .scard.s-out::before {
+            background: var(--red);
+        }
+
+        .scard.s-low::before {
+            background: var(--orange);
+        }
+
+        .scard.s-hold::before {
+            background: #f59e0b;
+        }
+
+        .scard.s-rented::before {
+            background: var(--blue);
+        }
+
+        .scard.s-damaged::before {
+            background: var(--purple);
+        }
+
+        .scard.on.s-all {
+            background: linear-gradient(135deg,#1a1209 0%,#2d1f0f 100%);
+        }
+
+        .scard.on.s-out {
+            background: linear-gradient(135deg,#7f1d1d,#b91c1c);
+        }
+
+        .scard.on.s-low {
+            background: linear-gradient(135deg,#7c2d12,#c2410c);
+        }
+
+        .scard.on.s-hold {
+            background: linear-gradient(135deg,#78350f,#d97706);
+        }
+
+        .scard.on.s-rented {
+            background: linear-gradient(135deg,#1e3a8a,#2563eb);
+        }
+
+        .scard.on.s-damaged {
+            background: linear-gradient(135deg,#4c1d95,#7c3aed);
+        }
+
+        .scard.on .sc-n, .scard.on .sc-l {
+            color: #fff !important;
+        }
+
+    .sc-n {
         font-family: 'Playfair Display',serif;
         font-size: 1.6rem;
         font-weight: 700;
@@ -203,178 +295,224 @@
         color: var(--deep);
     }
 
-    .sl {
-        font-size: .62rem;
-        letter-spacing: .08em;
+    .sc-l {
+        font-size: .6rem;
+        font-weight: 600;
+        letter-spacing: .1em;
         text-transform: uppercase;
         color: var(--muted);
-        margin-top: .18rem;
+        margin-top: .25rem;
         display: flex;
         align-items: center;
         gap: .25rem;
     }
 
-    .sdot {
-        width: 6px;
-        height: 6px;
+    .sc-dot {
+        width: 5px;
+        height: 5px;
         border-radius: 50%;
         flex-shrink: 0;
     }
-    /* Toolbar */
+
+    /* ── TOOLBAR ── */
     .toolbar {
         display: flex;
         align-items: center;
         gap: .65rem;
-        margin-bottom: 1rem;
+        margin-bottom: 1.1rem;
         flex-wrap: wrap;
     }
 
-    .srch {
+    .srch-wrap {
         flex: 1;
         min-width: 220px;
         position: relative;
     }
 
-        .srch i {
+        .srch-wrap i {
             position: absolute;
             left: .75rem;
             top: 50%;
             transform: translateY(-50%);
             color: var(--muted);
             font-size: .8rem;
+            pointer-events: none;
         }
 
-        .srch input {
+        .srch-wrap input {
             width: 100%;
-            padding: .58rem .85rem .58rem 2.2rem;
-            border: 1px solid var(--border);
-            border-radius: 7px;
-            font-family: 'Outfit',sans-serif;
+            padding: .6rem .9rem .6rem 2.2rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
             font-size: .83rem;
             color: var(--deep);
             background: #fff;
             outline: none;
-            transition: border-color .2s;
+            transition: all .2s;
         }
 
-            .srch input:focus {
+            .srch-wrap input:focus {
                 border-color: var(--gold);
+                box-shadow: 0 0 0 3px rgba(212,160,23,.1);
             }
 
-    .sel {
-        padding: .58rem .85rem;
-        border: 1px solid var(--border);
-        border-radius: 7px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .83rem;
+    .flt-sel {
+        padding: .58rem .9rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-size: .82rem;
         color: var(--deep);
         background: #fff;
         outline: none;
         cursor: pointer;
+        transition: border-color .18s;
     }
 
-        .sel:focus {
+        .flt-sel:focus {
             border-color: var(--gold);
         }
-    /* Table */
-    .tbl-wrap {
+
+    /* ── TABLE ── */
+    .tbl-card {
         background: #fff;
         border: 1px solid var(--border);
-        border-radius: 12px;
+        border-radius: 14px;
         overflow: hidden;
+        box-shadow: 0 2px 12px rgba(26,18,9,.06);
     }
 
-    .itbl {
+    .tbl-top {
+        background: var(--deep);
+        padding: .85rem 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+    }
+
+    .tbl-top-title {
+        font-family: 'Playfair Display',serif;
+        font-style: italic;
+        font-size: .92rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .tbl-cnt {
+        margin-left: auto;
+        font-size: .72rem;
+        font-weight: 700;
+        color: var(--gold2);
+        background: rgba(255,255,255,.1);
+        padding: .2rem .6rem;
+        border-radius: 20px;
+    }
+
+    table {
         width: 100%;
         border-collapse: collapse;
     }
 
-        .itbl th {
-            padding: .72rem 1rem;
-            background: var(--warm);
-            font-size: .62rem;
-            font-weight: 700;
-            letter-spacing: .12em;
-            text-transform: uppercase;
-            color: var(--muted);
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-            white-space: nowrap;
+    thead th {
+        padding: .68rem 1rem;
+        background: #231a0e;
+        font-size: .61rem;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: rgba(212,160,23,.75);
+        text-align: left;
+        white-space: nowrap;
+        border-bottom: 1px solid rgba(255,255,255,.05);
+    }
+
+    tbody td {
+        padding: .82rem 1rem;
+        border-bottom: 1px solid #f5f0ea;
+        font-size: .82rem;
+        color: var(--deep);
+        vertical-align: middle;
+    }
+
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    tbody tr {
+        transition: background .12s;
+    }
+
+        tbody tr:hover td {
+            background: #fffbf2;
         }
 
-        .itbl td {
-            padding: .78rem 1rem;
-            border-bottom: 1px solid var(--border);
-            font-size: .83rem;
-            color: var(--deep);
-            vertical-align: middle;
-        }
-
-        .itbl tr:last-child td {
-            border-bottom: none;
-        }
-
-        .itbl tr:hover td {
-            background: var(--cream);
-        }
-    /* Product cell */
+    /* product cell */
     .p-cell {
         display: flex;
         align-items: center;
-        gap: .65rem;
+        gap: .7rem;
     }
 
     .p-thumb {
-        width: 34px;
-        height: 34px;
-        border-radius: 6px;
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
         border: 1px solid var(--border);
         background: var(--warm);
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
+        overflow: hidden;
     }
 
         .p-thumb img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 6px;
+            border-radius: 8px;
         }
 
         .p-thumb i {
-            font-size: .8rem;
+            font-size: .9rem;
             color: var(--muted);
         }
 
     .p-name {
         font-weight: 700;
         font-size: .84rem;
-        color: var(--deep);
         line-height: 1.2;
     }
 
     .p-sku {
-        font-size: .66rem;
+        font-size: .65rem;
         color: var(--muted);
-        font-family: monospace;
+        font-family: 'Outfit',monospace;
+        margin-top: .05rem;
     }
-    /* Badges */
-    .bh-b {
+
+    .p-cat {
+        font-size: .63rem;
+        color: var(--muted);
+        margin-top: .04rem;
+    }
+
+    /* behavior tag */
+    .bh-tag {
         display: inline-flex;
         align-items: center;
         gap: .22rem;
-        padding: .18rem .55rem;
-        border-radius: 4px;
+        padding: .2rem .55rem;
+        border-radius: 5px;
         font-size: .64rem;
         font-weight: 700;
     }
-    /* Stock numbers */
-    .stk-main {
+
+    /* stock display */
+    .stk-num {
         font-family: 'Playfair Display',serif;
-        font-size: 1rem;
+        font-size: 1.05rem;
         font-weight: 700;
+        line-height: 1;
     }
 
     .stk-ok {
@@ -382,71 +520,103 @@
     }
 
     .stk-low {
-        color: #c2410c;
+        color: var(--orange);
     }
 
     .stk-zero {
         color: var(--red);
     }
 
-    .stk-sub {
-        font-size: .66rem;
+    .stk-meta {
+        font-size: .64rem;
         color: var(--muted);
-        margin-top: .1rem;
+        margin-top: .06rem;
     }
-    /* Progress bar */
+
     .stk-bar {
-        height: 4px;
-        background: var(--border);
+        height: 3px;
+        background: #f0ebe4;
         border-radius: 2px;
         overflow: hidden;
-        width: 70px;
-        margin-top: .3rem;
+        width: 80px;
+        margin-top: .32rem;
     }
 
-    .stk-bar-fill {
+    .stk-fill {
         height: 100%;
         border-radius: 2px;
-        transition: width .3s;
-    }
-    /* Rent indicator */
-    .rent-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: .2rem;
-        padding: .12rem .42rem;
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        border-radius: 4px;
-        font-size: .62rem;
-        font-weight: 700;
-        color: var(--blue);
+        transition: width .4s ease;
     }
 
-    .dmg-chip {
+    .chip {
         display: inline-flex;
         align-items: center;
         gap: .2rem;
         padding: .12rem .42rem;
-        background: #f5f3ff;
-        border: 1px solid #ddd6fe;
         border-radius: 4px;
-        font-size: .62rem;
+        font-size: .64rem;
         font-weight: 700;
-        color: var(--purple);
+        margin-top: .18rem;
     }
-    /* Quick actions */
+
+    .chip-rent {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .chip-dmg {
+        background: #ede9fe;
+        color: #6d28d9;
+    }
+
+    .chip-hold {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    /* status badges */
+    .st-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .22rem;
+        padding: .22rem .62rem;
+        border-radius: 6px;
+        font-size: .63rem;
+        font-weight: 700;
+    }
+
+    .st-ok {
+        background: #f0fdf4;
+        color: #15803d;
+    }
+
+    .st-low {
+        background: #fff7ed;
+        color: var(--orange);
+    }
+
+    .st-out {
+        background: #fef2f2;
+        color: var(--red);
+    }
+
+    .st-svc {
+        background: #f8fafc;
+        color: #94a3b8;
+    }
+
+    /* quick actions */
     .qa {
         display: flex;
-        gap: .25rem;
+        gap: .2rem;
         justify-content: flex-end;
     }
 
-    .qa-b {
-        width: 28px;
-        height: 28px;
-        border-radius: 5px;
-        border: 1px solid var(--border);
+    .qa-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 7px;
+        border: 1.5px solid var(--border);
         background: #fff;
         display: flex;
         align-items: center;
@@ -454,94 +624,139 @@
         cursor: pointer;
         color: var(--muted);
         transition: all .15s;
-        font-size: .72rem;
+        font-size: .75rem;
     }
 
-        .qa-b.qin:hover {
-            border-color: var(--gold);
-            color: var(--deep);
-            background: rgba(212,160,23,.07);
+        .qa-btn:hover {
+            transform: translateY(-1px);
         }
 
-        .qa-b.qout:hover {
-            border-color: var(--red);
-            color: var(--red);
-            background: rgba(201,75,42,.07);
-        }
+    .qa-in:hover {
+        border-color: var(--gold);
+        color: var(--gold);
+        box-shadow: 0 3px 8px rgba(212,160,23,.2);
+    }
 
-        .qa-b.qhist:hover {
-            border-color: var(--blue);
-            color: var(--blue);
-            background: rgba(29,78,216,.07);
-        }
+    .qa-out:hover {
+        border-color: var(--red);
+        color: var(--red);
+        box-shadow: 0 3px 8px rgba(201,75,42,.2);
+    }
 
-        .qa-b.qadj:hover {
-            border-color: var(--purple);
-            color: var(--purple);
-            background: rgba(124,58,237,.07);
-        }
-    /* Empty */
-    .empty-row td {
+    .qa-adj:hover {
+        border-color: var(--purple);
+        color: var(--purple);
+        box-shadow: 0 3px 8px rgba(124,58,237,.2);
+    }
+
+    .qa-hist:hover {
+        border-color: var(--blue);
+        color: var(--blue);
+        box-shadow: 0 3px 8px rgba(29,78,216,.2);
+    }
+
+    /* empty */
+    .empty-wrap {
+        padding: 4rem 2rem;
         text-align: center;
-        padding: 4rem;
         color: var(--muted);
     }
 
-    .empty-row i {
-        font-size: 2.5rem;
-        display: block;
-        margin-bottom: .75rem;
-        opacity: .2;
-    }
-    /* Pager */
-    .pager {
+        .empty-wrap i {
+            font-size: 3rem;
+            opacity: .15;
+            display: block;
+            margin-bottom: .75rem;
+        }
+
+        .empty-wrap h4 {
+            font-family: 'Playfair Display',serif;
+            font-style: italic;
+            font-size: 1.1rem;
+            color: var(--deep);
+            margin-bottom: .35rem;
+        }
+
+    /* pager */
+    .tbl-foot {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: .85rem 1.2rem;
+        padding: .8rem 1.2rem;
         border-top: 1px solid var(--border);
+        background: var(--cream);
         font-size: .78rem;
         color: var(--muted);
     }
 
-    .pg-btns {
-        display: flex;
-        gap: .3rem;
-    }
-
-    .pg-b {
-        min-width: 30px;
-        height: 30px;
-        border-radius: 5px;
-        border: 1px solid var(--border);
-        background: #fff;
-        font-size: .76rem;
-        cursor: pointer;
+    /* sys alert */
+    .sys-ok {
+        padding: .85rem 1.2rem;
+        border-radius: 10px;
+        margin-bottom: 1.2rem;
+        font-size: .82rem;
         display: flex;
         align-items: center;
-        justify-content: center;
-        color: var(--muted);
-        transition: all .15s;
+        gap: .6rem;
+        background: rgba(22,163,74,.07);
+        border: 1px solid rgba(22,163,74,.2);
+        color: #15803d;
     }
 
-        .pg-b:hover {
-            border-color: var(--gold);
-            color: var(--deep);
+    .sys-err {
+        padding: .85rem 1.2rem;
+        border-radius: 10px;
+        margin-bottom: 1.2rem;
+        font-size: .82rem;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        background: rgba(201,75,42,.06);
+        border: 1px solid rgba(201,75,42,.2);
+        color: var(--red);
+    }
+
+    /* checkbox */
+    input[type=checkbox] {
+        accent-color: var(--gold);
+        width: 14px;
+        height: 14px;
+        cursor: pointer;
+    }
+
+    @@media(max-width:1100px) {
+        .stats-grid {
+            grid-template-columns: repeat(3,1fr);
+        }
+    }
+
+    @@media(max-width:700px) {
+        .stats-grid {
+            grid-template-columns: repeat(2,1fr);
         }
 
-        .pg-b.on {
-            background: var(--deep);
-            border-color: var(--deep);
-            color: var(--gold2);
+        .toolbar {
+            flex-direction: column;
+            align-items: stretch;
         }
+    }
 </style>
 
 <div class="pg">
-    <!-- HEADER -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="sys-ok"><i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="sys-err"><i class="bi bi-exclamation-circle-fill"></i> @TempData["ErrorMessage"]</div>
+    }
+
     <div class="pg-hd">
         <div>
+            <div class="pg-eyebrow">Quản trị · Hàng hóa</div>
             <h1 class="pg-title">Kho <em>Hàng Hóa</em></h1>
-            <div class="pg-sub">Quản lý tồn kho, nhập xuất, cho thuê toàn cơ sở</div>
+            <div class="pg-sub">Tồn kho · Nhập xuất · Cho thuê · @Model.Items.Count mục tổng cộng</div>
         </div>
         <div class="hd-btns">
             <button class="btn-in" onclick="openModal('StockIn')">
@@ -550,219 +765,247 @@
             <button class="btn-out" onclick="openModal('StockOut')">
                 <i class="bi bi-box-arrow-up"></i> Xuất kho
             </button>
+            <a href="@Url.Action("Transfer", "AdminInventory")" class="btn-sec">
+                <i class="bi bi-arrow-left-right"></i> Chuyển kho
+            </a>
             <a href="@Url.Action("ActiveRentals", "AdminInventory")" class="btn-sec">
                 <i class="bi bi-arrow-repeat"></i> Đang thuê
+                @if (rentedCnt > 0)
+                {
+                    <span style="background:var(--blue);color:#fff;border-radius:10px;padding:.05rem .38rem;font-size:.62rem;font-weight:700">@rentedCnt</span>
+                }
             </a>
-            <a href="@Url.Action("LowStock", "AdminInventory")" class="btn-sec" @(outCnt + lowCnt > 0 ? "style=\"border-color:#c2410c;color:#c2410c;\"" : "")>
-                <i class="bi bi-exclamation-triangle"></i> Cảnh báo @(outCnt + lowCnt > 0 ? $"({outCnt + lowCnt})" : "")
+            <a href="@Url.Action("LowStock", "AdminInventory")" class="btn-sec @(outCnt + lowCnt > 0 ? "warn" : "")">
+                <i class="bi bi-exclamation-triangle"></i> Cảnh báo
+                @if (outCnt + lowCnt > 0)
+                {
+                    <span style="background:var(--orange);color:#fff;border-radius:10px;padding:.05rem .38rem;font-size:.62rem;font-weight:700">@(outCnt + lowCnt)</span>
+                }
             </a>
         </div>
     </div>
 
-    <!-- HOLD ALERT -->
-    <div class="alert-banner ab-warn" id="holdBanner">
+    @* Hold alert *@
+    <div class="hold-alert" id="holdBanner">
         <i class="bi bi-clock-fill"></i>
-        <span id="holdBannerText">Có đơn hold quá lâu</span>
-        <a href="#" style="margin-left:auto;color:var(--blue);font-weight:700;font-size:.78rem;" onclick="clearOldHolds()">Xem chi tiết</a>
+        <span id="holdBannerText">Có đơn hold quá lâu — cần xử lý</span>
+        <a href="#" class="hold-alert-link" onclick="return false">Xem ngay →</a>
     </div>
 
-    <!-- STATS STRIP -->
-    <div class="stats">
-        <div class="sb" id="sbAll" onclick="filterBy('all')">
-            <div class="sn">@Model.Items.Count</div>
-            <div class="sl"><span class="sdot" style="background:var(--gold)"></span>Tổng mục</div>
+    @* Stat cards *@
+    <div class="stats-grid">
+        <div class="scard s-all on" id="sbAll" onclick="filterBy('all','sbAll')">
+            <div class="sc-n">@Model.Items.Count</div>
+            <div class="sc-l"><span class="sc-dot" style="background:var(--gold)"></span>Tổng mục</div>
         </div>
-        <div class="sb" id="sbOut" onclick="filterBy('out')">
-            <div class="sn" style="color:var(--red)">@outCnt</div>
-            <div class="sl"><span class="sdot" style="background:var(--red)"></span>Hết hàng</div>
+        <div class="scard s-out" id="sbOut" onclick="filterBy('out','sbOut')">
+            <div class="sc-n" style="color:var(--red)">@outCnt</div>
+            <div class="sc-l"><span class="sc-dot" style="background:var(--red)"></span>Hết hàng</div>
         </div>
-        <div class="sb" id="sbLow" onclick="filterBy('low')">
-            <div class="sn" style="color:#c2410c">@lowCnt</div>
-            <div class="sl"><span class="sdot" style="background:#c2410c"></span>Sắp hết</div>
+        <div class="scard s-low" id="sbLow" onclick="filterBy('low','sbLow')">
+            <div class="sc-n" style="color:var(--orange)">@lowCnt</div>
+            <div class="sc-l"><span class="sc-dot" style="background:var(--orange)"></span>Sắp hết</div>
         </div>
-        <div class="sb" id="sbHold" onclick="filterBy('hold')">
-            <div class="sn" style="color:var(--orange)">@holdCnt</div>
-            <div class="sl"><span class="sdot" style="background:var(--orange)"></span>Đang giữ</div>
+        <div class="scard s-hold" id="sbHold" onclick="filterBy('hold','sbHold')">
+            <div class="sc-n" style="color:#d97706">@holdCnt</div>
+            <div class="sc-l"><span class="sc-dot" style="background:#d97706"></span>Đang giữ</div>
         </div>
-        <div class="sb" id="sbRented" onclick="filterBy('rented')">
-            <div class="sn" style="color:var(--blue)">@rentedCnt</div>
-            <div class="sl"><span class="sdot" style="background:var(--blue)"></span>Đang thuê</div>
+        <div class="scard s-rented" id="sbRented" onclick="filterBy('rented','sbRented')">
+            <div class="sc-n" style="color:var(--blue)">@rentedCnt</div>
+            <div class="sc-l"><span class="sc-dot" style="background:var(--blue)"></span>Đang thuê</div>
         </div>
-        <div class="sb" id="sbDamaged" onclick="filterBy('damaged')">
-            <div class="sn" style="color:var(--purple)">@damagedCnt</div>
-            <div class="sl"><span class="sdot" style="background:var(--purple)"></span>Hư hỏng</div>
+        <div class="scard s-damaged" id="sbDamaged" onclick="filterBy('damaged','sbDamaged')">
+            <div class="sc-n" style="color:var(--purple)">@damagedCnt</div>
+            <div class="sc-l"><span class="sc-dot" style="background:var(--purple)"></span>Hư hỏng</div>
         </div>
     </div>
 
-    <!-- TOOLBAR -->
+    @* Toolbar *@
     <div class="toolbar">
-        <div class="srch">
+        <div class="srch-wrap">
             <i class="bi bi-search"></i>
             <input type="text" id="srchIn" placeholder="Tên sản phẩm, SKU..." oninput="filterTable()" />
         </div>
-        <select class="sel" id="fFac" onchange="filterTable()">
+        <select class="flt-sel" id="fFac" onchange="filterTable()">
             <option value="">Tất cả cơ sở</option>
             @foreach (var f in facilities)
             {
-                <option value="@f.FacilityName" selected="@(Model.FacilityId == f.FacilityId)">@f.FacilityName</option>
+                <option value="@f.FacilityName" selected="@(Model.FacilityId == f.FacilityId ? "selected" : null)">@f.FacilityName</option>
             }
         </select>
-        <select class="sel" id="fCat" onchange="filterTable()">
+        <select class="flt-sel" id="fCat" onchange="filterTable()">
             <option value="">Tất cả danh mục</option>
             @foreach (var c in categories)
             {
                 <option value="@c.CategoryName">@c.CategoryName</option>
             }
         </select>
-        <select class="sel" id="fBh" onchange="filterTable()">
+        <select class="flt-sel" id="fBh" onchange="filterTable()">
             <option value="">Tất cả nhóm</option>
-            <option value="Retail">Bán lẻ</option>
-            <option value="Rental">Cho thuê</option>
-            <option value="Service">Dịch vụ</option>
+            <option value="Retail">🛒 Bán lẻ</option>
+            <option value="Rental">🔄 Cho thuê</option>
+            <option value="Service">🔧 Dịch vụ</option>
         </select>
     </div>
 
-    <!-- TABLE -->
-    <div class="tbl-wrap">
-        <table class="itbl">
-            <thead>
-                <tr>
-                    <th style="width:40px"><input type="checkbox" id="chkAll" onchange="toggleAll(this)" /></th>
-                    <th>Sản phẩm</th>
-                    <th style="width:110px">Cơ sở</th>
-                    <th style="width:100px">Nhóm</th>
-                    <th style="width:130px;text-align:right">Tồn kho</th>
-                    <th style="width:110px;text-align:center">Trạng thái</th>
-                    <th style="width:120px;text-align:right">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody id="invTbody">
-                @if (!Model.Items.Any())
-                {
-                    <tr class="empty-row">
-                        <td colspan="7">
-                            <i class="bi bi-archive"></i>
-                            <div style="font-weight:700;margin-bottom:.3rem;">Kho trống</div>
-                            <div style="font-size:.8rem;">Nhấn <strong>Nhập kho</strong> để thêm hàng.</div>
-                        </td>
+    @* Table *@
+    <div class="tbl-card">
+        <div class="tbl-top">
+            <i class="bi bi-boxes" style="color:var(--gold)"></i>
+            <span class="tbl-top-title">Danh sách tồn kho</span>
+            <span class="tbl-cnt" id="visCnt">@Model.Items.Count mục</span>
+        </div>
+        <div style="overflow-x:auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:36px"><input type="checkbox" id="chkAll" onchange="toggleAll(this)" /></th>
+                        <th>Sản phẩm</th>
+                        <th style="width:105px">Cơ sở</th>
+                        <th style="width:88px">Nhóm</th>
+                        <th style="width:140px;text-align:right">Tồn kho</th>
+                        <th style="width:108px;text-align:center">Trạng thái</th>
+                        <th style="width:130px;text-align:right">Thao tác</th>
                     </tr>
-                }
-                @foreach (var item in Model.Items)
-                {
-                    var bh = item.BehaviorType ?? "Retail";
-                    var stkCls = item.AvailableQuantity <= 0 ? "stk-zero" : item.IsLowStock ? "stk-low" : "stk-ok";
-                    var pct = item.MaxQuantity > 0 ? (int)((double)item.AvailableQuantity / item.MaxQuantity * 100) : 50;
-                    var barClr = item.AvailableQuantity <= 0 ? "var(--red)" : item.IsLowStock ? "#c2410c" : "var(--green)";
-                    <tr id="inv-@item.InventoryId"
-                        data-name="@item.ProductName.ToLower()"
-                        data-sku="@((item.ProductCode ?? "").ToLower())"
-                        data-fac="@(item.FacilityName ?? "")"
-                        data-cat="@(item.CategoryName ?? "")"
-                        data-bh="@bh"
-                        data-stock="@(item.AvailableQuantity <= 0 ? "out" : item.IsLowStock ? "low" : "ok")"
-                        data-hold="@(item.HoldQuantity > 0 ? "hold" : "")"
-                        data-rented="@(item.RentedQuantity > 0 ? "rented" : "")"
-                        data-damaged="@(item.DamagedQuantity > 0 ? "damaged" : "")">
-                        <td><input type="checkbox" class="row-cb" value="@item.InventoryId" /></td>
-                        <td>
-                            <div class="p-cell">
-                                <div class="p-thumb"><i class="bi @(bh == "Service" ? "bi-wrench-adjustable" : bh == "Rental" ? "bi-arrow-repeat" : "bi-box-seam")"></i></div>
-                                <div>
-                                    <div class="p-name">@item.ProductName</div>
-                                    <div class="p-sku">@(item.ProductCode ?? "—")</div>
+                </thead>
+                <tbody id="invTbody">
+                    @if (!Model.Items.Any())
+                    {
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-wrap">
+                                    <i class="bi bi-archive"></i>
+                                    <h4>Kho đang trống</h4>
+                                    <p style="font-size:.82rem">Nhấn <strong>Nhập kho</strong> để bắt đầu.</p>
+                                    <button class="btn-in" style="margin-top:.75rem" onclick="openModal('StockIn')"><i class="bi bi-plus-lg"></i> Nhập kho ngay</button>
                                 </div>
-                            </div>
-                        </td>
-                        <td style="font-size:.78rem;color:var(--muted);">@(item.FacilityName ?? "—")</td>
-                        <td>
-                            <span class="bh-b" style="background:@(bh == "Rental" ? "#eff6ff" : bh == "Service" ? "#f5f3ff" : "#f0fdf4");color:@(bh == "Rental" ? "#1d4ed8" : bh == "Service" ? "#7c3aed" : "#166534");">
-                                <i class="bi @(bh == "Rental" ? "bi-arrow-repeat" : bh == "Service" ? "bi-wrench-adjustable" : "bi-cart3")"></i>
-                                @(bh == "Rental" ? "Cho thuê" : bh == "Service" ? "Dịch vụ" : "Bán lẻ")
-                            </span>
-                        </td>
-                        <td style="text-align:right;">
-                            @if (bh == "Service")
-                            {
-                                <span style="font-size:.78rem;color:var(--muted);">Không tồn kho</span>
-                            }
-                            else
-                            {
-                                <div class="@stkCls stk-main">@item.AvailableQuantity <span style="font-size:.65rem;font-weight:400;color:var(--muted);">@item.Unit</span></div>
-                                @if (item.Quantity != item.AvailableQuantity)
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var item in Model.Items)
+                    {
+                        var bh = item.BehaviorType ?? "Retail";
+                        var stkCls = item.AvailableQuantity <= 0 ? "stk-zero" : item.IsLowStock ? "stk-low" : "stk-ok";
+                        var pct = item.MaxQuantity > 0 ? (int)Math.Min((double)item.AvailableQuantity / item.MaxQuantity * 100, 100) : 50;
+                        var barClr = item.AvailableQuantity <= 0 ? "var(--red)" : item.IsLowStock ? "var(--orange)" : "var(--green)";
+                        <tr id="inv-@item.InventoryId"
+                            data-name="@item.ProductName.ToLower()" data-sku="@((item.ProductCode ?? "").ToLower())"
+                            data-fac="@(item.FacilityName ?? "")" data-cat="@(item.CategoryName ?? "")" data-bh="@bh"
+                            data-stock="@(item.AvailableQuantity <= 0 ? "out" : item.IsLowStock ? "low" : "ok")"
+                            data-hold="@(item.HoldQuantity > 0 ? "hold" : "")"
+                            data-rented="@(item.RentedQuantity > 0 ? "rented" : "")"
+                            data-damaged="@(item.DamagedQuantity > 0 ? "damaged" : "")">
+                            <td><input type="checkbox" class="row-cb" value="@item.InventoryId" /></td>
+                            <td>
+                                <div class="p-cell">
+                                    <div class="p-thumb">
+                                        @if (!string.IsNullOrEmpty(item.ImageUrl) && item.ImageUrl != "/images/no-image.png")
+                                        {
+                                            <img src="@item.ImageUrl" alt="" onerror="this.style.display='none'" />
+                                        }
+                                        else
+                                        {
+
+                                            <i class="bi @BhIco(bh)"></i>
+                                        }
+                                    </div>
+                                    <div>
+                                        <div class="p-name">@item.ProductName</div>
+                                        <div class="p-sku">@(item.ProductCode ?? "—")</div>
+                                        @if (!string.IsNullOrEmpty(item.CategoryName))
+                                        {
+                                            <div class="p-cat">@item.CategoryName</div>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="font-size:.77rem;color:var(--muted)">@(item.FacilityName ?? "—")</td>
+                            <td>
+                                <span class="bh-tag" style="background:@BhBg(bh);color:@BhClr(bh)">
+                                    <i class="bi @BhIco(bh)"></i> @BhLbl(bh)
+                                </span>
+                            </td>
+                            <td style="text-align:right">
+                                @if (bh == "Service")
                                 {
-                                    <div class="stk-sub">Tổng: @item.Quantity</div>
+                                    <span style="font-size:.75rem;color:var(--muted)">Không kho</span>
                                 }
-                                @if (item.MaxQuantity > 0)
+                                else
                                 {
-                                    <div class="stk-bar">
-                                        <div class="stk-bar-fill" style="width:@(Math.Min(pct, 100))%;background:@barClr;"></div>
+                                    <div class="@stkCls stk-num">@item.AvailableQuantity <span style="font-size:.62rem;font-weight:400;color:var(--muted)">@item.Unit</span></div>
+                                    @if (item.Quantity != item.AvailableQuantity)
+                                    {
+                                        <div class="stk-meta">Tổng: @item.Quantity</div>
+                                    }
+                                    @if (item.MaxQuantity > 0)
+                                    {
+                                        <div class="stk-bar"><div class="stk-fill" style="width:@pct%;background:@barClr"></div></div>
+                                    }
+                                    <div style="display:flex;flex-wrap:wrap;gap:.15rem;justify-content:flex-end;margin-top:.2rem">
+                                        @if (item.HoldQuantity > 0)
+                                        {
+                                            <span class="chip chip-hold"><i class="bi bi-lock-fill"></i> @item.HoldQuantity hold</span>
+                                        }
+                                        @if (item.RentedQuantity > 0)
+                                        {
+                                            <span class="chip chip-rent"><i class="bi bi-person-fill"></i> @item.RentedQuantity thuê</span>
+                                        }
+                                        @if (item.DamagedQuantity > 0)
+                                        {
+                                            <span class="chip chip-dmg"><i class="bi bi-tools"></i> @item.DamagedQuantity hỏng</span>
+                                        }
                                     </div>
                                 }
-                                @if (item.RentedQuantity > 0)
+                            </td>
+                            <td style="text-align:center">
+                                @if (bh == "Service")
                                 {
-                                    <span class="rent-chip"><i class="bi bi-person-fill"></i> @item.RentedQuantity thuê</span>
+                                    <span class="st-badge st-svc">— Dịch vụ</span>
                                 }
-                                @if (item.DamagedQuantity > 0)
+                                else if (item.AvailableQuantity <= 0)
                                 {
-                                    <span class="dmg-chip"><i class="bi bi-tools"></i> @item.DamagedQuantity hỏng</span>
+
+                                    <span class="st-badge st-out"><i class="bi bi-x-circle-fill"></i> Hết hàng</span>
                                 }
-                            }
-                        </td>
-                        <td style="text-align:center;">
-                            @if (item.AvailableQuantity <= 0 && bh != "Service")
-                            {
-                                <span style="display:inline-flex;align-items:center;gap:.22rem;padding:.18rem .55rem;border-radius:4px;font-size:.64rem;font-weight:700;background:#fee2e2;color:var(--red);">
-                                    <i class="bi bi-x-circle-fill"></i> Hết hàng
-                                </span>
-                            }
-                            else if (item.IsLowStock && bh != "Service")
-                            {
-                                <span style="display:inline-flex;align-items:center;gap:.22rem;padding:.18rem .55rem;border-radius:4px;font-size:.64rem;font-weight:700;background:#fff7ed;color:#c2410c;">
-                                    <i class="bi bi-exclamation-triangle-fill"></i> Sắp hết
-                                </span>
-                            }
-                            else
-                            {
-                                <span style="display:inline-flex;align-items:center;gap:.22rem;padding:.18rem .55rem;border-radius:4px;font-size:.64rem;font-weight:700;background:#f0fdf4;color:#15803d;">
-                                    <i class="bi bi-check-circle-fill"></i> Bình thường
-                                </span>
-                            }
-                        </td>
-                        <td>
-                            <div class="qa">
-                                <button class="qa-b qin" onclick="openStockIn(@item.InventoryId,'@Html.Raw(item.ProductName.Replace("'", "\'"))',@(item.FacilityId),@(item.ProductId))" title="Nhập kho">
-                                    <i class="bi bi-box-arrow-in-down"></i>
-                                </button>
-                                @if (bh != "Service")
+                                else if (item.IsLowStock)
                                 {
-                                    <button class="qa-b qout" onclick="openStockOut(@item.InventoryId,'@Html.Raw(item.ProductName.Replace("'", "\'"))',@(item.FacilityId),@(item.ProductId),@item.AvailableQuantity)" title="Xuất kho">
-                                        <i class="bi bi-box-arrow-up"></i>
-                                    </button>
+
+                                    <span class="st-badge st-low"><i class="bi bi-exclamation-triangle-fill"></i> Sắp hết</span>
                                 }
-                                <button class="qa-b qadj" onclick="openAdjust(@item.InventoryId)" title="Điều chỉnh tồn kho">
-                                    <i class="bi bi-sliders"></i>
-                                </button>
-                                <button class="qa-b qhist" onclick="openHistory(@item.ProductId,'@Html.Raw(item.ProductName.Replace("'", "\'"))')" title="Lịch sử">
-                                    <i class="bi bi-clock-history"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-        <div class="pager">
-            <span id="rowCount">@Model.Items.Count mục</span>
-            <div class="pg-btns" id="pagerBtns"></div>
+                                else
+                                {
+
+                                    <span class="st-badge st-ok"><i class="bi bi-check-circle-fill"></i> Bình thường</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="qa">
+                                    <button class="qa-btn qa-in" title="Nhập kho" onclick="openStockIn(@item.InventoryId,'@Html.Raw(item.ProductName.Replace("'", "\\'"))',@(item.FacilityId),@(item.ProductId))"><i class="bi bi-box-arrow-in-down"></i></button>
+                                    @if (bh != "Service")
+                                    {
+                                        <button class="qa-btn qa-out" title="Xuất kho" onclick="openStockOut(@item.InventoryId,'@Html.Raw(item.ProductName.Replace("'", "\\'"))',@(item.FacilityId),@(item.ProductId),@item.AvailableQuantity)"><i class="bi bi-box-arrow-up"></i></button>
+                                    }
+                                    <button class="qa-btn qa-adj" title="Điều chỉnh" onclick="openAdjust(@item.InventoryId)"><i class="bi bi-sliders"></i></button>
+                                    <button class="qa-btn qa-hist" title="Lịch sử" onclick="openHistory(@item.ProductId,'@Html.Raw(item.ProductName.Replace("'", "\\'"))')"><i class="bi bi-clock-history"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="tbl-foot">
+            <span>Hiển thị <strong id="visNum">@Model.Items.Count</strong> / @Model.Items.Count mục</span>
+            <div id="pagerBtns"></div>
         </div>
     </div>
 </div>
 
-<!-- MODAL SHELL -->
+@* Modal shell *@
 <div class="modal fade" id="invModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" style="max-width:680px">
-        <div class="modal-content" id="invModalBody" style="border-radius:14px;border:none;">
-            <div class="p-5 text-center"><div class="spinner-border" style="color:var(--gold)"></div></div>
+        <div class="modal-content" id="invModalBody" style="border-radius:16px;border:none;box-shadow:0 25px 80px rgba(0,0,0,.2)">
+            <div class="p-5 text-center"><div class="spinner-border" style="color:#d4a017"></div></div>
         </div>
     </div>
 </div>
@@ -771,85 +1014,58 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @Html.AntiForgeryToken()
     <script>
-        const TOKEN = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+        const TOKEN=document.querySelector('input[name="__RequestVerificationToken"]')?.value??'';
         let invModal;
-        document.addEventListener('DOMContentLoaded', () => {
-            invModal = new bootstrap.Modal(document.getElementById('invModal'));
+        document.addEventListener('DOMContentLoaded',()=>{
+            invModal=new bootstrap.Modal(document.getElementById('invModal'));
             checkHoldAlerts();
-        });
-
-        function runScripts(el) {
-            el.querySelectorAll('script').forEach(s => { const n = document.createElement('script'); n.text = s.text; s.replaceWith(n); });
-        }
-
-        async function openModal(action, params = '') {
-            document.getElementById('invModalBody').innerHTML = '<div class="p-5 text-center"><div class="spinner-border" style="color:var(--gold)"></div></div>';
-            invModal.show();
-            const url = `/AdminInventory/${action}${params ? '?' + params : ''}`;
-            const r   = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-            document.getElementById('invModalBody').innerHTML = await r.text();
-            runScripts(document.getElementById('invModalBody'));
-        }
-
-        function openStockIn(invId, name, facilityId, productId) {
-            openModal('StockIn', `facilityId=${facilityId}&preProductId=${productId}&invId=${invId}&preProductName=${encodeURIComponent(name)}`);
-        }
-        function openStockOut(invId, name, facilityId, productId, available) {
-            openModal('StockOut', `facilityId=${facilityId}&preProductId=${productId}&invId=${invId}&preProductName=${encodeURIComponent(name)}&available=${available}`);
-        }
-        function openAdjust(invId) {
-            openModal('Adjustment', `inventoryId=${invId}`);
-        }
-        function openHistory(productId, name) {
-            openModal('History', `productId=${productId}`);
-        }
-
-        /* ── FILTER ── */
-        let filterMode = 'all';
-        function filterBy(mode) {
-            filterMode = mode;
-            document.querySelectorAll('.sb').forEach(b => b.classList.remove('on'));
-            document.getElementById('sb' + mode.charAt(0).toUpperCase() + mode.slice(1).replace('all','All').replace('out','Out').replace('low','Low').replace('hold','Hold').replace('rented','Rented').replace('damaged','Damaged'))?.classList.add('on');
-            if (mode === 'all') document.getElementById('sbAll')?.classList.add('on');
-            filterTable();
-        }
-
-        function filterTable() {
-            const q   = document.getElementById('srchIn').value.toLowerCase();
-            const fac = document.getElementById('fFac').value;
-            const cat = document.getElementById('fCat').value;
-            const bh  = document.getElementById('fBh').value;
-            let cnt = 0;
-            document.querySelectorAll('#invTbody tr[id^="inv-"]').forEach(r => {
-                const matchSearch = !q || r.dataset.name?.includes(q) || r.dataset.sku?.includes(q);
-                const matchFac    = !fac || r.dataset.fac === fac;
-                const matchCat    = !cat || r.dataset.cat === cat;
-                const matchBh     = !bh  || r.dataset.bh  === bh;
-                const matchMode   = filterMode === 'all' || r.dataset.stock === filterMode || r.dataset[filterMode];
-                const show = matchSearch && matchFac && matchCat && matchBh && matchMode;
-                r.style.display = show ? '' : 'none';
-                if (show) cnt++;
-            });
-            document.getElementById('rowCount').textContent = cnt + ' mục';
-        }
-
-        /* ── HOLD ALERTS ── */
-        async function checkHoldAlerts() {
-            try {
-                const data = await fetch('/AdminInventory/HoldAlerts').then(r => r.json());
-                if (data.length > 0) {
-                    document.getElementById('holdBannerText').textContent =
-                        `⚠ Có ${data.length} đơn hold quá lâu (>${Math.round(data[0].hoursAgo)}h) — cần xử lý`;
-                    document.getElementById('holdBanner').classList.add('show');
-                }
-            } catch(e) {}
-        }
-
-        function toggleAll(el) { document.querySelectorAll('.row-cb').forEach(c => c.checked = el.checked); }
-
-        // Init filter stats
-        document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('sbAll')?.classList.add('on');
         });
+        function runScripts(el){el.querySelectorAll('script').forEach(s=>{const n=document.createElement('script');n.text=s.text;s.replaceWith(n);});}
+
+        async function openModal(action,params=''){
+            document.getElementById('invModalBody').innerHTML='<div class="p-5 text-center"><div class="spinner-border" style="color:#d4a017"></div></div>';
+            invModal.show();
+            try{
+                const r=await fetch(`/AdminInventory/${action}${params?'?'+params:''}`,{headers:{'X-Requested-With':'XMLHttpRequest'}});
+                if(!r.ok) throw new Error('HTTP '+r.status);
+                document.getElementById('invModalBody').innerHTML=await r.text();
+                runScripts(document.getElementById('invModalBody'));
+            }catch(e){
+                document.getElementById('invModalBody').innerHTML=`<div class="p-4 text-center"><p class="text-danger mt-2"><i class="bi bi-exclamation-triangle-fill fs-2 d-block mb-2"></i>Lỗi tải: ${e.message}</p><button class="btn btn-sm btn-secondary" onclick="invModal.hide()">Đóng</button></div>`;
+            }
+        }
+        function openStockIn(invId,name,fid,pid){openModal('StockIn',`facilityId=${fid}&preProductId=${pid}&invId=${invId}&preProductName=${encodeURIComponent(name)}`);}
+        function openStockOut(invId,name,fid,pid,avail){openModal('StockOut',`facilityId=${fid}&preProductId=${pid}&invId=${invId}&preProductName=${encodeURIComponent(name)}&available=${avail}`);}
+        function openAdjust(invId){openModal('Adjustment',`inventoryId=${invId}`);}
+        function openHistory(pid,name){openModal('History',`productId=${pid}`);}
+
+        let filterMode='all', activeCard='sbAll';
+        function filterBy(mode,cardId){
+            filterMode=mode;
+            document.querySelectorAll('.scard').forEach(c=>c.classList.remove('on'));
+            document.getElementById(cardId)?.classList.add('on');
+            filterTable();
+        }
+        function filterTable(){
+            const q=document.getElementById('srchIn').value.toLowerCase();
+            const fac=document.getElementById('fFac').value;
+            const cat=document.getElementById('fCat').value;
+            const bh=document.getElementById('fBh').value;
+            let cnt=0;
+            document.querySelectorAll('#invTbody tr[id^="inv-"]').forEach(r=>{
+                const ok=(!q||r.dataset.name?.includes(q)||r.dataset.sku?.includes(q))
+                      &&(!fac||r.dataset.fac===fac)&&(!cat||r.dataset.cat===cat)&&(!bh||r.dataset.bh===bh)
+                      &&(filterMode==='all'||r.dataset.stock===filterMode||r.dataset[filterMode]);
+                r.style.display=ok?'':'none';if(ok)cnt++;
+            });
+            document.getElementById('visNum').textContent=cnt;
+            document.getElementById('visCnt').textContent=cnt+' mục';
+        }
+        async function checkHoldAlerts(){
+            try{const d=await fetch('/AdminInventory/HoldAlerts').then(r=>r.json());
+            if(d.length>0){document.getElementById('holdBannerText').textContent=`⚠ Có ${d.length} đơn hold quá lâu (>${Math.round(d[0].hoursAgo)}h) — cần xử lý`;document.getElementById('holdBanner').classList.add('show');}}catch(e){}
+        }
+        function toggleAll(el){document.querySelectorAll('.row-cb').forEach(c=>c.checked=el.checked);}
     </script>
 }

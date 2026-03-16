@@ -4,18 +4,19 @@
     var products = ViewBag.Products as IEnumerable<QuanLiSanCauLong.Models.Product> ?? Enumerable.Empty<QuanLiSanCauLong.Models.Product>();
     int preInvId = ViewBag.FromInventoryId is int v ? v : 0;
 }
-
 <style>
     :root {
         --deep: #1a1209;
         --gold: #d4a017;
         --gold2: #f5c842;
         --warm: #f5ede0;
+        --cream: #fdf8f0;
         --border: #e8ddd0;
         --muted: #8a7560;
         --red: #c94b2a;
         --green: #15803d;
         --teal: #0d9488;
+        --blue: #1d4ed8;
     }
 
     *, *::before, *::after {
@@ -27,62 +28,89 @@
     }
 
     .md-hd {
-        padding: 1rem 1.3rem;
+        padding: 1.1rem 1.5rem;
         border-bottom: 1px solid var(--border);
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: #134e4a;
+        background: linear-gradient(135deg,#134e4a,#0f766e);
     }
 
     .md-title {
         font-family: 'Playfair Display',serif;
-        font-size: 1rem;
+        font-size: 1.05rem;
         font-weight: 700;
         color: #fff;
+        display: flex;
+        align-items: center;
+        gap: .55rem;
     }
 
-        .md-title em {
-            color: #5eead4;
-            font-style: italic;
-        }
+    .md-title-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        background: rgba(255,255,255,.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .85rem;
+    }
 
     .md-close {
         background: none;
         border: none;
-        color: rgba(255,255,255,.4);
-        font-size: 1rem;
+        color: rgba(255,255,255,.5);
+        font-size: .95rem;
         cursor: pointer;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: .15s;
     }
 
         .md-close:hover {
+            background: rgba(255,255,255,.15);
             color: #fff;
         }
 
     .md-body {
-        padding: 1.2rem 1.3rem;
+        padding: 1.3rem 1.5rem;
         max-height: 72vh;
         overflow-y: auto;
     }
 
+        .md-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .md-body::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
     .md-ft {
-        padding: .85rem 1.3rem;
+        padding: .9rem 1.5rem;
         border-top: 1px solid var(--border);
-        background: var(--warm);
+        background: var(--cream);
         display: flex;
         justify-content: flex-end;
+        align-items: center;
         gap: .55rem;
     }
 
-    .sec-hd {
-        font-size: .62rem;
+    .sec {
+        font-size: .6rem;
         font-weight: 700;
-        letter-spacing: .15em;
+        letter-spacing: .16em;
         text-transform: uppercase;
         color: var(--muted);
-        padding: .5rem 0;
-        margin-bottom: .75rem;
+        padding: .45rem 0;
         border-bottom: 1px solid var(--border);
+        margin-bottom: .85rem;
         display: flex;
         align-items: center;
         gap: .38rem;
@@ -91,103 +119,120 @@
     .fg {
         display: flex;
         flex-direction: column;
-        gap: .25rem;
-        margin-bottom: .8rem;
+        gap: .28rem;
+        margin-bottom: .82rem;
     }
 
         .fg label {
-            font-size: .72rem;
+            font-size: .73rem;
             font-weight: 700;
             color: var(--deep);
         }
 
-        .fg .hint {
-            font-size: .66rem;
-            color: var(--muted);
-        }
+    .hint {
+        font-size: .67rem;
+        color: var(--muted);
+    }
 
     .fi {
-        padding: .6rem .85rem;
-        border: 1px solid var(--border);
-        border-radius: 7px;
-        font-family: 'Outfit',sans-serif;
-        font-size: .83rem;
+        padding: .58rem .85rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-size: .84rem;
         color: var(--deep);
         background: #fff;
         outline: none;
-        transition: border-color .2s;
         width: 100%;
+        transition: all .2s;
     }
 
         .fi:focus {
             border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(13,148,136,.1);
         }
-    /* Combo */
-    .combo-w {
+
+    textarea.fi {
+        resize: vertical;
+        min-height: 60px;
+    }
+
+    .cmb-wrap {
         position: relative;
     }
 
-    .combo-list {
+    .cmb-list {
         position: absolute;
-        top: 100%;
+        top: calc(100% + 4px);
         left: 0;
         right: 0;
         background: #fff;
-        border: 1px solid var(--border);
-        border-radius: 7px;
-        z-index: 100;
-        box-shadow: 0 4px 16px rgba(0,0,0,.12);
-        max-height: 200px;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        z-index: 200;
+        box-shadow: 0 8px 30px rgba(0,0,0,.12);
+        max-height: 210px;
         overflow-y: auto;
         display: none;
     }
 
-        .combo-list.show {
+        .cmb-list.open {
             display: block;
         }
 
-    .combo-opt {
-        padding: .42rem .82rem;
+    .cmb-item {
+        padding: .48rem .85rem;
         font-size: .82rem;
         cursor: pointer;
         color: var(--deep);
         display: flex;
-        align-items: center;
         justify-content: space-between;
+        transition: background .1s;
     }
 
-        .combo-opt:hover {
+        .cmb-item:hover {
             background: var(--warm);
         }
 
-        .combo-opt .co-stk {
+        .cmb-item small {
             font-size: .68rem;
-            font-weight: 700;
             color: var(--muted);
         }
-    /* Flow layout */
-    .flow-grid {
+
+    /* flow layout */
+    .flow-row {
         display: grid;
-        grid-template-columns: 1fr 36px 1fr;
-        gap: .6rem;
+        grid-template-columns: 1fr 52px 1fr;
         align-items: end;
-        margin-bottom: .85rem;
+        gap: .55rem;
+        margin-bottom: .9rem;
     }
 
-    .flow-arrow {
+    .flow-mid {
         display: flex;
         align-items: center;
         justify-content: center;
-        padding-bottom: .55rem;
-        color: var(--teal);
-        font-size: 1.3rem;
+        padding-bottom: .82rem;
     }
-    /* Stock preview */
+
+    .flow-arrow {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg,#134e4a,#0f766e);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: .9rem;
+    }
+
+    /* stock preview */
     .stk-preview {
         display: grid;
-        grid-template-columns: 1fr 36px 1fr;
-        gap: .6rem;
-        margin-bottom: .85rem;
+        grid-template-columns: 1fr 40px 1fr;
+        align-items: center;
+        gap: .5rem;
+        margin-bottom: .9rem;
         display: none;
     }
 
@@ -195,94 +240,69 @@
             display: grid;
         }
 
-    .stk-c {
-        background: #fff;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: .65rem .75rem;
+    .stk-card {
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: .7rem .85rem;
         text-align: center;
+        background: #fff;
     }
 
-        .stk-c.src {
+        .stk-card.from {
             border-top: 3px solid var(--red);
         }
 
-        .stk-c.dst {
+        .stk-card.to {
             border-top: 3px solid var(--teal);
         }
 
-    .stk-n {
+    .stk-card-n {
         font-family: 'Playfair Display',serif;
-        font-size: 1.2rem;
+        font-size: 1.3rem;
         font-weight: 700;
+        color: var(--deep);
         line-height: 1;
     }
 
-    .stk-l {
+    .stk-card-l {
         font-size: .58rem;
-        letter-spacing: .08em;
+        font-weight: 600;
+        letter-spacing: .1em;
         text-transform: uppercase;
         color: var(--muted);
         margin-top: .15rem;
     }
 
-    .stk-after {
+    .stk-card-after {
         font-size: .7rem;
-        color: var(--muted);
-        margin-top: .25rem;
+        margin-top: .3rem;
+        font-weight: 600;
     }
 
-        .stk-after.red {
+        .stk-card-after.red {
             color: var(--red);
         }
 
-        .stk-after.teal {
+        .stk-card-after.teal {
             color: var(--teal);
         }
 
-    .flow-sep {
+    .preview-arrow {
         display: flex;
         align-items: center;
         justify-content: center;
         color: var(--teal);
-        font-size: 1rem;
-    }
-    /* Qty presets */
-    .qty-presets {
-        display: flex;
-        gap: .3rem;
-        flex-wrap: wrap;
-        margin-top: .35rem;
+        font-size: 1.2rem;
     }
 
-    .qty-pill {
-        padding: .18rem .55rem;
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        font-size: .7rem;
-        cursor: pointer;
-        background: #fff;
-        transition: all .15s;
-        color: var(--muted);
-    }
-
-        .qty-pill:hover {
-            border-color: var(--teal);
-            background: rgba(13,148,136,.07);
-            color: var(--teal);
-        }
-
-        .qty-pill.max-pill {
-            border-style: dashed;
-        }
-    /* Warn */
+    /* warn */
     .warn-box {
-        background: #fff7ed;
-        border: 1px solid #fed7aa;
-        border-radius: 7px;
-        padding: .55rem .8rem;
-        font-size: .75rem;
-        color: #c2410c;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: .6rem .85rem;
+        font-size: .77rem;
+        color: #dc2626;
         display: none;
         align-items: center;
         gap: .4rem;
@@ -292,96 +312,131 @@
         .warn-box.show {
             display: flex;
         }
-    /* Buttons */
-    .btn-teal {
-        background: linear-gradient(135deg,#0d9488,#14b8a6);
-        color: #fff;
-        border: none;
-        padding: .62rem 1.3rem;
-        font-size: .84rem;
-        font-weight: 700;
-        border-radius: 7px;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: .38rem;
-        transition: all .2s;
+
+    /* qty */
+    .qty-btns {
+        display: flex;
+        gap: .28rem;
+        flex-wrap: wrap;
+        margin-top: .32rem;
     }
 
-        .btn-teal:hover {
-            box-shadow: 0 4px 14px rgba(13,148,136,.3);
-            transform: translateY(-1px);
-        }
-
-        .btn-teal:disabled {
-            opacity: .6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-    .btn-s {
-        padding: .6rem 1.1rem;
+    .qty-btn {
+        padding: .15rem .48rem;
         border: 1.5px solid var(--border);
-        border-radius: 7px;
+        border-radius: 5px;
+        font-size: .7rem;
+        font-weight: 600;
+        cursor: pointer;
         background: #fff;
-        font-size: .82rem;
+        color: var(--muted);
+        transition: .15s;
+    }
+
+        .qty-btn:hover {
+            border-color: var(--teal);
+            color: var(--teal);
+        }
+
+        .qty-btn.max-btn {
+            border-style: dashed;
+        }
+
+    /* buttons */
+    .btn-cancel {
+        padding: .6rem 1.2rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        font-size: .83rem;
         font-weight: 600;
         cursor: pointer;
         color: var(--muted);
-        transition: all .18s;
+        transition: .18s;
     }
 
-        .btn-s:hover {
+        .btn-cancel:hover {
             border-color: var(--deep);
             color: var(--deep);
+        }
+
+    .btn-save {
+        padding: .62rem 1.4rem;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg,#134e4a,#0f766e);
+        font-size: .83rem;
+        font-weight: 700;
+        color: #fff;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        transition: .2s;
+        box-shadow: 0 2px 8px rgba(19,78,74,.3);
+    }
+
+        .btn-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 16px rgba(19,78,74,.4);
+        }
+
+        .btn-save:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 </style>
 
 <div class="md-hd">
-    <span class="md-title"><i class="bi bi-arrow-left-right me-1" style="color:#5eead4"></i> Chuyển <em>Kho</em></span>
+    <div class="md-title">
+        <span class="md-title-icon"><i class="bi bi-arrow-left-right" style="color:#5eead4"></i></span>
+        Chuyển <em style="color:#5eead4;font-style:italic">Kho</em>
+    </div>
     <button class="md-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
 </div>
 
 <div class="md-body">
 
-    <!-- SẢN PHẨM -->
+    <div class="sec"><i class="bi bi-box-seam"></i> Sản phẩm</div>
     <div class="fg">
-        <label>Sản phẩm cần chuyển <span style="color:var(--red)">*</span></label>
-        <div class="combo-w">
-            <input type="text" id="tr_prod_txt" class="fi" placeholder="Tìm sản phẩm..."
-                   oninput="filterTrProd(this.value)" onfocus="showCombo('trProdList')" />
+        <label>Sản phẩm <span style="color:var(--red)">*</span></label>
+        <div class="cmb-wrap">
+            <input type="text" id="tr_prod_txt" class="fi" placeholder="Tìm tên hoặc SKU..."
+                   oninput="filterTrProd(this.value)" onfocus="showCmb('trProdList')" />
             <input type="hidden" id="tr_prod_id" />
-            <input type="hidden" id="tr_from_inv" value="@preInvId" />
-            <div class="combo-list" id="trProdList">
+            <div class="cmb-list" id="trProdList">
                 @foreach (var p in products)
                 {
-                    <div class="combo-opt" onclick="pickTrProd('@Html.Raw(p.ProductName.Replace("'", "\'"))',@p.ProductId)">
-                        <span>@p.ProductName <span style="font-size:.66rem;color:var(--muted);">@p.ProductCode</span></span>
-                        <span class="co-stk">@p.Unit</span>
+                    <div class="cmb-item" onclick="pickTrProd('@Html.Raw(p.ProductName.Replace("'", "\\\'"))',@p.ProductId)">
+                        <span>@p.ProductName <small>· @p.ProductCode</small></span>
+                        <small>@p.Unit</small>
                     </div>
                 }
             </div>
         </div>
     </div>
 
-    <!-- FROM → TO -->
-    <div class="sec-hd"><i class="bi bi-arrow-left-right"></i> Điểm xuất phát và điểm đến</div>
-    <div class="flow-grid">
-        <div class="fg" style="margin-bottom:0;">
+    <div class="sec"><i class="bi bi-building"></i> Hành trình chuyển kho</div>
+    <div class="flow-row">
+        <div class="fg" style="margin-bottom:0">
             <label>Từ cơ sở <span style="color:var(--red)">*</span></label>
             <select id="tr_from" class="fi" onchange="onTrFacChange()">
-                <option value="">-- Từ cơ sở --</option>
+                <option value="">-- Xuất từ --</option>
                 @foreach (var f in facilities)
                 {
                     <option value="@f.FacilityId">@f.FacilityName</option>
                 }
             </select>
         </div>
-        <div class="flow-arrow"><i class="bi bi-arrow-right"></i></div>
-        <div class="fg" style="margin-bottom:0;">
+        <div class="flow-mid">
+            <div class="flow-arrow"><i class="bi bi-arrow-right"></i></div>
+        </div>
+        <div class="fg" style="margin-bottom:0">
             <label>Đến cơ sở <span style="color:var(--red)">*</span></label>
             <select id="tr_to" class="fi" onchange="onTrFacChange()">
-                <option value="">-- Đến cơ sở --</option>
+                <option value="">-- Nhập vào --</option>
                 @foreach (var f in facilities)
                 {
                     <option value="@f.FacilityId">@f.FacilityName</option>
@@ -390,157 +445,99 @@
         </div>
     </div>
 
-    <!-- STOCK PREVIEW -->
+    @* Stock preview *@
     <div class="stk-preview" id="trStkPreview">
-        <div class="stk-c src">
-            <div class="stk-l">Xuất từ</div>
-            <div class="stk-n" id="trSrcQty" style="color:var(--red);">—</div>
-            <div class="stk-after" id="trSrcAfter">Sau khi chuyển: —</div>
+        <div class="stk-card from">
+            <div class="stk-card-n" id="trSrcQty">—</div>
+            <div class="stk-card-l">Cơ sở xuất</div>
+            <div class="stk-card-after red" id="trSrcAfter"></div>
         </div>
-        <div class="flow-sep"><i class="bi bi-arrow-right"></i></div>
-        <div class="stk-c dst">
-            <div class="stk-l">Nhập vào</div>
-            <div class="stk-n" id="trDstQty" style="color:var(--teal);">—</div>
-            <div class="stk-after" id="trDstAfter">Sau khi chuyển: —</div>
+        <div class="preview-arrow"><i class="bi bi-arrow-right"></i></div>
+        <div class="stk-card to">
+            <div class="stk-card-n" id="trDstQty">—</div>
+            <div class="stk-card-l">Cơ sở nhận</div>
+            <div class="stk-card-after teal" id="trDstAfter"></div>
         </div>
     </div>
 
-    <!-- SỐ LƯỢNG -->
+    <div class="sec"><i class="bi bi-hash"></i> Số lượng</div>
     <div class="fg">
         <label>Số lượng chuyển <span style="color:var(--red)">*</span></label>
-        <input type="number" id="tr_qty" class="fi" min="1" value="1" placeholder="SL" oninput="calcTrPreview()" />
-        <div class="qty-presets">
+        <input type="number" id="tr_qty" class="fi" min="1" value="1" oninput="calcTrPreview()" />
+        <div class="qty-btns">
             @foreach (var q in new[] { 1, 5, 10, 20, 50 })
             {
-                <span class="qty-pill" onclick="document.getElementById('tr_qty').value=@q;calcTrPreview();">@q</span>
+                <span class="qty-btn" onclick="document.getElementById('tr_qty').value=@q;calcTrPreview()">@q</span>
             }
-            <span class="qty-pill max-pill" onclick="setTrMax()">Tất cả</span>
+            <span class="qty-btn max-btn" onclick="setTrMax()">Tất cả</span>
         </div>
-        <div class="warn-box" id="trWarn"><i class="bi bi-exclamation-triangle-fill"></i> Vượt quá tồn kho khả dụng!</div>
+        <div class="warn-box" id="trWarn"><i class="bi bi-exclamation-triangle-fill"></i> Số lượng vượt tồn kho cơ sở xuất!</div>
     </div>
 
     <div class="fg">
         <label>Ghi chú</label>
-        <textarea id="tr_note" class="fi" rows="2" placeholder="Lý do chuyển kho..."></textarea>
+        <textarea id="tr_note" class="fi" rows="2" placeholder="Lý do chuyển kho, ghi chú thêm..."></textarea>
     </div>
+
 </div>
 
 <div class="md-ft">
-    <button class="btn-s" data-bs-dismiss="modal">Hủy</button>
-    <button class="btn-teal" id="trBtnSave" onclick="submitTransfer()">
+    <button class="btn-cancel" data-bs-dismiss="modal">Hủy</button>
+    <button class="btn-save" id="trBtnSave" onclick="submitTransfer()">
         <i class="bi bi-arrow-left-right"></i> Xác nhận chuyển kho
     </button>
 </div>
 
 <script>
-    const TR_PRODS  = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(products.Select(p => new { id = p.ProductId, name = p.ProductName, code = p.ProductCode ?? p.SKU ?? "" })));
-    const TOKEN_TR  = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
-    let trFromAvail = 0, trDstAvail = 0, trFromInvId = 0, trDstInvId = 0;
+    const TR_PRODS=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(products.Select(p => new { id = p.ProductId, name = p.ProductName, code = p.ProductCode ?? p.SKU ?? "" })));
+    const TOKEN_TR=document.querySelector('input[name="__RequestVerificationToken"]')?.value??'';
+    let trFrom=0,trDst=0;
 
-    function showCombo(id) { document.querySelectorAll('.combo-list').forEach(l=>l.classList.remove('show')); document.getElementById(id)?.classList.add('show'); }
-    function filterTrProd(q) {
-        const l = document.getElementById('trProdList'); if(!l)return;
-        l.classList.add('show');
-        l.querySelectorAll('.combo-opt').forEach(o=>{ o.style.display=o.textContent.toLowerCase().includes(q.toLowerCase())?'':'none'; });
-        document.getElementById('tr_prod_id').value = '';
-    }
-    function pickTrProd(name, id) {
-        document.getElementById('tr_prod_txt').value = name;
-        document.getElementById('tr_prod_id').value  = id;
-        document.getElementById('trProdList').classList.remove('show');
-        onTrFacChange();
-    }
-    document.addEventListener('click', e=>{ if(!e.target.closest('.combo-w')) document.querySelectorAll('.combo-list').forEach(l=>l.classList.remove('show')); });
+    function showCmb(id){document.querySelectorAll('.cmb-list').forEach(l=>l.classList.remove('open'));document.getElementById(id)?.classList.add('open');}
+    function filterTrProd(q){const l=document.getElementById('trProdList');if(!l)return;l.classList.add('open');l.querySelectorAll('.cmb-item').forEach(o=>{o.style.display=o.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});document.getElementById('tr_prod_id').value='';}
+    function pickTrProd(name,id){document.getElementById('tr_prod_txt').value=name;document.getElementById('tr_prod_id').value=id;document.getElementById('trProdList').classList.remove('open');onTrFacChange();}
+    document.addEventListener('click',e=>{if(!e.target.closest('.cmb-wrap'))document.querySelectorAll('.cmb-list').forEach(l=>l.classList.remove('open'));});
 
-    async function onTrFacChange() {
-        const prodId = document.getElementById('tr_prod_id').value;
-        const fromId = document.getElementById('tr_from').value;
-        const toId   = document.getElementById('tr_to').value;
-        if(!prodId || !fromId) return;
-
-        // Fetch from stock
-        if(fromId) {
-            const d = await fetch(`/AdminInventory/GetProductStock?facilityId=${fromId}&productId=${prodId}`).then(r=>r.json()).catch(()=>null);
-            if(d?.success) {
-                trFromAvail = d.availableQuantity;
-                trFromInvId = 0; // server resolves inv ID
-                document.getElementById('trSrcQty').textContent = d.availableQuantity;
-                document.getElementById('trStkPreview').classList.add('show');
-            }
-        }
-        // Fetch dst stock (may not exist yet)
-        if(toId) {
-            const d = await fetch(`/AdminInventory/GetProductStock?facilityId=${toId}&productId=${prodId}`).then(r=>r.json()).catch(()=>null);
-            trDstAvail = d?.success ? d.availableQuantity : 0;
-            document.getElementById('trDstQty').textContent = d?.success ? d.availableQuantity : '0 (mới)';
-        }
+    async function onTrFacChange(){
+        const pid=document.getElementById('tr_prod_id').value;
+        const fid=document.getElementById('tr_from').value;
+        const tid=document.getElementById('tr_to').value;
+        if(!pid||!fid)return;
+        const df=await fetch(`/AdminInventory/GetProductStock?facilityId=${fid}&productId=${pid}`).then(r=>r.json()).catch(()=>null);
+        if(df?.success){trFrom=df.availableQuantity;document.getElementById('trSrcQty').textContent=trFrom;document.getElementById('trStkPreview').classList.add('show');}
+        if(tid){const dt=await fetch(`/AdminInventory/GetProductStock?facilityId=${tid}&productId=${pid}`).then(r=>r.json()).catch(()=>null);trDst=dt?.success?dt.availableQuantity:0;document.getElementById('trDstQty').textContent=dt?.success?dt.availableQuantity:'0 (mới)';}
         calcTrPreview();
     }
-
-    function calcTrPreview() {
-        const qty = parseInt(document.getElementById('tr_qty').value)||0;
-        const srcAfter = trFromAvail - qty;
-        const dstAfter = trDstAvail + qty;
-        const srcEl = document.getElementById('trSrcAfter');
-        const dstEl = document.getElementById('trDstAfter');
-        srcEl.textContent = `Sau khi chuyển: ${srcAfter}`;
-        srcEl.className   = 'stk-after ' + (srcAfter < 0 ? 'red' : '');
-        dstEl.textContent = `Sau khi chuyển: ${dstAfter}`;
-        dstEl.className   = 'stk-after teal';
-        document.getElementById('trWarn').classList.toggle('show', qty > trFromAvail && trFromAvail > 0);
+    function calcTrPreview(){
+        const qty=parseInt(document.getElementById('tr_qty').value)||0;
+        const sa=trFrom-qty,da=trDst+qty;
+        const se=document.getElementById('trSrcAfter');const de=document.getElementById('trDstAfter');
+        se.textContent=`→ Sau: ${sa}`;se.className='stk-card-after '+(sa<0?'red':'');
+        de.textContent=`→ Sau: ${da}`;de.className='stk-card-after teal';
+        document.getElementById('trWarn').classList.toggle('show',qty>trFrom&&trFrom>0);
     }
+    function setTrMax(){document.getElementById('tr_qty').value=trFrom>0?trFrom:1;calcTrPreview();}
 
-    function setTrMax() {
-        document.getElementById('tr_qty').value = trFromAvail > 0 ? trFromAvail : 1;
-        calcTrPreview();
+    async function submitTransfer(){
+        const pid=document.getElementById('tr_prod_id').value;
+        const fid=document.getElementById('tr_from').value;
+        const tid=document.getElementById('tr_to').value;
+        const qty=parseInt(document.getElementById('tr_qty').value)||0;
+        const note=document.getElementById('tr_note').value;
+        if(!pid){alert('Vui lòng chọn sản phẩm!');return;}
+        if(!fid){alert('Vui lòng chọn cơ sở xuất!');return;}
+        if(!tid){alert('Vui lòng chọn cơ sở nhận!');return;}
+        if(fid===tid){alert('Cơ sở xuất và nhận phải khác nhau!');return;}
+        if(qty<=0){alert('Số lượng phải lớn hơn 0!');return;}
+        if(qty>trFrom&&trFrom>0&&!confirm(`Số lượng (${qty}) vượt tồn kho (${trFrom}). Tiếp tục?`))return;
+        const btn=document.getElementById('trBtnSave');
+        btn.disabled=true;btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span>...';
+        const fd=new FormData();fd.append('fromFacilityId',fid);fd.append('targetFacilityId',tid);fd.append('productId',pid);fd.append('quantity',qty);fd.append('note',note);
+        try{
+            const res=await fetch('/AdminInventory/Transfer',{method:'POST',headers:{'RequestVerificationToken':TOKEN_TR},body:fd}).then(r=>r.json());
+            if(res.success){bootstrap.Modal.getInstance(document.getElementById('invModal'))?.hide();showToast(res.message,true);setTimeout(()=>location.reload(),1600);}
+            else{alert(res.message||'Có lỗi xảy ra!');btn.disabled=false;btn.innerHTML='<i class="bi bi-arrow-left-right"></i> Xác nhận chuyển kho';}
+        }catch(e){alert('Lỗi kết nối!');btn.disabled=false;btn.innerHTML='<i class="bi bi-arrow-left-right"></i> Xác nhận chuyển kho';}
     }
-
-    async function submitTransfer() {
-        const prodId = document.getElementById('tr_prod_id').value;
-        const fromId = document.getElementById('tr_from').value;
-        const toId   = document.getElementById('tr_to').value;
-        const qty    = parseInt(document.getElementById('tr_qty').value)||0;
-        const note   = document.getElementById('tr_note').value;
-
-        if(!prodId) { alert('Vui lòng chọn sản phẩm!'); return; }
-        if(!fromId) { alert('Vui lòng chọn cơ sở xuất!'); return; }
-        if(!toId)   { alert('Vui lòng chọn cơ sở nhận!'); return; }
-        if(fromId === toId) { alert('Cơ sở xuất và nhận phải khác nhau!'); return; }
-        if(qty <= 0) { alert('Số lượng phải lớn hơn 0!'); return; }
-        if(qty > trFromAvail && trFromAvail > 0) {
-            const ok = confirm(`Số lượng (${qty}) vượt tồn kho khả dụng (${trFromAvail}). Tiếp tục?`);
-            if(!ok) return;
-        }
-
-        const btn = document.getElementById('trBtnSave');
-        btn.disabled=true; btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span>...';
-
-        const fd = new FormData();
-        fd.append('fromInventoryId',  trFromInvId || 0);  // server will resolve by facilityId+productId
-        fd.append('fromFacilityId',   fromId);
-        fd.append('targetFacilityId', toId);
-        fd.append('productId',        prodId);
-        fd.append('quantity',         qty);
-        fd.append('note',             note);
-
-        try {
-            const res = await fetch('/AdminInventory/Transfer', {
-                method:'POST', headers:{'RequestVerificationToken':TOKEN_TR}, body:fd
-            }).then(r=>r.json());
-            if(res.success) {
-                bootstrap.Modal.getInstance(document.getElementById('invModal'))?.hide();
-                const t=document.createElement('div');
-                t.style.cssText='position:fixed;bottom:1.5rem;right:1.5rem;background:#15803d;color:#fff;padding:.75rem 1.25rem;border-radius:8px;font-size:.84rem;font-weight:700;z-index:9999;display:flex;align-items:center;gap:.5rem;box-shadow:0 4px 16px rgba(0,0,0,.2);';
-                t.innerHTML=`<i class="bi bi-check-circle-fill"></i> ${res.message}`;
-                document.body.appendChild(t);
-                setTimeout(()=>{ t.style.opacity='0';t.style.transition='opacity .4s';setTimeout(()=>{t.remove();location.reload();},400);},1800);
-            } else {
-                alert(res.message||'Có lỗi xảy ra!');
-                btn.disabled=false; btn.innerHTML='<i class="bi bi-arrow-left-right"></i> Xác nhận chuyển kho';
-            }
-        } catch(e) {
-            alert('Lỗi kết nối!');
-            btn.disabled=false; btn.innerHTML='<i class="bi bi-arrow-left-right"></i> Xác nhận chuyển kho';
-        }
-    }
+    function showToast(msg,ok){const t=document.createElement('div');t.style.cssText=`position:fixed;bottom:1.5rem;right:1.5rem;background:${ok?'#0f766e':'#c94b2a'};color:#fff;padding:.75rem 1.3rem;border-radius:10px;font-size:.84rem;font-weight:700;z-index:9999;display:flex;align-items:center;gap:.5rem;box-shadow:0 6px 24px rgba(0,0,0,.2)`;t.innerHTML=`<i class="bi bi-${ok?'check-circle-fill':'exclamation-circle-fill'}"></i> ${msg}`;document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .4s';setTimeout(()=>t.remove(),400);},2200);}
 </script>

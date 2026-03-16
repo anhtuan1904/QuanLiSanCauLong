@@ -71,14 +71,14 @@ namespace QuanLiSanCauLong.ViewModels
     public class ProductCategoryGroupViewModel
     {
         public int CategoryId { get; set; }
-        public string CategoryName { get; set; }
-        public string CategoryType { get; set; }
-        public string Description { get; set; }
-        public string Icon { get; set; }
-        public List<ProductCardViewModel> Products { get; set; } = new();
-        public int ProductCount => Products?.Count ?? 0;
-    }
+        public string CategoryName { get; set; } = "";
 
+        // ✅ FIX: CategoryType đã xóa — dùng BehaviorType: "Retail" | "Rental" | "Service"
+        // Nếu view cũ đang dùng .CategoryType thì đổi sang .BehaviorType
+        public string BehaviorType { get; set; } = "Retail";
+
+        public List<ProductCardViewModel> Products { get; set; } = new();
+    }
     /// <summary>
     /// ViewModel cho thẻ sản phẩm (card) trong grid / list.
     /// </summary>

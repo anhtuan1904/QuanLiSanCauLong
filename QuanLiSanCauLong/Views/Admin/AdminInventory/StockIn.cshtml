@@ -2,74 +2,433 @@
 @{
     Layout = null;
     var facilities = ViewBag.Facilities as IEnumerable<QuanLiSanCauLong.Models.Facility> ?? Enumerable.Empty<QuanLiSanCauLong.Models.Facility>();
-    var products   = ViewBag.Products   as IEnumerable<QuanLiSanCauLong.Models.Product>  ?? Enumerable.Empty<QuanLiSanCauLong.Models.Product>();
-    int    preProductId   = 0;
+    var products = ViewBag.Products as IEnumerable<QuanLiSanCauLong.Models.Product> ?? Enumerable.Empty<QuanLiSanCauLong.Models.Product>();
+    int preProductId = 0;
     int.TryParse(Context.Request.Query["preProductId"], out preProductId);
     string preProductName = Context.Request.Query["preProductName"].ToString() ?? "";
-    int    preFacilityId  = Model.FacilityId > 0 ? Model.FacilityId : 0;}
-
+    int preFacilityId = Model.FacilityId > 0 ? Model.FacilityId : 0;
+}
 <style>
-:root{--deep:#1a1209;--gold:#d4a017;--gold2:#f5c842;--warm:#f5ede0;--border:#e8ddd0;--muted:#8a7560;--red:#c94b2a;--green:#15803d;}
-*,*::before,*::after{box-sizing:border-box;}*{font-family:'Outfit',sans-serif;}
-.md-hd{padding:1rem 1.3rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--deep);}
-.md-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#fff;}
-.md-title em{color:var(--gold2);font-style:italic;}
-.md-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:1rem;cursor:pointer;}
-.md-close:hover{color:#fff;}
-.md-body{padding:1.2rem 1.3rem;max-height:72vh;overflow-y:auto;}
-.md-ft{padding:.85rem 1.3rem;border-top:1px solid var(--border);background:var(--warm);display:flex;justify-content:flex-end;gap:.55rem;}
-.sec-hd{font-size:.62rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:.5rem 0;margin-bottom:.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.38rem;}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
-.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;}
-.fg{display:flex;flex-direction:column;gap:.25rem;margin-bottom:.8rem;}
-.fg label{font-size:.72rem;font-weight:700;color:var(--deep);}
-.fg .req{color:var(--red);}
-.fg .hint{font-size:.66rem;color:var(--muted);}
-.fi{padding:.58rem .82rem;border:1px solid var(--border);border-radius:7px;font-family:'Outfit',sans-serif;font-size:.83rem;color:var(--deep);background:#fff;outline:none;transition:border-color .2s;width:100%;}
-.fi:focus{border-color:var(--gold);}
-/* Combobox */
-.combo-w{position:relative;}
-.combo-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:7px;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:200px;overflow-y:auto;display:none;}
-.combo-list.show{display:block;}
-.combo-opt{padding:.45rem .82rem;font-size:.82rem;cursor:pointer;color:var(--deep);display:flex;align-items:center;justify-content:space-between;}
-.combo-opt:hover{background:var(--warm);}
-.combo-opt .co-stock{font-size:.68rem;color:var(--muted);}
-/* Quick qty */
-.qty-presets{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.35rem;}
-.qty-pill{padding:.18rem .55rem;border:1px solid var(--border);border-radius:4px;font-size:.7rem;cursor:pointer;background:#fff;transition:all .15s;color:var(--muted);}
-.qty-pill:hover{border-color:var(--gold);background:rgba(212,160,23,.07);color:var(--deep);}
-/* Stock indicator */
-.stk-info{background:var(--warm);border:1px solid var(--border);border-radius:7px;padding:.6rem .85rem;font-size:.8rem;display:none;}
-.stk-info.show{display:flex;align-items:center;justify-content:space-between;gap:.75rem;}
-.stk-info .si-val{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;}
-/* Item rows */
-.item-row{background:var(--warm);border:1px solid var(--border);border-radius:8px;padding:.75rem .9rem;margin-bottom:.6rem;position:relative;}
-.item-del{position:absolute;top:.5rem;right:.5rem;width:22px;height:22px;border-radius:4px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:.62rem;transition:all .15s;}
-.item-del:hover{border-color:var(--red);color:var(--red);}
-.btn-add-item{padding:.38rem .85rem;border:1.5px dashed var(--border);border-radius:6px;background:#fff;font-size:.76rem;font-weight:700;cursor:pointer;color:var(--muted);transition:all .15s;display:flex;align-items:center;gap:.3rem;margin-top:.5rem;}
-.btn-add-item:hover{border-color:var(--gold);color:var(--deep);}
-/* Buttons */
-.btn-p{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--deep);border:none;padding:.62rem 1.3rem;font-size:.84rem;font-weight:700;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:.38rem;transition:all .2s;}
-.btn-p:hover{box-shadow:0 4px 14px rgba(212,160,23,.35);transform:translateY(-1px);}
-.btn-p:disabled{opacity:.6;cursor:not-allowed;transform:none;}
-.btn-s{padding:.6rem 1.1rem;border:1.5px solid var(--border);border-radius:7px;background:#fff;font-size:.82rem;font-weight:600;cursor:pointer;color:var(--muted);transition:all .18s;}
-.btn-s:hover{border-color:var(--deep);color:var(--deep);}
-/* Optional section toggle */
-.opt-toggle{display:flex;align-items:center;gap:.4rem;font-size:.74rem;font-weight:600;color:var(--muted);cursor:pointer;user-select:none;padding:.4rem 0;margin-bottom:.6rem;}
-.opt-toggle i{transition:transform .2s;}
-.opt-toggle.open i{transform:rotate(90deg);}
-.opt-section{display:none;}
-.opt-section.show{display:block;}
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --warm: #f5ede0;
+        --cream: #fdf8f0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+        --red: #c94b2a;
+        --green: #15803d;
+        --blue: #1d4ed8;
+    }
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    * {
+        font-family: 'Outfit',sans-serif;
+    }
+
+    /* modal chrome */
+    .md-hd {
+        padding: 1.1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(135deg,#0f4c1a,#166534);
+    }
+
+    .md-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+    }
+
+    .md-title-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        background: rgba(255,255,255,.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .85rem;
+    }
+
+    .md-close {
+        background: none;
+        border: none;
+        color: rgba(255,255,255,.5);
+        font-size: .95rem;
+        cursor: pointer;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: .15s;
+    }
+
+        .md-close:hover {
+            background: rgba(255,255,255,.15);
+            color: #fff;
+        }
+
+    .md-body {
+        padding: 1.3rem 1.5rem;
+        max-height: 72vh;
+        overflow-y: auto;
+    }
+
+        .md-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .md-body::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+    .md-ft {
+        padding: .9rem 1.5rem;
+        border-top: 1px solid var(--border);
+        background: var(--cream);
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: .55rem;
+    }
+
+    /* fields */
+    .sec {
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        color: var(--muted);
+        padding: .45rem 0;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: .85rem;
+        display: flex;
+        align-items: center;
+        gap: .38rem;
+    }
+
+    .row2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .8rem;
+    }
+
+    .row3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: .75rem;
+    }
+
+    .fg {
+        display: flex;
+        flex-direction: column;
+        gap: .28rem;
+        margin-bottom: .82rem;
+    }
+
+        .fg label {
+            font-size: .73rem;
+            font-weight: 700;
+            color: var(--deep);
+        }
+
+    .req {
+        color: var(--red);
+    }
+
+    .hint {
+        font-size: .67rem;
+        color: var(--muted);
+    }
+
+    .fi {
+        padding: .58rem .85rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-size: .84rem;
+        color: var(--deep);
+        background: #fff;
+        outline: none;
+        width: 100%;
+        transition: all .2s;
+    }
+
+        .fi:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(212,160,23,.1);
+        }
+
+    textarea.fi {
+        resize: vertical;
+        min-height: 64px;
+    }
+
+    /* combobox */
+    .cmb-wrap {
+        position: relative;
+    }
+
+    .cmb-list {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        z-index: 200;
+        box-shadow: 0 8px 30px rgba(0,0,0,.12);
+        max-height: 210px;
+        overflow-y: auto;
+        display: none;
+    }
+
+        .cmb-list.open {
+            display: block;
+        }
+
+        .cmb-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .cmb-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+        }
+
+    .cmb-item {
+        padding: .48rem .85rem;
+        font-size: .82rem;
+        cursor: pointer;
+        color: var(--deep);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: background .1s;
+    }
+
+        .cmb-item:hover {
+            background: var(--warm);
+        }
+
+        .cmb-item small {
+            font-size: .68rem;
+            color: var(--muted);
+        }
+
+    /* item row */
+    .item-row {
+        background: var(--cream);
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: .85rem 1rem;
+        margin-bottom: .65rem;
+        position: relative;
+        transition: border-color .18s;
+    }
+
+        .item-row:focus-within {
+            border-color: rgba(212,160,23,.5);
+        }
+
+    .item-del {
+        position: absolute;
+        top: .55rem;
+        right: .55rem;
+        width: 22px;
+        height: 22px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--muted);
+        font-size: .62rem;
+        transition: .15s;
+    }
+
+        .item-del:hover {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+    /* qty presets */
+    .qty-btns {
+        display: flex;
+        gap: .28rem;
+        flex-wrap: wrap;
+        margin-top: .32rem;
+    }
+
+    .qty-btn {
+        padding: .15rem .48rem;
+        border: 1.5px solid var(--border);
+        border-radius: 5px;
+        font-size: .7rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: #fff;
+        color: var(--muted);
+        transition: .15s;
+    }
+
+        .qty-btn:hover {
+            border-color: var(--gold);
+            color: var(--deep);
+            background: rgba(212,160,23,.06);
+        }
+
+    /* total bar */
+    .total-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--deep);
+        border-radius: 10px;
+        padding: .75rem 1.1rem;
+        margin-top: .6rem;
+    }
+
+    .total-label {
+        font-size: .75rem;
+        color: rgba(255,255,255,.5);
+    }
+
+    .total-val {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--gold2);
+    }
+
+    /* collapsible optional */
+    .opt-hd {
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        font-size: .75rem;
+        font-weight: 600;
+        color: var(--muted);
+        cursor: pointer;
+        user-select: none;
+        padding: .38rem 0;
+        margin-bottom: .55rem;
+        border-top: 1px dashed var(--border);
+        margin-top: .5rem;
+    }
+
+        .opt-hd i.chevron {
+            transition: transform .2s;
+            font-size: .7rem;
+        }
+
+        .opt-hd.open i.chevron {
+            transform: rotate(90deg);
+        }
+
+    .opt-body {
+        display: none;
+    }
+
+        .opt-body.show {
+            display: block;
+        }
+
+    /* add item btn */
+    .btn-add {
+        padding: .38rem .9rem;
+        border: 1.5px dashed var(--border);
+        border-radius: 8px;
+        background: transparent;
+        font-size: .77rem;
+        font-weight: 700;
+        cursor: pointer;
+        color: var(--muted);
+        display: inline-flex;
+        align-items: center;
+        gap: .32rem;
+        transition: .18s;
+    }
+
+        .btn-add:hover {
+            border-color: var(--gold);
+            color: var(--deep);
+            background: rgba(212,160,23,.05);
+        }
+
+    /* footer buttons */
+    .btn-cancel {
+        padding: .6rem 1.2rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        font-size: .83rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--muted);
+        transition: .18s;
+    }
+
+        .btn-cancel:hover {
+            border-color: var(--deep);
+            color: var(--deep);
+        }
+
+    .btn-save {
+        padding: .62rem 1.4rem;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg,#0f4c1a,#166534);
+        font-size: .83rem;
+        font-weight: 700;
+        color: #fff;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        transition: .2s;
+        box-shadow: 0 2px 8px rgba(15,76,26,.3);
+    }
+
+        .btn-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 16px rgba(15,76,26,.4);
+        }
+
+        .btn-save:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
 </style>
 
 <div class="md-hd">
-    <span class="md-title"><i class="bi bi-box-arrow-in-down me-1" style="color:#4ade80"></i> Nhập <em>Kho</em></span>
+    <div class="md-title">
+        <span class="md-title-icon"><i class="bi bi-box-arrow-in-down" style="color:#4ade80"></i></span>
+        Nhập <em style="color:var(--gold2);font-style:italic">Kho</em>
+    </div>
     <button class="md-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
 </div>
 
 <div class="md-body">
 
-    <!-- CƠ SỞ + NGÀY -->
+    <div class="sec"><i class="bi bi-building"></i> Cơ sở & Ngày</div>
     <div class="row2">
         <div class="fg">
             <label>Cơ sở <span class="req">*</span></label>
@@ -77,7 +436,7 @@
                 <option value="">-- Chọn cơ sở --</option>
                 @foreach (var f in facilities)
                 {
-                    @Html.Raw($"<option value=\"{f.FacilityId}\"{(preFacilityId==f.FacilityId?" selected":"")}>{f.FacilityName}</option>")
+                    <option value="@f.FacilityId" selected="@(preFacilityId == f.FacilityId ? "selected" : null)">@f.FacilityName</option>
                 }
             </select>
         </div>
@@ -87,57 +446,53 @@
         </div>
     </div>
 
-    <!-- DANH SÁCH SẢN PHẨM NHẬP -->
-    <div class="sec-hd"><i class="bi bi-list-ul"></i> Sản phẩm nhập <span class="req">*</span></div>
-
+    <div class="sec"><i class="bi bi-list-ul"></i> Sản phẩm nhập <span class="req">*</span></div>
     <div id="siItemList">
-        <!-- Item 1 — auto pre-fill nếu có preProductId -->
         <div class="item-row" id="siItem0">
             <div class="row2">
-                <div class="fg" style="margin-bottom:.5rem;">
+                <div class="fg" style="margin-bottom:.5rem">
                     <label>Sản phẩm <span class="req">*</span></label>
-                    <div class="combo-w">
-                        <input type="text" class="fi si-prod-input" placeholder="Tìm sản phẩm..."
+                    <div class="cmb-wrap">
+                        <input type="text" class="fi si-prod-txt" placeholder="Tìm tên hoặc SKU..."
                                value="@preProductName"
-                               oninput="filterProdList(this, 'siProd0')"
-                               onfocus="showProdList('siProd0')" />
+                               oninput="filterSiProd(this,'siPL0')" onfocus="showCmb('siPL0')" />
                         <input type="hidden" class="si-prod-id" value="@(preProductId > 0 ? preProductId.ToString() : "")" />
-                        <div class="combo-list" id="siProd0">
+                        <div class="cmb-list" id="siPL0">
                             @foreach (var p in products)
                             {
-                                <div class="combo-opt" onclick="pickProd(this,'@Html.Raw(p.ProductName.Replace("'","\'"))',@p.ProductId,'siProd0')">
-                                    <span>@p.ProductName <span style="font-size:.68rem;color:var(--muted);">@p.ProductCode</span></span>
-                                    <span class="co-stock">@p.Unit</span>
+                                <div class="cmb-item" onclick="pickSiProd(this,'@Html.Raw(p.ProductName.Replace("'", "\\\'"))',@p.ProductId,'siPL0')">
+                                    <span>@p.ProductName <small>· @p.ProductCode</small></span>
+                                    <small>@p.Unit</small>
                                 </div>
                             }
                         </div>
                     </div>
                 </div>
-                <div class="fg" style="margin-bottom:.5rem;">
+                <div class="fg" style="margin-bottom:.5rem">
                     <label>Số lượng <span class="req">*</span></label>
-                    <input type="number" class="fi si-qty" min="1" value="1" placeholder="SL" oninput="calcTotal()" />
-                    <div class="qty-presets">
-                        @foreach (var q in new[]{5,10,20,50,100})
+                    <input type="number" class="fi si-qty" min="1" value="1" oninput="calcTotal()" />
+                    <div class="qty-btns">
+                        @foreach (var q in new[] { 5, 10, 20, 50, 100 })
                         {
-                            <span class="qty-pill" onclick="setQty(this.closest('.item-row').querySelector('.si-qty'),@q)">@q</span>
+                            <span class="qty-btn" onclick="setQty(this.closest('.item-row').querySelector('.si-qty'),@q)">@q</span>
                         }
                     </div>
                 </div>
             </div>
             <div class="row2">
-                <div class="fg" style="margin-bottom:0;">
+                <div class="fg" style="margin-bottom:0">
                     <label>Giá nhập (đ/đơn vị)</label>
                     <input type="number" class="fi si-cost" min="0" step="1000" placeholder="0" oninput="calcTotal()" />
                 </div>
-                <div class="fg" style="margin-bottom:0;">
+                <div class="fg" style="margin-bottom:0">
                     <label>Vị trí lưu kho</label>
-                    <div class="combo-w">
+                    <div class="cmb-wrap">
                         <input type="text" class="fi si-loc" placeholder="Kệ A1, Tủ B2..."
-                               onfocus="showCombo('siLocList0')" oninput="filterCombo('siLocList0',this.value)" />
-                        <div class="combo-list" id="siLocList0">
-                            @foreach (var loc in new[]{"Kệ A1","Kệ A2","Kệ B1","Kệ B2","Tủ đông","Ngăn mát","Kho phụ"})
+                               onfocus="showCmb('siLocL0')" oninput="filterCmb('siLocL0',this.value)" />
+                        <div class="cmb-list" id="siLocL0">
+                            @foreach (var loc in new[] { "Kệ A1", "Kệ A2", "Kệ B1", "Kệ B2", "Tủ đông", "Ngăn mát", "Kho phụ" })
                             {
-                                <div class="combo-opt" onclick="pickCombo(this.closest('.item-row').querySelector('.si-loc'),'@loc');hideAllCombo();">@loc</div>
+                                <div class="cmb-item" onclick="pickCmb(this.closest('.item-row').querySelector('.si-loc'),'@loc');hideAllCmb()">@loc</div>
                             }
                         </div>
                     </div>
@@ -146,200 +501,80 @@
         </div>
     </div>
 
-    <button type="button" class="btn-add-item" onclick="addSiItem()">
+    <button type="button" class="btn-add" onclick="addSiItem()">
         <i class="bi bi-plus-circle"></i> Thêm sản phẩm khác
     </button>
 
-    <!-- TỔNG TIỀN -->
-    <div style="background:var(--deep);border-radius:8px;padding:.7rem 1rem;margin-top:.75rem;display:flex;align-items:center;justify-content:space-between;" id="siTotalRow" style="display:none">
-        <span style="font-size:.76rem;color:rgba(255,255,255,.5);">Tổng tiền nhập</span>
-        <span style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--gold2);" id="siTotal">0đ</span>
+    <div class="total-bar">
+        <span class="total-label">Tổng tiền nhập hàng</span>
+        <span class="total-val" id="siTotal">0đ</span>
     </div>
 
-    <!-- THÔNG TIN PHỤ (có thể ẩn) -->
-    <div class="opt-toggle" id="siOptTgl" onclick="toggleOpt('siOpt','siOptTgl')">
-        <i class="bi bi-chevron-right"></i> Thông tin lô hàng / chứng từ (tùy chọn)
+    <div class="opt-hd" id="siOptHd" onclick="toggleOpt('siOptBody','siOptHd')">
+        <i class="bi bi-chevron-right chevron"></i>
+        <span>Thông tin lô hàng & chứng từ</span>
+        <span style="font-size:.65rem;font-style:italic;margin-left:.2rem">(tùy chọn)</span>
     </div>
-    <div class="opt-section" id="siOpt">
+    <div class="opt-body" id="siOptBody">
         <div class="row3">
-            <div class="fg">
-                <label>Số lô (Batch)</label>
-                <input type="text" id="si_batch" class="fi" placeholder="LOT-2024-001" />
-            </div>
-            <div class="fg">
-                <label>Hạn sử dụng</label>
-                <input type="date" id="si_expiry" class="fi" />
-            </div>
-            <div class="fg">
-                <label>Số chứng từ</label>
-                <input type="text" id="si_ref" class="fi" placeholder="PO-001, HD-002..." />
-            </div>
+            <div class="fg"><label>Số lô (Batch)</label><input type="text" id="si_batch" class="fi" placeholder="LOT-2024-001" /></div>
+            <div class="fg"><label>Hạn sử dụng</label><input type="date" id="si_expiry" class="fi" /></div>
+            <div class="fg"><label>Số chứng từ</label><input type="text" id="si_ref" class="fi" placeholder="PO-001, HD-002..." /></div>
         </div>
-        <div class="fg">
-            <label>Ghi chú</label>
-            <textarea id="si_note" class="fi" rows="2" placeholder="Nhà cung cấp, ghi chú thêm..."></textarea>
-        </div>
+        <div class="fg"><label>Ghi chú</label><textarea id="si_note" class="fi" placeholder="Nhà cung cấp, ghi chú thêm..."></textarea></div>
     </div>
+
 </div>
 
 <div class="md-ft">
-    <button class="btn-s" data-bs-dismiss="modal">Hủy</button>
-    <button class="btn-p" id="siBtnSave" onclick="submitStockIn()">
+    <button class="btn-cancel" data-bs-dismiss="modal">Hủy</button>
+    <button class="btn-save" id="siBtnSave" onclick="submitStockIn()">
         <i class="bi bi-check-lg"></i> Xác nhận nhập kho
     </button>
 </div>
 
 <script>
-const SI_PRODS = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(products.Select(p => new {
-    id = p.ProductId,
-    name = p.ProductName,
-    code = p.ProductCode ?? p.SKU ?? "",
-    unit = p.Unit ?? "",
-    cost = p.CostPrice
-})));
-const TOKEN_SI = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+    const SI_PRODS=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(products.Select(p => new { id = p.ProductId, name = p.ProductName, code = p.ProductCode ?? p.SKU ?? "", unit = p.Unit ?? "", cost = p.CostPrice })));
+    const TOKEN_SI=document.querySelector('input[name="__RequestVerificationToken"]')?.value??'';
+    let siCnt=1;
 
-let siItemCount = 1;
+    function showCmb(id){hideAllCmb();document.getElementById(id)?.classList.add('open');}
+    function hideAllCmb(){document.querySelectorAll('.cmb-list').forEach(l=>l.classList.remove('open'));}
+    function filterCmb(id,q){const l=document.getElementById(id);if(!l)return;l.classList.add('open');l.querySelectorAll('.cmb-item').forEach(o=>{o.style.display=o.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});}
+    function pickCmb(inp,val){inp.value=val;hideAllCmb();}
+    function filterSiProd(inp,listId){const q=inp.value.toLowerCase();const l=document.getElementById(listId);if(!l)return;l.classList.add('open');l.querySelectorAll('.cmb-item').forEach(o=>{o.style.display=o.textContent.toLowerCase().includes(q)?'':'none';});inp.closest('.cmb-wrap')?.querySelector('.si-prod-id')?.setAttribute('value','');}
+    function pickSiProd(el,name,id,listId){const row=el.closest('.item-row');row.querySelector('.si-prod-txt').value=name;row.querySelector('.si-prod-id').value=id;const p=SI_PRODS.find(x=>x.id===id);if(p&&p.cost>0)row.querySelector('.si-cost').value=p.cost;document.getElementById(listId)?.classList.remove('open');calcTotal();}
+    document.addEventListener('click',e=>{if(!e.target.closest('.cmb-wrap'))hideAllCmb();});
+    function setQty(inp,val){inp.value=val;calcTotal();}
+    function calcTotal(){let t=0;document.querySelectorAll('.item-row').forEach(r=>{t+=(parseInt(r.querySelector('.si-qty')?.value)||0)*(parseFloat(r.querySelector('.si-cost')?.value)||0);});document.getElementById('siTotal').textContent=t>0?t.toLocaleString('vi-VN')+'đ':'0đ';}
 
-// ── Combobox ──
-function showProdList(listId) {
-    document.querySelectorAll('.combo-list').forEach(l => l.classList.remove('show'));
-    document.getElementById(listId)?.classList.add('show');
-}
-function hideAllCombo() { document.querySelectorAll('.combo-list').forEach(l => l.classList.remove('show')); }
-function showCombo(id) { hideAllCombo(); document.getElementById(id)?.classList.add('show'); }
-function pickCombo(inp, val) { inp.value = val; hideAllCombo(); }
-function filterCombo(listId, q) {
-    const l = document.getElementById(listId); if(!l) return;
-    l.classList.add('show');
-    l.querySelectorAll('.combo-opt').forEach(o => { o.style.display = o.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none'; });
-}
-function filterProdList(inp, listId) {
-    const q = inp.value.toLowerCase();
-    const l = document.getElementById(listId); if(!l) return;
-    l.classList.add('show');
-    l.querySelectorAll('.combo-opt').forEach(o => { o.style.display = o.textContent.toLowerCase().includes(q) ? '' : 'none'; });
-    // Clear hidden id if user is typing manually
-    inp.closest('.combo-w')?.querySelector('.si-prod-id')?.setAttribute('value','');
-}
-function pickProd(el, name, id, listId) {
-    const row    = el.closest('.item-row');
-    const txtInp = row.querySelector('.si-prod-input');
-    const hidInp = row.querySelector('.si-prod-id');
-    txtInp.value = name;
-    hidInp.value = id;
-    // Pre-fill cost from product default
-    const prod = SI_PRODS.find(p => p.id === id);
-    if (prod && prod.cost > 0) {
-        row.querySelector('.si-cost').value = prod.cost;
+    function addSiItem(){
+        const idx=siCnt++;
+        const tpl=document.getElementById('siItem0').cloneNode(true);
+        tpl.id='siItem'+idx;
+        tpl.querySelector('.si-prod-txt').value='';tpl.querySelector('.si-prod-id').value='';
+        tpl.querySelector('.si-qty').value='1';if(tpl.querySelector('.si-cost'))tpl.querySelector('.si-cost').value='';if(tpl.querySelector('.si-loc'))tpl.querySelector('.si-loc').value='';
+        const newId='siPL'+idx;
+        const cl=tpl.querySelector('.cmb-list');if(cl){cl.id=newId;tpl.querySelector('.si-prod-txt').setAttribute('oninput',`filterSiProd(this,'${newId}')`);tpl.querySelector('.si-prod-txt').setAttribute('onfocus',`showCmb('${newId}')`);}
+        const del=document.createElement('button');del.type='button';del.className='item-del';del.innerHTML='<i class="bi bi-x"></i>';del.onclick=()=>{tpl.remove();calcTotal();};tpl.appendChild(del);
+        document.getElementById('siItemList').appendChild(tpl);
     }
-    document.getElementById(listId)?.classList.remove('show');
-    calcTotal();
-}
-document.addEventListener('click', e => { if (!e.target.closest('.combo-w')) hideAllCombo(); });
+    function toggleOpt(bodyId,hdId){const b=document.getElementById(bodyId);const h=document.getElementById(hdId);b.classList.toggle('show');h.classList.toggle('open');}
 
-// ── Qty presets ──
-function setQty(inp, val) { inp.value = val; calcTotal(); }
-
-// ── Calc total ──
-function calcTotal() {
-    let total = 0;
-    document.querySelectorAll('.item-row').forEach(row => {
-        const qty  = parseInt(row.querySelector('.si-qty')?.value) || 0;
-        const cost = parseFloat(row.querySelector('.si-cost')?.value) || 0;
-        total += qty * cost;
-    });
-    document.getElementById('siTotal').textContent = total > 0 ? total.toLocaleString('vi-VN') + 'đ' : '0đ';
-}
-
-// ── Add item row ──
-function addSiItem() {
-    const idx = siItemCount++;
-    const tpl = document.getElementById('siItem0').cloneNode(true);
-    tpl.id = 'siItem' + idx;
-    // Reset values
-    tpl.querySelector('.si-prod-input').value = '';
-    tpl.querySelector('.si-prod-id').value    = '';
-    tpl.querySelector('.si-qty').value        = '1';
-    tpl.querySelector('.si-cost').value       = '';
-    tpl.querySelector('.si-loc').value        = '';
-    // Fix combo list IDs
-    const newListId = 'siProd' + idx;
-    const newLocId  = 'siLocList' + idx;
-    tpl.querySelector('.combo-list:first-of-type').id = newListId;
-    tpl.querySelector('.si-prod-input').setAttribute('oninput', `filterProdList(this,'${newListId}')`);
-    tpl.querySelector('.si-prod-input').setAttribute('onfocus', `showProdList('${newListId}')`);
-    // Add delete btn
-    const del = document.createElement('button');
-    del.type = 'button'; del.className = 'item-del';
-    del.innerHTML = '<i class="bi bi-x"></i>';
-    del.onclick = () => { tpl.remove(); calcTotal(); };
-    tpl.appendChild(del);
-    document.getElementById('siItemList').appendChild(tpl);
-}
-
-// ── Optional section toggle ──
-function toggleOpt(secId, tglId) {
-    const sec = document.getElementById(secId);
-    const tgl = document.getElementById(tglId);
-    sec.classList.toggle('show');
-    tgl.classList.toggle('open');
-}
-
-// ── Submit ──
-async function submitStockIn() {
-    const facId = document.getElementById('si_fac').value;
-    if (!facId) { alert('Vui lòng chọn cơ sở!'); return; }
-
-    const items = [];
-    let valid = true;
-    document.querySelectorAll('.item-row').forEach(row => {
-        const prodId = row.querySelector('.si-prod-id').value;
-        const qty    = parseInt(row.querySelector('.si-qty').value) || 0;
-        if (!prodId || qty <= 0) { valid = false; return; }
-        items.push({ productId: parseInt(prodId), quantity: qty, costPrice: parseFloat(row.querySelector('.si-cost')?.value)||0 });
-    });
-    if (!valid || items.length === 0) { alert('Vui lòng chọn sản phẩm và nhập số lượng!'); return; }
-
-    const btn = document.getElementById('siBtnSave');
-    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang xử lý...';
-
-    const payload = {
-        facilityId:        parseInt(facId),
-        transactionDate:   document.getElementById('si_date').value,
-        batchNumber:       document.getElementById('si_batch').value,
-        expiryDate:        document.getElementById('si_expiry').value || null,
-        documentReference: document.getElementById('si_ref').value,
-        note:              document.getElementById('si_note').value,
-        items: items
-    };
-
-    try {
-        const res = await fetch('/AdminInventory/StockIn', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': TOKEN_SI },
-            body: JSON.stringify(payload)
-        }).then(r => r.json());
-
-        if (res.success) {
-            bootstrap.Modal.getInstance(document.getElementById('invModal'))?.hide();
-            showToast(res.message, true);
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            alert(res.message || 'Có lỗi xảy ra!');
-            btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg"></i> Xác nhận nhập kho';
-        }
-    } catch(e) {
-        alert('Lỗi kết nối!');
-        btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg"></i> Xác nhận nhập kho';
+    async function submitStockIn(){
+        const facId=document.getElementById('si_fac').value;
+        if(!facId){alert('Vui lòng chọn cơ sở!');return;}
+        const items=[];let valid=true;
+        document.querySelectorAll('.item-row').forEach(r=>{const pid=r.querySelector('.si-prod-id').value;const qty=parseInt(r.querySelector('.si-qty').value)||0;if(!pid||qty<=0){valid=false;return;}items.push({productId:parseInt(pid),quantity:qty,costPrice:parseFloat(r.querySelector('.si-cost')?.value)||0});});
+        if(!valid||!items.length){alert('Vui lòng chọn sản phẩm và nhập số lượng!');return;}
+        const btn=document.getElementById('siBtnSave');
+        btn.disabled=true;btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span> Đang xử lý...';
+        const payload={facilityId:parseInt(facId),transactionDate:document.getElementById('si_date').value,batchNumber:document.getElementById('si_batch').value,expiryDate:document.getElementById('si_expiry').value||null,documentReference:document.getElementById('si_ref').value,note:document.getElementById('si_note').value,items};
+        try{
+            const res=await fetch('/AdminInventory/StockIn',{method:'POST',headers:{'Content-Type':'application/json','RequestVerificationToken':TOKEN_SI},body:JSON.stringify(payload)}).then(r=>r.json());
+            if(res.success){bootstrap.Modal.getInstance(document.getElementById('invModal'))?.hide();showToast(res.message,true);setTimeout(()=>location.reload(),1600);}
+            else{alert(res.message||'Có lỗi xảy ra!');btn.disabled=false;btn.innerHTML='<i class="bi bi-check-lg"></i> Xác nhận nhập kho';}
+        }catch(e){alert('Lỗi kết nối!');btn.disabled=false;btn.innerHTML='<i class="bi bi-check-lg"></i> Xác nhận nhập kho';}
     }
-}
-
-function showToast(msg, ok) {
-    const t = document.createElement('div');
-    t.style.cssText = `position:fixed;bottom:1.5rem;right:1.5rem;background:${ok?'#15803d':'#c94b2a'};color:#fff;padding:.75rem 1.25rem;border-radius:8px;font-size:.84rem;font-weight:700;z-index:9999;display:flex;align-items:center;gap:.5rem;box-shadow:0 4px 16px rgba(0,0,0,.2);`;
-    t.innerHTML = `<i class="bi bi-${ok?'check-circle-fill':'exclamation-circle-fill'}"></i> ${msg}`;
-    document.body.appendChild(t);
-    setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(() => t.remove(), 400); }, 2000);
-}
+    function showToast(msg,ok){const t=document.createElement('div');t.style.cssText=`position:fixed;bottom:1.5rem;right:1.5rem;background:${ok?'#15803d':'#c94b2a'};color:#fff;padding:.75rem 1.3rem;border-radius:10px;font-size:.84rem;font-weight:700;z-index:9999;display:flex;align-items:center;gap:.5rem;box-shadow:0 6px 24px rgba(0,0,0,.2);animation:slideUp .25s ease`;t.innerHTML=`<i class="bi bi-${ok?'check-circle-fill':'exclamation-circle-fill'}"></i> ${msg}`;document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .4s';setTimeout(()=>t.remove(),400);},2200);}
 </script>
