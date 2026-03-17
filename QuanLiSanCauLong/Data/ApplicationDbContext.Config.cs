@@ -5,7 +5,6 @@ namespace QuanLiSanCauLong.Data
 {
     /// <summary>
     /// Partial class — toàn bộ fluent configuration OnModelCreating
-    /// Chia theo region/domain để dễ đọc và maintain
     /// </summary>
     public partial class ApplicationDbContext
     {
@@ -22,8 +21,9 @@ namespace QuanLiSanCauLong.Data
             ConfigureServicesAndJobs(mb);
             ConfigureMisc(mb);
             ConfigureShifts(mb);
-            ConfigureReviews(mb);       // ← THÊM DÒNG NÀY
+            ConfigureReviews(mb);
         }
+
         // ════════════════════════════════════════════════════════════════
         // USERS
         // ════════════════════════════════════════════════════════════════
@@ -32,20 +32,13 @@ namespace QuanLiSanCauLong.Data
             mb.Entity<User>(e =>
             {
                 e.HasIndex(u => u.Email).IsUnique();
-
                 e.Property(u => u.Status).HasDefaultValue("Active");
                 e.Property(u => u.IsActive).HasDefaultValue(true);
                 e.Property(u => u.CreatedAt).HasDefaultValueSql("GETDATE()");
                 e.Property(u => u.UpdatedAt).HasDefaultValueSql("GETDATE()");
-
-                // AvatarUrl — nullable, max 500
-                e.Property(u => u.AvatarUrl)
-                    .HasMaxLength(500)
-                    .IsRequired(false);
-
+                e.Property(u => u.AvatarUrl).HasMaxLength(500).IsRequired(false);
                 e.HasOne(u => u.Facility).WithMany()
-                    .HasForeignKey(u => u.FacilityId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .HasForeignKey(u => u.FacilityId).OnDelete(DeleteBehavior.NoAction);
             });
         }
 
@@ -57,23 +50,20 @@ namespace QuanLiSanCauLong.Data
             mb.Entity<Court>(e =>
             {
                 e.HasOne(c => c.Facility).WithMany(f => f.Courts)
-                    .HasForeignKey(c => c.FacilityId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .HasForeignKey(c => c.FacilityId).OnDelete(DeleteBehavior.NoAction);
             });
 
             mb.Entity<PriceSlot>(e =>
             {
                 e.Property(p => p.Price).HasPrecision(10, 2);
                 e.HasOne(p => p.Facility).WithMany(f => f.PriceSlots)
-                    .HasForeignKey(p => p.FacilityId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .HasForeignKey(p => p.FacilityId).OnDelete(DeleteBehavior.NoAction);
             });
 
             mb.Entity<FacilityImage>(e =>
             {
                 e.HasOne(fi => fi.Facility).WithMany(f => f.FacilityImages)
-                    .HasForeignKey(fi => fi.FacilityId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .HasForeignKey(fi => fi.FacilityId).OnDelete(DeleteBehavior.Cascade);
             });
         }
 
@@ -85,12 +75,10 @@ namespace QuanLiSanCauLong.Data
             mb.Entity<Booking>(e =>
             {
                 e.HasIndex(b => b.BookingCode).IsUnique();
-
                 e.Property(b => b.CourtPrice).HasPrecision(10, 2);
                 e.Property(b => b.ServiceFee).HasPrecision(10, 2);
                 e.Property(b => b.DiscountAmount).HasPrecision(10, 2);
                 e.Property(b => b.TotalPrice).HasPrecision(10, 2);
-
                 e.HasOne(b => b.User).WithMany(u => u.Bookings)
                     .HasForeignKey(b => b.UserId).OnDelete(DeleteBehavior.NoAction);
                 e.HasOne(b => b.Court).WithMany(c => c.Bookings)
@@ -99,37 +87,26 @@ namespace QuanLiSanCauLong.Data
                     .HasForeignKey(b => b.CheckInBy).OnDelete(DeleteBehavior.NoAction);
             });
 
-            // ✅ MỚI: Cấu hình cho CourtReview (Đánh giá sân sau khi đặt)
             mb.Entity<CourtReview>(e =>
             {
-                e.HasIndex(r => new { r.CourtId, r.UserId, r.BookingId })
-                    .IsUnique(); // Mỗi booking chỉ được review 1 lần
-
+                e.HasIndex(r => new { r.CourtId, r.UserId, r.BookingId }).IsUnique();
                 e.Property(r => r.Content).HasMaxLength(1000);
                 e.Property(r => r.Rating).IsRequired();
             });
         }
+
         private void ConfigureReviews(ModelBuilder mb)
         {
-            // Cấu hình Like cho Review
             mb.Entity<ReviewLike>(e =>
             {
-                // Khóa ngoại trỏ đến User
-                e.HasOne(l => l.User)
-                    .WithMany()
-                    .HasForeignKey(l => l.UserId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                // Khóa ngoại trỏ đến Review (Sửa lại chỗ này)
-                e.HasOne(l => l.Review)
-                    .WithMany(r => r.Likes) // ← Phải chỉ định rõ r.Likes ở đây
-                    .HasForeignKey(l => l.ReviewId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                // Đảm bảo mỗi user chỉ like 1 lần (Unique Index)
+                e.HasOne(l => l.User).WithMany()
+                    .HasForeignKey(l => l.UserId).OnDelete(DeleteBehavior.NoAction);
+                e.HasOne(l => l.Review).WithMany(r => r.Likes)
+                    .HasForeignKey(l => l.ReviewId).OnDelete(DeleteBehavior.Cascade);
                 e.HasIndex(l => new { l.ReviewId, l.UserId }).IsUnique();
             });
         }
+
         // ════════════════════════════════════════════════════════════════
         // PRODUCTS
         // ════════════════════════════════════════════════════════════════
@@ -142,7 +119,6 @@ namespace QuanLiSanCauLong.Data
                 e.Property(p => p.CostPrice).HasPrecision(10, 2);
                 e.Property(p => p.SalePrice).HasPrecision(10, 2);
                 e.Property(p => p.COGSPrice).HasPrecision(10, 2);
-
                 e.HasOne(p => p.Category).WithMany(c => c.Products)
                     .HasForeignKey(p => p.CategoryId).OnDelete(DeleteBehavior.NoAction);
             });
@@ -157,7 +133,6 @@ namespace QuanLiSanCauLong.Data
                 e.Property(v => v.ReservedQuantity).HasDefaultValue(0);
                 e.Property(v => v.MinStockLevel).HasDefaultValue(0);
                 e.Property(v => v.IsActive).HasDefaultValue(true);
-
                 e.HasOne(v => v.Product).WithMany(p => p.Variants)
                     .HasForeignKey(v => v.ProductId).OnDelete(DeleteBehavior.Cascade);
                 e.HasIndex(v => v.ProductId);
@@ -172,7 +147,6 @@ namespace QuanLiSanCauLong.Data
             mb.Entity<Inventory>(e =>
             {
                 e.HasIndex(i => new { i.ProductId, i.FacilityId }).IsUnique();
-
                 e.HasOne(i => i.Product).WithMany(p => p.Inventories)
                     .HasForeignKey(i => i.ProductId).OnDelete(DeleteBehavior.NoAction);
                 e.HasOne(i => i.Facility).WithMany()
@@ -187,7 +161,6 @@ namespace QuanLiSanCauLong.Data
                 e.Property(b => b.Status).HasMaxLength(10).HasDefaultValue("Active");
                 e.Property(b => b.CostPrice).HasPrecision(18, 0);
                 e.Property(b => b.ReceivedDate).HasDefaultValueSql("GETDATE()");
-
                 e.HasOne(b => b.Inventory).WithMany(i => i.Batches)
                     .HasForeignKey(b => b.InventoryId).OnDelete(DeleteBehavior.Restrict);
                 e.HasIndex(b => b.InventoryId);
@@ -206,12 +179,10 @@ namespace QuanLiSanCauLong.Data
                 e.Property(t => t.CostPrice).HasPrecision(18, 0).HasDefaultValue(0m);
                 e.Property(t => t.SalePrice).HasPrecision(18, 0).HasDefaultValue(0m);
                 e.Property(t => t.TransactionDate).HasDefaultValueSql("GETDATE()");
-
                 e.HasOne(t => t.Product).WithMany()
                     .HasForeignKey(t => t.ProductId).OnDelete(DeleteBehavior.Restrict);
                 e.HasOne(t => t.Facility).WithMany()
                     .HasForeignKey(t => t.FacilityId).OnDelete(DeleteBehavior.Restrict);
-
                 e.HasIndex(t => t.ProductId);
                 e.HasIndex(t => t.FacilityId);
                 e.HasIndex(t => t.Type);
@@ -231,7 +202,6 @@ namespace QuanLiSanCauLong.Data
                 e.Property(r => r.CreatedBy).HasMaxLength(100);
                 e.Property(r => r.CleaningFeeCharged).HasPrecision(18, 0).HasDefaultValue(0m);
                 e.Property(r => r.RentedAt).HasDefaultValueSql("GETDATE()");
-
                 e.HasOne(r => r.Inventory).WithMany(i => i.RentalItems)
                     .HasForeignKey(r => r.InventoryId).OnDelete(DeleteBehavior.Restrict);
                 e.HasIndex(r => r.InventoryId);
@@ -239,7 +209,6 @@ namespace QuanLiSanCauLong.Data
                 e.HasIndex(r => r.RentedAt);
             });
 
-            // Kho cũ
             mb.Entity<StockTransaction>(e =>
             {
                 e.Property(st => st.TotalAmount).HasPrecision(10, 2);
@@ -253,7 +222,6 @@ namespace QuanLiSanCauLong.Data
             {
                 e.Property(std => std.UnitPrice).HasPrecision(10, 2);
                 e.Property(std => std.TotalPrice).HasPrecision(10, 2);
-
                 e.HasOne(std => std.Transaction).WithMany(st => st.Details)
                     .HasForeignKey(std => std.TransactionId).OnDelete(DeleteBehavior.Cascade);
                 e.HasOne(std => std.Product).WithMany()
@@ -272,7 +240,6 @@ namespace QuanLiSanCauLong.Data
                 e.Property(o => o.SubTotal).HasPrecision(10, 2);
                 e.Property(o => o.DiscountAmount).HasPrecision(10, 2);
                 e.Property(o => o.TotalAmount).HasPrecision(10, 2);
-
                 e.HasOne(o => o.Booking).WithMany(b => b.Orders)
                     .HasForeignKey(o => o.BookingId).OnDelete(DeleteBehavior.NoAction);
                 e.HasOne(o => o.User).WithMany(u => u.Orders)
@@ -288,7 +255,6 @@ namespace QuanLiSanCauLong.Data
                 e.Property(od => od.UnitPrice).HasPrecision(10, 2);
                 e.Property(od => od.DiscountAmount).HasPrecision(10, 2);
                 e.Property(od => od.TotalPrice).HasPrecision(10, 2);
-
                 e.HasOne(od => od.Order).WithMany(o => o.OrderDetails)
                     .HasForeignKey(od => od.OrderId).OnDelete(DeleteBehavior.Cascade);
                 e.HasOne(od => od.Product).WithMany(p => p.OrderDetails)
@@ -309,7 +275,6 @@ namespace QuanLiSanCauLong.Data
             mb.Entity<VoucherUsage>(e =>
             {
                 e.Property(vu => vu.DiscountAmount).HasPrecision(10, 2);
-
                 e.HasOne(vu => vu.Voucher).WithMany(v => v.VoucherUsages)
                     .HasForeignKey(vu => vu.VoucherId).OnDelete(DeleteBehavior.NoAction);
                 e.HasOne(vu => vu.User).WithMany()
@@ -339,16 +304,14 @@ namespace QuanLiSanCauLong.Data
 
             mb.Entity<BlogReviewLike>(e =>
             {
-                // ✅ Cập nhật: Thêm .IsUnique() để mỗi user chỉ like 1 lần
-                // Filter đảm bảo không bị lỗi nếu UserId null (trong trường hợp cho phép khách vãng lai nhưng không dùng unique)
                 e.HasIndex(l => new { l.ReviewId, l.UserId })
                     .IsUnique()
                     .HasFilter("[UserId] IS NOT NULL");
-
                 e.HasOne(l => l.Review).WithMany(r => r.Likes)
                     .HasForeignKey(l => l.ReviewId).OnDelete(DeleteBehavior.Cascade);
             });
         }
+
         // ════════════════════════════════════════════════════════════════
         // SERVICES & JOBS
         // ════════════════════════════════════════════════════════════════
@@ -373,7 +336,7 @@ namespace QuanLiSanCauLong.Data
         }
 
         // ════════════════════════════════════════════════════════════════
-        // MISC (Course / Stringing / Tournament / System)
+        // MISC — Course / Stringing / Tournament / System
         // ════════════════════════════════════════════════════════════════
         private static void ConfigureMisc(ModelBuilder mb)
         {
@@ -385,6 +348,20 @@ namespace QuanLiSanCauLong.Data
                 e.Property(x => x.DiscountFee).HasPrecision(18, 2);
                 e.Property(x => x.Status).HasDefaultValue("Active");
                 e.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
+                e.Property(x => x.UpdatedAt).HasDefaultValueSql("GETDATE()");
+
+                // Gallery images — cascade delete
+                e.HasMany(x => x.CourseImages)
+                    .WithOne(i => i.Course)
+                    .HasForeignKey(i => i.CourseId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            mb.Entity<CourseImage>(e =>
+            {
+                e.HasKey(x => x.ImageId);
+                e.Property(x => x.ImagePath).IsRequired();
+                e.HasIndex(x => x.CourseId);
             });
 
             mb.Entity<StringingService>(e =>
@@ -392,8 +369,22 @@ namespace QuanLiSanCauLong.Data
                 e.HasKey(x => x.StringingId);
                 e.Property(x => x.ServiceName).IsRequired().HasMaxLength(200);
                 e.Property(x => x.Price).HasPrecision(18, 2);
+                e.Property(x => x.DiscountPrice).HasPrecision(18, 2);  // ← THÊM MỚI
                 e.Property(x => x.Status).HasDefaultValue("Active");
                 e.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
+                e.Property(x => x.UpdatedAt).HasDefaultValueSql("GETDATE()");
+
+                e.HasMany(x => x.StringingImages)
+                    .WithOne(i => i.StringingService)
+                    .HasForeignKey(i => i.StringingId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            mb.Entity<StringingImage>(e =>
+            {
+                e.HasKey(x => x.ImageId);
+                e.Property(x => x.ImagePath).IsRequired();
+                e.HasIndex(x => x.StringingId);
             });
 
             mb.Entity<Tournament>(e =>
@@ -404,6 +395,19 @@ namespace QuanLiSanCauLong.Data
                 e.Property(x => x.PrizeMoney).HasPrecision(18, 2);
                 e.Property(x => x.Status).HasDefaultValue("Upcoming");
                 e.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
+                e.Property(x => x.UpdatedAt).HasDefaultValueSql("GETDATE()");
+
+                e.HasMany(x => x.TournamentImages)
+                    .WithOne(i => i.Tournament)
+                    .HasForeignKey(i => i.TournamentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            mb.Entity<TournamentImage>(e =>
+            {
+                e.HasKey(x => x.ImageId);
+                e.Property(x => x.ImagePath).IsRequired();
+                e.HasIndex(x => x.TournamentId);
             });
 
             mb.Entity<SystemSetting>(e =>
@@ -420,9 +424,8 @@ namespace QuanLiSanCauLong.Data
             });
         }
 
-
         // ════════════════════════════════════════════════════════════════
-        // ✅ MỚI: SHIFTS & SHIFT ASSIGNMENTS
+        // SHIFTS & SHIFT ASSIGNMENTS
         // ════════════════════════════════════════════════════════════════
         private static void ConfigureShifts(ModelBuilder mb)
         {
@@ -443,16 +446,12 @@ namespace QuanLiSanCauLong.Data
                 e.Property(a => a.Note).HasMaxLength(500);
                 e.Property(a => a.CreatedAt).HasDefaultValueSql("GETDATE()");
                 e.Property(a => a.UpdatedAt).HasDefaultValueSql("GETDATE()");
-
-                // Relationships
                 e.HasOne(a => a.User).WithMany()
                     .HasForeignKey(a => a.UserId).OnDelete(DeleteBehavior.Cascade);
                 e.HasOne(a => a.Shift).WithMany(s => s.Assignments)
                     .HasForeignKey(a => a.ShiftId).OnDelete(DeleteBehavior.Cascade);
                 e.HasOne(a => a.Facility).WithMany()
                     .HasForeignKey(a => a.FacilityId).OnDelete(DeleteBehavior.NoAction);
-
-                // Indexes — tối ưu query lịch phân ca
                 e.HasIndex(a => new { a.UserId, a.WorkDate })
                     .HasDatabaseName("IX_ShiftAssignments_UserId_WorkDate");
                 e.HasIndex(a => new { a.FacilityId, a.WorkDate })

@@ -1,80 +1,99 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuanLiSanCauLong.Models
 {
-    [Table("StringingServices")]
     public class StringingService
     {
         [Key]
         public int StringingId { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Tên dịch vụ không được để trống")]
         [StringLength(200)]
-        [Display(Name = "Tên Dịch Vụ")]
         public string ServiceName { get; set; } = string.Empty;
 
-        [StringLength(100)]
-        [Display(Name = "Thương Hiệu Dây")]
-        public string? Brand { get; set; }          // Yonex, Victor, Lining...
+        [Required]
+        [StringLength(250)]
+        public string Slug { get; set; } = string.Empty;
 
         [StringLength(100)]
-        [Display(Name = "Model Dây")]
-        public string? StringModel { get; set; }   // BG80, VS850...
+        public string? Brand { get; set; }
 
-        [StringLength(500)]
-        [Display(Name = "Mô Tả Ngắn")]
+        [StringLength(100)]
+        public string? StringModel { get; set; }
+
         public string? ShortDesc { get; set; }
 
-        [Required]
-        [Display(Name = "Mô Tả Chi Tiết")]
+        [Required(ErrorMessage = "Mô tả chi tiết không được để trống")]
         public string Description { get; set; } = string.Empty;
 
-        [Display(Name = "Giá Dịch Vụ (VNĐ)")]
-        [Column(TypeName = "decimal(18,0)")]
+        public string? FeaturedImage { get; set; }
+        public string? VideoUrl { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? Price { get; set; }
 
-        [Display(Name = "Thời Gian Thực Hiện (phút)")]
-        public int? DurationMinutes { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? DiscountPrice { get; set; }
 
-        [Display(Name = "Bảo Hành (ngày)")]
+        public int? DurationMinutes { get; set; }
         public int? WarrantyDays { get; set; }
 
-        [StringLength(100)]
-        [Display(Name = "Lực Căng Hỗ Trợ")]
-        public string? Tension { get; set; }        // VD: "20-30 lbs"
+        // Thông số kỹ thuật
+        [StringLength(50)]
+        public string? Tension { get; set; }
 
-        [StringLength(500)]
-        [Display(Name = "Ảnh Đại Diện")]
-        public string? FeaturedImage { get; set; }
+        public int? TensionMin { get; set; }
+        public int? TensionMax { get; set; }
 
-        [Display(Name = "Tính Năng")]
-        public string? Features { get; set; }
+        [StringLength(50)]
+        public string? StringColor { get; set; }
 
         [StringLength(20)]
-        [Display(Name = "Trạng Thái")]
-        public string Status { get; set; } = "Active";
+        public string? StringGauge { get; set; }
 
-        [Display(Name = "Nổi Bật")]
-        public bool IsFeatured { get; set; } = false;
+        // Nội dung thu hút
+        public string? Features { get; set; }
+        public string? Benefits { get; set; }
 
-        [Display(Name = "Phổ Biến")]
-        public bool IsPopular { get; set; } = false;
-
-        [Display(Name = "Thứ Tự Hiển Thị")]
         public int DisplayOrder { get; set; } = 0;
 
-        [Display(Name = "Tổng Đơn Hàng")]
+        [StringLength(20)]
+        public string Status { get; set; } = "Active";
+
+        public bool IsFeatured { get; set; } = false;
+        public bool IsPopular { get; set; } = false;
+
+        public int ViewCount { get; set; } = 0;
         public int TotalOrders { get; set; } = 0;
 
-        [Display(Name = "Lượt Xem")]
-        public int ViewCount { get; set; } = 0;
-
-        [StringLength(300)]
-        public string? Slug { get; set; }
+        public string? MetaTitle { get; set; }
+        public string? MetaDescription { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime? UpdatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; } = DateTime.Now;
+
+        public virtual ICollection<StringingImage>? StringingImages { get; set; }
+    }
+
+    public class StringingImage
+    {
+        [Key]
+        public int ImageId { get; set; }
+
+        [Required]
+        public int StringingId { get; set; }
+
+        [Required]
+        public string ImagePath { get; set; } = string.Empty;
+
+        [StringLength(200)]
+        public string? Caption { get; set; }
+
+        public bool IsPrimary { get; set; } = false;
+        public int DisplayOrder { get; set; } = 0;
+        public DateTime UploadedAt { get; set; } = DateTime.Now;
+
+        public virtual StringingService? StringingService { get; set; }
     }
 }

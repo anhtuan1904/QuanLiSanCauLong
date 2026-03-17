@@ -1,435 +1,388 @@
 ﻿@model QuanLiSanCauLong.Models.Service
 @{
     Layout = null;
+    var uid = Guid.NewGuid().ToString("N")[..8];
     var images = ViewBag.ServiceImages as List<QuanLiSanCauLong.Models.ServiceImage> ?? new List<QuanLiSanCauLong.Models.ServiceImage>();
 }
-
 <style>
-:root {
-    --deep:#1a1209; --gold:#d4a017; --gold2:#f5c842;
-    --cream:#fdf8f0; --warm:#f5ede0; --border:#e8ddd0; --muted:#8a7560;
-}
-* { font-family:'Outfit',sans-serif; box-sizing:border-box; }
+    :root{--deep:#1a1209;--gold:#d4a017;--gold2:#f5c842;--cream:#fdf8f0;--warm:#f5ede0;--border:#e8ddd0;--muted:#8a7560;--green:#16a34a;--red:#c94b2a;}
+    *{font-family:'Outfit',sans-serif;box-sizing:border-box;}
+    .se-wrapper{display:flex;flex-direction:column;max-height:90vh;overflow:hidden;}
+    .se-header{display:flex;align-items:flex-start;justify-content:space-between;padding:1.5rem 1.75rem 1rem;flex-shrink:0;border-bottom:1px solid var(--border);background:#fff;}
+    .se-header-label{font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem;}
+    .se-header-label::before{content:'';width:14px;height:1px;background:var(--gold);}
+    .se-title{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--deep);}
+    .se-title em{font-style:italic;color:var(--gold);}
+    .se-subtitle{font-size:.82rem;color:var(--muted);margin-top:.2rem;}
+    .se-close{width:32px;height:32px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .2s;flex-shrink:0;}
+    .se-close:hover{border-color:var(--deep);color:var(--deep);}
+    .se-body{padding:1.25rem 1.75rem 1rem;overflow-y:auto;flex:1;}
+    .se-card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1.1rem;}
+    .se-card-head{padding:.85rem 1.25rem;border-bottom:1px solid var(--border);background:var(--warm);display:flex;align-items:center;gap:.55rem;}
+    .se-card-head i{color:var(--gold);font-size:.9rem;}
+    .se-card-title{font-size:.67rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);}
+    .se-card-body{padding:1.25rem;}
+    .fg{margin-bottom:1.1rem;}.fg:last-child{margin-bottom:0;}
+    .fg-row2{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;}
+    .fg-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.9rem;}
+    .fg-row4{display:grid;grid-template-columns:2fr 1fr 1fr;gap:.9rem;}
+    .fg-label{display:block;font-size:.71rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.45rem;}
+    .fg-label .req{color:var(--red);}
+    .fg-input,.fg-select,.fg-textarea{width:100%;padding:.65rem 1rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Outfit',sans-serif;font-size:.86rem;color:var(--deep);background:#fff;outline:none;transition:border-color .2s;}
+    .fg-input:focus,.fg-select:focus,.fg-textarea:focus{border-color:var(--gold);background:var(--cream);}
+    .fg-textarea{resize:vertical;min-height:80px;}
+    .fg-hint{font-size:.7rem;color:var(--muted);margin-top:.3rem;}
 
-/* MODAL HEADER */
-.se-header {
-    display:flex; align-items:flex-start; justify-content:space-between;
-    padding:1.5rem 1.75rem 0;
-}
-.se-header-label {
-    font-size:.65rem; letter-spacing:.2em; text-transform:uppercase;
-    color:var(--gold); display:flex; align-items:center; gap:.5rem; margin-bottom:.4rem;
-}
-.se-header-label::before { content:''; width:14px; height:1px; background:var(--gold); }
-.se-title {
-    font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:700; color:var(--deep);
-}
-.se-title em { font-style:italic; color:var(--gold); }
-.se-subtitle { font-size:.82rem; color:var(--muted); margin-top:.2rem; }
-.se-close {
-    width:32px; height:32px; border:1px solid var(--border); border-radius:6px;
-    background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;
-    color:var(--muted); transition:all .2s; flex-shrink:0;
-}
-.se-close:hover { border-color:var(--deep); color:var(--deep); }
+    /* STATUS */
+    .status-opts{display:flex;gap:.65rem;flex-wrap:wrap;}
+    .status-opt{display:flex;align-items:center;gap:.45rem;padding:.55rem 1rem;border:1.5px solid var(--border);border-radius:7px;cursor:pointer;font-size:.82rem;font-weight:500;transition:all .2s;user-select:none;}
+    .status-opt.selected{border-color:var(--gold);background:rgba(212,160,23,.08);font-weight:700;}
+    .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .toggle-row{display:flex;gap:.75rem;flex-wrap:wrap;}
+    .toggle-item{display:flex;align-items:center;gap:.5rem;border:1.5px solid var(--border);border-radius:7px;padding:.55rem 1rem;cursor:pointer;transition:all .2s;}
+    .toggle-item:has(input:checked){border-color:var(--gold);background:rgba(212,160,23,.06);}
+    .toggle-item input{accent-color:var(--gold);width:15px;height:15px;cursor:pointer;}
+    .toggle-label{font-size:.84rem;font-weight:600;color:var(--deep);}
 
-/* BODY */
-.se-body { padding:1.25rem 1.75rem 1rem; }
+    /* IMAGE GALLERY */
+    .img-upload-zone{border:2px dashed var(--border);border-radius:10px;padding:1.1rem;background:var(--cream);transition:border-color .2s;}
+    .img-upload-zone:hover{border-color:rgba(212,160,23,.5);}
+    .img-grid{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:.75rem;}
+    .img-thumb-wrap{position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:2px solid var(--border);cursor:pointer;transition:all .2s;}
+    .img-thumb-wrap img{width:100%;height:100%;object-fit:cover;}
+    .img-thumb-wrap .main-star{position:absolute;top:4px;left:4px;background:rgba(212,160,23,.9);border-radius:50%;width:20px;height:20px;display:none;align-items:center;justify-content:center;font-size:.6rem;color:var(--deep);}
+    .img-thumb-wrap.is-main{border-color:var(--gold);border-width:2.5px;}
+    .img-thumb-wrap.is-main .main-star{display:flex;}
+    .img-thumb-wrap .del-btn{position:absolute;top:3px;right:3px;background:rgba(201,75,42,.9);color:#fff;border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.65rem;}
+    .add-img-btn{width:80px;height:80px;border:2px dashed var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);gap:.2rem;font-size:.7rem;transition:all .2s;}
+    .add-img-btn:hover{border-color:var(--gold);color:var(--gold);background:rgba(212,160,23,.05);}
+    .add-img-btn i{font-size:1.2rem;}
+    .img-hint{font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:.35rem;}
+    .img-hint i{color:var(--gold);}
 
-/* CARD */
-.se-card {
-    background:#fff; border:1px solid var(--border); border-radius:12px;
-    overflow:hidden; margin-bottom:1.1rem;
-}
-.se-card-head {
-    padding:.85rem 1.25rem; border-bottom:1px solid var(--border);
-    background:var(--warm); display:flex; align-items:center; gap:.55rem;
-}
-.se-card-head i { color:var(--gold); font-size:.9rem; }
-.se-card-title {
-    font-size:.67rem; font-weight:700; letter-spacing:.14em;
-    text-transform:uppercase; color:var(--muted);
-}
-.se-card-body { padding:1.25rem; }
+    /* VIDEO PREVIEW */
+    .video-preview-wrap{margin-top:.65rem;border-radius:8px;overflow:hidden;display:none;}
+    .video-preview-wrap.show{display:block;}
+    .video-preview-wrap iframe{width:100%;height:175px;border:none;border-radius:8px;}
+    .btn-url-confirm{padding:.65rem 1rem;background:var(--warm);border:1.5px solid var(--border);border-radius:7px;font-size:.82rem;font-weight:600;color:var(--deep);cursor:pointer;white-space:nowrap;transition:all .2s;}
+    .btn-url-confirm:hover{border-color:var(--gold);background:rgba(212,160,23,.1);}
 
-/* FORM ELEMENTS */
-.fg { margin-bottom:1.1rem; }
-.fg:last-child { margin-bottom:0; }
-.fg-row2 { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
-.fg-row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:.9rem; }
-.fg-row4 { display:grid; grid-template-columns:2fr 1fr 1fr; gap:.9rem; }
-
-.fg-label {
-    display:block; font-size:.71rem; font-weight:700; letter-spacing:.08em;
-    text-transform:uppercase; color:var(--muted); margin-bottom:.45rem;
-}
-.fg-label .req { color:#c94b2a; }
-.fg-input, .fg-select, .fg-textarea {
-    width:100%; padding:.65rem 1rem; border:1.5px solid var(--border);
-    border-radius:7px; font-family:'Outfit',sans-serif; font-size:.86rem;
-    color:var(--deep); background:#fff; outline:none; transition:border-color .2s;
-}
-.fg-input:focus, .fg-select:focus, .fg-textarea:focus {
-    border-color:var(--gold); background:var(--cream);
-}
-.fg-textarea { resize:vertical; min-height:80px; }
-.fg-hint { font-size:.7rem; color:var(--muted); margin-top:.3rem; }
-
-/* STATUS PILLS */
-.status-opts {
-    display:flex; gap:.6rem; flex-wrap:wrap;
-}
-.status-opt {
-    display:flex; align-items:center; gap:.5rem;
-    padding:.5rem 1rem; border:1.5px solid var(--border); border-radius:6px;
-    cursor:pointer; font-size:.82rem; font-weight:600; color:var(--muted);
-    transition:all .2s; user-select:none;
-}
-.status-opt:hover { border-color:rgba(212,160,23,.5); }
-.status-opt.selected { border-color:var(--gold); background:rgba(212,160,23,.07); color:var(--deep); }
-.status-dot { width:8px; height:8px; border-radius:50%; }
-
-/* CHECKBOX TOGGLES */
-.toggle-row { display:flex; gap:1rem; flex-wrap:wrap; }
-.toggle-item {
-    display:flex; align-items:center; gap:.6rem;
-    border:1.5px solid var(--border); border-radius:7px;
-    padding:.6rem 1rem; cursor:pointer; transition:all .2s;
-}
-.toggle-item:has(input:checked) {
-    border-color:var(--gold); background:rgba(212,160,23,.06);
-}
-.toggle-item input { accent-color:var(--gold); width:16px; height:16px; cursor:pointer; }
-.toggle-label { font-size:.84rem; font-weight:600; color:var(--deep); }
-
-/* IMAGE UPLOAD */
-.img-upload-zone {
-    border:2px dashed var(--border); border-radius:10px; padding:1.25rem;
-    background:var(--cream); transition:border-color .2s;
-}
-.img-upload-zone:hover { border-color:rgba(212,160,23,.5); }
-.img-grid { display:flex; flex-wrap:wrap; gap:.6rem; margin-bottom:.75rem; }
-.img-thumb-wrap {
-    position:relative; width:82px; height:82px; border-radius:8px; overflow:hidden;
-    border:2px solid var(--border); cursor:pointer; transition:all .2s;
-}
-.img-thumb-wrap img { width:100%; height:100%; object-fit:cover; }
-.img-thumb-wrap .main-star {
-    position:absolute; top:4px; left:4px;
-    background:rgba(212,160,23,.9); border-radius:50%;
-    width:20px; height:20px; display:none; align-items:center;
-    justify-content:center; font-size:.6rem; color:var(--deep);
-}
-.img-thumb-wrap.is-main { border-color:var(--gold); border-width:2.5px; }
-.img-thumb-wrap.is-main .main-star { display:flex; }
-.img-thumb-wrap .del-btn {
-    position:absolute; top:3px; right:3px;
-    background:rgba(201,75,42,.9); color:#fff; border:none; border-radius:50%;
-    width:20px; height:20px; display:flex; align-items:center; justify-content:center;
-    cursor:pointer; font-size:.65rem;
-}
-.add-img-btn {
-    width:82px; height:82px; border:2px dashed var(--border); border-radius:8px;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    cursor:pointer; color:var(--muted); gap:.2rem; font-size:.7rem; transition:all .2s;
-}
-.add-img-btn:hover { border-color:var(--gold); color:var(--gold); background:rgba(212,160,23,.05); }
-.add-img-btn i { font-size:1.2rem; }
-.img-hint { font-size:.72rem; color:var(--muted); display:flex; align-items:center; gap:.35rem; }
-.img-hint i { color:var(--gold); }
-
-/* FOOTER */
-.se-footer {
-    display:flex; justify-content:flex-end; gap:.65rem;
-    padding:1rem 1.75rem 1.5rem; border-top:1px solid var(--border);
-}
-.btn-se-cancel {
-    padding:.65rem 1.4rem; border:1.5px solid var(--border); border-radius:7px;
-    background:#fff; color:var(--muted); font-size:.84rem; font-weight:600;
-    cursor:pointer; transition:all .2s; font-family:'Outfit',sans-serif;
-}
-.btn-se-cancel:hover { border-color:var(--deep); color:var(--deep); }
-.btn-se-save {
-    padding:.65rem 1.75rem; border:none; border-radius:7px;
-    background:linear-gradient(135deg,var(--gold),var(--gold2));
-    color:var(--deep); font-size:.84rem; font-weight:700;
-    cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:.4rem;
-    font-family:'Outfit',sans-serif;
-}
-.btn-se-save:hover { transform:translateY(-1px); box-shadow:0 5px 15px rgba(212,160,23,.3); }
+    /* FOOTER */
+    .se-footer{display:flex;align-items:center;justify-content:flex-end;gap:.75rem;padding:1rem 1.75rem;border-top:1px solid var(--border);background:var(--warm);flex-shrink:0;}
+    .btn-se-cancel{padding:.65rem 1.25rem;border:1.5px solid var(--border);border-radius:7px;background:#fff;font-size:.84rem;font-weight:600;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:.4rem;transition:all .2s;}
+    .btn-se-cancel:hover{border-color:var(--muted);color:var(--deep);}
+    .btn-se-save{padding:.7rem 1.75rem;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:7px;font-family:'Outfit',sans-serif;font-size:.86rem;font-weight:700;color:var(--deep);cursor:pointer;display:flex;align-items:center;gap:.45rem;transition:all .25s;}
+    .btn-se-save:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(212,160,23,.35);}
+    .btn-se-save:disabled{opacity:.6;transform:none;cursor:not-allowed;}
 </style>
 
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-<!-- HEADER -->
-<div class="se-header">
-    <div>
-        <div class="se-header-label"><i class="bi bi-pencil-square"></i> Chỉnh sửa dịch vụ</div>
-        <div class="se-title">Cập Nhật <em>Dịch Vụ</em></div>
-        <div class="se-subtitle">Đang chỉnh sửa: <strong>@Model.ServiceName</strong></div>
+<div class="se-wrapper">
+    <div class="se-header">
+        <div>
+            <div class="se-header-label"><i class="bi bi-pencil-square"></i> Chỉnh Sửa Dịch Vụ</div>
+            <div class="se-title">Cập Nhật <em>Dịch Vụ</em></div>
+            <div class="se-subtitle">Đang chỉnh sửa: <strong>@Model.ServiceName</strong> · ID #@Model.ServiceId</div>
+        </div>
+        <button type="button" class="se-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
     </div>
-    <button type="button" class="se-close" data-bs-dismiss="modal">
-        <i class="bi bi-x" style="font-size:1.1rem;"></i>
-    </button>
-</div>
 
-<!-- BODY -->
-<div class="se-body">
-    <form asp-action="Edit" method="post" enctype="multipart/form-data">
-        @Html.AntiForgeryToken()
-        <input type="hidden" asp-for="ServiceId" />
-        <input type="hidden" asp-for="CreatedAt" />
-        <input type="hidden" asp-for="ViewCount" />
-        <input type="hidden" asp-for="Slug" />
+    <div class="se-body">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data" id="frmServiceEdit-@uid">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="ServiceId" />
+            <input type="hidden" asp-for="CreatedAt" />
+            <input type="hidden" asp-for="ViewCount" />
+            <input type="hidden" asp-for="Slug" />
 
-        <!-- 1. THÔNG TIN CƠ BẢN -->
-        <div class="se-card">
-            <div class="se-card-head">
-                <i class="bi bi-info-circle"></i>
-                <span class="se-card-title">Thông Tin Cơ Bản</span>
-            </div>
-            <div class="se-card-body">
-                <div class="fg-row4 fg">
-                    <div>
-                        <label class="fg-label">Tên Dịch Vụ <span class="req">*</span></label>
-                        <input asp-for="ServiceName" class="fg-input" required />
-                    </div>
-                    <div>
-                        <label class="fg-label">Thứ Tự</label>
-                        <input asp-for="DisplayOrder" type="number" class="fg-input" />
-                    </div>
-                    <div>
-                        <label class="fg-label">Icon</label>
-                        <input asp-for="Icon" class="fg-input" placeholder="bi bi-..." />
-                    </div>
-                </div>
-                <div class="fg">
-                    <label class="fg-label">Mô Tả Ngắn</label>
-                    <textarea asp-for="ShortDescription" class="fg-textarea" rows="2"></textarea>
-                </div>
-                <div class="fg" style="margin-bottom:0;">
-                    <label class="fg-label">Mô Tả Chi Tiết <span class="req">*</span></label>
-                    <textarea asp-for="Description" class="fg-textarea" rows="5" required></textarea>
-                </div>
-            </div>
-        </div>
-
-        <!-- 2. GIÁ -->
-        <div class="se-card">
-            <div class="se-card-head">
-                <i class="bi bi-currency-exchange"></i>
-                <span class="se-card-title">Giá Dịch Vụ</span>
-            </div>
-            <div class="se-card-body">
-                <div class="fg-row3" style="margin-bottom:0;">
-                    <div>
-                        <label class="fg-label">Giá Gốc (VNĐ)</label>
-                        <input asp-for="Price" type="number" class="fg-input" />
-                    </div>
-                    <div>
-                        <label class="fg-label">Giá Khuyến Mãi</label>
-                        <input asp-for="DiscountPrice" type="number" class="fg-input" />
-                    </div>
-                    <div>
-                        <label class="fg-label">Đơn Vị</label>
-                        <select asp-for="PriceUnit" class="fg-select">
-                            <option value="">-- Chọn --</option>
-                            <option value="giờ">/giờ</option>
-                            <option value="tháng">/tháng</option>
-                            <option value="lần">/lần</option>
-                            <option value="khóa">/khóa</option>
-                            <option value="buổi">/buổi</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. TÍNH NĂNG -->
-        <div class="se-card">
-            <div class="se-card-head">
-                <i class="bi bi-list-check"></i>
-                <span class="se-card-title">Tính Năng</span>
-            </div>
-            <div class="se-card-body">
-                <div class="fg" style="margin-bottom:0;">
-                    <textarea asp-for="Features" class="fg-textarea" rows="4"
-                              placeholder="- Tính năng 1&#10;- Tính năng 2"></textarea>
-                    <div class="fg-hint">Mỗi dòng một tính năng, bắt đầu bằng dấu "-"</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. HÌNH ẢNH -->
-        <div class="se-card">
-            <div class="se-card-head">
-                <i class="bi bi-images"></i>
-                <span class="se-card-title">Hình Ảnh</span>
-            </div>
-            <div class="se-card-body">
-                <div class="img-upload-zone">
-                    <div class="img-grid" id="imagePreviewEdit">
-                        <div class="add-img-btn" onclick="document.getElementById('imgInputEdit').click()">
-                            <i class="bi bi-plus-lg"></i>
-                            <span>Thêm ảnh</span>
+            <!-- 1. THÔNG TIN CƠ BẢN -->
+            <div class="se-card">
+                <div class="se-card-head"><i class="bi bi-info-circle-fill"></i><span class="se-card-title">Thông Tin Cơ Bản</span></div>
+                <div class="se-card-body">
+                    <div class="fg-row4 fg">
+                        <div>
+                            <label class="fg-label">Tên Dịch Vụ <span class="req">*</span></label>
+                            <input asp-for="ServiceName" class="fg-input" required maxlength="200" />
+                        </div>
+                        <div>
+                            <label class="fg-label">Thứ Tự</label>
+                            <input asp-for="DisplayOrder" type="number" class="fg-input" min="0" />
+                        </div>
+                        <div>
+                            <label class="fg-label">Icon (Bootstrap)</label>
+                            <input asp-for="Icon" class="fg-input" placeholder="bi bi-..." />
                         </div>
                     </div>
-                    <input type="file" id="imgInputEdit" name="NewImageFiles" multiple accept="image/*" style="display:none" />
-                    <input type="hidden" name="PrimaryImageId" id="primaryImageIdEdit" value="@(images.FirstOrDefault(i => i.IsPrimary)?.ImageId ?? 0)" />
-                    <input type="hidden" name="NewMainImageIndex" id="mainImageIdxEdit" value="-1" />
-                    <input type="hidden" name="DeletedImageIds" id="deletedImageIdsEdit" value="" />
-                    <div id="existingImagesContainer"></div>
-                    <div class="img-hint"><i class="bi bi-info-circle"></i> Nhấn vào ảnh để đặt làm ảnh chính. X để xóa.</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 5. TRẠNG THÁI & CÀI ĐẶT -->
-        <div class="se-card">
-            <div class="se-card-head">
-                <i class="bi bi-toggles"></i>
-                <span class="se-card-title">Trạng Thái & Cài Đặt</span>
-            </div>
-            <div class="se-card-body">
-                <div class="fg">
-                    <label class="fg-label">Trạng Thái</label>
-                    <div class="status-opts">
-                        <div class="status-opt @(Model.Status == "Active" ? "selected" : "")" id="st-Active" data-val="Active">
-                            <span class="status-dot" style="background:#16a34a;"></span> Hoạt Động
-                        </div>
-                        <div class="status-opt @(Model.Status == "Inactive" ? "selected" : "")" id="st-Inactive" data-val="Inactive">
-                            <span class="status-dot" style="background:#c94b2a;"></span> Ngừng Hoạt Động
-                        </div>
+                    <div class="fg">
+                        <label class="fg-label">Mô Tả Ngắn</label>
+                        <textarea asp-for="ShortDescription" class="fg-textarea" rows="2" maxlength="300"></textarea>
                     </div>
-                    <input asp-for="Status" type="hidden" id="statusInput" />
-                </div>
-                <div class="fg" style="margin-bottom:0;">
-                    <label class="fg-label">Cài Đặt Hiển Thị</label>
-                    <div class="toggle-row">
-                        <label class="toggle-item">
-                            <input asp-for="IsFeatured" type="checkbox" />
-                            <span class="toggle-label"><i class="bi bi-star text-warning me-1"></i> Nổi bật</span>
-                        </label>
-                        <label class="toggle-item">
-                            <input asp-for="IsPopular" type="checkbox" />
-                            <span class="toggle-label"><i class="bi bi-fire text-danger me-1"></i> Phổ biến</span>
-                        </label>
+                    <div class="fg" style="margin-bottom:0;">
+                        <label class="fg-label">Mô Tả Chi Tiết <span class="req">*</span></label>
+                        <textarea asp-for="Description" class="fg-textarea" rows="5" required></textarea>
                     </div>
                 </div>
             </div>
-        </div>
 
-    </form>
-</div>
+            <!-- 2. GIÁ -->
+            <div class="se-card">
+                <div class="se-card-head"><i class="bi bi-currency-exchange"></i><span class="se-card-title">Giá Dịch Vụ</span></div>
+                <div class="se-card-body">
+                    <div class="fg-row3" style="margin-bottom:0;">
+                        <div>
+                            <label class="fg-label">Giá Gốc (VNĐ)</label>
+                            <input asp-for="Price" type="number" class="fg-input" min="0" step="5000" />
+                        </div>
+                        <div>
+                            <label class="fg-label">Giá Khuyến Mãi</label>
+                            <input asp-for="DiscountPrice" type="number" class="fg-input" min="0" step="5000" />
+                        </div>
+                        <div>
+                            <label class="fg-label">Đơn Vị</label>
+                            <select asp-for="PriceUnit" class="fg-select">
+                                <option value="">-- Chọn --</option>
+                                <option value="giờ">/giờ</option>
+                                <option value="tháng">/tháng</option>
+                                <option value="lần">/lần</option>
+                                <option value="khóa">/khóa</option>
+                                <option value="buổi">/buổi</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-<!-- FOOTER -->
-<div class="se-footer">
-    <button type="button" class="btn-se-cancel" data-bs-dismiss="modal">
-        <i class="bi bi-x-circle"></i> Hủy
-    </button>
-    <button type="button" class="btn-se-save" onclick="document.querySelector('form[action*=Edit]').submit()">
-        <i class="bi bi-check-circle"></i> Lưu Thay Đổi
-    </button>
+            <!-- 3. TÍNH NĂNG -->
+            <div class="se-card">
+                <div class="se-card-head"><i class="bi bi-list-check"></i><span class="se-card-title">Tính Năng</span></div>
+                <div class="se-card-body">
+                    <div class="fg" style="margin-bottom:0;">
+                        <textarea asp-for="Features" class="fg-textarea" rows="4"
+                                  placeholder="- Tính năng 1&#10;- Tính năng 2"></textarea>
+                        <div class="fg-hint"><i class="bi bi-info-circle"></i>Mỗi dòng một tính năng, bắt đầu bằng dấu -</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. HÌNH ẢNH -->
+            <div class="se-card">
+                <div class="se-card-head"><i class="bi bi-images"></i><span class="se-card-title">Hình Ảnh Gallery</span></div>
+                <div class="se-card-body">
+                    <div class="img-upload-zone">
+                        <div class="img-grid" id="imagePreviewEdit-@uid">
+                            <div class="add-img-btn" id="addImgBtn-@uid">
+                                <i class="bi bi-plus-lg"></i><span>Thêm ảnh</span>
+                            </div>
+                        </div>
+                        <input type="file" id="imgInputEdit-@uid" name="NewImageFiles" multiple accept="image/*" style="display:none" />
+                        <input type="hidden" name="PrimaryImageId" id="primaryImageIdEdit-@uid" value="@(images.FirstOrDefault(i => i.IsPrimary)?.ImageId ?? 0)" />
+                        <input type="hidden" name="NewMainImageIndex" id="mainImageIdxEdit-@uid" value="-1" />
+                        <input type="hidden" name="DeletedImageIds" id="deletedImageIdsEdit-@uid" value="" />
+                        <div id="existingImagesContainer-@uid"></div>
+                        <div class="img-hint"><i class="bi bi-info-circle"></i>Click ảnh để đặt làm ảnh chính (⭐). Nhấn X để xóa.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. VIDEO -->
+            <div class="se-card">
+                <div class="se-card-head"><i class="bi bi-play-circle-fill"></i><span class="se-card-title">Video Giới Thiệu</span></div>
+                <div class="se-card-body">
+                    <div class="fg" style="margin-bottom:0;">
+                        <label class="fg-label"><i class="bi bi-youtube me-1 text-danger"></i>YouTube URL</label>
+                        <div style="display:flex;gap:.5rem;">
+                            <input asp-for="VideoUrl" id="videoUrlEdit-@uid" class="fg-input" placeholder="https://www.youtube.com/watch?v=..." />
+                            <button type="button" class="btn-url-confirm" id="btnVideoEdit-@uid"><i class="bi bi-play"></i> Xem thử</button>
+                        </div>
+                        <div class="video-preview-wrap @(!string.IsNullOrEmpty(Model.VideoUrl)?"show":"")" id="videoPrevEdit-@uid">
+                            @if (!string.IsNullOrEmpty(Model.VideoUrl)) {
+                                var m = System.Text.RegularExpressions.Regex.Match(Model.VideoUrl, @"(?:youtube\.com/watch\?v=|youtu\.be/)([^&?#]+)");
+                                if (m.Success) { <iframe id="videoFrameEdit-@uid" src="https://www.youtube.com/embed/@m.Groups[1].Value" allowfullscreen></iframe> }
+                                else { <iframe id="videoFrameEdit-@uid" src="" allowfullscreen></iframe> }
+                            } else { <iframe id="videoFrameEdit-@uid" src="" allowfullscreen></iframe> }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. TRẠNG THÁI -->
+            <div class="se-card">
+                <div class="se-card-head"><i class="bi bi-toggles"></i><span class="se-card-title">Trạng Thái & Cài Đặt</span></div>
+                <div class="se-card-body">
+                    <div class="fg">
+                        <label class="fg-label">Trạng Thái</label>
+                        <div class="status-opts" id="statusOptsSE-@uid">
+                            <div class="status-opt @(Model.Status=="Active"?"selected":"")" data-val="Active">
+                                <span class="status-dot" style="background:var(--green);"></span> Hoạt Động
+                            </div>
+                            <div class="status-opt @(Model.Status=="Inactive"?"selected":"")" data-val="Inactive">
+                                <span class="status-dot" style="background:var(--red);"></span> Ngừng Hoạt Động
+                            </div>
+                        </div>
+                        <input asp-for="Status" type="hidden" id="statusInputSE-@uid" />
+                    </div>
+                    <div class="fg" style="margin-bottom:0;">
+                        <label class="fg-label">Cài Đặt Hiển Thị</label>
+                        <div class="toggle-row">
+                            <label class="toggle-item">
+                                <input asp-for="IsFeatured" type="checkbox" />
+                                <span class="toggle-label"><i class="bi bi-star text-warning me-1"></i>Nổi bật</span>
+                            </label>
+                            <label class="toggle-item">
+                                <input asp-for="IsPopular" type="checkbox" />
+                                <span class="toggle-label"><i class="bi bi-fire text-danger me-1"></i>Phổ biến</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+    <div class="se-footer">
+        <button type="button" class="btn-se-cancel" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Hủy</button>
+        <button type="button" class="btn-se-save" id="btnServiceEditSave-@uid"><i class="bi bi-check-circle"></i> Lưu Thay Đổi</button>
+    </div>
 </div>
 
 <script>
-(function() {
-    // selectStatus scoped — tránh conflict khi nhiều modal
-    function selectStatus(val) {
-        document.querySelectorAll('#modalServiceContent .status-opt').forEach(function(c) {
-            c.classList.remove('selected');
+(function(){
+    var UID = '@uid';
+    function el(id){ return document.getElementById(id+'-'+UID); }
+
+    // STATUS
+    var sOpts = el('statusOptsSE');
+    if (sOpts) {
+        sOpts.querySelectorAll('.status-opt').forEach(function(o){
+            o.addEventListener('click', function(){
+                sOpts.querySelectorAll('.status-opt').forEach(function(x){ x.classList.remove('selected'); });
+                this.classList.add('selected');
+                el('statusInputSE').value = this.dataset.val;
+            });
         });
-        var target = document.getElementById('st-' + val);
-        if (target) target.classList.add('selected');
-        var si = document.getElementById('statusInput');
-        if (si) si.value = val;
     }
 
-    // Attach click handlers thay vì dùng inline onclick
-    document.querySelectorAll('#modalServiceContent .status-opt').forEach(function(opt) {
-        opt.addEventListener('click', function() { selectStatus(this.dataset.val || this.id.replace('st-','')); });
-    });
-    // Fallback: expose selectStatus cho inline onclick nếu cần
-    window._editSelectStatus = selectStatus;
+    // VIDEO PREVIEW
+    var btnV = el('btnVideoEdit'), vUrl = el('videoUrlEdit');
+    var vPrev = el('videoPrevEdit'), vFr = el('videoFrameEdit');
+    if (btnV && vFr) {
+        btnV.addEventListener('click', function(){
+            var url = vUrl ? vUrl.value.trim() : '';
+            if (!url) { vPrev && vPrev.classList.remove('show'); return; }
+            var m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?#]+)/);
+            if (m) { vFr.src = 'https://www.youtube.com/embed/' + m[1]; vPrev && vPrev.classList.add('show'); }
+            else alert('Chỉ hỗ trợ xem thử YouTube.');
+        });
+    }
 
-(function() {
-    const existingImages = @Html.Raw(Json.Serialize(images.Select(i => new { 
-        imageId = i.ImageId, 
-        imagePath = i.ImagePath, 
-        isPrimary = i.IsPrimary 
+    // IMAGE GALLERY
+    var previewContainer = el('imagePreviewEdit');
+    var addBtn = el('addImgBtn');
+    var imgInput = el('imgInputEdit');
+    var existingContainer = el('existingImagesContainer');
+    var deletedIdsInput = el('deletedImageIdsEdit');
+    var primaryIdInput = el('primaryImageIdEdit');
+    var mainIdxInput = el('mainImageIdxEdit');
+    var newFiles = [], deletedIds = [];
+
+    var existingImages = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(images.Select(i => new {
+        imageId = i.ImageId, imagePath = i.ImagePath, isPrimary = i.IsPrimary
     })));
 
-    const previewContainer = document.getElementById('imagePreviewEdit');
-    const addBtn = previewContainer.querySelector('.add-img-btn');
-    const imgInput = document.getElementById('imgInputEdit');
-    const existingImagesContainer = document.getElementById('existingImagesContainer');
-    const deletedIdsInput = document.getElementById('deletedImageIdsEdit');
-    const primaryIdInput = document.getElementById('primaryImageIdEdit');
-    const mainIdxInput = document.getElementById('mainImageIdxEdit');
-    let newFiles = [], deletedIds = [];
-
-    existingImages.forEach(img => {
-        const wrap = createExistingThumb(img);
+    existingImages.forEach(function(img){
+        var wrap = createExistingThumb(img);
         previewContainer.insertBefore(wrap, addBtn);
-        const hidden = document.createElement('input');
+        var hidden = document.createElement('input');
         hidden.type = 'hidden'; hidden.name = 'ExistingImageIds';
         hidden.value = img.imageId; hidden.dataset.imageId = img.imageId;
-        existingImagesContainer.appendChild(hidden);
+        existingContainer.appendChild(hidden);
     });
 
     function createExistingThumb(img) {
-        const wrap = document.createElement('div');
+        var wrap = document.createElement('div');
         wrap.className = 'img-thumb-wrap' + (img.isPrimary ? ' is-main' : '');
         wrap.dataset.type = 'existing'; wrap.dataset.imageId = img.imageId;
-        wrap.innerHTML = `<img src="${img.imagePath}" /><div class="main-star"><i class="bi bi-star-fill" style="font-size:.55rem;color:var(--deep);"></i></div><button type="button" class="del-btn"><i class="bi bi-x" style="font-size:.7rem;"></i></button>`;
-        wrap.addEventListener('click', e => { if (!e.target.closest('.del-btn')) setMainExisting(wrap, img.imageId); });
-        wrap.querySelector('.del-btn').addEventListener('click', e => { e.stopPropagation(); removeExisting(img.imageId, wrap); });
+        wrap.innerHTML = '<img src="' + img.imagePath + '" />' +
+            '<div class="main-star"><i class="bi bi-star-fill" style="font-size:.55rem;color:var(--deep);"></i></div>' +
+            '<button type="button" class="del-btn"><i class="bi bi-x" style="font-size:.7rem;"></i></button>';
+        wrap.addEventListener('click', function(e){ if (!e.target.closest('.del-btn')) setMainExisting(wrap, img.imageId); });
+        wrap.querySelector('.del-btn').addEventListener('click', function(e){ e.stopPropagation(); removeExisting(img.imageId, wrap); });
         return wrap;
     }
-
     function setMainExisting(wrap, id) {
-        document.querySelectorAll('#imagePreviewEdit .img-thumb-wrap').forEach(w => w.classList.remove('is-main'));
+        previewContainer.querySelectorAll('.img-thumb-wrap').forEach(function(w){ w.classList.remove('is-main'); });
         wrap.classList.add('is-main');
         primaryIdInput.value = id; mainIdxInput.value = -1;
     }
-
     function removeExisting(id, wrap) {
         deletedIds.push(id); deletedIdsInput.value = deletedIds.join(',');
-        existingImagesContainer.querySelector(`input[data-image-id="${id}"]`)?.remove();
+        var h = existingContainer.querySelector('input[data-image-id="' + id + '"]');
+        if (h) h.remove();
         wrap.remove();
     }
 
-    imgInput.addEventListener('change', e => {
-        Array.from(e.target.files).forEach(file => {
-            if (!file.type.startsWith('image/')) return;
-            const idx = newFiles.length; newFiles.push(file);
-            const reader = new FileReader();
-            reader.onload = ev => previewContainer.insertBefore(createNewThumb(ev.target.result, idx), addBtn);
-            reader.readAsDataURL(file);
+    if (addBtn) addBtn.addEventListener('click', function(){ imgInput.click(); });
+    if (imgInput) {
+        imgInput.addEventListener('change', function(e){
+            Array.from(e.target.files).forEach(function(file){
+                if (!file.type.startsWith('image/')) return;
+                if (file.size > 5*1024*1024) { alert(file.name + ' quá 5MB'); return; }
+                var idx = newFiles.length; newFiles.push(file);
+                var reader = new FileReader();
+                reader.onload = function(ev){ previewContainer.insertBefore(createNewThumb(ev.target.result, idx), addBtn); };
+                reader.readAsDataURL(file);
+            });
+            updateInput();
         });
-        updateInput();
-    });
-
+    }
     function createNewThumb(src, index) {
-        const wrap = document.createElement('div');
+        var wrap = document.createElement('div');
         wrap.className = 'img-thumb-wrap'; wrap.dataset.type = 'new'; wrap.dataset.index = index;
-        wrap.innerHTML = `<img src="${src}" /><div class="main-star"><i class="bi bi-star-fill" style="font-size:.55rem;color:var(--deep);"></i></div><button type="button" class="del-btn"><i class="bi bi-x" style="font-size:.7rem;"></i></button>`;
-        wrap.addEventListener('click', e => { if (!e.target.closest('.del-btn')) setMainNew(wrap, index); });
-        wrap.querySelector('.del-btn').addEventListener('click', e => { e.stopPropagation(); newFiles[index] = null; wrap.remove(); updateInput(); });
+        wrap.innerHTML = '<img src="' + src + '" />' +
+            '<div class="main-star"><i class="bi bi-star-fill" style="font-size:.55rem;color:var(--deep);"></i></div>' +
+            '<button type="button" class="del-btn"><i class="bi bi-x" style="font-size:.7rem;"></i></button>';
+        wrap.addEventListener('click', function(e){ if (!e.target.closest('.del-btn')) setMainNew(wrap, index); });
+        wrap.querySelector('.del-btn').addEventListener('click', function(e){ e.stopPropagation(); newFiles[index] = null; wrap.remove(); updateInput(); });
         return wrap;
     }
-
     function setMainNew(wrap, index) {
-        document.querySelectorAll('#imagePreviewEdit .img-thumb-wrap').forEach(w => w.classList.remove('is-main'));
+        previewContainer.querySelectorAll('.img-thumb-wrap').forEach(function(w){ w.classList.remove('is-main'); });
         wrap.classList.add('is-main');
         primaryIdInput.value = -1; mainIdxInput.value = index;
     }
-
     function updateInput() {
-        const dt = new DataTransfer();
-        newFiles.forEach(f => { if (f) dt.items.add(f); });
+        var dt = new DataTransfer();
+        newFiles.forEach(function(f){ if (f) dt.items.add(f); });
         imgInput.files = dt.files;
     }
-})();
+
+    // SUBMIT
+    var btnSave = el('btnServiceEditSave');
+    var form = document.getElementById('frmServiceEdit-' + UID);
+    if (btnSave && form) {
+        btnSave.addEventListener('click', function(){
+            if (!form.checkValidity()) { form.reportValidity(); return; }
+            btnSave.disabled = true;
+            btnSave.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang lưu...';
+            fetch(form.action || '/AdminService/Edit', { method: 'POST', body: new FormData(form) })
+                .then(function(r){ return r.json(); })
+                .then(function(res){
+                    if (res.success) {
+                        var modal = bootstrap.Modal.getInstance(document.getElementById('modalService'));
+                        if (modal) modal.hide();
+                        location.reload();
+                    } else {
+                        alert(res.message || 'Có lỗi xảy ra');
+                        btnSave.disabled = false;
+                        btnSave.innerHTML = '<i class="bi bi-check-circle"></i> Lưu Thay Đổi';
+                    }
+                })
+                .catch(function(){
+                    alert('Lỗi kết nối server');
+                    btnSave.disabled = false;
+                    btnSave.innerHTML = '<i class="bi bi-check-circle"></i> Lưu Thay Đổi';
+                });
+        });
+    }
 })();
 </script>

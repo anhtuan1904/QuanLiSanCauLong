@@ -666,8 +666,8 @@
                 <div class="stat-l"><span class="stat-dot" style="background:#4f46e5;"></span>Học Viên</div>
             </div>
             <div class="stat-box">
-                <div class="stat-n" style="color:var(--gold);">@(((courses.Sum(c => (c.EffectivePrice ?? 0) * c.CurrentStudents)) / 1000000).ToString("N0"))M<small style="font-size:.9rem;font-family:'Outfit';">đ</small></div>
-                <div class="stat-l"><span class="stat-dot" style="background:var(--gold);"></span>Doanh Thu</div>
+                <div class="stat-n" style="color:#c94b2a;">@courses.Count(c => c.IsPopular)</div>
+                <div class="stat-l"><span class="stat-dot" style="background:#c94b2a;"></span>🔥 Đang Hot</div>
             </div>
         </div>
 
@@ -710,6 +710,18 @@
                                             @if (c.IsFeatured)
                                             {
                                                 <span class="chip chip-gold">⭐ Nổi bật</span>
+                                            }
+                                            @if (c.IsPopular)
+                                            {
+                                                <span class="chip chip-cyan">🔥 Hot</span>
+                                            }
+                                            @if (!string.IsNullOrEmpty(c.VideoUrl))
+                                            {
+                                                <span class="chip chip-neutral"><i class="bi bi-play-circle"></i> Video</span>
+                                            }
+                                            @if (c.CourseImages != null && c.CourseImages.Any())
+                                            {
+                                                <span class="chip chip-neutral"><i class="bi bi-images"></i> @c.CourseImages.Count</span>
                                             }
                                         </div>
                                     </div>
@@ -818,16 +830,16 @@
                 <div class="stat-l"><span class="stat-dot" style="background:var(--gold);"></span>Dịch Vụ</div>
             </div>
             <div class="stat-box">
-                <div class="stat-n" style="color:#16a34a;">@stringings.Sum(s => s.TotalOrders)</div>
-                <div class="stat-l"><span class="stat-dot" style="background:#16a34a;"></span>Đơn Tháng Này</div>
+                <div class="stat-n" style="color:#16a34a;">@stringings.Count(s => s.Status == "Active")</div>
+                <div class="stat-l"><span class="stat-dot" style="background:#16a34a;"></span>Đang Hoạt Động</div>
             </div>
             <div class="stat-box">
-                <div class="stat-n" style="color:#c94b2a;">@(((stringings.Sum(s => (s.Price ?? 0) * s.TotalOrders)) / 1000000).ToString("N0"))M<small style="font-size:.9rem;font-family:'Outfit';">đ</small></div>
-                <div class="stat-l"><span class="stat-dot" style="background:#c94b2a;"></span>Doanh Thu</div>
+                <div class="stat-n" style="color:#c94b2a;">@stringings.Sum(s => s.ViewCount).ToString("N0")</div>
+                <div class="stat-l"><span class="stat-dot" style="background:#c94b2a;"></span>Tổng Lượt Xem</div>
             </div>
             <div class="stat-box">
-                <div class="stat-n" style="color:var(--gold);">@stringings.Count(s => s.Status == "Active")</div>
-                <div class="stat-l"><span class="stat-dot" style="background:var(--gold);"></span>Đang Hoạt Động</div>
+                <div class="stat-n" style="color:var(--gold);">@stringings.Count(s => s.IsPopular)</div>
+                <div class="stat-l"><span class="stat-dot" style="background:var(--gold);"></span>🔥 Phổ Biến</div>
             </div>
         </div>
 
@@ -865,6 +877,14 @@
                                 {
                                     <span class="chip chip-gold">⭐</span>
                                 }
+                                @if (!string.IsNullOrEmpty(s.VideoUrl))
+                                {
+                                    <span class="chip chip-neutral"><i class="bi bi-play-circle"></i></span>
+                                }
+                                @if (s.StringingImages != null && s.StringingImages.Any())
+                                {
+                                    <span class="chip chip-neutral"><i class="bi bi-images"></i> @s.StringingImages.Count</span>
+                                }
                             </div>
                         </div>
                         <div class="price-val">@(s.Price?.ToString("N0") + "đ" ?? "—")</div>
@@ -874,7 +894,7 @@
                             <div class="meta-item"><span class="mk">Thời gian</span><br><span class="mv">@(s.DurationMinutes != null ? s.DurationMinutes + " phút" : "—")</span></div>
                             <div class="meta-item"><span class="mk">Bảo hành</span><br><span class="mv">@(s.WarrantyDays != null ? s.WarrantyDays + " ngày" : "—")</span></div>
                             <div class="meta-item"><span class="mk">Lực căng</span><br><span class="mv">@(string.IsNullOrEmpty(s.Tension) ? "—" : s.Tension)</span></div>
-                            <div class="meta-item"><span class="mk">Đơn hàng</span><br><span class="mv">@s.TotalOrders.ToString("N0") đơn</span></div>
+                            <div class="meta-item"><span class="mk">Lượt xem</span><br><span class="mv">@s.ViewCount.ToString("N0")</span></div>
                         </div>
                         @if (!string.IsNullOrEmpty(s.ShortDesc))
                         {
@@ -956,9 +976,10 @@
                                         @{
                                             var stClass = t.Status switch
                                             {
-                                                                        "Ongoing" => "chip-green",
-                                                                        "Upcoming" => "chip-blue",
-                                                                        "Completed" => "chip-neutral",
+                                                                                    "Ongoing" => "chip-green",
+                                                                                    "Upcoming" => "chip-blue",
+                                                                                    "Finished" => "chip-neutral",
+                                                                                    "Completed" => "chip-neutral",
                                                 _ => "chip-red"
                                             };
                                         }
@@ -966,6 +987,18 @@
                                         @if (!string.IsNullOrEmpty(t.TournamentType))
                                         {
                                             <span class="chip chip-neutral">@t.TournamentType</span>
+                                        }
+                                        @if (t.IsFeatured)
+                                        {
+                                            <span class="chip chip-gold">⭐</span>
+                                        }
+                                        @if (!string.IsNullOrEmpty(t.VideoUrl))
+                                        {
+                                            <span class="chip chip-neutral"><i class="bi bi-play-circle"></i></span>
+                                        }
+                                        @if (t.TournamentImages != null && t.TournamentImages.Any())
+                                        {
+                                            <span class="chip chip-neutral"><i class="bi bi-images"></i> @t.TournamentImages.Count</span>
                                         }
                                     </div>
                                     @if (!string.IsNullOrEmpty(t.ShortDesc))
@@ -1013,7 +1046,7 @@
 <!-- ═══ UNIVERSAL MODAL ═══ -->
 <style>
     /* Modal scroll fix - Bootstrap modal-dialog-scrollable cần đúng cấu trúc header/body/footer
-           Vì partial views dùng custom structure, ta tự handle scroll */
+               Vì partial views dùng custom structure, ta tự handle scroll */
     #modalService .modal-dialog {
         display: flex;
         align-items: center;

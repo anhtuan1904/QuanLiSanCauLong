@@ -19,9 +19,6 @@ namespace QuanLiSanCauLong.Controllers
             _environment = environment;
         }
 
-        // ──────────────────────────────────────────────────────────────
-        // INDEX
-        // ──────────────────────────────────────────────────────────────
         [HttpGet]
         public async Task<IActionResult> Index(string search, string city)
         {
@@ -41,23 +38,12 @@ namespace QuanLiSanCauLong.Controllers
             ViewBag.Cities = await _context.Facilities.Select(f => f.City).Distinct().ToListAsync();
             ViewBag.Search = search;
             ViewBag.SelectedCity = city;
-
-            // Trả List<Facility> thẳng — AdminFacility/Index.cshtml dùng @model IEnumerable<Facility>
-            return View(facilities);  // Convention: Views/AdminFacility/Index.cshtml
+            return View(facilities);
         }
 
-        // ──────────────────────────────────────────────────────────────
-        // CREATE GET
-        // ──────────────────────────────────────────────────────────────
         [HttpGet]
-        public IActionResult Create()
-        {
-            return View();
-        }
+        public IActionResult Create() => View();
 
-        // ──────────────────────────────────────────────────────────────
-        // CREATE POST
-        // ──────────────────────────────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
@@ -66,7 +52,6 @@ namespace QuanLiSanCauLong.Controllers
             int PrimaryImageIndex = 0,
             List<string>? Amenities = null)
         {
-            // Loại bỏ kiểm tra các navigation property & trường không liên quan
             ModelState.Remove("ImageUrl");
             ModelState.Remove("Status");
             ModelState.Remove("Courts");
@@ -75,6 +60,8 @@ namespace QuanLiSanCauLong.Controllers
             ModelState.Remove("FacilityImages");
             ModelState.Remove("Facility");
             ModelState.Remove("Amenities");
+            ModelState.Remove("Latitude");
+            ModelState.Remove("Longitude");
 
             if (ModelState.IsValid)
             {
@@ -85,7 +72,6 @@ namespace QuanLiSanCauLong.Controllers
                     model.UpdatedAt = DateTime.Now;
                     model.IsActive = true;
 
-                    // Lưu tiện ích đi kèm dạng comma-separated
                     model.Amenities = (Amenities != null && Amenities.Any())
                         ? string.Join(",", Amenities)
                         : null;
@@ -93,7 +79,6 @@ namespace QuanLiSanCauLong.Controllers
                     _context.Facilities.Add(model);
                     await _context.SaveChangesAsync();
 
-                    // Xử lý upload ảnh
                     if (FacilityImages != null && FacilityImages.Count > 0)
                     {
                         string folder = Path.Combine(_environment.WebRootPath, "images", "facilities");
@@ -105,9 +90,7 @@ namespace QuanLiSanCauLong.Controllers
                             if (file.Length == 0) continue;
 
                             string fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-                            string filePath = Path.Combine(folder, fileName);
-
-                            using (var stream = new FileStream(filePath, FileMode.Create))
+                            using (var stream = new FileStream(Path.Combine(folder, fileName), FileMode.Create))
                                 await file.CopyToAsync(stream);
 
                             var facilityImage = new FacilityImage
@@ -140,13 +123,9 @@ namespace QuanLiSanCauLong.Controllers
             var errors = ModelState
                 .Where(x => x.Value!.Errors.Count > 0)
                 .SelectMany(x => x.Value!.Errors.Select(e => e.ErrorMessage));
-
             return Json(new { success = false, message = "Dữ liệu không hợp lệ!", errors });
         }
 
-        // ──────────────────────────────────────────────────────────────
-        // EDIT GET
-        // ──────────────────────────────────────────────────────────────
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
@@ -156,7 +135,6 @@ namespace QuanLiSanCauLong.Controllers
 
             if (facility == null) return NotFound();
 
-            // ✅ FIX: Set ViewBag.FacilityImages để Edit.cshtml có thể render ảnh hiện tại
             ViewBag.FacilityImages = facility.FacilityImages
                 .OrderBy(i => i.DisplayOrder)
                 .ToList();
@@ -164,16 +142,15 @@ namespace QuanLiSanCauLong.Controllers
             return View(facility);
         }
 
-        // ──────────────────────────────────────────────────────────────
-        // EDIT POST
-        // ──────────────────────────────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(
             Facility model,
-            List<IFormFile>? FacilityImages,
+            List<IFormFile>? FacilityImages,       // new images from Create-style param
+            List<IFormFile>? NewImageFiles,         // new images from Edit-style param
             string? DeletedImageIds,
             int? NewPrimaryImageId,
+            int? PrimaryImageId,
             List<string>? Amenities = null)
         {
             ModelState.Remove("ImageUrl");
@@ -182,6 +159,8 @@ namespace QuanLiSanCauLong.Controllers
             ModelState.Remove("Inventories");
             ModelState.Remove("FacilityImages");
             ModelState.Remove("Amenities");
+            ModelState.Remove("Latitude");
+            ModelState.Remove("Longitude");
 
             if (!ModelState.IsValid)
             {
@@ -189,32 +168,29 @@ namespace QuanLiSanCauLong.Controllers
                 return Json(new { success = false, message = "Dữ liệu không hợp lệ!", errors });
             }
 
-            var facility = await _context.Facilities
-                .Include(f => f.FacilityImages)
-                .FirstOrDefaultAsync(f => f.FacilityId == model.FacilityId);
-
-            if (facility == null)
-                return Json(new { success = false, message = "Không tìm thấy cơ sở!" });
-
             try
             {
-                // Cập nhật thông tin cơ bản
+                var facility = await _context.Facilities
+                    .Include(f => f.FacilityImages)
+                    .FirstOrDefaultAsync(f => f.FacilityId == model.FacilityId);
+
+                if (facility == null)
+                    return Json(new { success = false, message = "Không tìm thấy cơ sở!" });
+
                 facility.FacilityName = model.FacilityName;
                 facility.Address = model.Address;
-                facility.Phone = model.Phone;
-                facility.City = model.City;
                 facility.District = model.District;
+                facility.City = model.City;
+                facility.Phone = model.Phone;
+                facility.Description = model.Description;
                 facility.OpenTime = model.OpenTime;
                 facility.CloseTime = model.CloseTime;
-                facility.Description = model.Description;
-                facility.Status = model.Status;
-                facility.UpdatedAt = DateTime.Now;
-
-                // ✅ FIX: Lưu Latitude & Longitude
                 facility.Latitude = model.Latitude;
                 facility.Longitude = model.Longitude;
+                facility.Status = model.Status;
+                facility.IsActive = model.Status != "Inactive";
+                facility.UpdatedAt = DateTime.Now;
 
-                // ✅ FIX: Lưu Amenities
                 facility.Amenities = (Amenities != null && Amenities.Any())
                     ? string.Join(",", Amenities)
                     : null;
@@ -227,36 +203,30 @@ namespace QuanLiSanCauLong.Controllers
                         .Select(id => int.Parse(id.Trim()))
                         .ToList();
 
-                    var imagesToDelete = facility.FacilityImages
-                        .Where(img => idsToDelete.Contains(img.ImageId))
-                        .ToList();
-
-                    foreach (var img in imagesToDelete)
+                    foreach (var img in facility.FacilityImages.Where(img => idsToDelete.Contains(img.ImageId)).ToList())
                     {
                         string physicalPath = Path.Combine(_environment.WebRootPath, img.ImagePath.TrimStart('/'));
-                        if (System.IO.File.Exists(physicalPath))
-                            System.IO.File.Delete(physicalPath);
+                        if (System.IO.File.Exists(physicalPath)) System.IO.File.Delete(physicalPath);
                         _context.FacilityImages.Remove(img);
                     }
                 }
 
-                // 2. Upload ảnh mới
-                if (FacilityImages != null && FacilityImages.Count > 0)
+                // 2. Upload ảnh mới (nhận từ cả 2 param name)
+                var uploadFiles = FacilityImages?.Where(f => f.Length > 0).ToList()
+                               ?? NewImageFiles?.Where(f => f.Length > 0).ToList();
+
+                if (uploadFiles != null && uploadFiles.Count > 0)
                 {
                     string folder = Path.Combine(_environment.WebRootPath, "images", "facilities");
                     if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
                     int currentMaxOrder = facility.FacilityImages.Any()
-                        ? facility.FacilityImages.Max(img => img.DisplayOrder)
-                        : -1;
+                        ? facility.FacilityImages.Max(img => img.DisplayOrder) : -1;
 
-                    foreach (var file in FacilityImages)
+                    foreach (var file in uploadFiles)
                     {
-                        if (file.Length == 0) continue;
-
                         string fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-                        string filePath = Path.Combine(folder, fileName);
-                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        using (var stream = new FileStream(Path.Combine(folder, fileName), FileMode.Create))
                             await file.CopyToAsync(stream);
 
                         _context.FacilityImages.Add(new FacilityImage
@@ -273,23 +243,24 @@ namespace QuanLiSanCauLong.Controllers
                 await _context.SaveChangesAsync();
 
                 // 3. Cập nhật ảnh chính
-                if (NewPrimaryImageId.HasValue && NewPrimaryImageId.Value > 0)
+                int primaryId = NewPrimaryImageId ?? PrimaryImageId ?? 0;
+                if (primaryId > 0)
                 {
-                    // Reload lại danh sách ảnh sau khi đã lưu ảnh mới
                     await _context.Entry(facility).Collection(f => f.FacilityImages).LoadAsync();
+                    foreach (var img in facility.FacilityImages) img.IsPrimary = false;
 
-                    foreach (var img in facility.FacilityImages)
-                        img.IsPrimary = false;
-
-                    var newPrimary = facility.FacilityImages
-                        .FirstOrDefault(img => img.ImageId == NewPrimaryImageId.Value);
-
+                    var newPrimary = facility.FacilityImages.FirstOrDefault(img => img.ImageId == primaryId);
                     if (newPrimary != null)
                     {
                         newPrimary.IsPrimary = true;
                         facility.ImageUrl = newPrimary.ImagePath;
                     }
-
+                    else
+                    {
+                        // fallback to first image
+                        var first = facility.FacilityImages.OrderBy(i => i.DisplayOrder).FirstOrDefault();
+                        if (first != null) { first.IsPrimary = true; facility.ImageUrl = first.ImagePath; }
+                    }
                     await _context.SaveChangesAsync();
                 }
 
@@ -336,11 +307,7 @@ namespace QuanLiSanCauLong.Controllers
                     ? new List<FacilityAmenityViewModel>()
                     : facility.Amenities
                         .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                        .Select(a => new FacilityAmenityViewModel
-                        {
-                            AmenityName = a.Trim(),
-                            IsAvailable = true
-                        })
+                        .Select(a => new FacilityAmenityViewModel { AmenityName = a.Trim(), IsAvailable = true })
                         .ToList(),
 
                 Courts = facility.Courts?.Select(c => new FacilityCourtViewModel
@@ -369,9 +336,6 @@ namespace QuanLiSanCauLong.Controllers
             return PartialView("Details", vm);
         }
 
-        // ──────────────────────────────────────────────────────────────
-        // DELETE
-        // ──────────────────────────────────────────────────────────────
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
@@ -393,7 +357,6 @@ namespace QuanLiSanCauLong.Controllers
                     string path = Path.Combine(_environment.WebRootPath, img.ImagePath.TrimStart('/'));
                     if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
                 }
-
                 _context.Facilities.Remove(facility);
                 await _context.SaveChangesAsync();
                 return Json(new { success = true, message = "Xóa cơ sở thành công!" });

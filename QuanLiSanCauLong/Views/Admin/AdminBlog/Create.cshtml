@@ -358,64 +358,6 @@
             background: var(--danger);
         }
 
-    /* ── TAG CHIPS ── */
-    .tag-wrap {
-        display: flex;
-        flex-wrap: wrap;
-        gap: .35rem;
-        padding: .4rem .6rem;
-        border: 1.5px solid var(--border);
-        border-radius: 7px;
-        min-height: 40px;
-        cursor: text;
-        background: #fff;
-        transition: border-color .2s;
-        align-items: center;
-    }
-
-        .tag-wrap:focus-within {
-            border-color: var(--gold);
-            background: var(--cream);
-        }
-
-    .tag-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: .3rem;
-        background: var(--warm);
-        color: var(--deep);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        padding: .15rem .45rem;
-        font-size: .76rem;
-        font-weight: 600;
-    }
-
-    .tag-chip-x {
-        background: none;
-        border: none;
-        color: var(--muted);
-        cursor: pointer;
-        font-size: .7rem;
-        padding: 0;
-        line-height: 1;
-    }
-
-        .tag-chip-x:hover {
-            color: var(--danger);
-        }
-
-    .tag-input {
-        border: none;
-        outline: none;
-        font-family: 'Outfit', sans-serif;
-        font-size: .84rem;
-        color: var(--deep);
-        background: transparent;
-        min-width: 80px;
-        flex: 1;
-    }
-
     /* ── SEO COLLAPSIBLE ── */
     .seo-toggle {
         display: flex;
@@ -472,6 +414,10 @@
         border-top: 1px solid var(--border);
         background: var(--warm);
         justify-content: flex-end;
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
+        flex-shrink: 0;
     }
 
     .btn-save {
@@ -537,7 +483,7 @@
         <h5>✍️ Thêm <em style="font-style:italic;color:var(--gold);">Bài Viết Mới</em></h5>
         <p>Điền thông tin và xuất bản bài viết</p>
     </div>
-    <button type="button" class="cf-close-btn" data-bs-dismiss="modal" title="Đóng">
+    <button type="button" class="cf-close-btn" onclick="closePostModal()" title="Đóng">
         <i class="bi bi-x-lg"></i>
     </button>
 </div>
@@ -546,7 +492,7 @@
       id="blogCreateForm" onsubmit="return validateAndSync()">
     @Html.AntiForgeryToken()
 
-    <div class="modal-body" style="padding:0;overflow-y:auto;">
+    <div class="modal-body" style="padding:0;overflow-y:auto;max-height:calc(85vh - 130px);">
         <div class="form-layout">
 
             <!-- ═══ LEFT / MAIN ═══ -->
@@ -559,6 +505,7 @@
                         <span class="cf-card-title">Thông Tin Cơ Bản</span>
                     </div>
                     <div class="cf-card-body">
+                        <input asp-for="CategoryId" type="hidden" value="1" />
                         <div class="fg">
                             <label class="fg-label">Tiêu Đề <span class="req">*</span></label>
                             <input asp-for="Title" class="fg-input" id="titleInput"
@@ -566,29 +513,7 @@
                                    oninput="autoFillSeoTitle(this.value)" />
                             <span asp-validation-for="Title" class="field-error"></span>
                         </div>
-                        <div class="fg-row2">
-                            <div class="fg" style="margin-bottom:0">
-                                <label class="fg-label">Danh Mục <span class="req">*</span></label>
-                                <select asp-for="CategoryId" class="fg-select" id="catSelect">
-                                    <option value="">— Chọn danh mục —</option>
-                                    @foreach (var cat in ViewBag.Categories as List<QuanLiSanCauLong.Models.BlogCategory> ?? new())
-                                    {
-                                        <option value="@cat.CategoryId">@cat.CategoryName</option>
-                                    }
-                                </select>
-                                <span asp-validation-for="CategoryId" class="field-error"></span>
-                            </div>
-                            <div class="fg" style="margin-bottom:0">
-                                <label class="fg-label">Tags</label>
-                                <div class="tag-wrap" id="tagWrap" onclick="document.getElementById('tagInput').focus()">
-                                    <input type="hidden" asp-for="Tags" id="tagsHidden" />
-                                    <input type="text" id="tagInput" class="tag-input"
-                                           placeholder="Nhập tag + Enter" autocomplete="off" />
-                                </div>
-                                <div class="fg-hint">Nhấn Enter hoặc dấu phẩy để thêm tag</div>
-                            </div>
-                        </div>
-                        <div class="fg" style="margin-top:.9rem;margin-bottom:0">
+                        <div class="fg" style="margin-bottom:0">
                             <label class="fg-label">Tóm Tắt</label>
                             <textarea asp-for="Excerpt" class="fg-textarea" rows="2"
                                       placeholder="Mô tả ngắn hiển thị ở danh sách bài viết (≤ 200 ký tự)..."
@@ -650,30 +575,21 @@
                         <span class="cf-card-title">Trạng Thái</span>
                     </div>
                     <div class="cf-card-body">
-                        <input asp-for="Status" type="hidden" id="statusInput" value="Draft" />
+                        <input asp-for="Status" type="hidden" id="statusInput" value="Published" />
                         <div class="status-opts">
-                            <div class="status-opt selected" id="st-Draft" onclick="selectStatus('Draft')">
-                                <span class="status-dot" style="background:#92660a;"></span> Bản Nháp
-                            </div>
-                            <div class="status-opt" id="st-Published" onclick="selectStatus('Published')">
-                                <span class="status-dot" style="background:var(--success);"></span> Xuất Bản Ngay
+                            <div class="status-opt selected" id="st-Published" onclick="selectStatus('Published')">
+                                <span class="status-dot" style="background:var(--success);"></span> Xuất Bản
                             </div>
                             <div class="status-opt" id="st-Archived" onclick="selectStatus('Archived')">
                                 <span class="status-dot" style="background:var(--danger);"></span> Lưu Trữ
+                                <span style="font-size:.7rem;color:var(--muted);margin-left:auto;">📦 Kho</span>
                             </div>
                         </div>
                         <div style="margin-top:1rem;display:flex;flex-direction:column;gap:0;">
-                            <div class="toggle-row">
+                            <div class="toggle-row" style="border-bottom:none;padding-bottom:0;">
                                 <span class="toggle-label"><span>⭐</span> Bài viết nổi bật</span>
                                 <label class="toggle-switch">
                                     <input asp-for="IsFeatured" type="checkbox" id="chkFeatured" />
-                                    <span class="toggle-track"></span>
-                                </label>
-                            </div>
-                            <div class="toggle-row">
-                                <span class="toggle-label"><span>💬</span> Cho phép bình luận</span>
-                                <label class="toggle-switch">
-                                    <input asp-for="AllowComments" type="checkbox" id="chkComments" checked />
                                     <span class="toggle-track"></span>
                                 </label>
                             </div>
@@ -711,7 +627,7 @@
     </div><!-- /modal-body -->
     <!-- ACTIONS (sticky footer, outside modal-body) -->
     <div class="cf-actions">
-        <button type="button" class="btn-cancel" data-bs-dismiss="modal">
+        <button type="button" class="btn-cancel" onclick="closePostModal()">
             <i class="bi bi-arrow-left"></i> Hủy
         </button>
         <button type="submit" class="btn-save" id="submitBtn">
@@ -755,59 +671,6 @@
         if (mt) mt.addEventListener('input', () => { mt.dataset.edited = '1'; });
     });
 
-    /* ── TAG CHIPS ── */
-    (function () {
-        const tagInput  = document.getElementById('tagInput');
-        const tagHidden = document.getElementById('tagsHidden');
-        const tagWrap   = document.getElementById('tagWrap');
-        let tags = [];
-
-        function renderTags() {
-            tagWrap.querySelectorAll('.tag-chip').forEach(c => c.remove());
-            tags.forEach((t, i) => {
-                const chip = document.createElement('span');
-                chip.className = 'tag-chip';
-                chip.innerHTML = `${t}<button type="button" class="tag-chip-x" onclick="removeTag(${i})">✕</button>`;
-                tagWrap.insertBefore(chip, tagInput);
-            });
-            tagHidden.value = tags.join(', ');
-        }
-
-        window.removeTag = function (i) {
-            tags.splice(i, 1);
-            renderTags();
-        };
-
-        tagInput.addEventListener('keydown', e => {
-            if ((e.key === 'Enter' || e.key === ',') && tagInput.value.trim()) {
-                e.preventDefault();
-                const newTags = tagInput.value.split(',').map(t => t.trim()).filter(Boolean);
-                newTags.forEach(t => { if (!tags.includes(t)) tags.push(t); });
-                tagInput.value = '';
-                renderTags();
-            }
-            if (e.key === 'Backspace' && !tagInput.value && tags.length) {
-                tags.pop();
-                renderTags();
-            }
-        });
-
-        tagInput.addEventListener('blur', () => {
-            if (tagInput.value.trim()) {
-                tagInput.value.split(',').map(t => t.trim()).filter(Boolean)
-                    .forEach(t => { if (!tags.includes(t)) tags.push(t); });
-                tagInput.value = '';
-                renderTags();
-            }
-        });
-
-        // Init from existing value
-        if (tagHidden.value) {
-            tags = tagHidden.value.split(',').map(t => t.trim()).filter(Boolean);
-            renderTags();
-        }
-    })();
-
     /* ── IMAGE PREVIEW ── */
     function previewImage(input) {
         if (!input.files || !input.files[0]) return;
@@ -837,18 +700,13 @@
 
     /* ── VALIDATE & SYNC ── */
     function validateAndSync() {
-        // Sync TinyMCE
         if (typeof tinymce !== 'undefined' && tinymce.get('editor-content')) {
             tinymce.get('editor-content').save();
         }
-        // Basic front-end validation
         let ok = true;
         const title = document.getElementById('titleInput');
-        const cat   = document.getElementById('catSelect');
         if (!title.value.trim()) { title.classList.add('error'); ok = false; }
         else title.classList.remove('error');
-        if (!cat.value) { cat.classList.add('error'); ok = false; }
-        else cat.classList.remove('error');
         if (!ok) {
             title.closest('.cf-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }

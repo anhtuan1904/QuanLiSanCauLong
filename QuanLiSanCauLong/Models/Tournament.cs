@@ -1,115 +1,127 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuanLiSanCauLong.Models
 {
-    [Table("Tournaments")]
     public class Tournament
     {
         [Key]
         public int TournamentId { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Tên giải đấu không được để trống")]
         [StringLength(200)]
-        [Display(Name = "Tên Giải Đấu")]
         public string TournamentName { get; set; } = string.Empty;
 
-        [StringLength(100)]
-        [Display(Name = "Loại Giải")]
-        public string? TournamentType { get; set; } // Đơn Nam/Nữ, Đôi Nam/Nữ/Mix
+        [Required]
+        [StringLength(250)]
+        public string Slug { get; set; } = string.Empty;
 
-        [StringLength(500)]
-        [Display(Name = "Mô Tả Ngắn")]
+        [StringLength(50)]
+        public string? TournamentType { get; set; }
+
         public string? ShortDesc { get; set; }
 
-        [Display(Name = "Mô Tả Chi Tiết")]
-        public string? Description { get; set; }
+        [Required(ErrorMessage = "Mô tả chi tiết không được để trống")]
+        public string Description { get; set; } = string.Empty;
 
-        [Display(Name = "Ngày Bắt Đầu")]
-        [DataType(DataType.Date)]
+        public string? FeaturedImage { get; set; }
+        public string? VideoUrl { get; set; }
+
+        // Thời gian
         public DateTime? StartDate { get; set; }
-
-        [Display(Name = "Ngày Kết Thúc")]
-        [DataType(DataType.Date)]
         public DateTime? EndDate { get; set; }
-
-        [Display(Name = "Hạn Đăng Ký")]
-        [DataType(DataType.Date)]
         public DateTime? RegistrationDeadline { get; set; }
 
-        [StringLength(300)]
-        [Display(Name = "Địa Điểm Tổ Chức")]
+        // Địa điểm
+        [StringLength(200)]
         public string? Venue { get; set; }
 
-        [Display(Name = "Số VĐV Tối Đa")]
-        public int? MaxPlayers { get; set; }
+        [StringLength(300)]
+        public string? VenueAddress { get; set; }
 
-        [Display(Name = "Số VĐV Hiện Tại")]
+        public string? MapUrl { get; set; }
+
+        // Người chơi
+        public int? MaxPlayers { get; set; }
         public int CurrentPlayers { get; set; } = 0;
 
-        [Display(Name = "Phí Đăng Ký (VNĐ)")]
-        [Column(TypeName = "decimal(18,0)")]
+        // Giải thưởng
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? EntryFee { get; set; }
 
-        [Display(Name = "Tổng Giải Thưởng (VNĐ)")]
-        [Column(TypeName = "decimal(18,0)")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? PrizeMoney { get; set; }
 
-        [Display(Name = "Mô Tả Giải Thưởng")]
         public string? PrizeDescription { get; set; }
 
-        [Display(Name = "Thể Lệ Giải Đấu")]
+        // Nội dung thu hút
         public string? Rules { get; set; }
+        public string? Schedule { get; set; }
+        public string? Sponsors { get; set; }
 
-        [StringLength(500)]
-        [Display(Name = "Ảnh Đại Diện")]
-        public string? FeaturedImage { get; set; }
-
-        [StringLength(20)]
-        [Display(Name = "Trạng Thái")]
-        public string Status { get; set; } = "Upcoming"; // Upcoming / Ongoing / Completed / Cancelled
-
-        [Display(Name = "Nổi Bật")]
-        public bool IsFeatured { get; set; } = false;
-
-        [Display(Name = "Thứ Tự Hiển Thị")]
+        // Hiển thị
         public int DisplayOrder { get; set; } = 0;
 
-        [Display(Name = "Lượt Xem")]
+        [StringLength(20)]
+        public string Status { get; set; } = "Upcoming";
+
+        public bool IsFeatured { get; set; } = false;
+
         public int ViewCount { get; set; } = 0;
 
-        [StringLength(300)]
-        public string? Slug { get; set; }
+        public string? MetaTitle { get; set; }
+        public string? MetaDescription { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime? UpdatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
-        // Computed
+        public virtual ICollection<TournamentImage>? TournamentImages { get; set; }
+
         [NotMapped]
         public int AvailableSlots => (MaxPlayers ?? 0) - CurrentPlayers;
 
         [NotMapped]
-        public bool IsFull => MaxPlayers.HasValue && CurrentPlayers >= MaxPlayers;
+        public bool IsFull => MaxPlayers.HasValue && CurrentPlayers >= MaxPlayers.Value;
 
         [NotMapped]
         public string StatusLabel => Status switch
         {
-            "Upcoming" => "Sắp Diễn Ra",
-            "Ongoing" => "Đang Hoạt Động",
-            "Completed" => "Đã Đầy",
-            "Cancelled" => "Đã Hủy",
+            "Upcoming" => "Sắp diễn ra",
+            "Ongoing" => "Đang diễn ra",
+            "Finished" => "Đã kết thúc",
+            "Cancelled" => "Đã hủy",
             _ => Status
         };
 
         [NotMapped]
         public string StatusBadge => Status switch
         {
-            "Upcoming" => "warning",
-            "Ongoing" => "success",
-            "Completed" => "primary",
-            "Cancelled" => "danger",
-            _ => "secondary"
+            "Upcoming" => "badge-upcoming",
+            "Ongoing" => "badge-ongoing",
+            "Finished" => "badge-finished",
+            "Cancelled" => "badge-cancelled",
+            _ => "badge-secondary"
         };
+    }
+
+    public class TournamentImage
+    {
+        [Key]
+        public int ImageId { get; set; }
+
+        [Required]
+        public int TournamentId { get; set; }
+
+        [Required]
+        public string ImagePath { get; set; } = string.Empty;
+
+        [StringLength(200)]
+        public string? Caption { get; set; }
+
+        public bool IsPrimary { get; set; } = false;
+        public int DisplayOrder { get; set; } = 0;
+        public DateTime UploadedAt { get; set; } = DateTime.Now;
+
+        public virtual Tournament? Tournament { get; set; }
     }
 }

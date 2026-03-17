@@ -1,12 +1,16 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PdfSharp.Logging;
 using QuanLiSanCauLong.Data;
 using QuanLiSanCauLong.Models;
 
 namespace QuanLiSanCauLong.Controllers
 {
+    /// <summary>
+    /// Quản lý bài viết — toàn bộ yêu cầu role Admin.
+    /// Route gốc: /AdminBlog/{action}
+    /// Views:     Views/AdminBlog/
+    /// </summary>
     [Authorize(Roles = "Admin")]
     public class AdminBlogController : Controller
     {
@@ -19,72 +23,55 @@ namespace QuanLiSanCauLong.Controllers
             _environment = environment;
         }
 
-        // ============ BLOG POSTS ============
+        // ══════════════════════════════════════════════
+        // QUẢN LÝ BÀI VIẾT
+        // ══════════════════════════════════════════════
+
+        // GET /AdminBlog/Index
         [HttpGet]
-        public async Task<IActionResult> Index(string search, int? categoryId, string status)
+        public async Task<IActionResult> Index(string search, string status)
         {
-            var query = _context.BlogPosts
-                .Include(p => p.Category)
-                .AsQueryable();
+            var query = _context.BlogPosts.AsQueryable();
 
             if (!string.IsNullOrEmpty(search))
                 query = query.Where(p => p.Title.Contains(search) || p.Content.Contains(search));
 
-            if (categoryId.HasValue)
-                query = query.Where(p => p.CategoryId == categoryId);
-
-            if (!string.IsNullOrEmpty(status))
+            if (status == "Published" || status == "Archived")
                 query = query.Where(p => p.Status == status);
 
             var posts = await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
-
-            ViewBag.Categories = await _context.BlogCategories.Where(c => c.IsActive).ToListAsync();
             return View(posts);
         }
 
+        // GET  /AdminBlog/Create  → PartialView render trong modal
         [HttpGet]
-        public async Task<IActionResult> Create()
-        {
-            ViewBag.Categories = await _context.BlogCategories.Where(c => c.IsActive).ToListAsync();
-            return PartialView();
-        }
+        public IActionResult Create() => PartialView();
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        // POST /AdminBlog/Create
+        [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(BlogPost model, IFormFile? featuredImage)
         {
             ModelState.Remove("FeaturedImage");
             ModelState.Remove("Category");
             ModelState.Remove("Comments");
+            ModelState.Remove("CategoryId");
+            ModelState.Remove("Slug");
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Generate slug from title
                     model.Slug = GenerateSlug(model.Title);
                     model.CreatedAt = DateTime.Now;
                     model.UpdatedAt = DateTime.Now;
+                    model.AllowComments = true;
+                    model.CategoryId = 1;
 
-                    if (model.Status == "Published" && !model.PublishedAt.HasValue)
+                    if (model.Status == "Published")
                         model.PublishedAt = DateTime.Now;
 
-                    // Upload featured image
                     if (featuredImage != null && featuredImage.Length > 0)
-                    {
-                        string folder = Path.Combine(_environment.WebRootPath, "images", "blog");
-                        if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-
-                        string fileName = $"{Guid.NewGuid()}{Path.GetExtension(featuredImage.FileName)}";
-                        string filePath = Path.Combine(folder, fileName);
-
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await featuredImage.CopyToAsync(stream);
-                        }
-
-                        model.FeaturedImage = $"/images/blog/{fileName}";
-                    }
+                        model.FeaturedImage = await SaveImageAsync(featuredImage);
 
                     _context.BlogPosts.Add(model);
                     await _context.SaveChangesAsync();
@@ -92,33 +79,30 @@ namespace QuanLiSanCauLong.Controllers
                     TempData["SuccessMessage"] = "Thêm bài viết thành công!";
                     return RedirectToAction(nameof(Index));
                 }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError("", "Lỗi: " + ex.Message);
-                }
+                catch (Exception ex) { ModelState.AddModelError("", "Lỗi: " + ex.Message); }
             }
 
-            ViewBag.Categories = await _context.BlogCategories.Where(c => c.IsActive).ToListAsync();
             return PartialView(model);
         }
 
+        // GET  /AdminBlog/Edit/5  → PartialView render trong modal
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
             var post = await _context.BlogPosts.FindAsync(id);
             if (post == null) return NotFound();
-
-            ViewBag.Categories = await _context.BlogCategories.Where(c => c.IsActive).ToListAsync();
             return PartialView(post);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(BlogPost model, IFormFile? featuredImage)
+        // POST /AdminBlog/Edit
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(BlogPost model, IFormFile? featuredImage, bool removeExistingImage = false)
         {
             ModelState.Remove("FeaturedImage");
             ModelState.Remove("Category");
             ModelState.Remove("Comments");
+            ModelState.Remove("CategoryId");
+            ModelState.Remove("Slug");
 
             if (ModelState.IsValid)
             {
@@ -131,8 +115,6 @@ namespace QuanLiSanCauLong.Controllers
                         post.Slug = GenerateSlug(model.Title);
                         post.Excerpt = model.Excerpt;
                         post.Content = model.Content;
-                        post.CategoryId = model.CategoryId;
-                        post.Tags = model.Tags;
                         post.Status = model.Status;
                         post.IsFeatured = model.IsFeatured;
                         post.MetaTitle = model.MetaTitle;
@@ -142,43 +124,31 @@ namespace QuanLiSanCauLong.Controllers
                         if (model.Status == "Published" && !post.PublishedAt.HasValue)
                             post.PublishedAt = DateTime.Now;
 
-                        // Upload new image
+                        if (removeExistingImage && !string.IsNullOrEmpty(post.FeaturedImage))
+                        {
+                            DeleteImage(post.FeaturedImage);
+                            post.FeaturedImage = null;
+                        }
+
                         if (featuredImage != null && featuredImage.Length > 0)
                         {
-                            // Delete old image
                             if (!string.IsNullOrEmpty(post.FeaturedImage))
-                            {
-                                string oldPath = Path.Combine(_environment.WebRootPath, post.FeaturedImage.TrimStart('/'));
-                                if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
-                            }
-
-                            string folder = Path.Combine(_environment.WebRootPath, "images", "blog");
-                            string fileName = $"{Guid.NewGuid()}{Path.GetExtension(featuredImage.FileName)}";
-                            string filePath = Path.Combine(folder, fileName);
-
-                            using (var stream = new FileStream(filePath, FileMode.Create))
-                            {
-                                await featuredImage.CopyToAsync(stream);
-                            }
-
-                            post.FeaturedImage = $"/images/blog/{fileName}";
+                                DeleteImage(post.FeaturedImage);
+                            post.FeaturedImage = await SaveImageAsync(featuredImage);
                         }
 
                         await _context.SaveChangesAsync();
                         TempData["SuccessMessage"] = "Cập nhật bài viết thành công!";
                         return RedirectToAction(nameof(Index));
                     }
-                    catch (Exception ex)
-                    {
-                        ModelState.AddModelError("", "Lỗi: " + ex.Message);
-                    }
+                    catch (Exception ex) { ModelState.AddModelError("", "Lỗi: " + ex.Message); }
                 }
             }
 
-            ViewBag.Categories = await _context.BlogCategories.Where(c => c.IsActive).ToListAsync();
             return PartialView(model);
         }
 
+        // POST /AdminBlog/Delete/5
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
@@ -191,16 +161,11 @@ namespace QuanLiSanCauLong.Controllers
 
             try
             {
-                // Delete image
                 if (!string.IsNullOrEmpty(post.FeaturedImage))
-                {
-                    string path = Path.Combine(_environment.WebRootPath, post.FeaturedImage.TrimStart('/'));
-                    if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
-                }
+                    DeleteImage(post.FeaturedImage);
 
                 _context.BlogPosts.Remove(post);
                 await _context.SaveChangesAsync();
-
                 return Json(new { success = true, message = "Xóa bài viết thành công!" });
             }
             catch (Exception ex)
@@ -209,25 +174,59 @@ namespace QuanLiSanCauLong.Controllers
             }
         }
 
-        // ============ CATEGORIES ============
+        // GET /AdminBlog/Details/5  → PartialView xem nhanh trong modal
         [HttpGet]
-        public async Task<IActionResult> Categories()
+        public async Task<IActionResult> Details(int id)
         {
-            var categories = await _context.BlogCategories.OrderBy(c => c.DisplayOrder).ToListAsync();
-            return View(categories);
+            var post = await _context.BlogPosts
+                .Include(p => p.Comments)
+                .FirstOrDefaultAsync(p => p.PostId == id);
+
+            if (post == null) return NotFound();
+            return PartialView(post);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CreateCategory([FromBody] BlogCategory model)
+        // ══════════════════════════════════════════════
+        // KHO LƯU TRỮ — chỉ Admin truy cập được
+        // ══════════════════════════════════════════════
+
+        // GET /AdminBlog/Archive
+        [HttpGet]
+        public async Task<IActionResult> Archive()
         {
+            var posts = await _context.BlogPosts
+                .Where(p => p.Status == "Archived")
+                .OrderByDescending(p => p.UpdatedAt)
+                .ToListAsync();
+            return View(posts);
+        }
+
+        // GET /AdminBlog/ArchiveRead/5
+        [HttpGet]
+        public async Task<IActionResult> ArchiveRead(int id)
+        {
+            var post = await _context.BlogPosts
+                .FirstOrDefaultAsync(p => p.PostId == id && p.Status == "Archived");
+
+            if (post == null) return NotFound();
+            return View(post);
+        }
+
+        // POST /AdminBlog/Restore/5  →  Archived → Published
+        [HttpPost]
+        public async Task<IActionResult> Restore(int id)
+        {
+            var post = await _context.BlogPosts.FindAsync(id);
+            if (post == null)
+                return Json(new { success = false, message = "Không tìm thấy bài viết!" });
+
             try
             {
-                model.Slug = GenerateSlug(model.CategoryName);
-                model.CreatedAt = DateTime.Now;
-                _context.BlogCategories.Add(model);
+                post.Status = "Published";
+                post.PublishedAt ??= DateTime.Now;
+                post.UpdatedAt = DateTime.Now;
                 await _context.SaveChangesAsync();
-
-                return Json(new { success = true, message = "Thêm danh mục thành công!" });
+                return Json(new { success = true, message = "Bài viết đã được khôi phục và xuất bản!" });
             }
             catch (Exception ex)
             {
@@ -235,35 +234,50 @@ namespace QuanLiSanCauLong.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> DeleteCategory(int id)
+        // ══════════════════════════════════════════════
+        // UPLOAD ẢNH TINYMCE
+        // ══════════════════════════════════════════════
+
+        // POST /AdminBlog/UploadImage
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadImage(IFormFile file)
         {
-            var category = await _context.BlogCategories
-                .Include(c => c.Posts)
-                .FirstOrDefaultAsync(c => c.CategoryId == id);
-
-            if (category == null)
-                return Json(new { success = false, message = "Không tìm thấy danh mục!" });
-
-            if (category.Posts != null && category.Posts.Any())
-                return Json(new { success = false, message = "Không thể xóa danh mục đang có bài viết!" });
-
+            if (file == null || file.Length == 0)
+                return Json(new { error = "Không có file" });
             try
             {
-                _context.BlogCategories.Remove(category);
-                await _context.SaveChangesAsync();
-                return Json(new { success = true, message = "Xóa danh mục thành công!" });
+                return Json(new { location = await SaveImageAsync(file) });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+                return Json(new { error = ex.Message });
             }
         }
 
-        // Helper method
-        private string GenerateSlug(string text)
+        // ══════════════════════════════════════════════
+        // PRIVATE HELPERS
+        // ══════════════════════════════════════════════
+
+        private async Task<string> SaveImageAsync(IFormFile file)
         {
-            return text.ToLower()
+            string folder = Path.Combine(_environment.WebRootPath, "images", "blog");
+            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+            string fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            using var stream = new FileStream(Path.Combine(folder, fileName), FileMode.Create);
+            await file.CopyToAsync(stream);
+            return $"/images/blog/{fileName}";
+        }
+
+        private void DeleteImage(string relativePath)
+        {
+            if (string.IsNullOrEmpty(relativePath)) return;
+            string full = Path.Combine(_environment.WebRootPath, relativePath.TrimStart('/'));
+            if (System.IO.File.Exists(full)) System.IO.File.Delete(full);
+        }
+
+        private static string GenerateSlug(string text) =>
+            text.ToLower()
                 .Replace("đ", "d")
                 .Replace("á", "a").Replace("à", "a").Replace("ả", "a").Replace("ã", "a").Replace("ạ", "a")
                 .Replace("ă", "a").Replace("ắ", "a").Replace("ằ", "a").Replace("ẳ", "a").Replace("ẵ", "a").Replace("ặ", "a")
@@ -277,8 +291,6 @@ namespace QuanLiSanCauLong.Controllers
                 .Replace("ú", "u").Replace("ù", "u").Replace("ủ", "u").Replace("ũ", "u").Replace("ụ", "u")
                 .Replace("ư", "u").Replace("ứ", "u").Replace("ừ", "u").Replace("ử", "u").Replace("ữ", "u").Replace("ự", "u")
                 .Replace("ý", "y").Replace("ỳ", "y").Replace("ỷ", "y").Replace("ỹ", "y").Replace("ỵ", "y")
-                .Replace(" ", "-")
-                .Replace("---", "-").Replace("--", "-");
-        }
+                .Replace(" ", "-").Replace("---", "-").Replace("--", "-");
     }
 }

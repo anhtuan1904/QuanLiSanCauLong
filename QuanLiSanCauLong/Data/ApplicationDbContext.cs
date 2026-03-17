@@ -3,8 +3,7 @@ using QuanLiSanCauLong.Models;
 
 namespace QuanLiSanCauLong.Data
 {
-    // ⚠️ QUAN TRỌNG: Thêm từ khóa "partial" vì OnModelCreating
-    // được định nghĩa trong file ApplicationDbContext.Configuration.cs
+    // ⚠️ QUAN TRỌNG: "partial" vì OnModelCreating định nghĩa trong ApplicationDbContext.Configuration.cs
     public partial class ApplicationDbContext : DbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -26,7 +25,7 @@ namespace QuanLiSanCauLong.Data
         public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
         public DbSet<RentalItem> RentalItems { get; set; }
 
-        // ── Giao dịch kho cũ (giữ để không break migration cũ) ──
+        // ── Giao dịch kho cũ ──
         public DbSet<StockTransaction> StockTransactions { get; set; }
         public DbSet<StockTransactionDetail> StockTransactionDetails { get; set; }
 
@@ -60,15 +59,17 @@ namespace QuanLiSanCauLong.Data
         public DbSet<JobApplication> JobApplications { get; set; }
         public DbSet<ContactMessage> ContactMessages { get; set; }
 
-        // ── Khác ──
+        // ── Khóa học / Căng vợt / Giải đấu ──
         public DbSet<Course> Courses { get; set; }
+        public DbSet<CourseImage> CourseImages { get; set; }           // ← THÊM MỚI
         public DbSet<StringingService> StringingServices { get; set; }
+        public DbSet<StringingImage> StringingImages { get; set; }     // ← THÊM MỚI
         public DbSet<Tournament> Tournaments { get; set; }
+        public DbSet<TournamentImage> TournamentImages { get; set; }   // ← THÊM MỚI
 
         // ── Nhân viên & Ca làm việc ──
         public DbSet<Shift> Shifts { get; set; }
         public DbSet<ShiftAssignment> ShiftAssignments { get; set; }
-
         public DbSet<CourtReview> CourtReviews { get; set; }
         public DbSet<ReviewReply> ReviewReplies { get; set; }
         public DbSet<ReviewLike> ReviewLikes { get; set; }

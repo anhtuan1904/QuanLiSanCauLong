@@ -2,8 +2,12 @@
 @{
     Layout = null;
     var uid = Guid.NewGuid().ToString("N")[..8];
+    var sponsorList = new List<string>();
+    if (!string.IsNullOrEmpty(Model.Sponsors))
+    {
+        try { sponsorList = System.Text.Json.JsonSerializer.Deserialize<List<string>>(Model.Sponsors) ?? new(); } catch { }
+    }
 }
-
 <style>
     :root {
         --deep: #1a1209;
@@ -13,6 +17,9 @@
         --warm: #f5ede0;
         --border: #e8ddd0;
         --muted: #8a7560;
+        --green: #16a34a;
+        --red: #c94b2a;
+        --blue: #1d4ed8;
     }
 
     * {
@@ -20,11 +27,21 @@
         box-sizing: border-box;
     }
 
+    .te-wrapper {
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+        overflow: hidden;
+    }
+
     .te-header {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        padding: 1.5rem 1.75rem 0;
+        padding: 1.5rem 1.75rem 1rem;
+        flex-shrink: 0;
+        border-bottom: 1px solid var(--border);
+        background: #fff;
     }
 
     .te-header-label {
@@ -86,7 +103,7 @@
     .te-body {
         padding: 1.25rem 1.75rem 1rem;
         overflow-y: auto;
-        max-height: calc(90vh - 130px);
+        flex: 1;
     }
 
     .te-card {
@@ -143,6 +160,12 @@
         gap: .9rem;
     }
 
+    .fg-row4 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: .9rem;
+    }
+
     .fg-label {
         display: block;
         font-size: .71rem;
@@ -154,7 +177,7 @@
     }
 
         .fg-label .req {
-            color: #c94b2a;
+            color: var(--red);
         }
 
     .fg-input, .fg-select, .fg-textarea {
@@ -177,7 +200,6 @@
 
     .fg-textarea {
         resize: vertical;
-        min-height: 80px;
     }
 
     .fg-hint {
@@ -186,79 +208,83 @@
         margin-top: .3rem;
     }
 
-    /* Type cards */
-    .ty-card {
-        border: 1.5px solid var(--border);
-        border-radius: 10px;
-        padding: .75rem .5rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all .22s;
-        user-select: none;
-        background: #fff;
-    }
-
-        .ty-card:hover {
-            border-color: rgba(212,160,23,.5);
-            background: var(--cream);
-        }
-
-        .ty-card.selected {
-            border-color: var(--gold);
-            background: rgba(212,160,23,.07);
-        }
-
-    .ty-card-icon {
-        font-size: 1.4rem;
-        margin-bottom: .3rem;
-    }
-
-    .ty-card-name {
-        font-size: .72rem;
-        font-weight: 700;
-        color: var(--deep);
-        line-height: 1.3;
-    }
-
-    /* Status opts */
-    .status-opts-te {
-        display: flex;
+    /* TYPE CARDS */
+    .type-cards {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
         gap: .6rem;
-        flex-wrap: wrap;
     }
 
-    .status-opt-te {
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-        padding: .5rem 1rem;
+    .type-card {
         border: 1.5px solid var(--border);
-        border-radius: 6px;
+        border-radius: 9px;
+        padding: .75rem .5rem;
         cursor: pointer;
-        font-size: .82rem;
-        font-weight: 600;
-        color: var(--muted);
+        text-align: center;
         transition: all .2s;
         user-select: none;
     }
 
-        .status-opt-te:hover {
+        .type-card:hover {
             border-color: rgba(212,160,23,.5);
         }
 
-        .status-opt-te.selected {
+        .type-card.selected {
             border-color: var(--gold);
-            background: rgba(212,160,23,.07);
+            background: rgba(212,160,23,.1);
+        }
+
+        .type-card .tc-icon {
+            font-size: 1.4rem;
+            margin-bottom: .25rem;
+        }
+
+        .type-card .tc-name {
+            font-size: .75rem;
+            font-weight: 700;
             color: var(--deep);
+        }
+
+        .type-card .tc-sub {
+            font-size: .62rem;
+            color: var(--muted);
+            margin-top: .1rem;
+        }
+
+    /* STATUS */
+    .status-opts {
+        display: flex;
+        gap: .65rem;
+        flex-wrap: wrap;
+    }
+
+    .status-opt {
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+        padding: .55rem 1rem;
+        border: 1.5px solid var(--border);
+        border-radius: 7px;
+        cursor: pointer;
+        font-size: .82rem;
+        font-weight: 500;
+        transition: all .2s;
+        user-select: none;
+    }
+
+        .status-opt.selected {
+            border-color: var(--gold);
+            background: rgba(212,160,23,.08);
+            font-weight: 700;
         }
 
     .status-dot {
         width: 8px;
         height: 8px;
         border-radius: 50%;
+        flex-shrink: 0;
     }
 
-    /* Toggle */
     .toggle-row {
         display: flex;
         gap: 1rem;
@@ -268,379 +294,755 @@
     .toggle-item {
         display: flex;
         align-items: center;
-        gap: .6rem;
-        border: 1.5px solid var(--border);
-        border-radius: 7px;
-        padding: .6rem 1rem;
+        gap: .5rem;
         cursor: pointer;
-        transition: all .2s;
     }
-
-        .toggle-item:has(input:checked) {
-            border-color: var(--gold);
-            background: rgba(212,160,23,.06);
-        }
-
-        .toggle-item input {
-            accent-color: var(--gold);
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-        }
 
     .toggle-label {
         font-size: .84rem;
-        font-weight: 600;
         color: var(--deep);
     }
 
-    /* Image */
-    .img-upload-zone-te {
+    /* PRIZE TABLE */
+    .prize-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .prize-table th {
+            background: var(--warm);
+            padding: .5rem .75rem;
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .prize-table td {
+            padding: .6rem .75rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .prize-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .prize-table .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-size: .75rem;
+            font-weight: 700;
+        }
+
+        .prize-table .rank-1 {
+            background: #ffd700;
+            color: #000;
+        }
+
+        .prize-table .rank-2 {
+            background: #c0c0c0;
+            color: #000;
+        }
+
+        .prize-table .rank-3 {
+            background: #cd7f32;
+            color: #fff;
+        }
+
+        .prize-table input {
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: .4rem .6rem;
+            font-size: .84rem;
+            width: 100%;
+            outline: none;
+        }
+
+            .prize-table input:focus {
+                border-color: var(--gold);
+            }
+
+    /* SPONSORS */
+    .sp-input-row {
+        display: flex;
+        gap: .5rem;
+    }
+
+        .sp-input-row .fg-input {
+            flex: 1;
+        }
+
+    .btn-sp-add {
+        padding: .65rem .9rem;
+        background: var(--deep);
+        border: none;
+        border-radius: 7px;
+        font-size: .82rem;
+        font-weight: 600;
+        color: var(--gold);
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .sponsor-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .45rem;
+        margin-top: .5rem;
+    }
+
+    .sp-tag {
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+        background: rgba(29,78,216,.08);
+        border: 1px solid rgba(29,78,216,.2);
+        border-radius: 20px;
+        padding: .3rem .75rem;
+        font-size: .78rem;
+        color: var(--deep);
+    }
+
+        .sp-tag .sp-remove {
+            cursor: pointer;
+            color: var(--muted);
+            font-size: .7rem;
+            background: none;
+            border: none;
+            padding: 0;
+            line-height: 1;
+        }
+
+            .sp-tag .sp-remove:hover {
+                color: var(--red);
+            }
+
+    /* IMAGE */
+    .img-upload-zone {
         border: 2px dashed var(--border);
         border-radius: 10px;
-        background: var(--cream);
+        background: var(--warm);
+        min-height: 150px;
         cursor: pointer;
-        transition: all .25s;
-        min-height: 110px;
+        position: relative;
+        overflow: hidden;
+        transition: border-color .2s;
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: .5rem;
-        padding: 1.25rem;
     }
 
-        .img-upload-zone-te:hover {
+        .img-upload-zone:hover {
             border-color: var(--gold);
         }
 
-        .img-upload-zone-te.has-preview {
+        .img-upload-zone.has-preview {
+            border-style: solid;
             border-color: var(--gold);
-            padding: 0;
         }
 
-    .img-preview-te {
+    .img-preview {
+        position: absolute;
+        inset: 0;
         width: 100%;
-        height: 130px;
+        height: 100%;
         object-fit: cover;
         display: none;
-        border-radius: 8px;
     }
 
-        .img-preview-te.show {
+        .img-preview.show {
             display: block;
         }
+
+    .img-upload-inner {
+        text-align: center;
+        padding: 2rem 1rem;
+        pointer-events: none;
+    }
+
+    .upload-icon {
+        font-size: 2rem;
+        color: var(--gold);
+        margin-bottom: .5rem;
+    }
+
+    .upload-text {
+        font-size: .84rem;
+        color: var(--muted);
+    }
 
     .img-url-row {
         display: flex;
         gap: .5rem;
-        margin-top: .75rem;
+        margin-top: .65rem;
     }
 
+        .img-url-row .fg-input {
+            flex: 1;
+        }
+
+    .btn-url-confirm {
+        padding: .65rem 1rem;
+        background: var(--warm);
+        border: 1.5px solid var(--border);
+        border-radius: 7px;
+        font-size: .82rem;
+        font-weight: 600;
+        color: var(--deep);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all .2s;
+    }
+
+        .btn-url-confirm:hover {
+            border-color: var(--gold);
+            background: rgba(212,160,23,.1);
+        }
+
+    /* GALLERY */
+    .gallery-drop-zone {
+        border: 2px dashed var(--border);
+        border-radius: 10px;
+        background: var(--warm);
+        padding: 1.2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all .2s;
+        margin-bottom: .75rem;
+    }
+
+        .gallery-drop-zone:hover, .gallery-drop-zone.drag-over {
+            border-color: var(--gold);
+            background: rgba(212,160,23,.05);
+        }
+
+        .gallery-drop-zone .dz-icon {
+            font-size: 1.5rem;
+            color: var(--gold);
+        }
+
+        .gallery-drop-zone .dz-text {
+            font-size: .82rem;
+            color: var(--muted);
+            margin-top: .3rem;
+        }
+
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(5,1fr);
+        gap: .5rem;
+    }
+
+    .gallery-thumb {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 7px;
+        overflow: hidden;
+        border: 2px solid var(--border);
+        background: var(--warm);
+    }
+
+        .gallery-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .gallery-thumb .thumb-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity .2s;
+        }
+
+        .gallery-thumb:hover .thumb-overlay {
+            opacity: 1;
+        }
+
+    .thumb-btn {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .72rem;
+    }
+
+        .thumb-btn.del {
+            background: var(--red);
+            color: #fff;
+        }
+
+    .gallery-thumb.existing .del-existing {
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        background: var(--red);
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 22px;
+        height: 22px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .65rem;
+    }
+
+    /* VIDEO */
+    .video-preview {
+        margin-top: .65rem;
+        border-radius: 8px;
+        overflow: hidden;
+        display: none;
+    }
+
+        .video-preview.show {
+            display: block;
+        }
+
+        .video-preview iframe {
+            width: 100%;
+            height: 175px;
+            border: none;
+            border-radius: 8px;
+        }
+
+    /* FOOTER */
     .te-footer {
         display: flex;
+        align-items: center;
         justify-content: flex-end;
-        gap: .65rem;
-        padding: 1rem 1.75rem 1.5rem;
+        gap: .75rem;
+        padding: 1rem 1.75rem;
         border-top: 1px solid var(--border);
+        background: var(--warm);
+        flex-shrink: 0;
     }
 
     .btn-te-cancel {
-        padding: .65rem 1.4rem;
+        padding: .65rem 1.25rem;
         border: 1.5px solid var(--border);
         border-radius: 7px;
         background: #fff;
-        color: var(--muted);
         font-size: .84rem;
         font-weight: 600;
+        color: var(--muted);
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
         transition: all .2s;
-        font-family: 'Outfit',sans-serif;
     }
 
         .btn-te-cancel:hover {
-            border-color: var(--deep);
+            border-color: var(--muted);
             color: var(--deep);
         }
 
     .btn-te-save {
-        padding: .65rem 1.75rem;
+        padding: .7rem 1.75rem;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
         border: none;
         border-radius: 7px;
-        background: linear-gradient(135deg,var(--gold),var(--gold2));
-        color: var(--deep);
-        font-size: .84rem;
+        font-family: 'Outfit',sans-serif;
+        font-size: .86rem;
         font-weight: 700;
+        color: var(--deep);
         cursor: pointer;
-        transition: all .2s;
         display: flex;
         align-items: center;
-        gap: .4rem;
-        font-family: 'Outfit',sans-serif;
+        gap: .45rem;
+        transition: all .25s;
     }
 
         .btn-te-save:hover {
             transform: translateY(-1px);
-            box-shadow: 0 5px 15px rgba(212,160,23,.3);
+            box-shadow: 0 6px 18px rgba(212,160,23,.35);
         }
 
         .btn-te-save:disabled {
             opacity: .6;
-            cursor: not-allowed;
             transform: none;
+            cursor: not-allowed;
         }
 </style>
 
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-<!-- HEADER -->
-<div class="te-header">
-    <div>
-        <div class="te-header-label"><i class="bi bi-pencil-square"></i> Chỉnh sửa giải đấu</div>
-        <div class="te-title">Cập Nhật <em>Giải Đấu</em></div>
-        <div class="te-subtitle">Đang chỉnh sửa: <strong>@Model.TournamentName</strong></div>
+<div class="te-wrapper">
+    <div class="te-header">
+        <div>
+            <div class="te-header-label"><i class="bi bi-trophy-fill"></i> Chỉnh Sửa Giải Đấu</div>
+            <div class="te-title">Sửa: <em>@Model.TournamentName.Substring(0, Math.Min(40, Model.TournamentName.Length))@(Model.TournamentName.Length > 40 ? "…" : "")</em></div>
+            <div class="te-subtitle">ID: #@Model.TournamentId · Tạo @Model.CreatedAt.ToString("dd/MM/yyyy")</div>
+        </div>
+        <button class="te-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
     </div>
-    <button type="button" class="te-close" data-bs-dismiss="modal">
-        <i class="bi bi-x" style="font-size:1.1rem;"></i>
-    </button>
-</div>
 
-<!-- BODY -->
-<div class="te-body">
-    <form id="frmTournamentEdit-@uid" method="post" enctype="multipart/form-data" action="/AdminService/TournamentEdit">
-        @Html.AntiForgeryToken()
-        <input type="hidden" name="TournamentId" value="@Model.TournamentId" />
-        <input type="hidden" name="CreatedAt" value="@Model.CreatedAt.ToString("o")" />
-        <input type="hidden" name="ViewCount" value="@Model.ViewCount" />
-        <input type="hidden" name="Slug" value="@Model.Slug" />
-        <input type="hidden" name="CurrentPlayers" value="@Model.CurrentPlayers" />
-        <input type="hidden" id="typeInputTE-@uid" name="TournamentType" value="@Model.TournamentType" />
-        <input type="hidden" id="statusInputTE-@uid" name="Status" value="@Model.Status" />
+    <div class="te-body">
+        <form id="frmTournEdit-@uid" enctype="multipart/form-data" novalidate>
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="TournamentId" value="@Model.TournamentId" />
 
-        <!-- 1. THÔNG TIN -->
-        <div class="te-card">
-            <div class="te-card-head"><i class="bi bi-trophy"></i><span class="te-card-title">Thông Tin Giải Đấu</span></div>
-            <div class="te-card-body">
-                <div class="fg">
-                    <label class="fg-label">Tên Giải Đấu <span class="req">*</span></label>
-                    <input name="TournamentName" value="@Model.TournamentName" class="fg-input" required />
-                </div>
-                <div class="fg-row2 fg">
-                    <div>
-                        <label class="fg-label">Địa Điểm</label>
-                        <input name="Venue" value="@Model.Venue" class="fg-input" />
+            <!-- 1. THÔNG TIN -->
+            <div class="te-card">
+                <div class="te-card-head"><i class="bi bi-info-circle-fill"></i><span class="te-card-title">Thông Tin Cơ Bản</span></div>
+                <div class="te-card-body">
+                    <div class="fg">
+                        <label class="fg-label">Tên Giải Đấu <span class="req">*</span></label>
+                        <input name="TournamentName" class="fg-input" required maxlength="200" value="@Model.TournamentName" />
                     </div>
-                    <div>
-                        <label class="fg-label">Số VĐV Tối Đa</label>
-                        <input name="MaxPlayers" type="number" value="@Model.MaxPlayers" class="fg-input" min="2" />
+                    <div class="fg">
+                        <label class="fg-label">Mô Tả Ngắn</label>
+                        <input name="ShortDesc" class="fg-input" maxlength="300" value="@Model.ShortDesc" />
                     </div>
-                </div>
-                <div class="fg-row3 fg" style="margin-bottom:0;">
-                    <div>
-                        <label class="fg-label">Ngày Bắt Đầu</label>
-                        <input name="StartDate" type="date" value="@(Model.StartDate?.ToString("yyyy-MM-dd"))" class="fg-input" />
-                    </div>
-                    <div>
-                        <label class="fg-label">Ngày Kết Thúc</label>
-                        <input name="EndDate" type="date" value="@(Model.EndDate?.ToString("yyyy-MM-dd"))" class="fg-input" />
-                    </div>
-                    <div>
-                        <label class="fg-label">Hạn Đăng Ký</label>
-                        <input name="RegistrationDeadline" type="date" value="@(Model.RegistrationDeadline?.ToString("yyyy-MM-dd"))" class="fg-input" />
+                    <div class="fg" style="margin-bottom:0;">
+                        <label class="fg-label">Mô Tả Chi Tiết <span class="req">*</span></label>
+                        <textarea name="Description" class="fg-textarea" rows="3" required>@Model.Description</textarea>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 2. HÌNH THỨC -->
-        <div class="te-card">
-            <div class="te-card-head"><i class="bi bi-people"></i><span class="te-card-title">Hình Thức Thi Đấu</span></div>
-            <div class="te-card-body">
-                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:.5rem;" id="typeCardsTE-@uid">
-                    <div class="ty-card @(Model.TournamentType == "Đơn Nam" ? "selected" : "")" data-type="Đơn Nam"><div class="ty-card-icon">🏃‍♂️</div><div class="ty-card-name">Đơn Nam</div></div>
-                    <div class="ty-card @(Model.TournamentType == "Đơn Nữ" ? "selected" : "")" data-type="Đơn Nữ"><div class="ty-card-icon">🏃‍♀️</div><div class="ty-card-name">Đơn Nữ</div></div>
-                    <div class="ty-card @(Model.TournamentType == "Đôi Nam" ? "selected" : "")" data-type="Đôi Nam"><div class="ty-card-icon">👬</div><div class="ty-card-name">Đôi Nam</div></div>
-                    <div class="ty-card @(Model.TournamentType == "Đôi Nữ" ? "selected" : "")" data-type="Đôi Nữ"><div class="ty-card-icon">👭</div><div class="ty-card-name">Đôi Nữ</div></div>
-                    <div class="ty-card @(Model.TournamentType == "Đôi Mix" ? "selected" : "")" data-type="Đôi Mix"><div class="ty-card-icon">👫</div><div class="ty-card-name">Đôi Mix</div></div>
-                    <div class="ty-card @(Model.TournamentType == "Đơn Nam/Nữ" ? "selected" : "")" data-type="Đơn Nam/Nữ"><div class="ty-card-icon">⚡</div><div class="ty-card-name">Đơn Nam/Nữ</div></div>
-                    <div class="ty-card @(Model.TournamentType == "Đôi Tổng Hợp" ? "selected" : "")" data-type="Đôi Tổng Hợp"><div class="ty-card-icon">🏆</div><div class="ty-card-name">Đôi Tổng Hợp</div></div>
-                    <div class="ty-card @(Model.TournamentType == "Khác" ? "selected" : "")" data-type="Khác"><div class="ty-card-icon">📋</div><div class="ty-card-name">Khác</div></div>
+            <!-- 2. THỂ THỨC -->
+            <div class="te-card">
+                <div class="te-card-head"><i class="bi bi-person-fill"></i><span class="te-card-title">Thể Thức Thi Đấu</span></div>
+                <div class="te-card-body">
+                    <div class="type-cards" id="typeCardsTE-@uid">
+                        @foreach (var t in new[] { ("Singles", "🏸", "Đơn Nam/Nữ"), ("Doubles", "👫", "Đôi"), ("Mixed", "🤝", "Đôi Nam Nữ"), ("All", "🏆", "Tất Cả") })
+                        {
+                            <div class="type-card @(Model.TournamentType == t.Item1 ? "selected" : "")" data-type="@t.Item1">
+                                <div class="tc-icon">@t.Item2</div><div class="tc-name">@t.Item3</div>
+                            </div>
+                        }
+                    </div>
+                    <input type="hidden" name="TournamentType" id="typeInputTE-@uid" value="@Model.TournamentType" />
                 </div>
             </div>
-        </div>
 
-        <!-- 3. GIẢI THƯỞNG -->
-        <div class="te-card">
-            <div class="te-card-head"><i class="bi bi-trophy-fill"></i><span class="te-card-title">Giải Thưởng & Phí</span></div>
-            <div class="te-card-body">
-                <div class="fg-row2 fg">
-                    <div>
-                        <label class="fg-label">Tổng Giải Thưởng (VNĐ)</label>
-                        <input name="PrizeMoney" type="number" value="@Model.PrizeMoney" class="fg-input" step="100000" />
+            <!-- 3. THỜI GIAN & ĐỊA ĐIỂM -->
+            <div class="te-card">
+                <div class="te-card-head"><i class="bi bi-calendar-event-fill"></i><span class="te-card-title">Thời Gian & Địa Điểm</span></div>
+                <div class="te-card-body">
+                    <div class="fg fg-row3">
+                        <div>
+                            <label class="fg-label">Ngày Bắt Đầu <span class="req">*</span></label>
+                            <input name="StartDate" type="datetime-local" class="fg-input" required
+                                   value="@(Model.StartDate?.ToString("yyyy-MM-ddTHH:mm") ?? "")" />
+                        </div>
+                        <div>
+                            <label class="fg-label">Ngày Kết Thúc</label>
+                            <input name="EndDate" type="datetime-local" class="fg-input"
+                                   value="@(Model.EndDate?.ToString("yyyy-MM-ddTHH:mm") ?? "")" />
+                        </div>
+                        <div>
+                            <label class="fg-label">Hạn Đăng Ký</label>
+                            <input name="RegistrationDeadline" type="datetime-local" class="fg-input"
+                                   value="@(Model.RegistrationDeadline?.ToString("yyyy-MM-ddTHH:mm") ?? "")" />
+                        </div>
                     </div>
-                    <div>
-                        <label class="fg-label">Phí Đăng Ký (VNĐ)</label>
-                        <input name="EntryFee" type="number" value="@Model.EntryFee" class="fg-input" step="10000" />
+                    <div class="fg">
+                        <label class="fg-label">Tên Địa Điểm <span class="req">*</span></label>
+                        <input name="Venue" class="fg-input" required maxlength="200" value="@Model.Venue" />
                     </div>
-                </div>
-                <div class="fg" style="margin-bottom:0;">
-                    <label class="fg-label">Cơ Cấu Giải Thưởng</label>
-                    <textarea name="PrizeDescription" class="fg-textarea" rows="3" placeholder="Giải Nhất: 5.000.000đ&#10;Giải Nhì: 3.000.000đ">@Model.PrizeDescription</textarea>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. MÔ TẢ & THỂ LỆ -->
-        <div class="te-card">
-            <div class="te-card-head"><i class="bi bi-file-text"></i><span class="te-card-title">Mô Tả & Thể Lệ</span></div>
-            <div class="te-card-body">
-                <div class="fg">
-                    <label class="fg-label">Mô Tả Ngắn</label>
-                    <textarea name="ShortDesc" class="fg-textarea" rows="2">@Model.ShortDesc</textarea>
-                </div>
-                <div class="fg">
-                    <label class="fg-label">Mô Tả Chi Tiết</label>
-                    <textarea name="Description" class="fg-textarea" rows="3">@Model.Description</textarea>
-                </div>
-                <div class="fg" style="margin-bottom:0;">
-                    <label class="fg-label">Thể Lệ Thi Đấu</label>
-                    <textarea name="Rules" class="fg-textarea" rows="4" placeholder="- Luật 1&#10;- Luật 2">@Model.Rules</textarea>
-                    <div class="fg-hint">Mỗi dòng một quy tắc</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 5. HÌNH ẢNH -->
-        <div class="te-card">
-            <div class="te-card-head"><i class="bi bi-image"></i><span class="te-card-title">Hình Ảnh Đại Diện</span></div>
-            <div class="te-card-body">
-                <div class="img-upload-zone-te" id="teUploadZone-@uid">
-                    <img class="img-preview-te @(!string.IsNullOrEmpty(Model.FeaturedImage) ? "show" : "")"
-                         id="teImgPreview-@uid" src="@(Model.FeaturedImage ?? "")" alt="Preview" />
-                    <div id="tePlaceholder-@uid" style="@(!string.IsNullOrEmpty(Model.FeaturedImage) ? "display:none;" : "")display:flex;flex-direction:column;align-items:center;gap:.5rem;">
-                        <i class="bi bi-cloud-arrow-up" style="font-size:1.8rem;color:var(--muted);"></i>
-                        <span style="font-size:.84rem;font-weight:600;">Click để tải ảnh lên</span>
+                    <div class="fg">
+                        <label class="fg-label">Địa Chỉ Đầy Đủ</label>
+                        <input name="VenueAddress" class="fg-input" maxlength="300" value="@Model.VenueAddress" />
                     </div>
-                    <input type="file" id="teImgInput-@uid" name="featuredImage" accept="image/*" style="display:none" />
-                </div>
-                <div class="img-url-row">
-                    <input type="text" id="teImgUrl-@uid" name="FeaturedImage" value="@Model.FeaturedImage" class="fg-input" placeholder="Hoặc nhập URL ảnh: https://..." />
-                    <button type="button" id="teBtnUrl-@uid" style="padding:.65rem 1.2rem;border:none;border-radius:7px;background:var(--gold);color:var(--deep);font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Outfit',sans-serif;">✓ Áp dụng</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 6. TRẠNG THÁI -->
-        <div class="te-card">
-            <div class="te-card-head"><i class="bi bi-toggles"></i><span class="te-card-title">Trạng Thái & Cài Đặt</span></div>
-            <div class="te-card-body">
-                <div class="fg">
-                    <label class="fg-label">Trạng Thái</label>
-                    <div class="status-opts-te" id="teStatusOpts-@uid">
-                        <div class="status-opt-te @(Model.Status == "Upcoming" ? "selected" : "")" data-status="Upcoming"><span class="status-dot" style="background:#7c3aed;"></span> Sắp Diễn Ra</div>
-                        <div class="status-opt-te @(Model.Status == "Ongoing" ? "selected" : "")" data-status="Ongoing"><span class="status-dot" style="background:#0284c7;"></span> Đang Diễn Ra</div>
-                        <div class="status-opt-te @(Model.Status == "Completed" ? "selected" : "")" data-status="Completed"><span class="status-dot" style="background:#16a34a;"></span> Đã Kết Thúc</div>
-                        <div class="status-opt-te @(Model.Status == "Cancelled" ? "selected" : "")" data-status="Cancelled"><span class="status-dot" style="background:#dc2626;"></span> Đã Hủy</div>
-                    </div>
-                </div>
-                <div class="fg-row2 fg" style="margin-bottom:.75rem;">
-                    <div>
-                        <label class="fg-label">Thứ Tự Hiển Thị</label>
-                        <input name="DisplayOrder" type="number" value="@Model.DisplayOrder" class="fg-input" />
-                    </div>
-                </div>
-                <div class="fg" style="margin-bottom:0;">
-                    <div class="toggle-row">
-                        <label class="toggle-item"><input type="checkbox" name="IsFeatured" value="true" @(Model.IsFeatured ? "checked" : "") /><span class="toggle-label"><i class="bi bi-star text-warning me-1"></i> Nổi bật</span></label>
+                    <div class="fg" style="margin-bottom:0;">
+                        <label class="fg-label"><i class="bi bi-geo-alt me-1"></i>Google Maps URL</label>
+                        <input name="MapUrl" class="fg-input" value="@Model.MapUrl" placeholder="https://maps.google.com/maps?q=..." />
                     </div>
                 </div>
             </div>
-        </div>
-    </form>
-</div>
 
-<!-- FOOTER -->
-<div class="te-footer">
-    <button type="button" class="btn-te-cancel" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Hủy</button>
-    <button type="button" class="btn-te-save" id="btnTournamentEditSave-@uid"><i class="bi bi-check-circle"></i> Lưu Thay Đổi</button>
+            <!-- 4. ĐĂNG KÝ & GIẢI THƯỞNG -->
+            <div class="te-card">
+                <div class="te-card-head"><i class="bi bi-trophy-fill"></i><span class="te-card-title">Đăng Ký & Giải Thưởng</span></div>
+                <div class="te-card-body">
+                    <div class="fg fg-row4">
+                        <div>
+                            <label class="fg-label">Phí Đăng Ký (VNĐ)</label>
+                            <input name="EntryFee" type="number" class="fg-input" value="@Model.EntryFee" min="0" step="10000" />
+                        </div>
+                        <div>
+                            <label class="fg-label">Tổng Giải Thưởng</label>
+                            <input name="PrizeMoney" type="number" class="fg-input" value="@Model.PrizeMoney" min="0" step="100000" />
+                        </div>
+                        <div>
+                            <label class="fg-label">Số VĐV TĐ</label>
+                            <input name="MaxPlayers" type="number" class="fg-input" value="@Model.MaxPlayers" min="1" />
+                        </div>
+                        <div>
+                            <label class="fg-label">Thứ Tự</label>
+                            <input name="DisplayOrder" type="number" class="fg-input" value="@Model.DisplayOrder" min="0" />
+                        </div>
+                    </div>
+
+                    <!-- PRIZE TABLE -->
+                    @{
+                        var prizeLines = (Model.PrizeDescription ?? "").Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+                        string GetPrizeField(int rank, int col)
+                        {
+                            var line = prizeLines.ElementAtOrDefault(rank);
+                            if (string.IsNullOrEmpty(line)) return "";
+                            var parts = line.Replace("🥇 ", "").Replace("🥈 ", "").Replace("🥉 ", "").Split(" | ");
+                            return col == 0 ? parts.ElementAtOrDefault(0)?.Trim() ?? "" : parts.ElementAtOrDefault(1)?.Trim() ?? "";
+                        }
+                    }
+                    <div class="fg">
+                        <label class="fg-label">🏆 Chi Tiết Giải Thưởng</label>
+                        <table class="prize-table">
+                            <thead><tr><th style="width:50px;">Hạng</th><th>Tiền thưởng</th><th>Phần thưởng thêm</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="rank-badge rank-1">🥇</span></td>
+                                    <td><input type="text" id="prize1Cash-@uid" value="@GetPrizeField(0, 0)" placeholder="VD: 5,000,000đ" /></td>
+                                    <td><input type="text" id="prize1Extra-@uid" value="@GetPrizeField(0, 1)" placeholder="Cúp vàng + Vợt" /></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="rank-badge rank-2">🥈</span></td>
+                                    <td><input type="text" id="prize2Cash-@uid" value="@GetPrizeField(1, 0)" placeholder="VD: 3,000,000đ" /></td>
+                                    <td><input type="text" id="prize2Extra-@uid" value="@GetPrizeField(1, 1)" placeholder="Cúp bạc" /></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="rank-badge rank-3">🥉</span></td>
+                                    <td><input type="text" id="prize3Cash-@uid" value="@GetPrizeField(2, 0)" placeholder="VD: 1,000,000đ" /></td>
+                                    <td><input type="text" id="prize3Extra-@uid" value="@GetPrizeField(2, 1)" placeholder="Cúp đồng" /></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <input type="hidden" name="PrizeDescription" id="prizeDescTE-@uid" value="@Model.PrizeDescription" />
+                    </div>
+
+                    <div class="fg" style="margin-bottom:0;">
+                        <label class="fg-label">📅 Lịch Trình Thi Đấu</label>
+                        <textarea name="Schedule" class="fg-textarea" rows="3" placeholder="Ngày 1: Vòng bảng...">@Model.Schedule</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. THỂ LỆ & NHÀ TÀI TRỢ -->
+            <div class="te-card">
+                <div class="te-card-head"><i class="bi bi-file-text-fill"></i><span class="te-card-title">Thể Lệ & Nhà Tài Trợ</span></div>
+                <div class="te-card-body">
+                    <div class="fg">
+                        <label class="fg-label">Thể Lệ Thi Đấu</label>
+                        <textarea name="Rules" class="fg-textarea" rows="4" placeholder="- Quy định thi đấu...">@Model.Rules</textarea>
+                    </div>
+                    <div class="fg" style="margin-bottom:0;">
+                        <label class="fg-label"><i class="bi bi-building me-1"></i>Nhà Tài Trợ</label>
+                        <div class="sp-input-row">
+                            <input type="text" id="spInputTE-@uid" class="fg-input" placeholder="Tên nhà tài trợ..." maxlength="100" />
+                            <button type="button" class="btn-sp-add" id="btnAddSpTE-@uid"><i class="bi bi-plus-lg"></i> Thêm</button>
+                        </div>
+                        <div class="sponsor-tags" id="spTagsTE-@uid"></div>
+                        <input type="hidden" name="Sponsors" id="sponsorsTE-@uid" value="@Model.Sponsors" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. HÌNH ẢNH & VIDEO -->
+            <div class="te-card">
+                <div class="te-card-head"><i class="bi bi-images"></i><span class="te-card-title">Hình Ảnh & Video</span></div>
+                <div class="te-card-body">
+                    <div class="fg">
+                        <label class="fg-label">Banner Giải Đấu</label>
+                        <div class="img-upload-zone @(!string.IsNullOrEmpty(Model.FeaturedImage) ? "has-preview" : "")" id="teUploadZone-@uid">
+                            <img class="img-preview @(!string.IsNullOrEmpty(Model.FeaturedImage) ? "show" : "")"
+                                 id="teImgPreview-@uid" src="@(Model.FeaturedImage ?? "")" alt="Preview" />
+                            <div class="img-upload-inner" id="teUploadInner-@uid" style="@(!string.IsNullOrEmpty(Model.FeaturedImage) ? "display:none;" : "")">
+                                <div class="upload-icon"><i class="bi bi-cloud-upload"></i></div>
+                                <div class="upload-text"><strong>Click để đổi banner</strong></div>
+                            </div>
+                        </div>
+                        <input type="file" id="teImgInput-@uid" name="featuredImage" accept="image/*" style="display:none" />
+                        <div class="img-url-row">
+                            <input type="text" id="teImgUrl-@uid" name="FeaturedImage" class="fg-input" value="@Model.FeaturedImage" placeholder="Hoặc nhập URL banner mới..." />
+                            <button type="button" class="btn-url-confirm" id="teBtnUrl-@uid"><i class="bi bi-check2"></i> Áp dụng</button>
+                        </div>
+                    </div>
+
+                    @if (Model.TournamentImages != null && Model.TournamentImages.Any())
+                    {
+                        <div class="fg">
+                            <label class="fg-label">Gallery Hiện Tại</label>
+                            <div class="gallery-grid" id="existingGalleryTE-@uid">
+                                @foreach (var img in Model.TournamentImages.OrderBy(i => i.DisplayOrder))
+                                {
+                                    <div class="gallery-thumb existing @(img.IsPrimary ? "is-primary" : "")" data-img-id="@img.ImageId">
+                                        <img src="@img.ImagePath" alt="Gallery" />
+                                        <button type="button" class="del-existing" onclick="deleteTournamentImage(@img.ImageId, this)">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div class="fg">
+                        <label class="fg-label"><i class="bi bi-plus-circle me-1"></i>Thêm Ảnh Mới</label>
+                        <div class="gallery-drop-zone" id="galleryDropTE-@uid">
+                            <div class="dz-icon"><i class="bi bi-images"></i></div>
+                            <div class="dz-text">Click hoặc kéo thả · tối đa 5MB/ảnh</div>
+                        </div>
+                        <input type="file" id="galleryFileTE-@uid" name="galleryImages" accept="image/*" multiple style="display:none" />
+                        <div class="gallery-grid" id="galleryGridTE-@uid"></div>
+                        <div id="galleryCountTE-@uid" style="font-size:.72rem;color:var(--muted);margin-top:.3rem;"></div>
+                    </div>
+
+                    <div class="fg" style="margin-bottom:0;">
+                        <label class="fg-label"><i class="bi bi-play-circle-fill me-1"></i>Video Highlight</label>
+                        <div style="display:flex;gap:.5rem;">
+                            <input type="text" name="VideoUrl" id="videoUrlTE-@uid" class="fg-input" value="@Model.VideoUrl" placeholder="https://www.youtube.com/watch?v=..." />
+                            <button type="button" class="btn-url-confirm" id="btnVideoTE-@uid"><i class="bi bi-play"></i> Xem</button>
+                        </div>
+                        <div class="video-preview @(!string.IsNullOrEmpty(Model.VideoUrl) ? "show" : "")" id="videoPreviewTE-@uid">
+                            @if (!string.IsNullOrEmpty(Model.VideoUrl))
+                            {
+                                var m = System.Text.RegularExpressions.Regex.Match(Model.VideoUrl, @"(?:youtube\.com/watch\?v=|youtu\.be/)([^&?#]+)");
+                                if (m.Success)
+                                {
+                                    <iframe id="videoIframeTE-@uid" src="https://www.youtube.com/embed/@m.Groups[1].Value" allowfullscreen></iframe>
+                                }
+                                else
+                                {
+
+                                    <iframe id="videoIframeTE-@uid" src="" allowfullscreen></iframe>
+                                }
+                            }
+                            else
+                            {
+
+                                <iframe id="videoIframeTE-@uid" src="" allowfullscreen></iframe>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. TRẠNG THÁI -->
+            <div class="te-card">
+                <div class="te-card-head"><i class="bi bi-toggles"></i><span class="te-card-title">Trạng Thái & Hiển Thị</span></div>
+                <div class="te-card-body">
+                    <div class="fg">
+                        <label class="fg-label">Trạng Thái</label>
+                        <div class="status-opts" id="statusOptsTE-@uid">
+                            <div class="status-opt @(Model.Status == "Upcoming" ? "selected" : "")" data-status="Upcoming">
+                                <span class="status-dot" style="background:var(--blue);"></span> Sắp Diễn Ra
+                            </div>
+                            <div class="status-opt @(Model.Status == "Ongoing" ? "selected" : "")" data-status="Ongoing">
+                                <span class="status-dot" style="background:var(--green);"></span> Đang Diễn Ra
+                            </div>
+                            <div class="status-opt @(Model.Status == "Finished" ? "selected" : "")" data-status="Finished">
+                                <span class="status-dot" style="background:var(--muted);"></span> Đã Kết Thúc
+                            </div>
+                            <div class="status-opt @(Model.Status == "Cancelled" ? "selected" : "")" data-status="Cancelled">
+                                <span class="status-dot" style="background:var(--red);"></span> Đã Hủy
+                            </div>
+                        </div>
+                        <input name="Status" type="hidden" id="statusInputTE-@uid" value="@Model.Status" />
+                    </div>
+                    <div class="fg" style="margin-bottom:0;">
+                        <label class="toggle-item">
+                            <input type="checkbox" name="IsFeatured" value="true" @(Model.IsFeatured ? "checked" : "") />
+                            <span class="toggle-label"><i class="bi bi-star text-warning me-1"></i> Giải đấu nổi bật</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="te-footer">
+        <button type="button" class="btn-te-cancel" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Hủy</button>
+        <button type="button" class="btn-te-save" id="btnTournEditSave-@uid"><i class="bi bi-check-circle"></i> Lưu Thay Đổi</button>
+    </div>
 </div>
 
 <script>
-    (function() {
-        var UID = '@uid';
-        function el(id) { return document.getElementById(id + '-' + UID); }
+    (function(){
+        var UID='@uid';
+        function el(id){return document.getElementById(id+'-'+UID);}
 
-        // Type cards
-        var typeCards = el('typeCardsTE');
-        if (typeCards) {
-            typeCards.querySelectorAll('.ty-card').forEach(function(card) {
-                card.addEventListener('click', function() {
-                    typeCards.querySelectorAll('.ty-card').forEach(function(c) { c.classList.remove('selected'); });
-                    this.classList.add('selected');
-                    el('typeInputTE').value = this.dataset.type;
-                });
-            });
+        // TYPE CARDS
+        var tcards=el('typeCardsTE');
+        if(tcards){tcards.querySelectorAll('.type-card').forEach(function(c){c.addEventListener('click',function(){tcards.querySelectorAll('.type-card').forEach(function(x){x.classList.remove('selected');});this.classList.add('selected');el('typeInputTE').value=this.dataset.type;});});}
+
+        // STATUS
+        var sOpts=el('statusOptsTE');
+        if(sOpts){sOpts.querySelectorAll('.status-opt').forEach(function(o){o.addEventListener('click',function(){sOpts.querySelectorAll('.status-opt').forEach(function(x){x.classList.remove('selected');});this.classList.add('selected');el('statusInputTE').value=this.dataset.status;});});}
+
+        // PRIZE SYNC
+        function syncPrize(){
+            var parts=[];
+            var p1c=el('prize1Cash'),p1e=el('prize1Extra');
+            var p2c=el('prize2Cash'),p2e=el('prize2Extra');
+            var p3c=el('prize3Cash'),p3e=el('prize3Extra');
+            if(p1c&&p1c.value)parts.push('🥇 '+p1c.value+(p1e&&p1e.value?' | '+p1e.value:''));
+            if(p2c&&p2c.value)parts.push('🥈 '+p2c.value+(p2e&&p2e.value?' | '+p2e.value:''));
+            if(p3c&&p3c.value)parts.push('🥉 '+p3c.value+(p3e&&p3e.value?' | '+p3e.value:''));
+            var h=el('prizeDescTE');if(h)h.value=parts.join('\n');
         }
+        ['prize1Cash','prize1Extra','prize2Cash','prize2Extra','prize3Cash','prize3Extra'].forEach(function(id){var inp=el(id);if(inp)inp.addEventListener('input',syncPrize);});
 
-        // Status opts
-        var statusOpts = el('teStatusOpts');
-        if (statusOpts) {
-            statusOpts.querySelectorAll('.status-opt-te').forEach(function(opt) {
-                opt.addEventListener('click', function() {
-                    statusOpts.querySelectorAll('.status-opt-te').forEach(function(c) { c.classList.remove('selected'); });
-                    this.classList.add('selected');
-                    el('statusInputTE').value = this.dataset.status;
-                });
-            });
-        }
+        // SPONSORS
+        var spInp=el('spInputTE'),btnSp=el('btnAddSpTE'),spTags=el('spTagsTE'),spHid=el('sponsorsTE');
+        var sponsors=[];
+        try{sponsors=JSON.parse(spHid?spHid.value:'[]')||[];}catch(e){sponsors=[];}
+        function renderSponsors(){if(!spTags)return;spTags.innerHTML='';sponsors.forEach(function(s,i){var t=document.createElement('div');t.className='sp-tag';t.innerHTML='🏢 '+s+'<button type="button" class="sp-remove">✕</button>';t.querySelector('.sp-remove').addEventListener('click',function(){sponsors.splice(i,1);renderSponsors();});spTags.appendChild(t);});if(spHid)spHid.value=JSON.stringify(sponsors);}
+        renderSponsors();
+        function addSponsor(){var v=spInp?spInp.value.trim():'';if(!v||sponsors.includes(v)||sponsors.length>=10)return;sponsors.push(v);if(spInp)spInp.value='';renderSponsors();}
+        if(btnSp)btnSp.addEventListener('click',addSponsor);
+        if(spInp)spInp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();addSponsor();}});
 
-        // Image
-        var zone = el('teUploadZone'), input = el('teImgInput');
-        var preview = el('teImgPreview'), placeholder = el('tePlaceholder');
-        var urlInput = el('teImgUrl'), btnUrl = el('teBtnUrl');
+        // FEATURED IMAGE
+        var zone=el('teUploadZone'),inp=el('teImgInput'),prev=el('teImgPreview'),inner=el('teUploadInner');
+        function showP(src){prev.src=src;prev.classList.add('show');if(inner)inner.style.display='none';zone.classList.add('has-preview');}
+        function resetP(){prev.src='';prev.classList.remove('show');if(inner)inner.style.display='';zone.classList.remove('has-preview');}
+        if(zone&&inp){zone.addEventListener('click',function(e){if(e.target===prev){resetP();inp.value='';return;}inp.click();});inp.addEventListener('change',function(){if(!this.files||!this.files[0])return;var r=new FileReader();r.onload=function(ev){showP(ev.target.result);};r.readAsDataURL(this.files[0]);});}
+        var btnUrl=el('teBtnUrl'),urlInp=el('teImgUrl');
+        if(btnUrl&&urlInp){btnUrl.addEventListener('click',function(){var url=urlInp.value.trim();if(url){showP(url);if(inp)inp.value='';}else resetP();});}
 
-        function showPreview(src) {
-            preview.src = src; preview.classList.add('show');
-            placeholder.style.display = 'none'; zone.classList.add('has-preview');
-        }
-        function resetPreview() {
-            preview.src = ''; preview.classList.remove('show');
-            placeholder.style.display = 'flex'; zone.classList.remove('has-preview');
-            input.value = ''; urlInput.value = '';
-        }
-        zone.addEventListener('click', function(e) {
-            if (!preview.classList.contains('show')) input.click(); else resetPreview();
-        });
-        input.addEventListener('change', function() {
-            if (!this.files[0]) return;
-            var reader = new FileReader();
-            reader.onload = function(ev) { showPreview(ev.target.result); urlInput.value = ''; };
-            reader.readAsDataURL(this.files[0]);
-        });
-        btnUrl.addEventListener('click', function() {
-            var url = urlInput.value.trim();
-            if (url) { showPreview(url); input.value = ''; }
-        });
+        // GALLERY
+        var gDrop=el('galleryDropTE'),gInp=el('galleryFileTE'),gGrid=el('galleryGridTE'),gCount=el('galleryCountTE');
+        var gFiles=[],MAX_G=10;
+        function renderG(){if(!gGrid)return;gGrid.innerHTML='';gFiles.forEach(function(f,i){var t=document.createElement('div');t.className='gallery-thumb';t.innerHTML='<img src="" alt=""><div class="thumb-overlay"><button type="button" class="thumb-btn del"><i class="bi bi-trash3-fill"></i></button></div>';var r=new FileReader();r.onload=function(ev){t.querySelector('img').src=ev.target.result;};r.readAsDataURL(f);t.querySelector('.thumb-btn.del').addEventListener('click',function(){gFiles.splice(i,1);renderG();rebuildG();});gGrid.appendChild(t);});if(gCount)gCount.textContent=gFiles.length>0?'Sẽ thêm '+gFiles.length+' ảnh':'';}
+        function addGF(files){Array.from(files).forEach(function(f){if(!f.type.startsWith('image/'))return;if(f.size>5*1024*1024){alert(f.name+' quá 5MB');return;}if(gFiles.length>=MAX_G){alert('Tối đa '+MAX_G+' ảnh');return;}gFiles.push(f);});renderG();rebuildG();}
+        function rebuildG(){if(!gInp)return;var dt=new DataTransfer();gFiles.forEach(function(f){dt.items.add(f);});gInp.files=dt.files;}
+        if(gDrop&&gInp){gDrop.addEventListener('click',function(){gInp.click();});gInp.addEventListener('change',function(){addGF(this.files);this.value='';});gDrop.addEventListener('dragover',function(e){e.preventDefault();this.classList.add('drag-over');});gDrop.addEventListener('dragleave',function(){this.classList.remove('drag-over');});gDrop.addEventListener('drop',function(e){e.preventDefault();this.classList.remove('drag-over');addGF(e.dataTransfer.files);});}
 
-        // Submit
-        var btnSave = el('btnTournamentEditSave');
-        var form = document.getElementById('frmTournamentEdit-' + UID);
-        btnSave.addEventListener('click', function() {
-            if (!form.checkValidity()) { form.reportValidity(); return; }
-            btnSave.disabled = true;
-            btnSave.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang lưu...';
-            fetch('/AdminService/TournamentEdit', { method:'POST', body: new FormData(form) })
-                .then(function(r) { return r.json(); })
-                .then(function(res) {
-                    if (res.success) {
-                        bootstrap.Modal.getInstance(document.getElementById('modalService'))?.hide();
-                        location.reload();
-                    } else {
-                        alert(res.message || 'Có lỗi xảy ra');
-                        btnSave.disabled = false;
-                        btnSave.innerHTML = '<i class="bi bi-check-circle"></i> Lưu Thay Đổi';
-                    }
-                });
-        });
+        // VIDEO
+        var btnV=el('btnVideoTE'),vUrl=el('videoUrlTE'),vPrev=el('videoPreviewTE'),vFr=el('videoIframeTE');
+        if(btnV&&vFr){btnV.addEventListener('click',function(){var url=vUrl?vUrl.value.trim():'';if(!url){vPrev&&vPrev.classList.remove('show');return;}var m=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?#]+)/);if(m){vFr.src='https://www.youtube.com/embed/'+m[1];vPrev&&vPrev.classList.add('show');}else alert('Chỉ hỗ trợ xem thử YouTube.');});}
+
+        // DELETE existing gallery
+        window.deleteTournamentImage=function(imageId,btn){
+            if(!confirm('Xóa ảnh này?'))return;
+            var fd=new FormData();fd.append('imageId',imageId);
+            var tok=document.querySelector('input[name="__RequestVerificationToken"]');
+            if(tok)fd.append('__RequestVerificationToken',tok.value);
+            fetch('/AdminService/TournamentImageDelete',{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(res){if(res.success){var t=btn.closest('.gallery-thumb');if(t)t.remove();}else alert('Không thể xóa.');}).catch(function(){alert('Lỗi kết nối.');});
+        };
+
+        // SUBMIT
+        var btnSave=el('btnTournEditSave'),form=document.getElementById('frmTournEdit-'+UID);
+        if(btnSave&&form){btnSave.addEventListener('click',function(){if(!form.checkValidity()){form.reportValidity();return;}btnSave.disabled=true;btnSave.innerHTML='<i class="bi bi-hourglass-split"></i> Đang lưu...';fetch('/AdminService/TournamentEdit',{method:'POST',body:new FormData(form)}).then(function(r){return r.json();}).then(function(res){if(res.success){var modal=bootstrap.Modal.getInstance(document.getElementById('modalService'));if(modal)modal.hide();location.reload();}else{alert(res.message||'Có lỗi xảy ra');btnSave.disabled=false;btnSave.innerHTML='<i class="bi bi-check-circle"></i> Lưu Thay Đổi';}}).catch(function(){alert('Lỗi kết nối');btnSave.disabled=false;btnSave.innerHTML='<i class="bi bi-check-circle"></i> Lưu Thay Đổi';});});}
     })();
 </script>

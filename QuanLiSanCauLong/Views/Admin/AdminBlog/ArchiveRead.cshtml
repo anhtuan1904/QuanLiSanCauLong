@@ -1,0 +1,458 @@
+﻿@model QuanLiSanCauLong.Models.BlogPost
+@{
+    ViewData["Title"] = "Xem Lưu Trữ — " + Model.Title;
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #fdf8f0;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+        --success: #16a34a;
+        --danger: #c94b2a;
+    }
+
+    body {
+        font-family: 'Outfit', sans-serif;
+        background: var(--cream);
+    }
+
+    .ar-wrap {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 4rem;
+    }
+
+    /* TOPBAR */
+    .ar-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: .75rem;
+    }
+
+    .ar-back {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        font-size: .83rem;
+        font-weight: 600;
+        color: var(--muted);
+        text-decoration: none;
+        transition: color .2s;
+    }
+
+        .ar-back:hover {
+            color: var(--deep);
+        }
+
+    .ar-action-btns {
+        display: flex;
+        gap: .5rem;
+    }
+
+    .ar-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .5rem 1.1rem;
+        border-radius: 7px;
+        font-size: .82rem;
+        font-weight: 700;
+        border: 1.5px solid var(--border);
+        background: #fff;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all .18s;
+        color: var(--muted);
+    }
+
+        .ar-btn:hover {
+            text-decoration: none;
+        }
+
+        .ar-btn.restore {
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            color: #fff;
+            border-color: transparent;
+        }
+
+            .ar-btn.restore:hover {
+                box-shadow: 0 4px 14px rgba(22,163,74,.35);
+                transform: translateY(-1px);
+                color: #fff;
+            }
+
+        .ar-btn.edit:hover {
+            border-color: #4f46e5;
+            color: #4f46e5;
+            background: rgba(79,70,229,.06);
+        }
+
+        .ar-btn.del:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: rgba(201,75,42,.06);
+        }
+
+    /* ARCHIVE NOTICE BANNER */
+    .arc-banner {
+        background: rgba(212,160,23,.09);
+        border: 1px solid rgba(212,160,23,.3);
+        border-radius: 10px;
+        padding: .9rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        font-size: .84rem;
+        color: #92660a;
+        margin-bottom: 1.5rem;
+    }
+
+        .arc-banner i {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+    /* META STRIP */
+    .ar-meta-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .ar-meta-item {
+        background: #fff;
+        padding: .65rem 1.1rem;
+        flex: 1;
+        min-width: 100px;
+    }
+
+    .ar-meta-label {
+        font-size: .64rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: var(--muted);
+        margin-bottom: .15rem;
+    }
+
+    .ar-meta-val {
+        font-size: .88rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+    /* COVER IMAGE */
+    .ar-cover {
+        width: 100%;
+        max-height: 380px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        margin-bottom: 1.5rem;
+        display: block;
+    }
+
+    /* TITLE */
+    .ar-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: var(--deep);
+        line-height: 1.3;
+        margin-bottom: 1rem;
+    }
+
+    /* EXCERPT */
+    .ar-excerpt {
+        background: var(--warm);
+        border-left: 3px solid var(--gold);
+        padding: .85rem 1.2rem;
+        border-radius: 0 8px 8px 0;
+        font-size: .88rem;
+        color: var(--muted);
+        font-style: italic;
+        margin-bottom: 1.5rem;
+    }
+
+    /* CONTENT */
+    .ar-content {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 2rem 2.25rem;
+        line-height: 1.85;
+        font-size: .95rem;
+        color: var(--deep);
+    }
+
+        .ar-content h1, .ar-content h2, .ar-content h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--deep);
+            margin-top: 1.75rem;
+        }
+
+        .ar-content img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .ar-content a {
+            color: var(--gold);
+        }
+
+        .ar-content blockquote {
+            border-left: 3px solid var(--gold);
+            margin: 1.5rem 0;
+            padding: .75rem 1.25rem;
+            background: var(--warm);
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: var(--muted);
+        }
+
+        .ar-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+            .ar-content table th, .ar-content table td {
+                border: 1px solid var(--border);
+                padding: .55rem .85rem;
+                font-size: .88rem;
+            }
+
+            .ar-content table th {
+                background: var(--warm);
+                font-weight: 700;
+            }
+
+    @@media (max-width: 600px) {
+        .ar-content {
+            padding: 1.25rem 1rem;
+        }
+
+        .ar-title {
+            font-size: 1.45rem;
+        }
+    }
+</style>
+
+<div class="ar-wrap">
+
+    <!-- TOPBAR -->
+    <div class="ar-topbar">
+        <a href="/AdminBlog/Archive" class="ar-back">
+            <i class="bi bi-arrow-left"></i> Về kho lưu trữ
+        </a>
+        <div class="ar-action-btns">
+            <button class="ar-btn restore"
+                    onclick="restorePost(@Model.PostId, '@Html.Raw(Model.Title.Replace("'", "&#39;"))')">
+                <i class="bi bi-arrow-up-circle"></i> Khôi Phục
+            </button>
+            <button class="ar-btn edit"
+                    onclick="openEditModal(@Model.PostId)">
+                <i class="bi bi-pencil"></i> Sửa
+            </button>
+            <button class="ar-btn del"
+                    onclick="confirmDelete(@Model.PostId, '@Html.Raw(Model.Title.Replace("'", "&#39;"))')">
+                <i class="bi bi-trash3"></i> Xóa
+            </button>
+        </div>
+    </div>
+
+    <!-- ARCHIVE NOTICE -->
+    <div class="arc-banner">
+        <i class="bi bi-archive-fill"></i>
+        Bài viết này đang ở trạng thái <strong>Lưu Trữ</strong> — chỉ Admin mới xem được. Nhấn <strong>Khôi Phục</strong> để xuất bản lại.
+    </div>
+
+    <!-- META -->
+    <div class="ar-meta-strip">
+        <div class="ar-meta-item">
+            <div class="ar-meta-label"><i class="bi bi-calendar-plus" style="color:var(--gold);margin-right:.3rem;"></i>Tạo lúc</div>
+            <div class="ar-meta-val">@Model.CreatedAt.ToString("dd/MM/yyyy")</div>
+        </div>
+        @if (Model.PublishedAt.HasValue)
+        {
+            <div class="ar-meta-item">
+                <div class="ar-meta-label"><i class="bi bi-calendar-check" style="color:var(--success);margin-right:.3rem;"></i>Đã xuất bản</div>
+                <div class="ar-meta-val">@Model.PublishedAt.Value.ToString("dd/MM/yyyy")</div>
+            </div>
+        }
+        <div class="ar-meta-item">
+            <div class="ar-meta-label"><i class="bi bi-clock" style="color:var(--muted);margin-right:.3rem;"></i>Cập nhật</div>
+            <div class="ar-meta-val">@Model.UpdatedAt.ToString("dd/MM/yyyy")</div>
+        </div>
+        <div class="ar-meta-item">
+            <div class="ar-meta-label"><i class="bi bi-eye" style="color:#4f46e5;margin-right:.3rem;"></i>Lượt xem</div>
+            <div class="ar-meta-val">@Model.ViewCount.ToString("N0")</div>
+        </div>
+    </div>
+
+    <!-- COVER IMAGE -->
+    @if (!string.IsNullOrEmpty(Model.FeaturedImage))
+    {
+        <img class="ar-cover" src="@Model.FeaturedImage" alt="@Model.Title" />
+    }
+
+    <!-- TITLE -->
+    <h1 class="ar-title">
+        @if (Model.IsFeatured)
+        {
+            <i class="bi bi-star-fill" style="color:var(--gold);font-size:1.2rem;margin-right:.4rem;"></i>
+        }
+        @Model.Title
+    </h1>
+
+    <!-- EXCERPT -->
+    @if (!string.IsNullOrEmpty(Model.Excerpt))
+    {
+        <div class="ar-excerpt">@Model.Excerpt</div>
+    }
+
+    <!-- CONTENT -->
+    <div class="ar-content">
+        @Html.Raw(Model.Content)
+    </div>
+
+</div>
+
+<!-- MODAL EDIT -->
+<div class="modal fade" id="modalPost" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="max-height:90vh;">
+        <div class="modal-content" id="modalPostContent" style="max-height:90vh;overflow:hidden;display:flex;flex-direction:column;">
+            <div style="padding:3rem;text-align:center;color:var(--muted);">
+                <div class="spinner-border" style="color:var(--gold);"></div>
+                <p style="margin-top:.75rem;font-size:.84rem;">Đang tải...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/tinymce/tinymce.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @Html.AntiForgeryToken()
+    <script>
+        document.addEventListener('focusin', (e) => {
+            if (e.target.closest(".tox-tinymce-aux, .moxman-window") !== null)
+                e.stopImmediatePropagation();
+        });
+
+        let currentEditor = null;
+
+        function closePostModal() {
+            const modalEl = document.getElementById('modalPost');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
+
+        function openEditModal(id) {
+            if (currentEditor) { currentEditor.remove(); currentEditor = null; }
+            const el = document.getElementById('modalPostContent');
+            el.innerHTML = '<div style="padding:3rem;text-align:center;"><div class="spinner-border" style="color:var(--gold);"></div><p style="margin-top:.75rem;font-size:.84rem;color:var(--muted);">Đang tải...</p></div>';
+            const modal = new bootstrap.Modal(document.getElementById('modalPost'));
+            modal.show();
+            fetch('/AdminBlog/Edit/' + id)
+                .then(r => r.text())
+                .then(html => {
+                    el.innerHTML = html;
+                    setTimeout(() => {
+                        const textarea = document.querySelector('#editor-content');
+                        if (!textarea) return;
+                        tinymce.init({
+                            selector: '#editor-content', height: 420, menubar: false,
+                            plugins: ['advlist','autolink','lists','link','image','charmap',
+                                'searchreplace','code','fullscreen','media','table','wordcount'],
+                            toolbar: 'undo redo | blocks | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image | code fullscreen',
+                            base_url: '/lib/tinymce', suffix: '.min',
+                            content_style: 'body { font-family: Outfit, sans-serif; font-size:15px; line-height:1.75; padding:12px; }',
+                            setup: function(editor) {
+                                currentEditor = editor;
+                                editor.on('change input undo redo', function() { editor.save(); });
+                            }
+                        });
+                    }, 200);
+                });
+        }
+
+        document.getElementById('modalPost').addEventListener('hidden.bs.modal', () => {
+            if (currentEditor) { currentEditor.remove(); currentEditor = null; }
+        });
+
+        function restorePost(id, title) {
+            Swal.fire({
+                title: 'Khôi phục bài viết?',
+                html: `Bài viết <strong>${title}</strong> sẽ được chuyển sang <strong>Xuất Bản</strong>.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#16a34a',
+                cancelButtonColor: '#8a7560',
+                confirmButtonText: '<i class="bi bi-arrow-up-circle"></i> Khôi Phục',
+                cancelButtonText: 'Hủy',
+                reverseButtons: true
+            }).then(r => {
+                if (!r.isConfirmed) return;
+                const fd = new FormData();
+                fd.append('__RequestVerificationToken',
+                    document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+                fetch('/AdminBlog/Restore/' + id, { method: 'POST', body: fd })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({ icon: 'success', title: 'Đã khôi phục!', text: data.message, timer: 1500, showConfirmButton: false })
+                                .then(() => window.location.href = '/AdminBlog/Archive');
+                        } else {
+                            Swal.fire('Lỗi!', data.message, 'error');
+                        }
+                    });
+            });
+        }
+
+        function confirmDelete(id, title) {
+            Swal.fire({
+                title: 'Xóa vĩnh viễn?',
+                html: `Bài viết <strong>${title}</strong> sẽ bị xóa và không thể khôi phục!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#c94b2a',
+                cancelButtonColor: '#8a7560',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy',
+                reverseButtons: true
+            }).then(r => {
+                if (!r.isConfirmed) return;
+                const fd = new FormData();
+                fd.append('__RequestVerificationToken',
+                    document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+                fetch('/AdminBlog/Delete/' + id, { method: 'POST', body: fd })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({ icon: 'success', title: 'Đã xóa!', timer: 1500, showConfirmButton: false })
+                                .then(() => window.location.href = '/AdminBlog/Archive');
+                        } else {
+                            Swal.fire('Lỗi!', data.message, 'error');
+                        }
+                    });
+            });
+        }
+    </script>
+}

@@ -109,7 +109,7 @@
         <div class="mh-title">Cập Nhật Cơ Sở</div>
         <div class="mh-sub">@Model.FacilityName</div>
     </div>
-    <button class="mh-close" data-bs-dismiss="modal" title="Đóng">
+    <button class="mh-close" onclick="closeFacilityModal()" title="Đóng">
         <i class="bi bi-x-lg"></i>
     </button>
 </div>
@@ -183,44 +183,65 @@
             </div>
         </div>
 
-        <!-- 3. Tọa độ -->
+        <!-- 3. Google Maps Link -->
         <div class="sf-card">
             <div class="sf-card-head">
                 <i class="bi bi-pin-map sf-card-icon"></i>
-                <span class="sf-card-title">Tọa Độ Google Maps</span>
+                <span class="sf-card-title">Vị Trí Google Maps</span>
             </div>
-            <div class="sf-card-body" style="grid-template-columns:1fr 1fr auto;">
+            <div class="sf-card-body" style="grid-template-columns:1fr auto;">
                 <div class="fg">
-                    <label class="fg-label">Vĩ độ (Lat)</label>
-                    <input type="number" step="any" name="Latitude" value="@Model.Latitude" class="fg-input" placeholder="10.7769" />
+                    <label class="fg-label">Dán link Google Maps <span style="font-weight:400;text-transform:none;letter-spacing:0;">(tuỳ chọn)</span></label>
+                    <div class="input-icon">
+                        <i class="bi bi-link-45deg"></i>
+                        <input type="text" id="mapsLinkInputEdit" class="fg-input"
+                               placeholder="https://maps.app.goo.gl/... hoặc link từ thanh địa chỉ trình duyệt"
+                               oninput="parseMapsLinkEdit(this.value)" />
+                    </div>
                 </div>
-                <div class="fg">
-                    <label class="fg-label">Kinh độ (Lng)</label>
-                    <input type="number" step="any" name="Longitude" value="@Model.Longitude" class="fg-input" placeholder="106.7009" />
-                </div>
-                <div class="fg">
+                <div class="fg" style="justify-content:flex-end;">
                     <label class="fg-label">&nbsp;</label>
                     @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
                     {
-                        <a href="https://www.google.com/maps?q=@Model.Latitude,@Model.Longitude" target="_blank"
-                           style="display:flex;align-items:center;gap:.4rem;padding:.6rem .9rem;
+                        <a id="mapsOpenBtnEdit" href="https://www.google.com/maps?q=@Model.Latitude,@Model.Longitude" target="_blank"
+                           style="display:flex;align-items:center;gap:.45rem;padding:.6rem .9rem;
                            border:1px solid rgba(22,163,74,.4);border-radius:7px;color:#16a34a;
-                           text-decoration:none;font-size:.8rem;background:rgba(22,163,74,.06);white-space:nowrap;">
-                            <i class="bi bi-map-fill"></i> Xem vị trí
+                           text-decoration:none;font-size:.82rem;background:rgba(22,163,74,.06);white-space:nowrap;height:38px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#EA4335"/><circle cx="12" cy="9" r="2.5" fill="white"/></svg>
+                            Xem vị trí
                         </a>
                     }
                     else
                     {
-                        <a href="https://www.google.com/maps" target="_blank"
-                           style="display:flex;align-items:center;gap:.4rem;padding:.6rem .9rem;
+                        <a id="mapsOpenBtnEdit" href="https://www.google.com/maps" target="_blank"
+                           style="display:flex;align-items:center;gap:.45rem;padding:.6rem .9rem;
                            border:1px solid var(--border);border-radius:7px;color:var(--muted);
-                           text-decoration:none;font-size:.8rem;background:#fff;white-space:nowrap;">
-                            <i class="bi bi-map" style="color:var(--gold);"></i> Maps
+                           text-decoration:none;font-size:.82rem;background:#fff;white-space:nowrap;height:38px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#EA4335"/><circle cx="12" cy="9" r="2.5" fill="white"/></svg>
+                            Mở Maps
                         </a>
                     }
                 </div>
+                <input type="hidden" name="Latitude" id="latInputEdit" value="@Model.Latitude" />
+                <input type="hidden" name="Longitude" id="lngInputEdit" value="@Model.Longitude" />
+                @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+                {
+                    <div style="grid-column:1/-1;margin-top:.3rem;" id="mapsParseResultEdit">
+                        <div style="padding:.5rem .75rem;background:rgba(22,163,74,.08);border:1px solid rgba(22,163,74,.25);border-radius:6px;font-size:.78rem;color:#16a34a;display:flex;align-items:center;gap:.4rem;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="#16a34a"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                            Tọa độ hiện tại: <strong>@Model.Latitude, @Model.Longitude</strong> — dán link mới để cập nhật
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div style="grid-column:1/-1;" id="mapsParseResultEdit"></div>
+                }
                 <div style="grid-column:1/-1;">
-                    <div class="fg-hint"><i class="bi bi-info-circle me-1"></i>Mở Google Maps → Nhấp chuột phải → Copy tọa độ</div>
+                    <div class="fg-hint">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10" stroke="#8a7560" stroke-width="2"/><path d="M12 8v4M12 16h.01" stroke="#8a7560" stroke-width="2" stroke-linecap="round"/></svg>
+                        Mở Google Maps → Tìm địa điểm → Chia sẻ → Sao chép link → Dán vào đây
+                    </div>
                 </div>
             </div>
         </div>
@@ -236,7 +257,7 @@
                     <label class="amenity-item">
                         <input type="checkbox" name="Amenities" value="parking"
                                @(existingAmenities.Contains("parking") ? "checked" : "") />
-                        <span class="amenity-box"><i class="bi bi-p-square-fill" style="color:#2196f3;"></i> Gửi xe</span>
+                        <span class="amenity-box"><svg width="15" height="15" viewBox="0 0 24 24" fill="#2196f3" xmlns="http://www.w3.org/2000/svg"><path d="M5 3H19C20.1 3 21 3.9 21 5V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V5C3 3.9 3.9 3 5 3ZM9 7V17H11V13H13C14.7 13 16 11.7 16 10C16 8.3 14.7 7 13 7H9ZM11 9H13C13.6 9 14 9.4 14 10C14 10.6 13.6 11 13 11H11V9Z"/></svg> Bãi xe</span>
                     </label>
                     <label class="amenity-item">
                         <input type="checkbox" name="Amenities" value="wifi"
@@ -256,7 +277,17 @@
                     <label class="amenity-item">
                         <input type="checkbox" name="Amenities" value="rental"
                                @(existingAmenities.Contains("rental") ? "checked" : "") />
-                        <span class="amenity-box"><i class="bi bi-bag-fill" style="color:#9c27b0;"></i> Thuê vợt / giày</span>
+                        <span class="amenity-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="#9c27b0" xmlns="http://www.w3.org/2000/svg"><path d="M20 6H4L2 4H22L20 6ZM3 8L4.5 14H5V20H19V14H19.5L21 8H3ZM17 14V18H7V14H17ZM17 12H7L5.8 8H18.2L17 12Z"/></svg> Thuê vợt / giày</span>
+                    </label>
+                    <label class="amenity-item">
+                        <input type="checkbox" name="Amenities" value="lighting"
+                               @(existingAmenities.Contains("lighting") ? "checked" : "") />
+                        <span class="amenity-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a7 7 0 0 1 7 7c0 2.79-1.63 5.2-4 6.32V17a1 1 0 0 1-1 1H10a1 1 0 0 1-1-1v-1.68C6.63 14.2 5 11.79 5 9a7 7 0 0 1 7-7zm-1 17h2v2h-2v-2z"/></svg> Đèn chiếu sáng</span>
+                    </label>
+                    <label class="amenity-item">
+                        <input type="checkbox" name="Amenities" value="ac"
+                               @(existingAmenities.Contains("ac") ? "checked" : "") />
+                        <span class="amenity-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="#00bcd4" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="6" width="20" height="7" rx="2"/><path d="M7 13v3M12 13v5M17 13v3"/><circle cx="7" cy="19" r="1"/><circle cx="17" cy="19" r="1"/></svg> Điều hòa</span>
                     </label>
                 </div>
             </div>
@@ -306,12 +337,13 @@
 
 <!-- FOOTER -->
 <div class="mfooter">
-    <button type="button" class="btn-cancel" data-bs-dismiss="modal">Hủy</button>
+    <button type="button" class="btn-cancel" onclick="closeFacilityModal()">Hủy</button>
     <button type="submit" form="editFacilityForm" class="btn-save" id="btnEditSubmit">
         <i class="bi bi-check-circle"></i> Lưu Thay Đổi
     </button>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 (function() {
     const existingImages = @Html.Raw(Json.Serialize(images.Select(i => new {
@@ -410,6 +442,36 @@
         }
     }
 
+    // PARSE MAPS LINK
+    window.parseMapsLinkEdit = function(val) {
+        val = val.trim();
+        const resultDiv = document.getElementById('mapsParseResultEdit');
+        const latIn = document.getElementById('latInputEdit');
+        const lngIn = document.getElementById('lngInputEdit');
+        const openBtn = document.getElementById('mapsOpenBtnEdit');
+        const patterns = [/(-?\d+\.\d+,(-?\d+\.\d+)/, /[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/, /ll=(-?\d+\.\d+),(-?\d+\.\d+)/];
+        for (const re of patterns) {
+            const m = val.match(re);
+            if (m) {
+                latIn.value = m[1]; lngIn.value = m[2];
+                resultDiv.innerHTML = '<div style="padding:.5rem .75rem;background:rgba(22,163,74,.08);border:1px solid rgba(22,163,74,.25);border-radius:6px;font-size:.78rem;color:#16a34a;display:flex;align-items:center;gap:.4rem;"><svg width="13" height="13" viewBox="0 0 24 24" fill="#16a34a"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Đã nhận tọa độ: <strong>' + m[1] + ', ' + m[2] + '</strong></div>';
+                if (openBtn) openBtn.href = 'https://www.google.com/maps?q=' + m[1] + ',' + m[2];
+                return;
+            }
+        }
+        if (val.length > 10) {
+            resultDiv.innerHTML = '<div style="padding:.5rem .75rem;background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.3);border-radius:6px;font-size:.78rem;color:#92660a;">Không đọc được tọa độ — hãy dán link trực tiếp từ thanh địa chỉ trình duyệt khi đang xem vị trí trên Google Maps.</div>';
+        } else {
+            resultDiv.innerHTML = '';
+        }
+    };
+
+    // CLOSE MODAL HELPER
+    window.closeFacilityModal = function() {
+        const m = document.getElementById('modalFacility');
+        if (m) { const inst = bootstrap.Modal.getInstance(m); if (inst) inst.hide(); }
+    };
+
     // AJAX submit
     document.getElementById('editFacilityForm').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -422,9 +484,9 @@
             const ct = r.headers.get('content-type');
             if (!ct?.includes('application/json')) throw new Error('Lỗi server');
             const res = await r.json();
-            if (res.success) { alert(res.message); window.location.reload(); }
-            else alert('Lỗi: ' + res.message);
-        } catch(err) { alert('Lỗi hệ thống: ' + err.message); }
+            if (res.success) { Swal.fire({icon:'success',title:'Thành công!',text:res.message,timer:1500,showConfirmButton:false}).then(()=>window.location.reload()); }
+            else Swal.fire({icon:'error',title:'Lỗi!',text:res.message});
+        } catch(err) { Swal.fire({icon:'error',title:'Lỗi hệ thống',text:err.message}); }
         finally { btn.disabled = false; btn.innerHTML = orig; }
     });
 })();

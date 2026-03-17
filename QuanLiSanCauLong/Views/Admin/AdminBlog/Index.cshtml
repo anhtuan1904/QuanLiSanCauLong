@@ -579,7 +579,7 @@
                 Tổng cộng @(Model?.Count() ?? 0) bài viết trong hệ thống
             </div>
         </div>
-        <button class="add-btn" data-bs-toggle="modal" data-bs-target="#modalPost" onclick="openCreateModal()">
+        <button class="add-btn" onclick="openCreateModal()">
             <i class="bi bi-plus-circle"></i> Thêm Bài Viết
         </button>
     </div>
@@ -605,8 +605,8 @@
             <div class="stat-l"><span class="stat-dot" style="background:#16a34a;"></span>Đã Xuất Bản</div>
         </div>
         <div class="stat-box">
-            <div class="stat-n" style="color:#92660a;">@(Model?.Count(p => p.Status == "Draft") ?? 0)</div>
-            <div class="stat-l"><span class="stat-dot" style="background:#92660a;"></span>Bản Nháp</div>
+            <div class="stat-n" style="color:#c94b2a;">@(Model?.Count(p => p.Status == "Archived") ?? 0)</div>
+            <div class="stat-l"><span class="stat-dot" style="background:#c94b2a;"></span>Lưu Trữ</div>
         </div>
         <div class="stat-box">
             <div class="stat-n" style="color:#4f46e5;">@(Model?.Sum(p => p.ViewCount).ToString("N0") ?? "0")</div>
@@ -624,23 +624,11 @@
 
         <div class="toolbar-sep"></div>
 
-        <!-- Category filter -->
-        <select class="tb-sel" id="catFilter" onchange="applyFilters()">
-            <option value="">Tất cả danh mục</option>
-            @foreach (var cat in ViewBag.Categories as List<QuanLiSanCauLong.Models.BlogCategory> ?? new())
-            {
-                <option value="@cat.CategoryName.ToLower()">@cat.CategoryName</option>
-            }
-        </select>
-
-        <div class="toolbar-sep"></div>
-
         <!-- Status quick chips -->
         <div class="filter-chips">
             <span class="fchip active" data-status="" onclick="setStatusFilter(this,'')">Tất cả</span>
             <span class="fchip" data-status="published" onclick="setStatusFilter(this,'published')">✓ Đã xuất bản</span>
-            <span class="fchip" data-status="draft" onclick="setStatusFilter(this,'draft')">● Nháp</span>
-            <span class="fchip" data-status="archived" onclick="setStatusFilter(this,'archived')">⊘ Lưu trữ</span>
+            <span class="fchip" data-status="archived" onclick="setStatusFilter(this,'archived')">📦 Lưu trữ</span>
         </div>
 
         <!-- View toggle -->
@@ -663,7 +651,6 @@
             <thead>
                 <tr>
                     <th>Bài Viết</th>
-                    <th>Danh Mục</th>
                     <th>Trạng Thái</th>
                     <th>Lượt Xem</th>
                     <th>Ngày Tạo</th>
@@ -677,7 +664,6 @@
                     {
                         <tr class="post-row"
                             data-title="@post.Title.ToLower()"
-                            data-category="@(post.Category?.CategoryName?.ToLower() ?? "")"
                             data-status="@post.Status.ToLower()">
                             <td>
                                 <div class="post-name-cell">
@@ -705,20 +691,13 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="chip chip-category">@(post.Category?.CategoryName ?? "—")</span>
-                            </td>
-                            <td>
-                                @switch (post.Status)
+                                @if (post.Status == "Published")
                                 {
-                                    case "Published":
-                                        <span class="chip chip-published">✓ Xuất bản</span>
-                                        break;
-                                    case "Draft":
-                                        <span class="chip chip-draft">● Nháp</span>
-                                        break;
-                                    default:
-                                        <span class="chip chip-archived">⊘ Lưu trữ</span>
-                                        break;
+                                    <span class="chip chip-published">✓ Xuất bản</span>
+                                }
+                                else
+                                {
+                                    <span class="chip chip-archived">📦 Lưu trữ</span>
                                 }
                             </td>
                             <td style="font-size:.81rem;color:var(--muted);">
@@ -731,8 +710,7 @@
                                         <i class="bi bi-eye"></i>
                                     </button>
                                     <button class="act-b edit" title="Sửa"
-                                            onclick="openEditModal(@post.PostId)"
-                                            data-bs-toggle="modal" data-bs-target="#modalPost">
+                                            onclick="openEditModal(@post.PostId)">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     <button class="act-b del"
@@ -753,7 +731,7 @@
                 <i class="bi bi-newspaper"></i>
                 <div>Không có bài viết nào.</div>
                 <button class="add-btn" style="display:inline-flex;margin-top:.75rem;"
-                        data-bs-toggle="modal" data-bs-target="#modalPost" onclick="openCreateModal()">
+                        onclick="openCreateModal()">
                     + Thêm bài viết mới
                 </button>
             </div>
@@ -784,17 +762,13 @@
                             <div class="pc-img-empty"><i class="bi bi-newspaper"></i></div>
                         }
                         <div class="pc-status">
-                            @switch (post.Status)
+                            @if (post.Status == "Published")
                             {
-                                case "Published":
-                                    <span class="chip chip-published">✓ Xuất bản</span>
-                                    break;
-                                case "Draft":
-                                    <span class="chip chip-draft">● Nháp</span>
-                                    break;
-                                default:
-                                    <span class="chip chip-archived">⊘ Lưu trữ</span>
-                                    break;
+                                <span class="chip chip-published">✓ Xuất bản</span>
+                            }
+                            else
+                            {
+                                <span class="chip chip-archived">📦 Lưu trữ</span>
                             }
                         </div>
                         @if (post.IsFeatured)
@@ -806,15 +780,6 @@
                     </div>
                     <div class="pc-body">
                         <div class="pc-title">@post.Title</div>
-                        <div class="pc-category">
-                            <i class="bi bi-folder2"></i>
-                            @(post.Category?.CategoryName ?? "—")
-                            @if (!string.IsNullOrEmpty(post.Tags))
-                            {
-                                <span style="color:var(--border);">·</span>
-                                @post.Tags.Split(',').First().Trim()
-                            }
-                        </div>
                         @if (!string.IsNullOrEmpty(post.Excerpt))
                         {
                             <div class="pc-excerpt">@post.Excerpt</div>
@@ -832,8 +797,7 @@
                                 <i class="bi bi-eye"></i>
                             </button>
                             <button class="act-b edit" title="Sửa"
-                                    onclick="openEditModal(@post.PostId)"
-                                    data-bs-toggle="modal" data-bs-target="#modalPost">
+                                    onclick="openEditModal(@post.PostId)">
                                 <i class="bi bi-pencil"></i>
                             </button>
                             <button class="act-b del"
@@ -852,7 +816,7 @@
                 <i class="bi bi-newspaper"></i>
                 <div>Không tìm thấy bài viết nào.</div>
                 <button class="add-btn" style="display:inline-flex;margin-top:.75rem;"
-                        data-bs-toggle="modal" data-bs-target="#modalPost" onclick="openCreateModal()">
+                        onclick="openCreateModal()">
                     + Thêm bài viết mới
                 </button>
             </div>
@@ -867,8 +831,8 @@
 
 <!-- MODAL -->
 <div class="modal fade" id="modalPost" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content" id="modalPostContent">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="max-height:90vh;">
+        <div class="modal-content" id="modalPostContent" style="max-height:90vh;overflow:hidden;display:flex;flex-direction:column;">
             <div style="padding:3rem;text-align:center;color:var(--muted);">
                 <div class="spinner-border" style="color:var(--gold);"></div>
                 <p style="margin-top:.75rem;font-size:.84rem;">Đang tải...</p>
@@ -980,6 +944,13 @@
 
         document.getElementById('modalPost').addEventListener('hidden.bs.modal', destroyEditor);
 
+        /* ── CLOSE MODAL HELPER (called from partial views) ── */
+        function closePostModal() {
+            const modalEl = document.getElementById('modalPost');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
+
         /* ── VIEW TOGGLE ── */
         let currentView = 'card';
         function switchView(v) {
@@ -1004,25 +975,22 @@
 
         function applyFilters() {
             const q   = (document.getElementById('searchInput').value || '').toLowerCase().trim();
-            const cat = (document.getElementById('catFilter').value || '').toLowerCase();
             const tableRows = document.querySelectorAll('.post-row');
             const cardItems = document.querySelectorAll('.post-card-item');
             let shownTable = 0, shownCard = 0;
 
             tableRows.forEach(el => {
                 const title    = (el.dataset.title || '');
-                const elCat    = (el.dataset.category || '');
                 const elStatus = (el.dataset.status || '');
-                const visible  = (!q || title.includes(q)) && (!cat || elCat === cat) && (!activeStatus || elStatus === activeStatus);
+                const visible  = (!q || title.includes(q)) && (!activeStatus || elStatus === activeStatus);
                 el.style.display = visible ? '' : 'none';
                 if (visible) shownTable++;
             });
 
             cardItems.forEach(el => {
                 const title    = (el.dataset.title || '');
-                const elCat    = (el.dataset.category || '');
                 const elStatus = (el.dataset.status || '');
-                const visible  = (!q || title.includes(q)) && (!cat || elCat === cat) && (!activeStatus || elStatus === activeStatus);
+                const visible  = (!q || title.includes(q)) && (!activeStatus || elStatus === activeStatus);
                 el.style.display = visible ? '' : 'none';
                 if (visible) shownCard++;
             });

@@ -1,0 +1,567 @@
+﻿@model IEnumerable<QuanLiSanCauLong.Models.BlogPost>
+@{
+    ViewData["Title"] = "Kho Lưu Trữ";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --deep: #1a1209;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --cream: #fdf8f0;
+        --warm: #f5ede0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+    }
+
+    body {
+        font-family: 'Outfit', sans-serif;
+        background: var(--cream);
+    }
+
+    /* ── HERO ── */
+    .arc-hero {
+        background: linear-gradient(135deg, var(--deep) 0%, #2d1f0a 100%);
+        padding: 4rem 0 3rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .arc-hero::before {
+            content: '📦';
+            position: absolute;
+            font-size: 12rem;
+            opacity: .04;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+    .arc-hero-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.4rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0 0 .5rem;
+    }
+
+        .arc-hero-title em {
+            color: var(--gold2);
+            font-style: italic;
+        }
+
+    .arc-hero-sub {
+        font-size: .92rem;
+        color: rgba(255,255,255,.55);
+        margin: 0 0 1.5rem;
+    }
+
+    .arc-hero-count {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        background: rgba(212,160,23,.15);
+        border: 1px solid rgba(212,160,23,.3);
+        color: var(--gold2);
+        font-size: .8rem;
+        font-weight: 600;
+        padding: .4rem 1rem;
+        border-radius: 20px;
+    }
+
+    /* ── CONTAINER ── */
+    .arc-wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 2.5rem 1.25rem 4rem;
+    }
+
+    /* ── SEARCH BAR ── */
+    .arc-search-bar {
+        margin-bottom: 2rem;
+        position: relative;
+        max-width: 480px;
+    }
+
+        .arc-search-bar input {
+            width: 100%;
+            padding: .72rem 1rem .72rem 2.6rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: .9rem;
+            color: var(--deep);
+            background: #fff;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color .2s;
+        }
+
+            .arc-search-bar input:focus {
+                border-color: var(--gold);
+            }
+
+        .arc-search-bar i {
+            position: absolute;
+            left: .85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+        }
+
+    /* ── GRID ── */
+    .arc-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.4rem;
+    }
+
+    /* ── CARD ── */
+    .arc-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+        transition: all .22s;
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+    }
+
+        .arc-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 28px rgba(26,18,9,.1);
+            border-color: var(--gold);
+            text-decoration: none;
+        }
+
+    .arc-card-img {
+        aspect-ratio: 16/9;
+        background: var(--warm);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .arc-card-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform .3s;
+        }
+
+    .arc-card:hover .arc-card-img img {
+        transform: scale(1.04);
+    }
+
+    .arc-card-img-empty {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        opacity: .2;
+        color: var(--muted);
+    }
+
+    .arc-badge {
+        position: absolute;
+        top: .6rem;
+        left: .6rem;
+        background: rgba(26,18,9,.75);
+        color: var(--gold2);
+        font-size: .68rem;
+        font-weight: 700;
+        padding: .25rem .65rem;
+        border-radius: 4px;
+        backdrop-filter: blur(4px);
+    }
+
+    .arc-card-body {
+        padding: 1.1rem 1.25rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .arc-card-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--deep);
+        line-height: 1.35;
+        margin-bottom: .6rem;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .arc-card-excerpt {
+        font-size: .8rem;
+        color: var(--muted);
+        line-height: 1.55;
+        flex: 1;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        margin-bottom: .9rem;
+    }
+
+    .arc-card-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: .74rem;
+        color: var(--muted);
+        padding-top: .7rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .arc-card-read {
+        font-size: .75rem;
+        font-weight: 700;
+        color: var(--gold);
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+    /* ── ACTION BUTTONS ON CARD ── */
+    .arc-card-actions {
+        display: flex;
+        gap: .4rem;
+        padding: .65rem 1.25rem;
+        border-top: 1px solid var(--border);
+        background: var(--warm);
+        justify-content: flex-end;
+    }
+
+    .arc-act-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .38rem .8rem;
+        border-radius: 6px;
+        font-size: .74rem;
+        font-weight: 600;
+        border: 1.5px solid var(--border);
+        background: #fff;
+        cursor: pointer;
+        color: var(--muted);
+        text-decoration: none;
+        transition: all .18s;
+    }
+
+        .arc-act-btn:hover {
+            text-decoration: none;
+        }
+
+        .arc-act-btn.restore:hover {
+            border-color: #16a34a;
+            color: #16a34a;
+            background: rgba(22,163,74,.06);
+        }
+
+        .arc-act-btn.edit:hover {
+            border-color: #4f46e5;
+            color: #4f46e5;
+            background: rgba(79,70,229,.06);
+        }
+
+        .arc-act-btn.del:hover {
+            border-color: #c94b2a;
+            color: #c94b2a;
+            background: rgba(201,75,42,.06);
+        }
+
+    /* ── EMPTY STATE ── */
+    .arc-empty {
+        grid-column: 1/-1;
+        text-align: center;
+        padding: 5rem 1rem;
+        color: var(--muted);
+    }
+
+        .arc-empty i {
+            font-size: 3rem;
+            opacity: .3;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        .arc-empty p {
+            font-size: .9rem;
+        }
+
+    /* ── BACK LINK ── */
+    .arc-back {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        font-size: .82rem;
+        font-weight: 600;
+        color: var(--muted);
+        text-decoration: none;
+        margin-bottom: 1.25rem;
+        transition: color .2s;
+    }
+
+        .arc-back:hover {
+            color: var(--deep);
+        }
+</style>
+
+<!-- HERO -->
+<div class="arc-hero">
+    <div class="arc-hero-title">📦 Kho <em>Lưu Trữ</em></div>
+    <div class="arc-hero-sub">Tổng hợp các bài viết đã được lưu trữ</div>
+    <div class="arc-hero-count">
+        <i class="bi bi-archive"></i>
+        @(Model?.Count() ?? 0) bài viết
+    </div>
+</div>
+
+<div class="arc-wrap">
+
+    <!-- BACK -->
+    <a href="/AdminBlog/Index" class="arc-back">
+        <i class="bi bi-arrow-left"></i> Về quản lý bài viết
+    </a>
+
+    <!-- SEARCH -->
+    <div class="arc-search-bar">
+        <i class="bi bi-search"></i>
+        <input type="text" id="arcSearch" placeholder="Tìm trong kho lưu trữ..." oninput="filterArchive()" />
+    </div>
+
+    <!-- GRID -->
+    <div class="arc-grid" id="arcGrid">
+        @if (Model?.Any() == true)
+        {
+            foreach (var post in Model)
+            {
+                <div class="arc-card arc-item" data-title="@post.Title.ToLower()">
+                    <a href="/AdminBlog/ArchiveRead/@post.PostId" style="text-decoration:none;display:block;">
+                        <div class="arc-card-img">
+                            @if (!string.IsNullOrEmpty(post.FeaturedImage))
+                            {
+                                <img src="@post.FeaturedImage" alt="@post.Title" loading="lazy" />
+                            }
+                            else
+                            {
+                                <div class="arc-card-img-empty">📰</div>
+                            }
+                            @if (post.IsFeatured)
+                            {
+                                <span class="arc-badge">⭐ Nổi bật</span>
+                            }
+                        </div>
+                        <div class="arc-card-body">
+                            <div class="arc-card-title">@post.Title</div>
+                            @if (!string.IsNullOrEmpty(post.Excerpt))
+                            {
+                                <div class="arc-card-excerpt">@post.Excerpt</div>
+                            }
+                            else
+                            {
+                                var rawText = System.Text.RegularExpressions.Regex.Replace(post.Content ?? "", "<[^>]+>", "");
+                                var preview = rawText.Length > 120 ? rawText.Substring(0, 120) + "…" : rawText;
+                                <div class="arc-card-excerpt">@preview</div>
+                            }
+                            <div class="arc-card-meta">
+                                <span>
+                                    <i class="bi bi-eye" style="margin-right:.25rem;"></i>@post.ViewCount.ToString("N0")
+                                    <span style="margin:0 .4rem;opacity:.4;">·</span>
+                                    <i class="bi bi-clock" style="margin-right:.25rem;"></i>@post.UpdatedAt.ToString("dd/MM/yyyy")
+                                </span>
+                                <span class="arc-card-read">Xem <i class="bi bi-arrow-right"></i></span>
+                            </div>
+                        </div>
+                    </a>
+                    <!-- ACTION BUTTONS -->
+                    <div class="arc-card-actions">
+                        <button class="arc-act-btn restore"
+                                onclick="restorePost(@post.PostId, '@Html.Raw(post.Title.Replace("'", "&#39;"))')"
+                                title="Khôi phục → Xuất Bản">
+                            <i class="bi bi-arrow-up-circle"></i> Khôi Phục
+                        </button>
+                        <button class="arc-act-btn edit"
+                                onclick="openEditModal(@post.PostId)"
+                                title="Chỉnh sửa">
+                            <i class="bi bi-pencil"></i> Sửa
+                        </button>
+                        <button class="arc-act-btn del"
+                                onclick="confirmDelete(@post.PostId, '@Html.Raw(post.Title.Replace("'", "&#39;"))')"
+                                title="Xóa vĩnh viễn">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="arc-empty">
+                <i class="bi bi-archive"></i>
+                <p>Chưa có bài viết nào trong kho lưu trữ.</p>
+            </div>
+        }
+    </div>
+
+    <div id="arcNoResult" style="display:none;" class="arc-empty">
+        <i class="bi bi-search"></i>
+        <p>Không tìm thấy bài viết phù hợp.</p>
+    </div>
+</div>
+
+<!-- MODAL EDIT (dùng lại từ Index) -->
+<div class="modal fade" id="modalPost" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="max-height:90vh;">
+        <div class="modal-content" id="modalPostContent" style="max-height:90vh;overflow:hidden;display:flex;flex-direction:column;">
+            <div style="padding:3rem;text-align:center;color:var(--muted);">
+                <div class="spinner-border" style="color:var(--gold);"></div>
+                <p style="margin-top:.75rem;font-size:.84rem;">Đang tải...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/tinymce/tinymce.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @Html.AntiForgeryToken()
+    <script>
+        /* ── FILTER ── */
+        function filterArchive() {
+            const q = document.getElementById('arcSearch').value.toLowerCase().trim();
+            const items = document.querySelectorAll('.arc-item');
+            let shown = 0;
+            items.forEach(el => {
+                const match = !q || (el.dataset.title || '').includes(q);
+                el.style.display = match ? '' : 'none';
+                if (match) shown++;
+            });
+            document.getElementById('arcNoResult').style.display = shown === 0 && q ? 'block' : 'none';
+        }
+
+        /* ── MODAL EDIT ── */
+        document.addEventListener('focusin', (e) => {
+            if (e.target.closest(".tox-tinymce-aux, .moxman-window") !== null)
+                e.stopImmediatePropagation();
+        });
+
+        let currentEditor = null;
+
+        function closePostModal() {
+            const modalEl = document.getElementById('modalPost');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
+
+        function openEditModal(id) {
+            if (currentEditor) { currentEditor.remove(); currentEditor = null; }
+            const el = document.getElementById('modalPostContent');
+            el.innerHTML = '<div style="padding:3rem;text-align:center;"><div class="spinner-border" style="color:var(--gold);"></div><p style="margin-top:.75rem;font-size:.84rem;color:var(--muted);">Đang tải...</p></div>';
+            const modal = new bootstrap.Modal(document.getElementById('modalPost'));
+            modal.show();
+            fetch('/AdminBlog/Edit/' + id)
+                .then(r => r.text())
+                .then(html => {
+                    el.innerHTML = html;
+                    setTimeout(() => {
+                        const textarea = document.querySelector('#editor-content');
+                        if (!textarea) return;
+                        tinymce.init({
+                            selector: '#editor-content', height: 420, menubar: false,
+                            plugins: ['advlist','autolink','lists','link','image','charmap',
+                                'searchreplace','visualblocks','code','fullscreen','insertdatetime',
+                                'media','table','wordcount'],
+                            toolbar: 'undo redo | blocks | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image | code fullscreen',
+                            base_url: '/lib/tinymce', suffix: '.min',
+                            content_style: 'body { font-family: Outfit, sans-serif; font-size:15px; line-height:1.75; padding:12px; }',
+                            setup: function(editor) {
+                                currentEditor = editor;
+                                editor.on('change input undo redo', function() { editor.save(); });
+                            }
+                        });
+                    }, 200);
+                })
+                .catch(() => {
+                    el.innerHTML = '<div style="padding:3rem;text-align:center;color:var(--danger);"><i class="bi bi-exclamation-triangle" style="font-size:2rem;"></i><p style="margin-top:.75rem;">Không thể tải dữ liệu.</p></div>';
+                });
+        }
+
+        document.getElementById('modalPost').addEventListener('hidden.bs.modal', () => {
+            if (currentEditor) { currentEditor.remove(); currentEditor = null; }
+        });
+
+        /* ── KHÔI PHỤC ── */
+        function restorePost(id, title) {
+            Swal.fire({
+                title: 'Khôi phục bài viết?',
+                html: `Bài viết <strong>${title}</strong> sẽ được chuyển sang trạng thái <strong>Xuất Bản</strong>.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#16a34a',
+                cancelButtonColor: '#8a7560',
+                confirmButtonText: '<i class="bi bi-arrow-up-circle"></i> Khôi Phục',
+                cancelButtonText: 'Hủy',
+                reverseButtons: true
+            }).then(r => {
+                if (!r.isConfirmed) return;
+                const fd = new FormData();
+                fd.append('__RequestVerificationToken',
+                    document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+                fetch('/AdminBlog/Restore/' + id, { method: 'POST', body: fd })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({ icon: 'success', title: 'Đã khôi phục!', text: data.message, timer: 1500, showConfirmButton: false })
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire('Lỗi!', data.message, 'error');
+                        }
+                    })
+                    .catch(() => Swal.fire('Lỗi!', 'Không thể kết nối máy chủ', 'error'));
+            });
+        }
+
+        /* ── XÓA ── */
+        function confirmDelete(id, title) {
+            Swal.fire({
+                title: 'Xóa vĩnh viễn?',
+                html: `Bài viết <strong>${title}</strong> sẽ bị xóa và không thể khôi phục!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#c94b2a',
+                cancelButtonColor: '#8a7560',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy',
+                reverseButtons: true
+            }).then(r => {
+                if (!r.isConfirmed) return;
+                const fd = new FormData();
+                fd.append('__RequestVerificationToken',
+                    document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+                fetch('/AdminBlog/Delete/' + id, { method: 'POST', body: fd })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({ icon: 'success', title: 'Đã xóa!', text: data.message, timer: 1500, showConfirmButton: false })
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire('Lỗi!', data.message, 'error');
+                        }
+                    })
+                    .catch(() => Swal.fire('Lỗi!', 'Không thể kết nối máy chủ', 'error'));
+            });
+        }
+    </script>
+}

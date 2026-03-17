@@ -1,8 +1,17 @@
 ﻿@model QuanLiSanCauLong.Models.StringingService
 @{
     Layout = null;
+    var uid = Guid.NewGuid().ToString("N")[..8];
+    var hasDiscount = Model.DiscountPrice.HasValue && Model.Price.HasValue && Model.DiscountPrice < Model.Price;
+    var effectivePrice = Model.DiscountPrice ?? Model.Price;
+    var allImages = new List<string>();
+    if (!string.IsNullOrEmpty(Model.FeaturedImage)) allImages.Add(Model.FeaturedImage);
+    if (Model.StringingImages != null)
+        allImages.AddRange(Model.StringingImages.OrderBy(i => i.DisplayOrder).Select(i => i.ImagePath));
+    var benefitList = new List<string>();
+    if (!string.IsNullOrEmpty(Model.Benefits))
+        benefitList = Model.Benefits.Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()).ToList();
 }
-
 <style>
     :root {
         --deep: #1a1209;
@@ -12,6 +21,8 @@
         --warm: #f5ede0;
         --border: #e8ddd0;
         --muted: #8a7560;
+        --green: #16a34a;
+        --red: #c94b2a;
     }
 
     * {
@@ -19,14 +30,24 @@
         box-sizing: border-box;
     }
 
-    .sd2-header {
+    .sd-wrapper {
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+        overflow: hidden;
+    }
+
+    .sd-header {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        padding: 1.5rem 1.75rem 0;
+        padding: 1.25rem 1.75rem .9rem;
+        flex-shrink: 0;
+        border-bottom: 1px solid var(--border);
+        background: #fff;
     }
 
-    .sd2-header-label {
+    .sd-header-label {
         font-size: .65rem;
         letter-spacing: .2em;
         text-transform: uppercase;
@@ -34,26 +55,25 @@
         display: flex;
         align-items: center;
         gap: .5rem;
-        margin-bottom: .4rem;
+        margin-bottom: .3rem;
     }
 
-        .sd2-header-label::before {
+        .sd-header-label::before {
             content: '';
             width: 14px;
             height: 1px;
             background: var(--gold);
         }
 
-    .sd2-title {
+    .sd-title {
         font-family: 'Playfair Display',serif;
-        font-size: 1.4rem;
+        font-size: 1.35rem;
         font-weight: 700;
         color: var(--deep);
-        line-height: 1.25;
-        max-width: 520px;
+        max-width: 560px;
     }
 
-    .sd2-close {
+    .sd-close {
         width: 32px;
         height: 32px;
         border: 1px solid var(--border);
@@ -68,42 +88,166 @@
         flex-shrink: 0;
     }
 
-        .sd2-close:hover {
+        .sd-close:hover {
             border-color: var(--deep);
             color: var(--deep);
         }
 
-    .sd2-body {
+    .sd-body {
         padding: 1.25rem 1.75rem 1.5rem;
         overflow-y: auto;
-        max-height: calc(90vh - 80px);
+        flex: 1;
     }
 
-    .sd2-hero-img {
-        width: 100%;
-        height: 180px;
-        border-radius: 10px;
+    /* GALLERY */
+    .gallery-slider {
+        position: relative;
+        border-radius: 12px;
         overflow: hidden;
-        border: 1px solid var(--border);
-        margin-bottom: 1.25rem;
+        margin-bottom: 1rem;
         background: var(--warm);
+        border: 1px solid var(--border);
+    }
+
+    .gallery-main {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+        display: block;
+        cursor: zoom-in;
+        transition: opacity .3s;
+    }
+
+        .gallery-main.loading {
+            opacity: .5;
+        }
+
+    .gallery-placeholder {
+        width: 100%;
+        height: 220px;
         display: flex;
         align-items: center;
         justify-content: center;
+        color: var(--muted);
     }
 
-        .sd2-hero-img img {
+    .gallery-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255,255,255,.85);
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--deep);
+        font-size: .9rem;
+        transition: all .2s;
+    }
+
+        .gallery-nav:hover {
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+        }
+
+        .gallery-nav.prev {
+            left: 8px;
+        }
+
+        .gallery-nav.next {
+            right: 8px;
+        }
+
+    .gallery-dots {
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: .35rem;
+    }
+
+    .gallery-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.55);
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .gallery-dot.active {
+            background: #fff;
+            width: 20px;
+            border-radius: 4px;
+        }
+
+    .gallery-counter {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(0,0,0,.5);
+        color: #fff;
+        font-size: .7rem;
+        padding: .2rem .5rem;
+        border-radius: 4px;
+    }
+
+    .gallery-thumbs {
+        display: flex;
+        gap: .4rem;
+        overflow-x: auto;
+        padding: .5rem 0;
+        margin-bottom: 1rem;
+        scrollbar-width: thin;
+    }
+
+        .gallery-thumbs::-webkit-scrollbar {
+            height: 3px;
+        }
+
+        .gallery-thumbs::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 2px;
+        }
+
+    .thumb-item {
+        flex-shrink: 0;
+        width: 52px;
+        height: 52px;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: border-color .2s;
+    }
+
+        .thumb-item:hover {
+            border-color: rgba(212,160,23,.5);
+        }
+
+        .thumb-item.active {
+            border-color: var(--gold);
+        }
+
+        .thumb-item img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
         }
 
-    .sd2-strip {
+    /* STRIPS */
+    .sd-strip {
         background: var(--warm);
         border: 1px solid var(--border);
         border-radius: 10px;
-        padding: 1.1rem 1.25rem;
-        margin-bottom: 1.25rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.1rem;
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
@@ -125,12 +269,12 @@
 
     .badge-active {
         background: rgba(22,163,74,.1);
-        color: #16a34a;
+        color: var(--green);
     }
 
     .badge-inactive {
         background: rgba(201,75,42,.1);
-        color: #c94b2a;
+        color: var(--red);
     }
 
     .badge-featured {
@@ -139,80 +283,137 @@
     }
 
     .badge-popular {
-        background: rgba(6,182,212,.08);
-        color: #0e7490;
+        background: rgba(239,68,68,.1);
+        color: #dc2626;
     }
 
-    .sd2-price-now {
+    .badge-brand {
+        background: rgba(29,78,216,.08);
+        color: #1d4ed8;
+    }
+
+    .cd-badges {
+        display: flex;
+        gap: .4rem;
+        flex-wrap: wrap;
+        margin-top: .5rem;
+    }
+
+    .sd-price-block {
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .sd-price-old {
+        font-size: .78rem;
+        color: var(--muted);
+        text-decoration: line-through;
+    }
+
+    .sd-price-now {
         font-family: 'Playfair Display',serif;
-        font-size: 1.6rem;
+        font-size: 1.5rem;
         font-weight: 700;
         color: var(--gold);
         line-height: 1;
     }
 
-    .sd2-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        margin-bottom: 1.25rem;
-    }
-
-    .sd2-grid-item {
-        background: var(--warm);
-        padding: 1rem 1.2rem;
-        border-radius: 6px;
-        border: 1px solid var(--border);
-    }
-
-    .sd2-grid-label {
-        font-size: .68rem;
-        letter-spacing: .1em;
-        text-transform: uppercase;
+    .sd-price-unit {
+        font-size: .73rem;
         color: var(--muted);
-        display: block;
-        margin-bottom: .4rem;
     }
 
-    .sd2-grid-val {
+    .cd-discount-badge {
+        display: inline-block;
+        background: var(--red);
+        color: #fff;
+        font-size: .62rem;
         font-weight: 700;
-        font-size: .92rem;
+        padding: .12rem .45rem;
+        border-radius: 3px;
+        margin-left: .35rem;
+    }
+
+    /* TECH SPECS TABLE */
+    .specs-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1.1rem;
+    }
+
+        .specs-table tr:nth-child(even) td {
+            background: var(--warm);
+        }
+
+        .specs-table td {
+            padding: .55rem .9rem;
+            border-bottom: 1px solid var(--border);
+            font-size: .85rem;
+        }
+
+            .specs-table td:first-child {
+                color: var(--muted);
+                font-size: .72rem;
+                letter-spacing: .08em;
+                text-transform: uppercase;
+                font-weight: 700;
+                width: 40%;
+            }
+
+            .specs-table td:last-child {
+                color: var(--deep);
+                font-weight: 600;
+            }
+
+    /* BENEFITS */
+    .benefit-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .4rem;
+        margin-top: .4rem;
+    }
+
+    .benefit-chip-display {
+        background: rgba(212,160,23,.1);
+        border: 1px solid rgba(212,160,23,.25);
+        border-radius: 20px;
+        padding: .3rem .75rem;
+        font-size: .78rem;
         color: var(--deep);
     }
 
-    .sd2-section {
-        margin-bottom: 1.25rem;
+    /* SECTION */
+    .sd-section {
+        margin-bottom: 1.1rem;
     }
 
-    .sd2-section-label {
-        font-size: .68rem;
-        font-weight: 700;
+    .sd-section-label {
+        font-size: .67rem;
         letter-spacing: .12em;
         text-transform: uppercase;
         color: var(--muted);
-        margin-bottom: .6rem;
         display: flex;
         align-items: center;
-        gap: .5rem;
+        gap: .4rem;
+        margin-bottom: .6rem;
+        padding-bottom: .4rem;
+        border-bottom: 1px solid var(--border);
     }
 
-        .sd2-section-label i {
-            color: var(--gold);
-        }
-
-    .sd2-text {
-        font-size: .86rem;
+    .sd-text {
+        font-size: .87rem;
         color: var(--deep);
-        line-height: 1.75;
+        line-height: 1.65;
         white-space: pre-wrap;
     }
 
-    .sd2-features {
-        display: grid;
+    .sd-feature-list {
+        display: flex;
+        flex-direction: column;
         gap: .4rem;
     }
 
-    .sd2-feature-item {
+    .sd-feature-item {
         display: flex;
         align-items: flex-start;
         gap: .6rem;
@@ -220,77 +421,65 @@
         color: var(--deep);
     }
 
-        .sd2-feature-item i {
-            color: #16a34a;
-            margin-top: .15rem;
+        .sd-feature-item i {
+            color: var(--green);
+            font-size: .9rem;
             flex-shrink: 0;
+            margin-top: .1rem;
         }
 
-    .sd2-stats {
-        display: grid;
-        grid-template-columns: repeat(3,1fr);
-        gap: 1rem;
-        margin-bottom: 1.25rem;
-    }
-
-    .sd2-stat-box {
-        background: var(--warm);
+    /* VIDEO */
+    .video-embed {
+        margin-bottom: 1.1rem;
+        border-radius: 10px;
+        overflow: hidden;
         border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: .9rem 1rem;
-        text-align: center;
     }
 
-    .sd2-stat-n {
-        font-family: 'Playfair Display',serif;
-        font-size: 1.6rem;
-        font-weight: 700;
-        color: var(--deep);
-        line-height: 1;
-    }
+        .video-embed iframe {
+            width: 100%;
+            height: 200px;
+            display: block;
+            border: none;
+        }
 
-    .sd2-stat-l {
-        font-size: .68rem;
-        letter-spacing: .08em;
-        text-transform: uppercase;
-        color: var(--muted);
-        margin-top: .3rem;
-    }
-
-    .sd2-meta {
+    /* META */
+    .sd-meta {
         display: flex;
         gap: 1.5rem;
         flex-wrap: wrap;
-        padding-top: 1rem;
+        padding-top: .9rem;
         border-top: 1px solid var(--border);
-        margin-top: 1rem;
     }
 
-    .sd2-meta-item {
-        font-size: .75rem;
+    .sd-meta-item {
+        font-size: .74rem;
         color: var(--muted);
         display: flex;
         align-items: center;
         gap: .35rem;
     }
 
-        .sd2-meta-item strong {
+        .sd-meta-item strong {
             color: var(--deep);
         }
 
-        .sd2-meta-item i {
+        .sd-meta-item i {
             color: var(--gold);
         }
 
-    .sd2-footer {
+    /* FOOTER */
+    .sd-footer {
         display: flex;
         justify-content: flex-end;
         gap: .65rem;
-        padding: 1rem 1.75rem 1.5rem;
+        padding: 1rem 1.75rem;
         border-top: 1px solid var(--border);
+        background: var(--warm);
+        flex-shrink: 0;
     }
 
-    .btn-sd2-close {
+    .btn-sd-close {
         padding: .65rem 1.4rem;
         border: 1.5px solid var(--border);
         border-radius: 7px;
@@ -303,12 +492,12 @@
         font-family: 'Outfit',sans-serif;
     }
 
-        .btn-sd2-close:hover {
+        .btn-sd-close:hover {
             border-color: var(--deep);
             color: var(--deep);
         }
 
-    .btn-sd2-edit {
+    .btn-sd-edit {
         padding: .65rem 1.6rem;
         border: none;
         border-radius: 7px;
@@ -324,167 +513,242 @@
         font-family: 'Outfit',sans-serif;
     }
 
-        .btn-sd2-edit:hover {
+        .btn-sd-edit:hover {
             transform: translateY(-1px);
             box-shadow: 0 5px 15px rgba(212,160,23,.3);
         }
 </style>
 
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-<!-- HEADER -->
-<div class="sd2-header">
-    <div>
-        <div class="sd2-header-label"><i class="bi bi-tools"></i> Chi tiết căng vợt</div>
-        <div class="sd2-title">@Model.ServiceName</div>
-    </div>
-    <button type="button" class="sd2-close" data-bs-dismiss="modal">
-        <i class="bi bi-x" style="font-size:1.1rem;"></i>
-    </button>
-</div>
-
-<!-- BODY -->
-<div class="sd2-body">
-
-    @if (!string.IsNullOrEmpty(Model.FeaturedImage))
-    {
-        <div class="sd2-hero-img"><img src="@Model.FeaturedImage" alt="@Model.ServiceName" /></div>
-    }
-    else
-    {
-        <div class="sd2-hero-img">
-            <div style="display:flex;flex-direction:column;align-items:center;gap:.5rem;color:var(--muted);">
-                <i class="bi bi-tools" style="font-size:3rem;opacity:.25;"></i>
-                <span style="font-size:.8rem;">Chưa có ảnh đại diện</span>
-            </div>
-        </div>
-    }
-
-    <!-- Info strip -->
-    <div class="sd2-strip">
+<div class="sd-wrapper">
+    <div class="sd-header">
         <div>
-            <div style="font-weight:700;font-size:1rem;color:var(--deep);">@Model.ServiceName</div>
-            @if (!string.IsNullOrEmpty(Model.Brand) || !string.IsNullOrEmpty(Model.StringModel))
+            <div class="sd-header-label"><i class="bi bi-tools"></i> Chi Tiết Căng Vợt</div>
+            <div class="sd-title">@Model.ServiceName</div>
+        </div>
+        <button type="button" class="sd-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <div class="sd-body">
+
+        <!-- GALLERY -->
+        @if (allImages.Any())
+        {
+            <div class="gallery-slider" id="sliderSD-@uid">
+                <img class="gallery-main" id="mainImgSD-@uid" src="@allImages[0]" alt="@Model.ServiceName" />
+                @if (allImages.Count > 1)
+                {
+                    <button class="gallery-nav prev" id="prevBtnSD-@uid"><i class="bi bi-chevron-left"></i></button>
+                    <button class="gallery-nav next" id="nextBtnSD-@uid"><i class="bi bi-chevron-right"></i></button>
+                    <div class="gallery-dots" id="dotsSD-@uid">
+                        @for (int i = 0; i < allImages.Count; i++)
+                        {
+                            <div class="gallery-dot @(i == 0 ? "active" : "")" data-idx="@i"></div>
+                        }
+                    </div>
+                    <div class="gallery-counter" id="counterSD-@uid">1 / @allImages.Count</div>
+                }
+            </div>
+            @if (allImages.Count > 1)
             {
-                <div style="font-size:.82rem;color:var(--muted);margin-top:.25rem;">
-                    @(Model.Brand ?? "") @(Model.StringModel ?? "")
+                <div class="gallery-thumbs" id="thumbsSD-@uid">
+                    @for (int i = 0; i < allImages.Count; i++)
+                    {
+                        <div class="thumb-item @(i == 0 ? "active" : "")" data-idx="@i"><img src="@allImages[i]" alt="" /></div>
+                    }
                 </div>
             }
-            <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem;">
-                @if (Model.Status == "Active")
-                {
-                    <span class="badge-pill badge-active">● Hoạt động</span>
-                }
-                else
-                {
-                    <span class="badge-pill badge-inactive">○ Ngừng hoạt động</span>
-                }
-                @if (Model.IsFeatured)
-                {
-                    <span class="badge-pill badge-featured"><i class="bi bi-star-fill"></i> Nổi bật</span>
-                }
-                @if (Model.IsPopular)
-                {
-                    <span class="badge-pill badge-popular"><i class="bi bi-fire"></i> Phổ biến</span>
-                }
-            </div>
-        </div>
-        @if (Model.Price.HasValue)
+        }
+        else
         {
-            <div style="text-align:right;flex-shrink:0;">
-                <div class="sd2-price-now">@Model.Price.Value.ToString("N0")đ</div>
-                <div style="font-size:.75rem;color:var(--muted);">/lần căng</div>
+            <div style="background:var(--warm);border:1px solid var(--border);border-radius:12px;height:160px;display:flex;align-items:center;justify-content:center;color:var(--muted);margin-bottom:1rem;">
+                <div style="text-align:center;"><i class="bi bi-tools" style="font-size:3rem;opacity:.25;"></i><br /><span style="font-size:.8rem;">Chưa có ảnh</span></div>
             </div>
         }
-    </div>
 
-    <!-- Stats -->
-    <div class="sd2-stats">
-        <div class="sd2-stat-box">
-            <div class="sd2-stat-n" style="color:var(--gold);">@Model.TotalOrders.ToString("N0")</div>
-            <div class="sd2-stat-l">Tổng đơn</div>
-        </div>
-        <div class="sd2-stat-box">
-            <div class="sd2-stat-n">@(Model.DurationMinutes != null ? Model.DurationMinutes + " phút" : "—")</div>
-            <div class="sd2-stat-l">Thời gian</div>
-        </div>
-        <div class="sd2-stat-box">
-            <div class="sd2-stat-n">@(Model.WarrantyDays != null ? Model.WarrantyDays + " ngày" : "—")</div>
-            <div class="sd2-stat-l">Bảo hành</div>
-        </div>
-    </div>
+        <!-- INFO STRIP -->
+        <div class="sd-strip">
+            <div>
+                <div style="font-weight:700;font-size:.96rem;color:var(--deep);">@Model.ServiceName</div>
+                <div class="cd-badges">
+                    @if (Model.Status == "Active")
+                    {
+                        <span class="badge-pill badge-active">● Hoạt động</span>
+                    }
+                    else
+                    {
 
-    <!-- Grid thông tin -->
-    <div class="sd2-grid">
-        <div class="sd2-grid-item">
-            <span class="sd2-grid-label"><i class="bi bi-patch-check me-1"></i>Thương Hiệu</span>
-            <span class="sd2-grid-val">@(Model.Brand ?? "—")</span>
-        </div>
-        <div class="sd2-grid-item">
-            <span class="sd2-grid-label"><i class="bi bi-tag me-1"></i>Model Dây</span>
-            <span class="sd2-grid-val">@(Model.StringModel ?? "—")</span>
-        </div>
-        <div class="sd2-grid-item">
-            <span class="sd2-grid-label"><i class="bi bi-speedometer2 me-1"></i>Lực Căng</span>
-            <span class="sd2-grid-val">@(Model.Tension ?? "—")</span>
-        </div>
-        <div class="sd2-grid-item">
-            <span class="sd2-grid-label"><i class="bi bi-sort-numeric-down me-1"></i>Thứ Tự</span>
-            <span class="sd2-grid-val">#@Model.DisplayOrder</span>
-        </div>
-    </div>
-
-    @if (!string.IsNullOrEmpty(Model.ShortDesc))
-    {
-        <div class="sd2-section">
-            <div class="sd2-section-label"><i class="bi bi-chat-quote"></i> Mô tả ngắn</div>
-            <div class="sd2-text" style="color:var(--muted);">@Model.ShortDesc</div>
-        </div>
-    }
-
-    <div class="sd2-section">
-        <div class="sd2-section-label"><i class="bi bi-file-text"></i> Mô tả chi tiết</div>
-        <div class="sd2-text">@Model.Description</div>
-    </div>
-
-    @if (!string.IsNullOrEmpty(Model.Features))
-    {
-        <div class="sd2-section">
-            <div class="sd2-section-label"><i class="bi bi-check2-all"></i> Tính năng nổi bật</div>
-            <div class="sd2-features">
-                @foreach (var f in Model.Features.Split('\n').Where(f => !string.IsNullOrWhiteSpace(f)))
-                {
-                    <div class="sd2-feature-item">
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span>@f.Trim().TrimStart('-').Trim()</span>
-                    </div>
-                }
+                        <span class="badge-pill badge-inactive">○ Ngừng</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Brand))
+                    {
+                        <span class="badge-pill badge-brand">@Model.Brand</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.StringModel))
+                    {
+                        <span class="badge-pill" style="background:rgba(212,160,23,.1);color:var(--deep);">@Model.StringModel</span>
+                    }
+                    @if (Model.IsFeatured)
+                    {
+                        <span class="badge-pill badge-featured">⭐ Nổi bật</span>
+                    }
+                    @if (Model.IsPopular)
+                    {
+                        <span class="badge-pill badge-popular">🔥 Hot</span>
+                    }
+                </div>
             </div>
+            @if (effectivePrice.HasValue)
+            {
+                <div class="sd-price-block">
+                    @if (hasDiscount)
+                    {
+                        <div class="sd-price-old">@Model.Price!.Value.ToString("N0")đ</div>
+                        <div class="sd-price-now">
+                            @Model.DiscountPrice!.Value.ToString("N0")đ
+                            <span class="cd-discount-badge">-@(((Model.Price - Model.DiscountPrice) / Model.Price * 100)!.Value.ToString("N0"))%</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="sd-price-now">@effectivePrice.Value.ToString("N0")đ</div>
+                    }
+                    <div class="sd-price-unit">/lần căng</div>
+                </div>
+            }
         </div>
-    }
 
-    <div class="sd2-meta">
-        <div class="sd2-meta-item"><i class="bi bi-calendar-plus"></i> Tạo: <strong>@Model.CreatedAt.ToString("dd/MM/yyyy")</strong></div>
-        <div class="sd2-meta-item"><i class="bi bi-eye"></i> Lượt xem: <strong>@Model.ViewCount.ToString("N0")</strong></div>
+        <!-- THÔNG SỐ KỸ THUẬT -->
+        <div class="sd-section">
+            <div class="sd-section-label"><i class="bi bi-sliders"></i>Thông Số Kỹ Thuật</div>
+            <table class="specs-table">
+                @if (!string.IsNullOrEmpty(Model.StringModel))
+                {
+                    <tr><td>Model Dây</td><td>@Model.StringModel</td></tr>
+                }
+                @if (!string.IsNullOrEmpty(Model.Tension) || (Model.TensionMin.HasValue && Model.TensionMax.HasValue))
+                {
+                    var tensionDisplay = (Model.TensionMin.HasValue && Model.TensionMax.HasValue)
+                    ? $"{Model.TensionMin}–{Model.TensionMax} lbs" : Model.Tension;
+                    <tr><td>Lực Căng</td><td>@tensionDisplay</td></tr>
+                }
+                @if (!string.IsNullOrEmpty(Model.StringGauge))
+                {
+                    <tr><td>Độ Dày Dây</td><td>@Model.StringGauge</td></tr>
+                }
+                @if (!string.IsNullOrEmpty(Model.StringColor))
+                {
+                    <tr><td>Màu Dây</td><td>@Model.StringColor</td></tr>
+                }
+                @if (Model.DurationMinutes.HasValue)
+                {
+                    <tr><td>Thời Gian Căng</td><td>@Model.DurationMinutes phút</td></tr>
+                }
+                @if (Model.WarrantyDays.HasValue)
+                {
+                    <tr><td>Bảo Hành</td><td>@Model.WarrantyDays ngày</td></tr>
+                }
+                <tr><td>Lượt Xem</td><td>@Model.ViewCount.ToString("N0")</td></tr>
+            </table>
+        </div>
+
+        <!-- LỢI ÍCH -->
+        @if (benefitList.Any())
+        {
+            <div class="sd-section">
+                <div class="sd-section-label"><i class="bi bi-stars"></i>Lợi Ích Nổi Bật</div>
+                <div class="benefit-chips">
+                    @foreach (var b in benefitList)
+                    {
+                        <span class="benefit-chip-display">⚡ @b</span>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- VIDEO -->
+        @if (!string.IsNullOrEmpty(Model.VideoUrl))
+        {
+            var ytM = System.Text.RegularExpressions.Regex.Match(Model.VideoUrl, @"(?:youtube\.com/watch\?v=|youtu\.be/)([^&?#]+)");
+            if (ytM.Success)
+            {
+                <div class="sd-section">
+                    <div class="sd-section-label"><i class="bi bi-play-circle-fill"></i>Video Demo Căng Dây</div>
+                    <div class="video-embed">
+                        <iframe src="https://www.youtube.com/embed/@ytM.Groups[1].Value" allowfullscreen></iframe>
+                    </div>
+                </div>
+            }
+        }
+
+        <!-- MÔ TẢ -->
+        @if (!string.IsNullOrEmpty(Model.ShortDesc))
+        {
+            <div class="sd-section">
+                <div class="sd-section-label"><i class="bi bi-chat-quote"></i>Mô Tả Ngắn</div>
+                <div class="sd-text" style="color:var(--muted);">@Model.ShortDesc</div>
+            </div>
+        }
+        <div class="sd-section">
+            <div class="sd-section-label"><i class="bi bi-file-text"></i>Mô Tả Chi Tiết</div>
+            <div class="sd-text">@Model.Description</div>
+        </div>
+
+        <!-- TÍNH NĂNG -->
+        @if (!string.IsNullOrEmpty(Model.Features))
+        {
+            <div class="sd-section">
+                <div class="sd-section-label"><i class="bi bi-check2-all"></i>Tính Năng Chi Tiết</div>
+                <div class="sd-feature-list">
+                    @foreach (var f in Model.Features.Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)))
+                    {
+                        <div class="sd-feature-item"><i class="bi bi-check-circle-fill"></i><span>@f.Trim().TrimStart('-').Trim()</span></div>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="sd-meta">
+            <div class="sd-meta-item"><i class="bi bi-calendar-plus"></i>Tạo: <strong>@Model.CreatedAt.ToString("dd/MM/yyyy")</strong></div>
+            <div class="sd-meta-item"><i class="bi bi-pencil-square"></i>Cập nhật: <strong>@Model.UpdatedAt.ToString("dd/MM/yyyy")</strong></div>
+            @if (!string.IsNullOrEmpty(Model.Slug))
+            {
+                <div class="sd-meta-item"><i class="bi bi-link-45deg"></i>Slug: <strong>@Model.Slug</strong></div>
+            }
+            <div class="sd-meta-item"><i class="bi bi-sort-numeric-down"></i>Thứ tự: <strong>#@Model.DisplayOrder</strong></div>
+        </div>
     </div>
-</div>
 
-<!-- FOOTER -->
-<div class="sd2-footer">
-    <button type="button" class="btn-sd2-close" data-bs-dismiss="modal">
-        <i class="bi bi-x-circle"></i> Đóng
-    </button>
-    <button type="button" class="btn-sd2-edit" onclick="openStringingEdit(@Model.StringingId)">
-        <i class="bi bi-pencil"></i> Chỉnh Sửa
-    </button>
+    <div class="sd-footer">
+        <button type="button" class="btn-sd-close" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Đóng</button>
+        <button type="button" class="btn-sd-edit" onclick="openStringEditFromDetail(@Model.StringingId)">
+            <i class="bi bi-pencil"></i> Chỉnh Sửa
+        </button>
+    </div>
 </div>
 
 <script>
-    function openStringingEdit(id) {
-        var modal = bootstrap.Modal.getInstance(document.getElementById('modalService'));
-        if (modal) modal.hide();
-        setTimeout(function() {
-            if (typeof openModal === 'function') openModal('/AdminService/StringingEdit/' + id);
-        }, 300);
+    (function(){
+        var UID='@uid';
+        var images=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(allImages));
+        var current=0;
+        function goTo(idx){
+            if(images.length<=1)return;
+            current=(idx+images.length)%images.length;
+            var mi=document.getElementById('mainImgSD-'+UID);
+            if(mi){mi.classList.add('loading');mi.src=images[current];mi.onload=function(){mi.classList.remove('loading');};}
+            document.querySelectorAll('#dotsSD-'+UID+' .gallery-dot').forEach(function(d,i){d.classList.toggle('active',i===current);});
+            var c=document.getElementById('counterSD-'+UID);if(c)c.textContent=(current+1)+' / '+images.length;
+            document.querySelectorAll('#thumbsSD-'+UID+' .thumb-item').forEach(function(t,i){t.classList.toggle('active',i===current);});
+        }
+        var prev=document.getElementById('prevBtnSD-'+UID),next=document.getElementById('nextBtnSD-'+UID);
+        if(prev)prev.addEventListener('click',function(){goTo(current-1);});
+        if(next)next.addEventListener('click',function(){goTo(current+1);});
+        document.querySelectorAll('#dotsSD-'+UID+' .gallery-dot').forEach(function(d){d.addEventListener('click',function(){goTo(parseInt(this.dataset.idx));});});
+        document.querySelectorAll('#thumbsSD-'+UID+' .thumb-item').forEach(function(t){t.addEventListener('click',function(){goTo(parseInt(this.dataset.idx));});});
+    })();
+    function openStringEditFromDetail(id){
+        var modal=bootstrap.Modal.getInstance(document.getElementById('modalService'));
+        if(modal)modal.hide();
+        setTimeout(function(){if(typeof openModal==='function')openModal('/AdminService/StringingEdit/'+id);},300);
     }
 </script>

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QuanLiSanCauLong.Data;
 
@@ -11,9 +12,11 @@ using QuanLiSanCauLong.Data;
 namespace QuanLiSanCauLong.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260317141052_adminblogup1")]
+    partial class adminblogup1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -565,7 +568,7 @@ namespace QuanLiSanCauLong.Migrations
 
                     b.Property<decimal?>("DiscountFee")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,0)");
 
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
@@ -574,62 +577,37 @@ namespace QuanLiSanCauLong.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("FeaturedImage")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Features")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Highlights")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Instructor")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("InstructorAvatar")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InstructorTitle")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
                     b.Property<bool>("IsFeatured")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsPopular")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Level")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<int?>("MaxStudents")
                         .HasColumnType("int");
 
-                    b.Property<string>("MetaDescription")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MetaTitle")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Outcomes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Requirements")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Schedule")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<string>("ShortDesc")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -640,15 +618,10 @@ namespace QuanLiSanCauLong.Migrations
 
                     b.Property<decimal?>("TuitionFee")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,0)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETDATE()");
-
-                    b.Property<string>("VideoUrl")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("ViewCount")
                         .HasColumnType("int");
@@ -656,41 +629,6 @@ namespace QuanLiSanCauLong.Migrations
                     b.HasKey("CourseId");
 
                     b.ToTable("Courses");
-                });
-
-            modelBuilder.Entity("QuanLiSanCauLong.Models.CourseImage", b =>
-                {
-                    b.Property<int>("ImageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ImageId"));
-
-                    b.Property<string>("Caption")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<int>("CourseId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ImagePath")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsPrimary")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("ImageId");
-
-                    b.HasIndex("CourseId");
-
-                    b.ToTable("CourseImages");
                 });
 
             modelBuilder.Entity("QuanLiSanCauLong.Models.Court", b =>
@@ -2196,9 +2134,6 @@ namespace QuanLiSanCauLong.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("VideoUrl")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("ViewCount")
                         .HasColumnType("int");
 
@@ -2478,41 +2413,6 @@ namespace QuanLiSanCauLong.Migrations
                     b.ToTable("StockTransactionDetails");
                 });
 
-            modelBuilder.Entity("QuanLiSanCauLong.Models.StringingImage", b =>
-                {
-                    b.Property<int>("ImageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ImageId"));
-
-                    b.Property<string>("Caption")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ImagePath")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsPrimary")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("StringingId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("ImageId");
-
-                    b.HasIndex("StringingId");
-
-                    b.ToTable("StringingImages");
-                });
-
             modelBuilder.Entity("QuanLiSanCauLong.Models.StringingService", b =>
                 {
                     b.Property<int>("StringingId")
@@ -2520,9 +2420,6 @@ namespace QuanLiSanCauLong.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StringingId"));
-
-                    b.Property<string>("Benefits")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Brand")
                         .HasMaxLength(100)
@@ -2537,10 +2434,6 @@ namespace QuanLiSanCauLong.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal?>("DiscountPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
@@ -2548,7 +2441,8 @@ namespace QuanLiSanCauLong.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("FeaturedImage")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Features")
                         .HasColumnType("nvarchar(max)");
@@ -2559,15 +2453,9 @@ namespace QuanLiSanCauLong.Migrations
                     b.Property<bool>("IsPopular")
                         .HasColumnType("bit");
 
-                    b.Property<string>("MetaDescription")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MetaTitle")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<decimal?>("Price")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,0)");
 
                     b.Property<string>("ServiceName")
                         .IsRequired()
@@ -2575,12 +2463,12 @@ namespace QuanLiSanCauLong.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("ShortDesc")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -2589,38 +2477,19 @@ namespace QuanLiSanCauLong.Migrations
                         .HasColumnType("nvarchar(20)")
                         .HasDefaultValue("Active");
 
-                    b.Property<string>("StringColor")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("StringGauge")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.Property<string>("StringModel")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Tension")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int?>("TensionMax")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("TensionMin")
-                        .HasColumnType("int");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("TotalOrders")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETDATE()");
-
-                    b.Property<string>("VideoUrl")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("ViewCount")
                         .HasColumnType("int");
@@ -2752,7 +2621,6 @@ namespace QuanLiSanCauLong.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("DisplayOrder")
@@ -2763,32 +2631,24 @@ namespace QuanLiSanCauLong.Migrations
 
                     b.Property<decimal?>("EntryFee")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,0)");
 
                     b.Property<string>("FeaturedImage")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<bool>("IsFeatured")
                         .HasColumnType("bit");
 
-                    b.Property<string>("MapUrl")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int?>("MaxPlayers")
                         .HasColumnType("int");
-
-                    b.Property<string>("MetaDescription")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MetaTitle")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PrizeDescription")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("PrizeMoney")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,0)");
 
                     b.Property<DateTime?>("RegistrationDeadline")
                         .HasColumnType("datetime2");
@@ -2796,19 +2656,13 @@ namespace QuanLiSanCauLong.Migrations
                     b.Property<string>("Rules")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Schedule")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ShortDesc")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<string>("Sponsors")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime2");
@@ -2826,24 +2680,15 @@ namespace QuanLiSanCauLong.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("TournamentType")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETDATE()");
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Venue")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("VenueAddress")
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
-
-                    b.Property<string>("VideoUrl")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ViewCount")
                         .HasColumnType("int");
@@ -2851,41 +2696,6 @@ namespace QuanLiSanCauLong.Migrations
                     b.HasKey("TournamentId");
 
                     b.ToTable("Tournaments");
-                });
-
-            modelBuilder.Entity("QuanLiSanCauLong.Models.TournamentImage", b =>
-                {
-                    b.Property<int>("ImageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ImageId"));
-
-                    b.Property<string>("Caption")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ImagePath")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsPrimary")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("TournamentId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("ImageId");
-
-                    b.HasIndex("TournamentId");
-
-                    b.ToTable("TournamentImages");
                 });
 
             modelBuilder.Entity("QuanLiSanCauLong.Models.User", b =>
@@ -3153,17 +2963,6 @@ namespace QuanLiSanCauLong.Migrations
                     b.Navigation("Court");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("QuanLiSanCauLong.Models.CourseImage", b =>
-                {
-                    b.HasOne("QuanLiSanCauLong.Models.Course", "Course")
-                        .WithMany("CourseImages")
-                        .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Course");
                 });
 
             modelBuilder.Entity("QuanLiSanCauLong.Models.Court", b =>
@@ -3550,17 +3349,6 @@ namespace QuanLiSanCauLong.Migrations
                     b.Navigation("Transaction");
                 });
 
-            modelBuilder.Entity("QuanLiSanCauLong.Models.StringingImage", b =>
-                {
-                    b.HasOne("QuanLiSanCauLong.Models.StringingService", "StringingService")
-                        .WithMany("StringingImages")
-                        .HasForeignKey("StringingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("StringingService");
-                });
-
             modelBuilder.Entity("QuanLiSanCauLong.Models.SystemSetting", b =>
                 {
                     b.HasOne("QuanLiSanCauLong.Models.User", "Creator")
@@ -3575,17 +3363,6 @@ namespace QuanLiSanCauLong.Migrations
                     b.Navigation("Creator");
 
                     b.Navigation("Updater");
-                });
-
-            modelBuilder.Entity("QuanLiSanCauLong.Models.TournamentImage", b =>
-                {
-                    b.HasOne("QuanLiSanCauLong.Models.Tournament", "Tournament")
-                        .WithMany("TournamentImages")
-                        .HasForeignKey("TournamentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tournament");
                 });
 
             modelBuilder.Entity("QuanLiSanCauLong.Models.User", b =>
@@ -3666,11 +3443,6 @@ namespace QuanLiSanCauLong.Migrations
                     b.Navigation("Orders");
 
                     b.Navigation("VoucherUsages");
-                });
-
-            modelBuilder.Entity("QuanLiSanCauLong.Models.Course", b =>
-                {
-                    b.Navigation("CourseImages");
                 });
 
             modelBuilder.Entity("QuanLiSanCauLong.Models.Court", b =>
@@ -3766,19 +3538,9 @@ namespace QuanLiSanCauLong.Migrations
                     b.Navigation("Details");
                 });
 
-            modelBuilder.Entity("QuanLiSanCauLong.Models.StringingService", b =>
-                {
-                    b.Navigation("StringingImages");
-                });
-
             modelBuilder.Entity("QuanLiSanCauLong.Models.Supplier", b =>
                 {
                     b.Navigation("Products");
-                });
-
-            modelBuilder.Entity("QuanLiSanCauLong.Models.Tournament", b =>
-                {
-                    b.Navigation("TournamentImages");
                 });
 
             modelBuilder.Entity("QuanLiSanCauLong.Models.User", b =>

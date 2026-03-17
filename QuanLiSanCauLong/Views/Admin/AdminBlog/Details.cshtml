@@ -143,31 +143,18 @@
         color: #16a34a;
     }
 
-    .chip-draft {
-        background: rgba(212,160,23,.12);
-        color: #92660a;
-    }
 
     .chip-archived {
         background: rgba(201,75,42,.1);
         color: #c94b2a;
     }
 
-    .chip-category {
-        background: rgba(79,70,229,.08);
-        color: #4f46e5;
-    }
 
     .chip-featured {
         background: rgba(212,160,23,.15);
         color: #92660a;
     }
 
-    .chip-tag {
-        background: var(--warm);
-        color: var(--muted);
-        border: 1px solid var(--border);
-    }
 
     /* FEATURED IMG */
     .featured-img-wrap {
@@ -276,6 +263,10 @@
         border-top: 1px solid var(--border);
         background: var(--warm);
         justify-content: flex-end;
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
+        flex-shrink: 0;
     }
 
     .btn-primary {
@@ -324,12 +315,12 @@
         <h5>📄 Chi Tiết <em style="font-style:italic;color:var(--gold);">Bài Viết</em></h5>
         <p>Xem đầy đủ thông tin bài viết</p>
     </div>
-    <button type="button" class="cf-close-btn" data-bs-dismiss="modal">
+    <button type="button" class="cf-close-btn" onclick="closePostModal()">
         <i class="bi bi-x-lg"></i>
     </button>
 </div>
 
-<div class="modal-body" style="padding:1.25rem 1.5rem;background:var(--cream);">
+<div class="modal-body" style="padding:1.25rem 1.5rem;background:var(--cream);overflow-y:auto;max-height:calc(85vh - 130px);">
 
     <!-- STAT ROW -->
     <div class="stat-row">
@@ -376,25 +367,15 @@
                     case "Published":
                         <span class="chip chip-published">✓ Đã Xuất Bản</span>
                         break;
-                    case "Draft":
-                        <span class="chip chip-draft">● Bản Nháp</span>
-                        break;
                     default:
-                        <span class="chip chip-archived">⊘ Lưu Trữ</span>
+                        <span class="chip chip-archived">📦 Lưu Trữ</span>
                         break;
-                }
-                @if (Model.Category != null)
-                {
-                    <span class="chip chip-category"><i class="bi bi-folder2"></i> @Model.Category.CategoryName</span>
                 }
                 @if (Model.IsFeatured)
                 {
                     <span class="chip chip-featured">⭐ Nổi Bật</span>
                 }
-                @if (Model.AllowComments)
-                {
-                    <span class="chip" style="background:rgba(6,182,212,.08);color:#0e7490;">💬 Bình luận bật</span>
-                }
+
             </div>
 
             @if (!string.IsNullOrEmpty(Model.Excerpt))
@@ -402,15 +383,6 @@
                 <div class="excerpt-box">@Model.Excerpt</div>
             }
 
-            @if (!string.IsNullOrEmpty(Model.Tags))
-            {
-                <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.75rem;">
-                    @foreach (var tag in Model.Tags.Split(','))
-                    {
-                        <span class="chip chip-tag">#@tag.Trim()</span>
-                    }
-                </div>
-            }
         </div>
     </div>
 
@@ -460,7 +432,7 @@
 
 <!-- ACTIONS -->
 <div class="cf-actions">
-    <button type="button" class="btn-secondary" data-bs-dismiss="modal">
+    <button type="button" class="btn-secondary" onclick="closePostModal()">
         <i class="bi bi-x"></i> Đóng
     </button>
     <button type="button" class="btn-primary" onclick="openEditFromDetails(@Model.PostId)">

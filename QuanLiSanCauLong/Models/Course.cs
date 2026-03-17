@@ -1,91 +1,112 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuanLiSanCauLong.Models
 {
-    [Table("Courses")]
     public class Course
     {
         [Key]
         public int CourseId { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Tên khóa học không được để trống")]
         [StringLength(200)]
-        [Display(Name = "Tên Khóa Học")]
         public string CourseName { get; set; } = string.Empty;
 
-        [StringLength(500)]
-        [Display(Name = "Mô Tả Ngắn")]
+        [Required]
+        [StringLength(250)]
+        public string Slug { get; set; } = string.Empty;
+
         public string? ShortDesc { get; set; }
 
-        [Required]
-        [Display(Name = "Mô Tả Chi Tiết")]
+        [Required(ErrorMessage = "Mô tả chi tiết không được để trống")]
         public string Description { get; set; } = string.Empty;
 
+        // Huấn luyện viên
         [StringLength(100)]
-        [Display(Name = "Huấn Luyện Viên")]
         public string? Instructor { get; set; }
 
-        [StringLength(50)]
-        [Display(Name = "Trình Độ")]
-        public string? Level { get; set; }         // Beginner / Intermediate / Advanced
+        [StringLength(150)]
+        public string? InstructorTitle { get; set; }
 
-        [Display(Name = "Thời Lượng (tuần)")]
-        public int? DurationWeeks { get; set; }
+        public string? InstructorAvatar { get; set; }
 
-        [StringLength(300)]
-        [Display(Name = "Lịch Học")]
-        public string? Schedule { get; set; }      // VD: "Thứ 2,4,6 - 18h-19h30"
+        // Media
+        public string? FeaturedImage { get; set; }
+        public string? VideoUrl { get; set; }
 
-        [Display(Name = "Sĩ Số Tối Đa")]
-        public int? MaxStudents { get; set; }
-
-        [Display(Name = "Học Viên Hiện Tại")]
-        public int CurrentStudents { get; set; } = 0;
-
-        [Display(Name = "Học Phí (VNĐ)")]
-        [Column(TypeName = "decimal(18,0)")]
+        // Học phí
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? TuitionFee { get; set; }
 
-        [Display(Name = "Học Phí Khuyến Mãi")]
-        [Column(TypeName = "decimal(18,0)")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? DiscountFee { get; set; }
 
-        [StringLength(500)]
-        [Display(Name = "Ảnh Đại Diện")]
-        public string? FeaturedImage { get; set; }
+        // Chi tiết khóa học
+        [Required(ErrorMessage = "Vui lòng chọn trình độ")]
+        [StringLength(50)]
+        public string Level { get; set; } = string.Empty;
 
-        [Display(Name = "Tính Năng / Nội Dung")]
+        public int? DurationWeeks { get; set; }
+
+        [StringLength(200)]
+        public string? Schedule { get; set; }
+
+        public int? MaxStudents { get; set; }
+        public int CurrentStudents { get; set; } = 0;
+
+        // Nội dung thu hút
         public string? Features { get; set; }
+        public string? Highlights { get; set; }
+        public string? Requirements { get; set; }
+        public string? Outcomes { get; set; }
 
-        [StringLength(20)]
-        [Display(Name = "Trạng Thái")]
-        public string Status { get; set; } = "Active"; // Active / Inactive / Full
-
-        [Display(Name = "Nổi Bật")]
-        public bool IsFeatured { get; set; } = false;
-
-        [Display(Name = "Thứ Tự Hiển Thị")]
+        // Hiển thị
         public int DisplayOrder { get; set; } = 0;
 
-        [Display(Name = "Lượt Xem")]
+        [StringLength(20)]
+        public string Status { get; set; } = "Active";
+
+        public bool IsFeatured { get; set; } = false;
+        public bool IsPopular { get; set; } = false;
+
         public int ViewCount { get; set; } = 0;
 
-        [StringLength(300)]
-        public string? Slug { get; set; }
+        public string? MetaTitle { get; set; }
+        public string? MetaDescription { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime? UpdatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
-        // Computed
+        public virtual ICollection<CourseImage>? CourseImages { get; set; }
+
         [NotMapped]
         public int AvailableSlots => (MaxStudents ?? 0) - CurrentStudents;
 
         [NotMapped]
-        public bool IsFull => MaxStudents.HasValue && CurrentStudents >= MaxStudents;
+        public bool IsFull => MaxStudents.HasValue && CurrentStudents >= MaxStudents.Value;
 
         [NotMapped]
-        public decimal? EffectivePrice => DiscountFee ?? TuitionFee;
+        public decimal EffectivePrice => DiscountFee ?? TuitionFee ?? 0;
+    }
+
+    public class CourseImage
+    {
+        [Key]
+        public int ImageId { get; set; }
+
+        [Required]
+        public int CourseId { get; set; }
+
+        [Required]
+        public string ImagePath { get; set; } = string.Empty;
+
+        [StringLength(200)]
+        public string? Caption { get; set; }
+
+        public bool IsPrimary { get; set; } = false;
+        public int DisplayOrder { get; set; } = 0;
+        public DateTime UploadedAt { get; set; } = DateTime.Now;
+
+        public virtual Course? Course { get; set; }
     }
 }

@@ -1,10 +1,17 @@
 ﻿@model QuanLiSanCauLong.Models.Service
 @{
     Layout = null;
+    var uid = Guid.NewGuid().ToString("N")[..8];
     var images = ViewBag.ServiceImages as List<QuanLiSanCauLong.Models.ServiceImage> ?? new List<QuanLiSanCauLong.Models.ServiceImage>();
     var primaryImage = images.FirstOrDefault(i => i.IsPrimary)?.ImagePath ?? Model.FeaturedImage;
+    var allImages = new List<string>();
+    if (!string.IsNullOrEmpty(primaryImage)) allImages.Add(primaryImage);
+    foreach (var img in images.Where(i => !i.IsPrimary && i.ImagePath != primaryImage))
+        allImages.Add(img.ImagePath);
+    if (!allImages.Any() && !string.IsNullOrEmpty(Model.FeaturedImage))
+        allImages.Add(Model.FeaturedImage);
+    var hasDiscount = Model.DiscountPrice.HasValue && Model.Price.HasValue && Model.DiscountPrice < Model.Price;
 }
-
 <style>
     :root {
         --deep: #1a1209;
@@ -14,6 +21,8 @@
         --warm: #f5ede0;
         --border: #e8ddd0;
         --muted: #8a7560;
+        --green: #16a34a;
+        --red: #c94b2a;
     }
 
     * {
@@ -21,15 +30,24 @@
         box-sizing: border-box;
     }
 
-    /* MODAL HEADER */
-    .sd-header {
+    .svd-wrapper {
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+        overflow: hidden;
+    }
+
+    .svd-header {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        padding: 1.5rem 1.75rem 0;
+        padding: 1.25rem 1.75rem .9rem;
+        flex-shrink: 0;
+        border-bottom: 1px solid var(--border);
+        background: #fff;
     }
 
-    .sd-header-label {
+    .svd-header-label {
         font-size: .65rem;
         letter-spacing: .2em;
         text-transform: uppercase;
@@ -37,29 +55,26 @@
         display: flex;
         align-items: center;
         gap: .5rem;
-        margin-bottom: .4rem;
+        margin-bottom: .3rem;
     }
 
-        .sd-header-label::before {
+        .svd-header-label::before {
             content: '';
             width: 14px;
             height: 1px;
             background: var(--gold);
         }
 
-    .sd-title {
+    .svd-title {
         font-family: 'Playfair Display',serif;
-        font-size: 1.5rem;
+        font-size: 1.35rem;
         font-weight: 700;
         color: var(--deep);
+        max-width: 560px;
+        line-height: 1.25;
     }
 
-        .sd-title em {
-            font-style: italic;
-            color: var(--gold);
-        }
-
-    .sd-close {
+    .svd-close {
         width: 32px;
         height: 32px;
         border: 1px solid var(--border);
@@ -74,71 +89,165 @@
         flex-shrink: 0;
     }
 
-        .sd-close:hover {
+        .svd-close:hover {
             border-color: var(--deep);
             color: var(--deep);
         }
 
-    /* BODY */
-    .sd-body {
+    .svd-body {
         padding: 1.25rem 1.75rem 1.5rem;
+        overflow-y: auto;
+        flex: 1;
     }
 
-    /* IMAGE GALLERY */
-    .sd-gallery {
-        margin-bottom: 1.5rem;
-    }
-
-    .sd-main-img {
-        width: 100%;
-        aspect-ratio: 16/7;
-        border-radius: 10px;
+    /* GALLERY SLIDER */
+    .gallery-slider {
+        position: relative;
+        border-radius: 12px;
         overflow: hidden;
-        border: 1px solid var(--border);
         margin-bottom: .75rem;
         background: var(--warm);
+        border: 1px solid var(--border);
     }
 
-        .sd-main-img img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+    .gallery-main {
+        width: 100%;
+        height: 210px;
+        object-fit: cover;
+        display: block;
+        transition: opacity .3s;
+    }
+
+        .gallery-main.loading {
+            opacity: .5;
         }
 
-    .sd-thumbs {
+    .gallery-placeholder {
+        width: 100%;
+        height: 210px;
         display: flex;
-        gap: .5rem;
-        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
     }
 
-    .sd-thumb {
-        width: 64px;
-        height: 64px;
-        border-radius: 7px;
-        overflow: hidden;
-        border: 2px solid var(--border);
+    .gallery-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255,255,255,.85);
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--deep);
+        font-size: .9rem;
+        transition: all .2s;
+    }
+
+        .gallery-nav:hover {
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+        }
+
+        .gallery-nav.prev {
+            left: 8px;
+        }
+
+        .gallery-nav.next {
+            right: 8px;
+        }
+
+    .gallery-dots {
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: .35rem;
+    }
+
+    .gallery-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.55);
         cursor: pointer;
         transition: all .2s;
     }
 
-        .sd-thumb:hover, .sd-thumb.active {
-            border-color: var(--gold);
-            transform: scale(1.05);
+        .gallery-dot.active {
+            background: #fff;
+            width: 20px;
+            border-radius: 4px;
         }
 
-        .sd-thumb img {
+    .gallery-counter {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(0,0,0,.5);
+        color: #fff;
+        font-size: .7rem;
+        padding: .2rem .5rem;
+        border-radius: 4px;
+    }
+
+    .gallery-thumbs {
+        display: flex;
+        gap: .4rem;
+        overflow-x: auto;
+        margin-bottom: 1.1rem;
+        padding-bottom: .25rem;
+        scrollbar-width: thin;
+    }
+
+        .gallery-thumbs::-webkit-scrollbar {
+            height: 3px;
+        }
+
+        .gallery-thumbs::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 2px;
+        }
+
+    .thumb-item {
+        flex-shrink: 0;
+        width: 54px;
+        height: 54px;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: border-color .2s;
+    }
+
+        .thumb-item:hover {
+            border-color: rgba(212,160,23,.5);
+        }
+
+        .thumb-item.active {
+            border-color: var(--gold);
+        }
+
+        .thumb-item img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
         }
 
     /* INFO STRIP */
-    .sd-info-strip {
+    .svd-strip {
         background: var(--warm);
         border: 1px solid var(--border);
         border-radius: 10px;
-        padding: 1.1rem 1.25rem;
-        margin-bottom: 1.25rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.1rem;
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
@@ -146,18 +255,11 @@
         flex-wrap: wrap;
     }
 
-    .sd-name {
-        font-family: 'Playfair Display',serif;
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: var(--deep);
-    }
-
-    .sd-badges {
+    .svd-badges {
         display: flex;
         gap: .4rem;
         flex-wrap: wrap;
-        margin-top: .4rem;
+        margin-top: .5rem;
     }
 
     .badge-pill {
@@ -174,12 +276,12 @@
 
     .badge-active {
         background: rgba(22,163,74,.1);
-        color: #16a34a;
+        color: var(--green);
     }
 
     .badge-inactive {
         background: rgba(201,75,42,.1);
-        color: #c94b2a;
+        color: var(--red);
     }
 
     .badge-featured {
@@ -192,99 +294,44 @@
         color: #0e7490;
     }
 
-    /* PRICE BLOCK */
-    .sd-price-block {
+    .svd-price-block {
         text-align: right;
+        flex-shrink: 0;
     }
 
-    .sd-price-old {
+    .svd-price-old {
         font-size: .78rem;
         color: var(--muted);
         text-decoration: line-through;
         margin-bottom: .1rem;
     }
 
-    .sd-price-now {
+    .svd-price-now {
         font-family: 'Playfair Display',serif;
-        font-size: 1.4rem;
+        font-size: 1.5rem;
         font-weight: 700;
         color: var(--gold);
         line-height: 1;
     }
 
-    .sd-price-unit {
-        font-size: .75rem;
+    .svd-price-unit {
+        font-size: .73rem;
         color: var(--muted);
-        font-family: 'Outfit',sans-serif;
     }
 
-    .sd-discount-badge {
+    .svd-discount-badge {
         display: inline-block;
-        background: #c94b2a;
+        background: var(--red);
         color: #fff;
-        font-size: .65rem;
+        font-size: .62rem;
         font-weight: 700;
-        padding: .15rem .5rem;
+        padding: .12rem .45rem;
         border-radius: 3px;
-        margin-left: .4rem;
+        margin-left: .35rem;
     }
 
-    /* SECTION */
-    .sd-section {
-        margin-bottom: 1.25rem;
-    }
-
-    .sd-section-label {
-        font-size: .68rem;
-        font-weight: 700;
-        letter-spacing: .12em;
-        text-transform: uppercase;
-        color: var(--muted);
-        margin-bottom: .6rem;
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-    }
-
-        .sd-section-label i {
-            color: var(--gold);
-        }
-
-    .sd-text {
-        font-size: .86rem;
-        color: var(--deep);
-        line-height: 1.75;
-        white-space: pre-wrap;
-    }
-
-    .sd-short {
-        font-size: .86rem;
-        color: var(--muted);
-        line-height: 1.6;
-    }
-
-    /* FEATURES */
-    .sd-features {
-        display: grid;
-        gap: .4rem;
-    }
-
-    .sd-feature-item {
-        display: flex;
-        align-items: flex-start;
-        gap: .6rem;
-        font-size: .85rem;
-        color: var(--deep);
-    }
-
-        .sd-feature-item i {
-            color: #16a34a;
-            margin-top: .15rem;
-            flex-shrink: 0;
-        }
-
-    /* ICON PREVIEW */
-    .sd-icon-preview {
+    /* ICON ROW */
+    .svd-icon-row {
         display: inline-flex;
         align-items: center;
         gap: .75rem;
@@ -292,55 +339,128 @@
         border: 1px solid var(--border);
         border-radius: 8px;
         padding: .6rem 1rem;
+        margin-bottom: 1.1rem;
     }
 
-        .sd-icon-preview i {
-            font-size: 1.5rem;
+        .svd-icon-row i {
+            font-size: 1.4rem;
             color: var(--gold);
         }
 
-    .sd-icon-code {
+    .svd-icon-code {
         font-size: .78rem;
         color: var(--muted);
         font-family: monospace;
     }
 
+    /* VIDEO EMBED */
+    .video-embed {
+        margin-bottom: 1.1rem;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+    }
+
+        .video-embed iframe {
+            width: 100%;
+            height: 195px;
+            display: block;
+            border: none;
+        }
+
+    /* SECTION */
+    .svd-section {
+        margin-bottom: 1.1rem;
+    }
+
+    .svd-section-label {
+        font-size: .67rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        margin-bottom: .6rem;
+        padding-bottom: .4rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+        .svd-section-label i {
+            color: var(--gold);
+        }
+
+    .svd-text {
+        font-size: .86rem;
+        color: var(--deep);
+        line-height: 1.7;
+        white-space: pre-wrap;
+    }
+
+    .svd-short {
+        font-size: .86rem;
+        color: var(--muted);
+        line-height: 1.65;
+    }
+
+    .svd-feature-list {
+        display: flex;
+        flex-direction: column;
+        gap: .4rem;
+    }
+
+    .svd-feature-item {
+        display: flex;
+        align-items: flex-start;
+        gap: .6rem;
+        font-size: .85rem;
+        color: var(--deep);
+    }
+
+        .svd-feature-item i {
+            color: var(--green);
+            font-size: .9rem;
+            flex-shrink: 0;
+            margin-top: .1rem;
+        }
+
     /* META */
-    .sd-meta {
+    .svd-meta {
         display: flex;
         gap: 1.5rem;
         flex-wrap: wrap;
-        padding-top: 1rem;
+        padding-top: .9rem;
         border-top: 1px solid var(--border);
-        margin-top: 1rem;
     }
 
-    .sd-meta-item {
-        font-size: .75rem;
+    .svd-meta-item {
+        font-size: .74rem;
         color: var(--muted);
         display: flex;
         align-items: center;
         gap: .35rem;
     }
 
-        .sd-meta-item strong {
+        .svd-meta-item strong {
             color: var(--deep);
         }
 
-        .sd-meta-item i {
+        .svd-meta-item i {
             color: var(--gold);
         }
 
     /* FOOTER */
-    .sd-footer {
+    .svd-footer {
         display: flex;
         justify-content: flex-end;
         gap: .65rem;
-        padding: 1rem 1.75rem 1.5rem;
+        padding: 1rem 1.75rem;
         border-top: 1px solid var(--border);
+        background: var(--warm);
+        flex-shrink: 0;
     }
 
-    .btn-sd-close {
+    .btn-svd-close {
         padding: .65rem 1.4rem;
         border: 1.5px solid var(--border);
         border-radius: 7px;
@@ -353,12 +473,12 @@
         font-family: 'Outfit',sans-serif;
     }
 
-        .btn-sd-close:hover {
+        .btn-svd-close:hover {
             border-color: var(--deep);
             color: var(--deep);
         }
 
-    .btn-sd-edit {
+    .btn-svd-edit {
         padding: .65rem 1.6rem;
         border: none;
         border-radius: 7px;
@@ -374,168 +494,237 @@
         font-family: 'Outfit',sans-serif;
     }
 
-        .btn-sd-edit:hover {
+        .btn-svd-edit:hover {
             transform: translateY(-1px);
             box-shadow: 0 5px 15px rgba(212,160,23,.3);
         }
 </style>
 
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<div class="svd-wrapper">
+    <div class="svd-header">
+        <div>
+            <div class="svd-header-label">
+                @if (!string.IsNullOrEmpty(Model.Icon))
+                {
+                    <i class="@Model.Icon"></i>
+                }
+                else
+                {
 
-<!-- HEADER -->
-<div class="sd-header">
-    <div>
-        <div class="sd-header-label"><i class="bi bi-info-circle"></i> Chi tiết dịch vụ</div>
-        <div class="sd-title">@Model.ServiceName</div>
-    </div>
-    <button type="button" class="sd-close" data-bs-dismiss="modal">
-        <i class="bi bi-x" style="font-size:1.1rem;"></i>
-    </button>
-</div>
-
-<!-- BODY -->
-<div class="sd-body">
-
-    <!-- Image Gallery -->
-    @if (images.Any())
-    {
-        <div class="sd-gallery">
-            <div class="sd-main-img">
-                <img src="@primaryImage" id="mainDisplayImage" alt="@Model.ServiceName" />
+                    <i class="bi bi-info-circle-fill"></i>
+                }
+                Chi Tiết Dịch Vụ
             </div>
-            @if (images.Count > 1)
+            <div class="svd-title">@Model.ServiceName</div>
+        </div>
+        <button type="button" class="svd-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <div class="svd-body">
+
+        <!-- GALLERY SLIDER -->
+        @if (allImages.Any())
+        {
+            <div class="gallery-slider" id="sliderSVD-@uid">
+                <img class="gallery-main" id="mainImgSVD-@uid" src="@allImages[0]" alt="@Model.ServiceName" />
+                @if (allImages.Count > 1)
+                {
+                    <button class="gallery-nav prev" id="prevSVD-@uid"><i class="bi bi-chevron-left"></i></button>
+                    <button class="gallery-nav next" id="nextSVD-@uid"><i class="bi bi-chevron-right"></i></button>
+                    <div class="gallery-dots" id="dotsSVD-@uid">
+                        @for (int i = 0; i < allImages.Count; i++)
+                        {
+                            <div class="gallery-dot @(i == 0 ? "active" : "")" data-idx="@i"></div>
+                        }
+                    </div>
+                    <div class="gallery-counter" id="ctrSVD-@uid">1 / @allImages.Count</div>
+                }
+            </div>
+            @if (allImages.Count > 1)
             {
-                <div class="sd-thumbs">
-                    @foreach (var img in images)
+                <div class="gallery-thumbs" id="thumbsSVD-@uid">
+                    @for (int i = 0; i < allImages.Count; i++)
                     {
-                        <div class="sd-thumb @(img.IsPrimary ? "active" : "")"
-                             onclick="changeMainImage('@img.ImagePath', this)">
-                            <img src="@img.ImagePath" alt="Thumb" />
+                        <div class="thumb-item @(i == 0 ? "active" : "")" data-idx="@i">
+                            <img src="@allImages[i]" alt="" />
                         </div>
                     }
                 </div>
             }
-        </div>
-    }
-
-    <!-- Info Strip -->
-    <div class="sd-info-strip">
-        <div>
-            <div class="sd-name">@Model.ServiceName</div>
-            <div class="sd-badges">
-                @if (Model.Status == "Active")
-                {
-                    <span class="badge-pill badge-active">● Hoạt động</span>
-                }
-                else
-                {
-                    <span class="badge-pill badge-inactive">● Ngừng hoạt động</span>
-                }
-                @if (Model.IsFeatured)
-                {
-                    <span class="badge-pill badge-featured"><i class="bi bi-star-fill"></i> Nổi bật</span>
-                }
-                @if (Model.IsPopular)
-                {
-                    <span class="badge-pill badge-popular"><i class="bi bi-fire"></i> Phổ biến</span>
-                }
-            </div>
-        </div>
-        @if (Model.Price.HasValue)
+        }
+        else
         {
-            <div class="sd-price-block">
-                @if (Model.DiscountPrice.HasValue)
-                {
-                    <div class="sd-price-old">@Model.Price.Value.ToString("N0")đ</div>
-                    <div class="sd-price-now">
-                        @Model.DiscountPrice.Value.ToString("N0")đ
-                        <span class="sd-discount-badge">-@(((Model.Price - Model.DiscountPrice) / Model.Price * 100).Value.ToString("N0"))%</span>
-                    </div>
-                }
-                else
-                {
-                    <div class="sd-price-now">@Model.Price.Value.ToString("N0")đ</div>
-                }
-                @if (!string.IsNullOrEmpty(Model.PriceUnit))
-                {
-                    <div class="sd-price-unit">/@Model.PriceUnit</div>
-                }
+            <div style="background:var(--warm);border:1px solid var(--border);border-radius:12px;height:160px;display:flex;align-items:center;justify-content:center;color:var(--muted);margin-bottom:1.1rem;">
+                <div style="text-align:center;">
+                    @if (!string.IsNullOrEmpty(Model.Icon))
+                    {
+                        <i class="@Model.Icon" style="font-size:3rem;opacity:.25;"></i>
+                    }
+                    else
+                    {
+
+                        <i class="bi bi-image" style="font-size:3rem;opacity:.2;"></i>
+                    }
+                    <br /><span style="font-size:.8rem;">Chưa có ảnh</span>
+                </div>
             </div>
         }
-    </div>
 
-    <!-- Short Description -->
-    @if (!string.IsNullOrEmpty(Model.ShortDescription))
-    {
-        <div class="sd-section">
-            <div class="sd-section-label"><i class="bi bi-chat-quote"></i> Mô tả ngắn</div>
-            <div class="sd-short">@Model.ShortDescription</div>
+        <!-- INFO STRIP -->
+        <div class="svd-strip">
+            <div>
+                <div style="font-weight:700;font-size:.96rem;color:var(--deep);">@Model.ServiceName</div>
+                <div class="svd-badges">
+                    @if (Model.Status == "Active")
+                    {
+                        <span class="badge-pill badge-active">● Hoạt động</span>
+                    }
+                    else
+                    {
+
+                        <span class="badge-pill badge-inactive">○ Ngừng hoạt động</span>
+                    }
+                    @if (Model.IsFeatured)
+                    {
+                        <span class="badge-pill badge-featured"><i class="bi bi-star-fill"></i> Nổi bật</span>
+                    }
+                    @if (Model.IsPopular)
+                    {
+                        <span class="badge-pill badge-popular"><i class="bi bi-fire"></i> Phổ biến</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.PriceUnit))
+                    {
+                        <span class="badge-pill" style="background:var(--warm);color:var(--muted);border:1px solid var(--border);">/@Model.PriceUnit</span>
+                    }
+                </div>
+            </div>
+            @if (Model.Price.HasValue)
+            {
+                <div class="svd-price-block">
+                    @if (hasDiscount)
+                    {
+                        <div class="svd-price-old">@Model.Price!.Value.ToString("N0")đ</div>
+                        <div class="svd-price-now">
+                            @Model.DiscountPrice!.Value.ToString("N0")đ
+                            <span class="svd-discount-badge">-@(((Model.Price - Model.DiscountPrice) / Model.Price * 100)!.Value.ToString("N0"))%</span>
+                        </div>
+                    }
+                    else
+                    {
+
+                        <div class="svd-price-now">@Model.Price!.Value.ToString("N0")đ</div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.PriceUnit))
+                    {
+                        <div class="svd-price-unit">/@Model.PriceUnit</div>
+                    }
+                </div>
+            }
         </div>
-    }
 
-    <!-- Full Description -->
-    <div class="sd-section">
-        <div class="sd-section-label"><i class="bi bi-file-text"></i> Mô tả chi tiết</div>
-        <div class="sd-text">@Model.Description</div>
-    </div>
+        <!-- ICON -->
+        @if (!string.IsNullOrEmpty(Model.Icon))
+        {
+            <div class="svd-section" style="margin-bottom:.75rem;">
+                <div class="svd-icon-row">
+                    <i class="@Model.Icon"></i>
+                    <span class="svd-icon-code">@Model.Icon</span>
+                </div>
+            </div>
+        }
 
-    <!-- Features -->
-    @if (!string.IsNullOrEmpty(Model.Features))
-    {
-        <div class="sd-section">
-            <div class="sd-section-label"><i class="bi bi-check2-all"></i> Tính năng nổi bật</div>
-            <div class="sd-features">
-                @foreach (var feature in Model.Features.Split('\n').Where(f => !string.IsNullOrWhiteSpace(f)))
-                {
-                    <div class="sd-feature-item">
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span>@feature.Trim().TrimStart('-').Trim()</span>
+        <!-- VIDEO -->
+        @if (!string.IsNullOrEmpty(Model.VideoUrl))
+        {
+            var ytM = System.Text.RegularExpressions.Regex.Match(Model.VideoUrl, @"(?:youtube\.com/watch\?v=|youtu\.be/)([^&?#]+)");
+            if (ytM.Success)
+            {
+                <div class="svd-section">
+                    <div class="svd-section-label"><i class="bi bi-play-circle-fill"></i>Video Giới Thiệu</div>
+                    <div class="video-embed">
+                        <iframe src="https://www.youtube.com/embed/@ytM.Groups[1].Value" allowfullscreen></iframe>
                     </div>
-                }
-            </div>
-        </div>
-    }
+                </div>
+            }
+        }
 
-    <!-- Icon -->
-    @if (!string.IsNullOrEmpty(Model.Icon))
-    {
-        <div class="sd-section">
-            <div class="sd-section-label"><i class="bi bi-palette"></i> Icon</div>
-            <div class="sd-icon-preview">
-                <i class="@Model.Icon"></i>
-                <span class="sd-icon-code">@Model.Icon</span>
+        <!-- MÔ TẢ NGẮN -->
+        @if (!string.IsNullOrEmpty(Model.ShortDescription))
+        {
+            <div class="svd-section">
+                <div class="svd-section-label"><i class="bi bi-chat-quote"></i>Mô Tả Ngắn</div>
+                <div class="svd-short">@Model.ShortDescription</div>
             </div>
-        </div>
-    }
+        }
 
-    <!-- Meta -->
-    <div class="sd-meta">
-        <div class="sd-meta-item"><i class="bi bi-sort-numeric-down"></i> Thứ tự: <strong>@Model.DisplayOrder</strong></div>
-        <div class="sd-meta-item"><i class="bi bi-calendar-plus"></i> Tạo: <strong>@Model.CreatedAt.ToString("dd/MM/yyyy")</strong></div>
-        <div class="sd-meta-item"><i class="bi bi-eye"></i> Lượt xem: <strong>@Model.ViewCount.ToString("N0")</strong></div>
+        <!-- MÔ TẢ CHI TIẾT -->
+        <div class="svd-section">
+            <div class="svd-section-label"><i class="bi bi-file-text"></i>Mô Tả Chi Tiết</div>
+            <div class="svd-text">@Model.Description</div>
+        </div>
+
+        <!-- TÍNH NĂNG -->
+        @if (!string.IsNullOrEmpty(Model.Features))
+        {
+            <div class="svd-section">
+                <div class="svd-section-label"><i class="bi bi-check2-all"></i>Tính Năng Nổi Bật</div>
+                <div class="svd-feature-list">
+                    @foreach (var f in Model.Features.Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)))
+                    {
+                        <div class="svd-feature-item">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>@f.Trim().TrimStart('-').Trim()</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- META -->
+        <div class="svd-meta">
+            <div class="svd-meta-item"><i class="bi bi-sort-numeric-down"></i>Thứ tự: <strong>#@Model.DisplayOrder</strong></div>
+            <div class="svd-meta-item"><i class="bi bi-calendar-plus"></i>Tạo: <strong>@Model.CreatedAt.ToString("dd/MM/yyyy")</strong></div>
+            <div class="svd-meta-item"><i class="bi bi-eye"></i>Lượt xem: <strong>@Model.ViewCount.ToString("N0")</strong></div>
+            @if (allImages.Count > 1)
+            {
+                <div class="svd-meta-item"><i class="bi bi-images"></i>Ảnh: <strong>@allImages.Count</strong></div>
+            }
+        </div>
+
     </div>
 
-</div>
-
-<!-- FOOTER -->
-<div class="sd-footer">
-    <button type="button" class="btn-sd-close" data-bs-dismiss="modal">
-        <i class="bi bi-x-circle"></i> Đóng
-    </button>
-    <button type="button" class="btn-sd-edit" onclick="openEditFromDetails(@Model.ServiceId)">
-        <i class="bi bi-pencil"></i> Chỉnh Sửa
-    </button>
+    <div class="svd-footer">
+        <button type="button" class="btn-svd-close" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Đóng</button>
+        <button type="button" class="btn-svd-edit" onclick="openEditFromDetails(@Model.ServiceId)">
+            <i class="bi bi-pencil"></i> Chỉnh Sửa
+        </button>
+    </div>
 </div>
 
 <script>
-    function changeMainImage(imagePath, thumbElement) {
-        document.getElementById('mainDisplayImage').src = imagePath;
-        document.querySelectorAll('.sd-thumb').forEach(el => el.classList.remove('active'));
-        thumbElement.classList.add('active');
-    }
+    (function(){
+        var UID = '@uid';
+        var images = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(allImages));
+        var current = 0;
+        function goTo(idx) {
+            if (images.length <= 1) return;
+            current = (idx + images.length) % images.length;
+            var mi = document.getElementById('mainImgSVD-' + UID);
+            if (mi) { mi.classList.add('loading'); mi.src = images[current]; mi.onload = function(){ mi.classList.remove('loading'); }; }
+            document.querySelectorAll('#dotsSVD-' + UID + ' .gallery-dot').forEach(function(d,i){ d.classList.toggle('active', i===current); });
+            var c = document.getElementById('ctrSVD-' + UID); if (c) c.textContent = (current+1)+' / '+images.length;
+            document.querySelectorAll('#thumbsSVD-' + UID + ' .thumb-item').forEach(function(t,i){ t.classList.toggle('active', i===current); });
+        }
+        var prev = document.getElementById('prevSVD-' + UID), next = document.getElementById('nextSVD-' + UID);
+        if (prev) prev.addEventListener('click', function(){ goTo(current-1); });
+        if (next) next.addEventListener('click', function(){ goTo(current+1); });
+        document.querySelectorAll('#dotsSVD-' + UID + ' .gallery-dot').forEach(function(d){ d.addEventListener('click', function(){ goTo(parseInt(this.dataset.idx)); }); });
+        document.querySelectorAll('#thumbsSVD-' + UID + ' .thumb-item').forEach(function(t){ t.addEventListener('click', function(){ goTo(parseInt(this.dataset.idx)); }); });
+    })();
+
     function openEditFromDetails(id) {
-        const currentModal = bootstrap.Modal.getInstance(document.getElementById('modalService'));
-        if (currentModal) currentModal.hide();
-        setTimeout(() => { openEditModal(id); }, 300);
+        var modal = bootstrap.Modal.getInstance(document.getElementById('modalService'));
+        if (modal) modal.hide();
+        setTimeout(function(){ if (typeof openEditModal === 'function') openEditModal(id); }, 300);
     }
 </script>

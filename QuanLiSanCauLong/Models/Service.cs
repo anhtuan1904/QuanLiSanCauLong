@@ -3,9 +3,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuanLiSanCauLong.Models
 {
-    /// <summary>
-    /// Model cho dịch vụ
-    /// </summary>
     public class Service
     {
         [Key]
@@ -26,6 +23,7 @@ namespace QuanLiSanCauLong.Models
 
         public string? Icon { get; set; }
         public string? FeaturedImage { get; set; }
+        public string? VideoUrl { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal? Price { get; set; }
@@ -34,14 +32,14 @@ namespace QuanLiSanCauLong.Models
         public decimal? DiscountPrice { get; set; }
 
         [StringLength(20)]
-        public string? PriceUnit { get; set; } // /giờ, /tháng, /lần
+        public string? PriceUnit { get; set; }
 
-        public string? Features { get; set; } // JSON array
+        public string? Features { get; set; }
 
         public int DisplayOrder { get; set; } = 0;
 
         [StringLength(20)]
-        public string Status { get; set; } = "Active"; // Active, Inactive
+        public string Status { get; set; } = "Active";
 
         public bool IsFeatured { get; set; } = false;
         public bool IsPopular { get; set; } = false;
@@ -54,14 +52,10 @@ namespace QuanLiSanCauLong.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
-        // Navigation
         public virtual ICollection<ServiceImage>? ServiceImages { get; set; }
         public virtual ICollection<ServiceInquiry>? Inquiries { get; set; }
     }
 
-    /// <summary>
-    /// Hình ảnh dịch vụ
-    /// </summary>
     public class ServiceImage
     {
         [Key]
@@ -77,13 +71,9 @@ namespace QuanLiSanCauLong.Models
         public int DisplayOrder { get; set; } = 0;
         public DateTime UploadedAt { get; set; } = DateTime.Now;
 
-        // Navigation
         public virtual Service? Service { get; set; }
     }
 
-    /// <summary>
-    /// Yêu cầu tư vấn dịch vụ
-    /// </summary>
     public class ServiceInquiry
     {
         [Key]
@@ -106,7 +96,7 @@ namespace QuanLiSanCauLong.Models
         public string? Message { get; set; }
 
         [StringLength(20)]
-        public string Status { get; set; } = "New"; // New, Contacted, Completed, Cancelled
+        public string Status { get; set; } = "New";
 
         public string? Notes { get; set; }
         public string? AssignedTo { get; set; }
@@ -115,7 +105,6 @@ namespace QuanLiSanCauLong.Models
         public DateTime? ContactedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
 
-        // Navigation
         public virtual Service? Service { get; set; }
     }
 }

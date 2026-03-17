@@ -1,28 +1,24 @@
 ﻿@model QuanLiSanCauLong.Models.Tournament
 @{
     Layout = null;
+    var uid = Guid.NewGuid().ToString("N")[..8];
     var pct = Model.MaxPlayers.HasValue && Model.MaxPlayers > 0
-              ? Math.Min(100, (int)(Model.CurrentPlayers * 100.0 / Model.MaxPlayers.Value))
-              : 0;
+              ? Math.Min(100, (int)(Model.CurrentPlayers * 100.0 / Model.MaxPlayers.Value)) : 0;
     var pctColor = pct >= 90 ? "#c94b2a" : pct >= 70 ? "#d4a017" : "#16a34a";
-    var statusColor = Model.Status switch
+    var isFull = Model.IsFull;
+    var allImages = new List<string>();
+    if (!string.IsNullOrEmpty(Model.FeaturedImage)) allImages.Add(Model.FeaturedImage);
+    if (Model.TournamentImages != null)
+        allImages.AddRange(Model.TournamentImages.OrderBy(i => i.DisplayOrder).Select(i => i.ImagePath));
+    var sponsorList = new List<string>();
+    if (!string.IsNullOrEmpty(Model.Sponsors))
     {
-        "Ongoing" => "#0284c7",
-        "Upcoming" => "#7c3aed",
-        "Completed" => "#16a34a",
-        "Cancelled" => "#dc2626",
-        _ => "#8a7560"
-    };
-    var statusBg = Model.Status switch
-    {
-        "Ongoing" => "rgba(2,132,199,.1)",
-        "Upcoming" => "rgba(124,58,237,.1)",
-        "Completed" => "rgba(22,163,74,.1)",
-        "Cancelled" => "rgba(220,38,38,.1)",
-        _ => "var(--warm)"
-    };
+        try { sponsorList = System.Text.Json.JsonSerializer.Deserialize<List<string>>(Model.Sponsors) ?? new(); } catch { }
+    }
+    var prizeLines = (Model.PrizeDescription ?? "").Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+    var statusColors = new Dictionary<string, string> { { "Upcoming", "#1d4ed8" }, { "Ongoing", "#16a34a" }, { "Finished", "#8a7560" }, { "Cancelled", "#c94b2a" } };
+    var currentStatusColor = statusColors.ContainsKey(Model.Status) ? statusColors[Model.Status] : "#8a7560";
 }
-
 <style>
     :root {
         --deep: #1a1209;
@@ -32,6 +28,9 @@
         --warm: #f5ede0;
         --border: #e8ddd0;
         --muted: #8a7560;
+        --green: #16a34a;
+        --red: #c94b2a;
+        --blue: #1d4ed8;
     }
 
     * {
@@ -39,11 +38,21 @@
         box-sizing: border-box;
     }
 
+    .td-wrapper {
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+        overflow: hidden;
+    }
+
     .td-header {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        padding: 1.5rem 1.75rem 0;
+        padding: 1.25rem 1.75rem .9rem;
+        flex-shrink: 0;
+        border-bottom: 1px solid var(--border);
+        background: #fff;
     }
 
     .td-header-label {
@@ -54,7 +63,7 @@
         display: flex;
         align-items: center;
         gap: .5rem;
-        margin-bottom: .4rem;
+        margin-bottom: .3rem;
     }
 
         .td-header-label::before {
@@ -66,11 +75,10 @@
 
     .td-title {
         font-family: 'Playfair Display',serif;
-        font-size: 1.4rem;
+        font-size: 1.35rem;
         font-weight: 700;
         color: var(--deep);
-        line-height: 1.25;
-        max-width: 520px;
+        max-width: 560px;
     }
 
     .td-close {
@@ -96,49 +104,161 @@
     .td-body {
         padding: 1.25rem 1.75rem 1.5rem;
         overflow-y: auto;
-        max-height: calc(90vh - 80px);
+        flex: 1;
     }
 
-    .td-hero-img {
-        width: 100%;
-        height: 180px;
-        border-radius: 10px;
+    /* GALLERY */
+    .gallery-slider {
+        position: relative;
+        border-radius: 12px;
         overflow: hidden;
+        margin-bottom: 1rem;
+        background: var(--warm);
         border: 1px solid var(--border);
-        margin-bottom: 1.25rem;
-        background: var(--deep);
+    }
+
+    .gallery-main {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+        display: block;
+        cursor: zoom-in;
+        transition: opacity .3s;
+    }
+
+        .gallery-main.loading {
+            opacity: .5;
+        }
+
+    .gallery-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255,255,255,.85);
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        position: relative;
+        color: var(--deep);
+        font-size: .9rem;
+        transition: all .2s;
     }
 
-        .td-hero-img img {
+        .gallery-nav:hover {
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+        }
+
+        .gallery-nav.prev {
+            left: 8px;
+        }
+
+        .gallery-nav.next {
+            right: 8px;
+        }
+
+    .gallery-dots {
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: .35rem;
+    }
+
+    .gallery-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.55);
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .gallery-dot.active {
+            background: #fff;
+            width: 20px;
+            border-radius: 4px;
+        }
+
+    .gallery-counter {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(0,0,0,.5);
+        color: #fff;
+        font-size: .7rem;
+        padding: .2rem .5rem;
+        border-radius: 4px;
+    }
+
+    .gallery-thumbs {
+        display: flex;
+        gap: .4rem;
+        overflow-x: auto;
+        padding: .5rem 0;
+        margin-bottom: 1rem;
+        scrollbar-width: thin;
+    }
+
+        .gallery-thumbs::-webkit-scrollbar {
+            height: 3px;
+        }
+
+        .gallery-thumbs::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 2px;
+        }
+
+    .thumb-item {
+        flex-shrink: 0;
+        width: 52px;
+        height: 52px;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: border-color .2s;
+    }
+
+        .thumb-item:hover {
+            border-color: rgba(212,160,23,.5);
+        }
+
+        .thumb-item.active {
+            border-color: var(--gold);
+        }
+
+        .thumb-item img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            opacity: .7;
+            display: block;
         }
 
-    .td-hero-placeholder {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: .5rem;
-        color: rgba(255,255,255,.3);
-    }
-
+    /* INFO STRIP */
     .td-strip {
         background: var(--warm);
         border: 1px solid var(--border);
         border-radius: 10px;
-        padding: 1.1rem 1.25rem;
-        margin-bottom: 1.25rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.1rem;
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
         gap: 1rem;
         flex-wrap: wrap;
+    }
+
+    .cd-badges {
+        display: flex;
+        gap: .4rem;
+        flex-wrap: wrap;
+        margin-top: .5rem;
     }
 
     .badge-pill {
@@ -153,29 +273,135 @@
         text-transform: uppercase;
     }
 
-    .td-prize-now {
+    .badge-featured {
+        background: rgba(212,160,23,.12);
+        color: #92660a;
+    }
+
+    .td-prize-block {
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .td-prize-label {
+        font-size: .68rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: .2rem;
+    }
+
+    .td-prize-val {
         font-family: 'Playfair Display',serif;
-        font-size: 1.6rem;
+        font-size: 1.5rem;
         font-weight: 700;
         color: var(--gold);
         line-height: 1;
     }
 
-    /* Progress */
-    .td-progress-wrap {
-        margin-bottom: 1.25rem;
+    .td-prize-sub {
+        font-size: .73rem;
+        color: var(--muted);
+    }
+
+    /* DATE TIMELINE */
+    .date-timeline {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: .75rem;
+        margin-bottom: 1.1rem;
+    }
+
+    .date-card {
+        background: var(--warm);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: .85rem 1rem;
+        text-align: center;
+    }
+
+        .date-card .dc-label {
+            font-size: .65rem;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: .35rem;
+        }
+
+        .date-card .dc-val {
+            font-size: .88rem;
+            font-weight: 700;
+            color: var(--deep);
+        }
+
+        .date-card .dc-time {
+            font-size: .72rem;
+            color: var(--muted);
+            margin-top: .15rem;
+        }
+
+    /* VENUE CARD */
+    .venue-card {
+        background: var(--warm);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .venue-info .v-name {
+        font-weight: 700;
+        font-size: .92rem;
+        color: var(--deep);
+    }
+
+    .venue-info .v-addr {
+        font-size: .8rem;
+        color: var(--muted);
+        margin-top: .2rem;
+    }
+
+    .btn-map {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .5rem 1rem;
+        background: var(--deep);
+        border: none;
+        border-radius: 7px;
+        color: var(--gold);
+        font-size: .78rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: all .2s;
+    }
+
+        .btn-map:hover {
+            background: rgba(26,18,9,.85);
+            color: var(--gold);
+        }
+
+    /* PROGRESS */
+    .td-progress {
+        margin-bottom: 1.1rem;
     }
 
     .td-progress-label {
         display: flex;
         justify-content: space-between;
-        align-items: center;
         font-size: .72rem;
         color: var(--muted);
         margin-bottom: .4rem;
     }
 
-    .td-progress-bar-bg {
+    .td-progress-bg {
         height: 8px;
         background: var(--border);
         border-radius: 4px;
@@ -188,121 +414,142 @@
         transition: width 1s;
     }
 
-    /* Grid */
-    .td-grid {
+    /* PRIZE CARDS */
+    .prize-podium {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 1rem;
-        margin-bottom: 1.25rem;
+        grid-template-columns: repeat(3,1fr);
+        gap: .65rem;
+        margin-bottom: 1.1rem;
     }
 
-    .td-grid-item {
-        background: var(--warm);
-        padding: 1rem 1.2rem;
-        border-radius: 6px;
-        border: 1px solid var(--border);
+    .prize-card {
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: .9rem 1rem;
+        text-align: center;
     }
 
-    .td-grid-label {
-        font-size: .68rem;
-        letter-spacing: .1em;
-        text-transform: uppercase;
-        color: var(--muted);
-        display: block;
-        margin-bottom: .4rem;
-    }
+        .prize-card.rank-1 {
+            border-color: #ffd700;
+            background: rgba(255,215,0,.07);
+        }
 
-    .td-grid-val {
-        font-weight: 700;
-        font-size: .88rem;
-        color: var(--deep);
-    }
+        .prize-card.rank-2 {
+            border-color: #c0c0c0;
+            background: rgba(192,192,192,.07);
+        }
 
-    /* Prize breakdown */
-    .td-prize-box {
-        background: var(--deep);
-        color: #fff;
-        padding: 1.25rem 1.5rem;
-        border-radius: 8px;
-        margin-bottom: 1.25rem;
-    }
+        .prize-card.rank-3 {
+            border-color: #cd7f32;
+            background: rgba(205,127,50,.07);
+        }
 
-    .td-prize-box-label {
-        font-size: .68rem;
-        letter-spacing: .12em;
-        text-transform: uppercase;
-        color: var(--gold2);
-        margin-bottom: .6rem;
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-    }
+        .prize-card .p-medal {
+            font-size: 1.75rem;
+            margin-bottom: .4rem;
+        }
 
-    /* Rules */
+        .prize-card .p-money {
+            font-family: 'Playfair Display',serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--deep);
+        }
+
+        .prize-card .p-extra {
+            font-size: .72rem;
+            color: var(--muted);
+            margin-top: .2rem;
+        }
+
+    /* SECTION */
     .td-section {
-        margin-bottom: 1.25rem;
+        margin-bottom: 1.1rem;
     }
 
     .td-section-label {
-        font-size: .68rem;
-        font-weight: 700;
+        font-size: .67rem;
         letter-spacing: .12em;
         text-transform: uppercase;
         color: var(--muted);
-        margin-bottom: .6rem;
         display: flex;
         align-items: center;
-        gap: .5rem;
+        gap: .4rem;
+        margin-bottom: .6rem;
+        padding-bottom: .4rem;
+        border-bottom: 1px solid var(--border);
     }
 
-        .td-section-label i {
-            color: var(--gold);
-        }
-
     .td-text {
-        font-size: .86rem;
+        font-size: .87rem;
         color: var(--deep);
-        line-height: 1.75;
+        line-height: 1.65;
         white-space: pre-wrap;
     }
 
-    .td-rules {
-        list-style: none;
-        padding: 0;
-        margin: 0;
+    .td-feature-list {
+        display: flex;
+        flex-direction: column;
+        gap: .4rem;
     }
 
-        .td-rules li {
-            display: flex;
-            gap: .75rem;
-            padding: .6rem 0;
-            border-bottom: 1px solid var(--border);
-            font-size: .88rem;
-            color: var(--deep);
-            font-weight: 300;
+    .td-feature-item {
+        display: flex;
+        align-items: flex-start;
+        gap: .6rem;
+        font-size: .85rem;
+        color: var(--deep);
+    }
+
+        .td-feature-item i {
+            color: var(--green);
+            font-size: .9rem;
+            flex-shrink: 0;
+            margin-top: .1rem;
         }
 
-            .td-rules li:last-child {
-                border-bottom: none;
-            }
-
-    .td-rule-icon {
-        color: var(--gold);
-        flex-shrink: 0;
-        margin-top: 2px;
+    /* SPONSORS */
+    .sponsor-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .4rem;
     }
 
+    .sponsor-chip {
+        background: rgba(29,78,216,.07);
+        border: 1px solid rgba(29,78,216,.15);
+        border-radius: 20px;
+        padding: .3rem .75rem;
+        font-size: .78rem;
+        color: var(--deep);
+    }
+
+    /* VIDEO */
+    .video-embed {
+        margin-bottom: 1.1rem;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+    }
+
+        .video-embed iframe {
+            width: 100%;
+            height: 200px;
+            display: block;
+            border: none;
+        }
+
+    /* META */
     .td-meta {
         display: flex;
         gap: 1.5rem;
         flex-wrap: wrap;
-        padding-top: 1rem;
+        padding-top: .9rem;
         border-top: 1px solid var(--border);
-        margin-top: 1rem;
     }
 
     .td-meta-item {
-        font-size: .75rem;
+        font-size: .74rem;
         color: var(--muted);
         display: flex;
         align-items: center;
@@ -317,12 +564,15 @@
             color: var(--gold);
         }
 
+    /* FOOTER */
     .td-footer {
         display: flex;
         justify-content: flex-end;
         gap: .65rem;
-        padding: 1rem 1.75rem 1.5rem;
+        padding: 1rem 1.75rem;
         border-top: 1px solid var(--border);
+        background: var(--warm);
+        flex-shrink: 0;
     }
 
     .btn-td-close {
@@ -365,181 +615,300 @@
         }
 </style>
 
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-<!-- HEADER -->
-<div class="td-header">
-    <div>
-        <div class="td-header-label"><i class="bi bi-trophy"></i> Chi tiết giải đấu</div>
-        <div class="td-title">@Model.TournamentName</div>
+<div class="td-wrapper">
+    <div class="td-header">
+        <div>
+            <div class="td-header-label"><i class="bi bi-trophy-fill"></i> Chi Tiết Giải Đấu</div>
+            <div class="td-title">@Model.TournamentName</div>
+        </div>
+        <button type="button" class="td-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
     </div>
-    <button type="button" class="td-close" data-bs-dismiss="modal">
-        <i class="bi bi-x" style="font-size:1.1rem;"></i>
-    </button>
-</div>
 
-<!-- BODY -->
-<div class="td-body">
+    <div class="td-body">
 
-    <!-- Hero image -->
-    <div class="td-hero-img">
-        @if (!string.IsNullOrEmpty(Model.FeaturedImage))
+        <!-- GALLERY -->
+        @if (allImages.Any())
         {
-            <img src="@Model.FeaturedImage" alt="@Model.TournamentName" />
+            <div class="gallery-slider" id="sliderTD-@uid">
+                <img class="gallery-main" id="mainImgTD-@uid" src="@allImages[0]" alt="@Model.TournamentName" />
+                @if (allImages.Count > 1)
+                {
+                    <button class="gallery-nav prev" id="prevBtnTD-@uid"><i class="bi bi-chevron-left"></i></button>
+                    <button class="gallery-nav next" id="nextBtnTD-@uid"><i class="bi bi-chevron-right"></i></button>
+                    <div class="gallery-dots" id="dotsTD-@uid">
+                        @for (int i = 0; i < allImages.Count; i++)
+                        {
+                            <div class="gallery-dot @(i == 0 ? "active" : "")" data-idx="@i"></div>
+                        }
+                    </div>
+                    <div class="gallery-counter" id="counterTD-@uid">1 / @allImages.Count</div>
+                }
+            </div>
+            @if (allImages.Count > 1)
+            {
+                <div class="gallery-thumbs" id="thumbsTD-@uid">
+                    @for (int i = 0; i < allImages.Count; i++)
+                    {
+                        <div class="thumb-item @(i == 0 ? "active" : "")" data-idx="@i"><img src="@allImages[i]" alt="" /></div>
+                    }
+                </div>
+            }
         }
         else
         {
-            <div class="td-hero-placeholder">
-                <i class="bi bi-trophy-fill" style="font-size:4rem;"></i>
-                <span style="font-size:.8rem;letter-spacing:.05em;">Chưa có ảnh</span>
+            <div style="background:var(--warm);border:1px solid var(--border);border-radius:12px;height:160px;display:flex;align-items:center;justify-content:center;color:var(--muted);margin-bottom:1rem;">
+                <div style="text-align:center;"><i class="bi bi-trophy" style="font-size:3rem;opacity:.25;"></i><br /><span style="font-size:.8rem;">Chưa có banner</span></div>
             </div>
         }
-    </div>
 
-    <!-- Info strip -->
-    <div class="td-strip">
-        <div>
-            <div style="font-weight:700;font-size:1rem;color:var(--deep);">@Model.TournamentName</div>
-            @if (!string.IsNullOrEmpty(Model.TournamentType))
-            {
-                <div style="font-size:.82rem;color:var(--muted);margin-top:.2rem;">@Model.TournamentType</div>
-            }
-            <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem;">
-                <span class="badge-pill" style="background:@statusBg;color:@statusColor;">@Model.StatusLabel</span>
-                @if (Model.IsFeatured)
-                {
-                    <span class="badge-pill" style="background:rgba(212,160,23,.12);color:#92660a;"><i class="bi bi-star-fill"></i> Nổi bật</span>
-                }
-                @if (Model.IsFull)
-                {
-                    <span class="badge-pill" style="background:rgba(201,75,42,.1);color:#c94b2a;">⊗ Đã đầy</span>
-                }
+        <!-- INFO STRIP -->
+        <div class="td-strip">
+            <div>
+                <div style="font-weight:700;font-size:.96rem;color:var(--deep);">@Model.TournamentName</div>
+                <div class="cd-badges">
+                    <span class="badge-pill" style="background:rgba(0,0,0,.06);color:@currentStatusColor;">
+                        ● @Model.StatusLabel
+                    </span>
+                    @if (!string.IsNullOrEmpty(Model.TournamentType))
+                    {
+                        var typeLabel = Model.TournamentType switch { "Singles" => "🏸 Đơn", "Doubles" => "👫 Đôi", "Mixed" => "🤝 Nam Nữ", "All" => "🏆 Đa Nội Dung", _ => Model.TournamentType };
+                        <span class="badge-pill" style="background:rgba(79,70,229,.08);color:#4f46e5;">@typeLabel</span>
+                    }
+                    @if (Model.IsFeatured)
+                    {
+                        <span class="badge-pill badge-featured">⭐ Nổi bật</span>
+                    }
+                    @if (isFull)
+                    {
+                        <span class="badge-pill" style="background:rgba(201,75,42,.1);color:var(--red);">⊗ Đã đầy</span>
+                    }
+                </div>
             </div>
+            @if (Model.PrizeMoney.HasValue)
+            {
+                <div class="td-prize-block">
+                    <div class="td-prize-label">Tổng Giải Thưởng</div>
+                    <div class="td-prize-val">@Model.PrizeMoney.Value.ToString("N0")đ</div>
+                    @if (Model.EntryFee.HasValue)
+                    {
+                        <div class="td-prize-sub">Phí đăng ký: @Model.EntryFee.Value.ToString("N0")đ</div>
+                    }
+                </div>
+            }
         </div>
-        @if (Model.PrizeMoney.HasValue)
+
+        <!-- NGÀY THÁNG -->
+        @if (Model.StartDate.HasValue || Model.RegistrationDeadline.HasValue)
         {
-            <div style="text-align:right;flex-shrink:0;">
-                <div style="font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem;">Tổng giải thưởng</div>
-                <div class="td-prize-now">@Model.PrizeMoney.Value.ToString("N0")đ</div>
+            <div class="date-timeline">
+                @if (Model.RegistrationDeadline.HasValue)
+                {
+                    <div class="date-card">
+                        <div class="dc-label">Hạn Đăng Ký</div>
+                        <div class="dc-val">@Model.RegistrationDeadline.Value.ToString("dd/MM/yyyy")</div>
+                        <div class="dc-time">@Model.RegistrationDeadline.Value.ToString("HH:mm")</div>
+                    </div>
+                }
+                @if (Model.StartDate.HasValue)
+                {
+                    <div class="date-card">
+                        <div class="dc-label">Bắt Đầu</div>
+                        <div class="dc-val">@Model.StartDate.Value.ToString("dd/MM/yyyy")</div>
+                        <div class="dc-time">@Model.StartDate.Value.ToString("HH:mm")</div>
+                    </div>
+                }
+                @if (Model.EndDate.HasValue)
+                {
+                    <div class="date-card">
+                        <div class="dc-label">Kết Thúc</div>
+                        <div class="dc-val">@Model.EndDate.Value.ToString("dd/MM/yyyy")</div>
+                        <div class="dc-time">@Model.EndDate.Value.ToString("HH:mm")</div>
+                    </div>
+                }
             </div>
         }
-    </div>
 
-    <!-- Progress VĐV -->
-    @if (Model.MaxPlayers.HasValue && Model.MaxPlayers > 0)
-    {
-        <div class="td-progress-wrap">
-            <div class="td-progress-label">
-                <span><i class="bi bi-people me-1" style="color:var(--gold);"></i>Vận động viên đăng ký</span>
-                <span style="font-weight:700;color:var(--deep);">@Model.CurrentPlayers / @Model.MaxPlayers người</span>
+        <!-- ĐỊA ĐIỂM -->
+        @if (!string.IsNullOrEmpty(Model.Venue))
+        {
+            <div class="venue-card">
+                <div class="venue-info">
+                    <div class="v-name"><i class="bi bi-geo-alt-fill me-1" style="color:var(--gold);"></i>@Model.Venue</div>
+                    @if (!string.IsNullOrEmpty(Model.VenueAddress))
+                    {
+                        <div class="v-addr">@Model.VenueAddress</div>
+                    }
+                </div>
+                @if (!string.IsNullOrEmpty(Model.MapUrl))
+                {
+                    <a href="@Model.MapUrl" target="_blank" class="btn-map">
+                        <i class="bi bi-map"></i> Xem bản đồ
+                    </a>
+                }
             </div>
-            <div class="td-progress-bar-bg">
-                <div class="td-progress-bar" style="width:@pct%;background:@pctColor;"></div>
+        }
+
+        <!-- PROGRESS -->
+        @if (Model.MaxPlayers.HasValue && Model.MaxPlayers > 0)
+        {
+            <div class="td-progress">
+                <div class="td-progress-label">
+                    <span><i class="bi bi-people me-1" style="color:var(--gold);"></i>VĐV đăng ký</span>
+                    <span style="font-weight:700;color:var(--deep);">
+                        @Model.CurrentPlayers / @Model.MaxPlayers
+                        @if (isFull)
+                        {
+                            <span style="color:var(--red);"> — Đã đầy</span>
+                        }
+                        else
+                        {
+
+                            <span style="color:var(--muted);"> — Còn @Model.AvailableSlots suất</span>
+                        }
+                    </span>
+                </div>
+                <div class="td-progress-bg">
+                    <div class="td-progress-bar" style="width:@pct%;background:@pctColor;"></div>
+                </div>
             </div>
-            @if (Model.IsFull)
+        }
+
+        <!-- GIẢI THƯỞNG PODIUM -->
+        @if (prizeLines.Any())
+        {
+            <div class="td-section">
+                <div class="td-section-label"><i class="bi bi-trophy-fill"></i>Giải Thưởng</div>
+                <div class="prize-podium">
+                    @{
+                        var medals = new[] { "🥇", "🥈", "🥉" };
+                        var rankCls = new[] { "rank-1", "rank-2", "rank-3" };
+                        for (int i = 0; i < Math.Min(3, prizeLines.Count); i++)
+                        {
+                            var line = prizeLines[i].Replace("🥇 ", "").Replace("🥈 ", "").Replace("🥉 ", "");
+                            var parts = line.Split(" | ");
+                            <div class="prize-card @rankCls[i]">
+                                <div class="p-medal">@medals[i]</div>
+                                <div class="p-money">@(parts.ElementAtOrDefault(0)?.Trim() ?? "—")</div>
+                                @if (parts.Length > 1)
+                                {
+                                    <div class="p-extra">@parts[1].Trim()</div>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- VIDEO -->
+        @if (!string.IsNullOrEmpty(Model.VideoUrl))
+        {
+            var ytM = System.Text.RegularExpressions.Regex.Match(Model.VideoUrl, @"(?:youtube\.com/watch\?v=|youtu\.be/)([^&?#]+)");
+            if (ytM.Success)
             {
-                <div style="font-size:.72rem;color:#c94b2a;margin-top:.3rem;"><i class="bi bi-lock-fill me-1"></i>Giải đấu đã đủ VĐV</div>
+                <div class="td-section">
+                    <div class="td-section-label"><i class="bi bi-play-circle-fill"></i>Video Highlight</div>
+                    <div class="video-embed">
+                        <iframe src="https://www.youtube.com/embed/@ytM.Groups[1].Value" allowfullscreen></iframe>
+                    </div>
+                </div>
             }
-            else
-            {
-                <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem;">Còn <strong style="color:var(--deep);">@Model.AvailableSlots</strong> chỗ trống</div>
-            }
-        </div>
-    }
+        }
 
-    <!-- Grid thông tin -->
-    <div class="td-grid">
-        <div class="td-grid-item">
-            <span class="td-grid-label"><i class="bi bi-calendar-event me-1"></i>Bắt Đầu</span>
-            <span class="td-grid-val">@(Model.StartDate?.ToString("dd/MM/yyyy") ?? "—")</span>
-        </div>
-        <div class="td-grid-item">
-            <span class="td-grid-label"><i class="bi bi-calendar-check me-1"></i>Kết Thúc</span>
-            <span class="td-grid-val">@(Model.EndDate?.ToString("dd/MM/yyyy") ?? "—")</span>
-        </div>
-        <div class="td-grid-item">
-            <span class="td-grid-label"><i class="bi bi-alarm me-1"></i>Hạn Đăng Ký</span>
-            <span class="td-grid-val">@(Model.RegistrationDeadline?.ToString("dd/MM/yyyy") ?? "—")</span>
-        </div>
-        <div class="td-grid-item">
-            <span class="td-grid-label"><i class="bi bi-geo-alt me-1"></i>Địa Điểm</span>
-            <span class="td-grid-val" style="font-size:.84rem;">@(Model.Venue ?? "—")</span>
-        </div>
-        <div class="td-grid-item">
-            <span class="td-grid-label"><i class="bi bi-ticket me-1"></i>Phí Đăng Ký</span>
-            <span class="td-grid-val">@(Model.EntryFee?.ToString("N0") + "đ" ?? "—")</span>
-        </div>
-        <div class="td-grid-item">
-            <span class="td-grid-label"><i class="bi bi-people me-1"></i>VĐV Tối Đa</span>
-            <span class="td-grid-val">@(Model.MaxPlayers?.ToString() ?? "Không giới hạn")</span>
-        </div>
-    </div>
-
-    <!-- Prize description -->
-    @if (!string.IsNullOrEmpty(Model.PrizeDescription))
-    {
-        <div class="td-prize-box">
-            <div class="td-prize-box-label"><i class="bi bi-trophy-fill"></i> Cơ Cấu Giải Thưởng</div>
-            <div style="font-size:.88rem;line-height:1.8;white-space:pre-wrap;">@Model.PrizeDescription</div>
-        </div>
-    }
-
-    <!-- Mô tả -->
-    @if (!string.IsNullOrEmpty(Model.ShortDesc))
-    {
+        <!-- MÔ TẢ -->
+        @if (!string.IsNullOrEmpty(Model.ShortDesc))
+        {
+            <div class="td-section">
+                <div class="td-section-label"><i class="bi bi-chat-quote"></i>Mô Tả Ngắn</div>
+                <div class="td-text" style="color:var(--muted);">@Model.ShortDesc</div>
+            </div>
+        }
         <div class="td-section">
-            <div class="td-section-label"><i class="bi bi-chat-quote"></i> Mô tả ngắn</div>
-            <div class="td-text" style="color:var(--muted);">@Model.ShortDesc</div>
-        </div>
-    }
-    @if (!string.IsNullOrEmpty(Model.Description))
-    {
-        <div class="td-section">
-            <div class="td-section-label"><i class="bi bi-file-text"></i> Mô tả chi tiết</div>
+            <div class="td-section-label"><i class="bi bi-file-text"></i>Mô Tả Chi Tiết</div>
             <div class="td-text">@Model.Description</div>
         </div>
-    }
 
-    <!-- Thể lệ -->
-    @if (!string.IsNullOrEmpty(Model.Rules))
-    {
-        <div class="td-section">
-            <div class="td-section-label"><i class="bi bi-list-check"></i> Thể Lệ Thi Đấu</div>
-            <ul class="td-rules">
-                @foreach (var rule in Model.Rules.Split('\n').Where(r => !string.IsNullOrWhiteSpace(r)))
-                {
-                    <li>
-                        <i class="bi bi-check-circle td-rule-icon"></i>
-                        <span>@rule.Trim().TrimStart('-').Trim()</span>
-                    </li>
-                }
-            </ul>
+        <!-- LỊCH TRÌNH -->
+        @if (!string.IsNullOrEmpty(Model.Schedule))
+        {
+            <div class="td-section">
+                <div class="td-section-label"><i class="bi bi-calendar-week"></i>Lịch Trình Thi Đấu</div>
+                <div class="td-feature-list">
+                    @foreach (var s in Model.Schedule.Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)))
+                    {
+                        <div class="td-feature-item"><i class="bi bi-arrow-right-circle-fill"></i><span>@s.Trim()</span></div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- THỂ LỆ -->
+        @if (!string.IsNullOrEmpty(Model.Rules))
+        {
+            <div class="td-section">
+                <div class="td-section-label"><i class="bi bi-clipboard-check"></i>Thể Lệ Thi Đấu</div>
+                <div class="td-feature-list">
+                    @foreach (var r in Model.Rules.Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)))
+                    {
+                        <div class="td-feature-item"><i class="bi bi-check-circle-fill"></i><span>@r.Trim().TrimStart('-').Trim()</span></div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- NHÀ TÀI TRỢ -->
+        @if (sponsorList.Any())
+        {
+            <div class="td-section">
+                <div class="td-section-label"><i class="bi bi-building"></i>Nhà Tài Trợ</div>
+                <div class="sponsor-chips">
+                    @foreach (var sp in sponsorList)
+                    {
+                        <span class="sponsor-chip">🏢 @sp</span>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="td-meta">
+            <div class="td-meta-item"><i class="bi bi-calendar-plus"></i>Tạo: <strong>@Model.CreatedAt.ToString("dd/MM/yyyy")</strong></div>
+            <div class="td-meta-item"><i class="bi bi-pencil-square"></i>Cập nhật: <strong>@Model.UpdatedAt.ToString("dd/MM/yyyy")</strong></div>
+            <div class="td-meta-item"><i class="bi bi-eye"></i>Lượt xem: <strong>@Model.ViewCount.ToString("N0")</strong></div>
+            <div class="td-meta-item"><i class="bi bi-sort-numeric-down"></i>Thứ tự: <strong>#@Model.DisplayOrder</strong></div>
         </div>
-    }
-
-    <div class="td-meta">
-        <div class="td-meta-item"><i class="bi bi-calendar-plus"></i> Tạo: <strong>@Model.CreatedAt.ToString("dd/MM/yyyy")</strong></div>
-        <div class="td-meta-item"><i class="bi bi-eye"></i> Lượt xem: <strong>@Model.ViewCount.ToString("N0")</strong></div>
-        <div class="td-meta-item"><i class="bi bi-sort-numeric-down"></i> Thứ tự: <strong>#@Model.DisplayOrder</strong></div>
     </div>
-</div>
 
-<!-- FOOTER -->
-<div class="td-footer">
-    <button type="button" class="btn-td-close" data-bs-dismiss="modal">
-        <i class="bi bi-x-circle"></i> Đóng
-    </button>
-    <button type="button" class="btn-td-edit" onclick="openTournamentEdit(@Model.TournamentId)">
-        <i class="bi bi-pencil"></i> Chỉnh Sửa
-    </button>
+    <div class="td-footer">
+        <button type="button" class="btn-td-close" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Đóng</button>
+        <button type="button" class="btn-td-edit" onclick="openTournEditFromDetail(@Model.TournamentId)">
+            <i class="bi bi-pencil"></i> Chỉnh Sửa
+        </button>
+    </div>
 </div>
 
 <script>
-    function openTournamentEdit(id) {
-        var modal = bootstrap.Modal.getInstance(document.getElementById('modalService'));
-        if (modal) modal.hide();
-        setTimeout(function() {
-            if (typeof openModal === 'function') openModal('/AdminService/TournamentEdit/' + id);
-        }, 300);
+    (function(){
+        var UID='@uid';
+        var images=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(allImages));
+        var current=0;
+        function goTo(idx){
+            if(images.length<=1)return;
+            current=(idx+images.length)%images.length;
+            var mi=document.getElementById('mainImgTD-'+UID);
+            if(mi){mi.classList.add('loading');mi.src=images[current];mi.onload=function(){mi.classList.remove('loading');};}
+            document.querySelectorAll('#dotsTD-'+UID+' .gallery-dot').forEach(function(d,i){d.classList.toggle('active',i===current);});
+            var c=document.getElementById('counterTD-'+UID);if(c)c.textContent=(current+1)+' / '+images.length;
+            document.querySelectorAll('#thumbsTD-'+UID+' .thumb-item').forEach(function(t,i){t.classList.toggle('active',i===current);});
+        }
+        var prev=document.getElementById('prevBtnTD-'+UID),next=document.getElementById('nextBtnTD-'+UID);
+        if(prev)prev.addEventListener('click',function(){goTo(current-1);});
+        if(next)next.addEventListener('click',function(){goTo(current+1);});
+        document.querySelectorAll('#dotsTD-'+UID+' .gallery-dot').forEach(function(d){d.addEventListener('click',function(){goTo(parseInt(this.dataset.idx));});});
+        document.querySelectorAll('#thumbsTD-'+UID+' .thumb-item').forEach(function(t){t.addEventListener('click',function(){goTo(parseInt(this.dataset.idx));});});
+    })();
+    function openTournEditFromDetail(id){
+        var modal=bootstrap.Modal.getInstance(document.getElementById('modalService'));
+        if(modal)modal.hide();
+        setTimeout(function(){if(typeof openModal==='function')openModal('/AdminService/TournamentEdit/'+id);},300);
     }
 </script>
