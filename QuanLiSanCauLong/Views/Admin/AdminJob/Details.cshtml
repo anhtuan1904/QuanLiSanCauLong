@@ -1,373 +1,578 @@
 ﻿@model QuanLiSanCauLong.Models.JobPosting
 @{
     Layout = null;
+    var appCount = Model.Applications?.Count ?? 0;
+    var newApps = Model.Applications?.Count(a => a.Status == "New") ?? 0;
+    var shortlist = Model.Applications?.Count(a => a.Status == "Shortlisted" || a.Status == "Interview") ?? 0;
+    var accepted = Model.Applications?.Count(a => a.Status == "Accepted") ?? 0;
 }
 
 <style>
     :root {
-        --court-dark: #1a1a2e;
-        --court-gold: #e8c840;
-        --court-bg: #f5f0e8;
-        --court-border: #e8e0d0;
-        --court-muted: #7a7060;
+        --deep: #1a1209;
+        --deep2: #231a0e;
+        --deep3: #2e2110;
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --gold3: rgba(212,160,23,.1);
+        --warm: #f5ede0;
+        --cream: #fdf8f0;
+        --border: #e8ddd0;
+        --muted: #8a7560;
+        --red: #c94b2a;
+        --green: #15803d;
+        --blue: #1d4ed8;
+        --purple: #7c3aed;
     }
 
-    .modal-header-court {
-        background: var(--court-dark);
+    * {
+        font-family: 'Outfit',sans-serif;
+        box-sizing: border-box;
+    }
+
+    .mh {
+        background: var(--deep2);
         color: #fff;
         border-radius: 16px 16px 0 0;
         padding: 1.25rem 1.5rem;
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
+        align-items: center;
+        border-bottom: 2px solid rgba(212,160,23,.2);
     }
 
-        .modal-header-court h5 {
-            font-weight: 800;
-            font-size: 1.1rem;
-            margin: 0 0 2px;
-            color: #fff;
-        }
-
-        .modal-header-court p {
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.6);
-            margin: 0;
-        }
-
-        .modal-header-court .btn-close {
-            filter: invert(1);
-            opacity: 0.7;
-        }
-
-    .detail-hero {
-        background: var(--court-bg);
-        border: 1px solid var(--court-border);
-        border-radius: 12px;
-        padding: 1.25rem 1.5rem;
-        margin-bottom: 1.25rem;
+    .mh-left {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
     }
 
-    .detail-job-title {
-        font-size: 1.4rem;
+    .mh-ico {
+        width: 36px;
+        height: 36px;
+        background: rgba(212,160,23,.15);
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gold2);
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .mh h5 {
         font-weight: 800;
-        color: var(--court-dark);
-        margin-bottom: 0.5rem;
+        font-size: 1.05rem;
+        margin: 0 0 2px;
     }
 
-    .badge-status {
+    .mh p {
+        font-size: .78rem;
+        color: rgba(255,255,255,.5);
+        margin: 0;
+    }
+
+    .mh .btn-close {
+        filter: invert(1);
+        opacity: .6;
+    }
+
+    .modal-body {
+        background: #fff;
+    }
+
+    /* hero */
+    .hero-box {
+        background: linear-gradient(135deg,var(--deep2),var(--deep3));
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.25rem;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .hero-box::before {
+            content: '🏸';
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 5rem;
+            opacity: .05;
+            pointer-events: none;
+        }
+
+    .hero-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.35rem;
+        font-weight: 800;
+        margin-bottom: .65rem;
+    }
+
+    .hero-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .4rem;
+        margin-bottom: .65rem;
+    }
+
+    .hero-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+        margin-top: .75rem;
+    }
+
+    .hero-chip {
+        background: rgba(255,255,255,.1);
+        border: 1px solid rgba(255,255,255,.15);
+        border-radius: 20px;
+        padding: 3px 12px;
+        font-size: .78rem;
         display: inline-flex;
         align-items: center;
         gap: 4px;
-        padding: 4px 12px;
+    }
+
+        .hero-chip i {
+            color: var(--gold2);
+            opacity: .8;
+            font-size: .7rem;
+        }
+
+    /* badges */
+    .bdg {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 3px 10px;
         border-radius: 20px;
-        font-size: 0.75rem;
+        font-size: .7rem;
         font-weight: 700;
     }
 
-    .badge-open {
-        background: #d4edda;
-        color: #1a6b2e;
+    .bdg-open {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
     }
 
-    .badge-closed {
-        background: #e2e3e5;
-        color: #4a4a5a;
+    .bdg-closed {
+        background: var(--warm);
+        color: var(--muted);
+        border: 1px solid var(--border);
     }
 
-    .badge-filled {
-        background: #cce5ff;
-        color: #1a5fa0;
+    .bdg-filled {
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #bfdbfe;
     }
 
-    .badge-featured {
-        background: #fff3cd;
-        color: #856404;
+    .bdg-draft {
+        background: rgba(212,160,23,.12);
+        color: #92400e;
+        border: 1px solid rgba(212,160,23,.3);
     }
 
-    .detail-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.75rem 1.5rem;
-        margin-top: 1rem;
+    .bdg-feat {
+        background: rgba(212,160,23,.18);
+        color: #92400e;
+        border: 1px solid rgba(212,160,23,.4);
     }
 
-    .detail-item label {
-        font-size: 0.72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--court-muted);
-        display: block;
-        margin-bottom: 2px;
+    .bdg-urgent {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
     }
 
-    .detail-item strong {
-        font-size: 0.9rem;
-        color: var(--court-dark);
-        font-weight: 700;
-    }
-
-    .detail-section {
+    /* apps summary bar */
+    .apps-bar {
+        display: flex;
+        background: var(--warm);
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
         margin-bottom: 1.25rem;
     }
 
-    .detail-section-title {
-        font-size: 0.72rem;
+    .apps-stat {
+        flex: 1;
+        text-align: center;
+        padding: .85rem .5rem;
+        border-right: 1px solid var(--border);
+    }
+
+        .apps-stat:last-child {
+            border-right: none;
+        }
+
+    .apps-num {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.6rem;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--deep);
+    }
+
+    .apps-lbl {
+        font-size: .6rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: var(--muted);
+        margin-top: 3px;
+    }
+
+    /* salary box */
+    .sal-box {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: .75rem 1.1rem;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .sal-green {
+        background: #d1fae5;
+        border: 1.5px solid #6ee7b7;
+        color: #065f46;
+    }
+
+    .sal-amber {
+        background: rgba(212,160,23,.1);
+        border: 1.5px solid rgba(212,160,23,.3);
+        color: #92400e;
+    }
+
+    /* section titles */
+    .sec-title {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .68rem;
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 1px;
-        color: var(--court-dark);
-        padding-bottom: 0.4rem;
-        border-bottom: 2px solid var(--court-gold);
-        margin-bottom: 0.75rem;
-        display: inline-block;
+        color: var(--deep);
+        margin-bottom: .75rem;
     }
 
-    .detail-text {
-        font-size: 0.875rem;
-        color: #4a4a5a;
-        line-height: 1.7;
-        white-space: pre-wrap;
-        background: var(--court-bg);
-        border: 1px solid var(--court-border);
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
-    }
+        .sec-title::after {
+            content: '';
+            flex: 1;
+            height: 1.5px;
+            background: linear-gradient(90deg,rgba(212,160,23,.35),transparent);
+        }
 
-    .salary-box {
-        background: #f0faf3;
-        border: 1.5px solid #86efac;
+    /* content boxes */
+    .content-box {
+        background: var(--warm);
+        border: 1.5px solid var(--border);
         border-radius: 10px;
-        padding: 0.75rem 1rem;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 1rem;
-        font-weight: 800;
-        color: #1a6b2e;
+        padding: .9rem 1rem;
+        font-size: .875rem;
+        color: #4a4a5a;
+        line-height: 1.8;
+        white-space: pre-wrap;
     }
 
-    .contact-grid {
+    /* info grid */
+    .info-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.75rem;
+        grid-template-columns: repeat(3,1fr);
+        gap: .65rem;
     }
 
-    .contact-item {
-        background: var(--court-bg);
-        border: 1px solid var(--court-border);
-        border-radius: 8px;
-        padding: 0.65rem 0.9rem;
+    .info-item {
+        background: var(--warm);
+        border: 1.5px solid var(--border);
+        border-radius: 9px;
+        padding: .65rem .9rem;
     }
 
-        .contact-item label {
-            font-size: 0.7rem;
+        .info-item .lbl {
+            font-size: .67rem;
             font-weight: 700;
             text-transform: uppercase;
-            color: var(--court-muted);
+            letter-spacing: .08em;
+            color: var(--muted);
             display: block;
             margin-bottom: 2px;
         }
 
-        .contact-item strong {
-            font-size: 0.85rem;
-            color: var(--court-dark);
+        .info-item strong {
+            font-size: .875rem;
+            color: var(--deep);
         }
 
-    .meta-bar {
-        background: var(--court-bg);
-        border: 1px solid var(--court-border);
-        border-radius: 8px;
-        padding: 0.65rem 1rem;
+    /* meta row */
+    .meta-row {
+        background: var(--warm);
+        border: 1.5px solid var(--border);
+        border-radius: 9px;
+        padding: .65rem 1rem;
         display: flex;
         gap: 1.5rem;
         flex-wrap: wrap;
-        font-size: 0.8rem;
-        color: var(--court-muted);
+        font-size: .8rem;
+        color: var(--muted);
     }
 
-        .meta-bar strong {
-            color: var(--court-dark);
+        .meta-row strong {
+            color: var(--deep);
         }
 
-    .btn-court-primary {
-        background: var(--court-gold);
-        color: var(--court-dark);
+        .meta-row i {
+            color: var(--gold);
+            opacity: .7;
+        }
+
+    /* footer */
+    .footer-bar {
+        border-top: 1.5px solid var(--border);
+        background: var(--cream);
+        padding: .85rem 1.5rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: .5rem;
+        border-radius: 0 0 16px 16px;
+    }
+
+    .btn-p {
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        color: var(--deep);
         border: none;
         border-radius: 10px;
-        padding: 0.6rem 1.5rem;
+        padding: .62rem 1.5rem;
         font-weight: 800;
-        font-size: 0.875rem;
+        font-size: .875rem;
         display: inline-flex;
         align-items: center;
         gap: 6px;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: .2s;
+        box-shadow: 0 2px 8px rgba(212,160,23,.3);
     }
 
-        .btn-court-primary:hover {
-            background: #d4b320;
+        .btn-p:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 16px rgba(212,160,23,.45);
         }
 
-    .btn-court-secondary {
-        background: var(--court-bg);
-        color: #2d2d2d;
-        border: 1.5px solid var(--court-border);
+    .btn-s {
+        background: var(--warm);
+        color: var(--deep);
+        border: 1.5px solid var(--border);
         border-radius: 10px;
-        padding: 0.6rem 1.5rem;
+        padding: .62rem 1.5rem;
         font-weight: 600;
-        font-size: 0.875rem;
+        font-size: .875rem;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: .2s;
     }
 
-        .btn-court-secondary:hover {
-            background: #ede8de;
+        .btn-s:hover {
+            background: var(--cream);
+            border-color: var(--deep);
+        }
+
+    .btn-outline {
+        background: transparent;
+        color: var(--deep);
+        border: 1.5px solid var(--deep);
+        border-radius: 10px;
+        padding: .62rem 1.5rem;
+        font-weight: 700;
+        font-size: .875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+        .btn-outline:hover {
+            background: var(--deep);
+            color: #fff;
         }
 </style>
 
-<div class="modal-header-court">
-    <div>
-        <h5>Chi Tiết Tin Tuyển Dụng</h5>
-        <p>Xem đầy đủ thông tin vị trí tuyển dụng</p>
+<div class="mh">
+    <div class="mh-left">
+        <div class="mh-ico"><i class="bi bi-eye-fill"></i></div>
+        <div>
+            <h5>Chi Tiết Tin Tuyển Dụng</h5>
+            <p>#@Model.JobId &middot; Đăng ngày @Model.CreatedAt.ToString("dd/MM/yyyy")</p>
+        </div>
     </div>
     <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
 </div>
 
-<div class="modal-body px-4 py-3" style="background:#fff;">
+<div class="modal-body px-4 py-3">
 
-    <!-- Hero Card -->
-    <div class="detail-hero">
-        <div class="detail-job-title">@Model.JobTitle</div>
-        <div class="d-flex flex-wrap gap-2 mb-2">
+    <!-- Hero -->
+    <div class="hero-box">
+        <div class="hero-badges">
             @{
-                string statusClass = Model.Status == "Open" ? "badge-open" : (Model.Status == "Filled" ? "badge-filled" : "badge-closed");
-                string statusText = Model.Status == "Open" ? "● Đang tuyển" : (Model.Status == "Filled" ? "● Đã tuyển đủ" : "● Đã đóng");
+                string sc = Model.Status switch { "Open" => "bdg-open", "Filled" => "bdg-filled", "Draft" => "bdg-draft", _ => "bdg-closed" };
+                string st = Model.Status switch { "Open" => "● Đang tuyển", "Filled" => "● Đã tuyển đủ", "Draft" => "● Nháp", _ => "● Đã đóng" };
             }
-            <span class="badge-status @statusClass">@statusText</span>
+            <span class="bdg @sc">@st</span>
             @if (Model.IsFeatured)
             {
-                <span class="badge-status badge-featured">⭐ Nổi bật</span>
+                <span class="bdg bdg-feat">⭐ Nổi bật</span>
+            }
+            @if (Model.IsUrgent)
+            {
+                <span class="bdg bdg-urgent">🔥 Tuyển gấp</span>
             }
         </div>
-        <div class="detail-grid">
-            <div class="detail-item">
-                <label>Loại hình</label>
-                <strong><i class="bi bi-briefcase me-1"></i>@Model.JobType</strong>
-            </div>
-            <div class="detail-item">
-                <label>Cấp bậc</label>
-                <strong><i class="bi bi-diagram-3 me-1"></i>@Model.Level</strong>
-            </div>
-            <div class="detail-item">
-                <label>Số lượng tuyển</label>
-                <strong><i class="bi bi-people me-1"></i>@Model.VacancyCount vị trí</strong>
-            </div>
-            <div class="detail-item">
-                <label>Địa điểm</label>
-                <strong><i class="bi bi-geo-alt me-1"></i>@Model.Location</strong>
-            </div>
+        <div class="hero-title">@Model.JobTitle</div>
+        <div class="hero-meta">
+            @if (!string.IsNullOrEmpty(Model.Department))
+            {
+                <span class="hero-chip"><i class="bi bi-building"></i>@Model.Department</span>
+            }
+            @if (!string.IsNullOrEmpty(Model.JobType))
+            {
+                <span class="hero-chip"><i class="bi bi-briefcase"></i>@Model.JobType</span>
+            }
+            @if (!string.IsNullOrEmpty(Model.Level))
+            {
+                <span class="hero-chip"><i class="bi bi-diagram-3"></i>@Model.Level</span>
+            }
+            @if (!string.IsNullOrEmpty(Model.Location))
+            {
+                <span class="hero-chip"><i class="bi bi-geo-alt"></i>@Model.Location</span>
+            }
+            <span class="hero-chip"><i class="bi bi-people"></i>@Model.VacancyCount vị trí</span>
+            <span class="hero-chip"><i class="bi bi-eye"></i>@Model.ViewCount.ToString("N0") lượt xem</span>
         </div>
     </div>
 
-    <!-- Salary -->
-    @if (Model.SalaryMin.HasValue || Model.SalaryMax.HasValue)
+    <!-- Apps summary -->
+    <div class="apps-bar">
+        <div class="apps-stat">
+            <div class="apps-num">@appCount</div>
+            <div class="apps-lbl">Tổng hồ sơ</div>
+        </div>
+        <div class="apps-stat">
+            <div class="apps-num" style="color:var(--red);">@newApps</div>
+            <div class="apps-lbl">Chưa xem</div>
+        </div>
+        <div class="apps-stat">
+            <div class="apps-num" style="color:var(--blue);">@shortlist</div>
+            <div class="apps-lbl">Vòng tiếp</div>
+        </div>
+        <div class="apps-stat">
+            <div class="apps-num" style="color:var(--green);">@accepted</div>
+            <div class="apps-lbl">Đã nhận</div>
+        </div>
+    </div>
+
+    <!-- Mức lương -->
+    @if (Model.SalaryType == "Negotiable" || Model.SalaryType == "Competitive" || Model.SalaryMin.HasValue || Model.SalaryMax.HasValue)
     {
-        <div class="detail-section">
-            <span class="detail-section-title">💰 Mức Lương</span>
-            <div class="salary-box mt-2">
-                <i class="bi bi-cash-coin fs-5"></i>
-                @if (Model.SalaryMin.HasValue && Model.SalaryMax.HasValue)
-                {
-                    <span>@Model.SalaryMin.Value.ToString("N0")đ – @Model.SalaryMax.Value.ToString("N0")đ</span>
-                }
-                else if (Model.SalaryMin.HasValue)
-                {
-                    <span>Từ @Model.SalaryMin.Value.ToString("N0")đ</span>
-                }
-                else
-                {
-                    <span>Lên đến @Model.SalaryMax.Value.ToString("N0")đ</span>
-                }
-            </div>
+        <div class="mb-3">
+            <div class="sec-title">💰 Mức Lương</div>
+            @if (Model.SalaryType is "Negotiable" or "Competitive")
+            {
+                <div class="sal-box sal-amber"><i class="bi bi-chat-dots"></i> Thương lượng</div>
+            }
+            else if (Model.SalaryMin.HasValue && Model.SalaryMax.HasValue)
+            {
+                <div class="sal-box sal-green"><i class="bi bi-cash-coin"></i> @Model.SalaryMin.Value.ToString("N0")đ – @Model.SalaryMax.Value.ToString("N0")đ / tháng</div>
+            }
+            else if (Model.SalaryMin.HasValue)
+            {
+                <div class="sal-box sal-green"><i class="bi bi-cash-coin"></i> Từ @Model.SalaryMin.Value.ToString("N0")đ / tháng</div>
+            }
+            else
+            {
+                <div class="sal-box sal-green"><i class="bi bi-cash-coin"></i> Đến @Model.SalaryMax!.Value.ToString("N0")đ / tháng</div>
+            }
         </div>
     }
 
-    <!-- Description -->
-    <div class="detail-section">
-        <span class="detail-section-title">📝 Mô Tả Công Việc</span>
-        <div class="detail-text mt-2">@Model.JobDescription</div>
+    <!-- Mô tả -->
+    <div class="mb-3">
+        <div class="sec-title">📝 Mô Tả Công Việc</div>
+        <div class="content-box">@Model.JobDescription</div>
     </div>
 
-    <!-- Requirements -->
     @if (!string.IsNullOrEmpty(Model.Requirements))
     {
-        <div class="detail-section">
-            <span class="detail-section-title">✅ Yêu Cầu</span>
-            <div class="detail-text mt-2">@Model.Requirements</div>
+        <div class="mb-3">
+            <div class="sec-title">✅ Yêu Cầu Ứng Viên</div>
+            <div class="content-box">@Model.Requirements</div>
         </div>
     }
 
-    <!-- Benefits -->
     @if (!string.IsNullOrEmpty(Model.Benefits))
     {
-        <div class="detail-section">
-            <span class="detail-section-title">🎁 Quyền Lợi</span>
-            <div class="detail-text mt-2">@Model.Benefits</div>
+        <div class="mb-3">
+            <div class="sec-title">🎁 Quyền Lợi</div>
+            <div class="content-box">@Model.Benefits</div>
         </div>
     }
 
-    <!-- Contact -->
-    <div class="detail-section">
-        <span class="detail-section-title">📞 Thông Tin Liên Hệ</span>
-        <div class="contact-grid mt-2">
-            @if (!string.IsNullOrEmpty(Model.ContactPerson))
-            {
-                <div class="contact-item">
-                    <label>Người liên hệ</label>
-                    <strong>@Model.ContactPerson</strong>
-                </div>
-            }
-            @if (!string.IsNullOrEmpty(Model.ContactEmail))
-            {
-                <div class="contact-item">
-                    <label>Email</label>
-                    <strong>@Model.ContactEmail</strong>
-                </div>
-            }
-            @if (!string.IsNullOrEmpty(Model.ContactPhone))
-            {
-                <div class="contact-item">
-                    <label>Điện thoại</label>
-                    <strong>@Model.ContactPhone</strong>
-                </div>
-            }
+    <!-- Liên hệ -->
+    @if (!string.IsNullOrEmpty(Model.ContactPerson) || !string.IsNullOrEmpty(Model.ContactEmail) || !string.IsNullOrEmpty(Model.ContactPhone))
+    {
+        <div class="mb-3">
+            <div class="sec-title">📞 Thông Tin Liên Hệ</div>
+            <div class="info-grid">
+                @if (!string.IsNullOrEmpty(Model.ContactPerson))
+                {
+                    <div class="info-item"><span class="lbl">Người phụ trách</span><strong>@Model.ContactPerson</strong></div>
+                }
+                @if (!string.IsNullOrEmpty(Model.ContactEmail))
+                {
+                    <div class="info-item"><span class="lbl">Email</span><strong>@Model.ContactEmail</strong></div>
+                }
+                @if (!string.IsNullOrEmpty(Model.ContactPhone))
+                {
+                    <div class="info-item"><span class="lbl">Điện thoại</span><strong>@Model.ContactPhone</strong></div>
+                }
+            </div>
         </div>
-    </div>
+    }
 
     <!-- Meta -->
-    <div class="meta-bar">
-        <span><i class="bi bi-calendar-plus me-1"></i>Đăng ngày: <strong>@Model.CreatedAt.ToString("dd/MM/yyyy")</strong></span>
+    <div class="meta-row mb-4">
+        <span><i class="bi bi-calendar-plus"></i> Đăng: <strong>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</strong></span>
+        <span><i class="bi bi-pencil"></i> Cập nhật: <strong>@Model.UpdatedAt.ToString("dd/MM/yyyy")</strong></span>
         @if (Model.Deadline.HasValue)
         {
-            <span><i class="bi bi-calendar-x me-1"></i>Hạn nộp: <strong>@Model.Deadline.Value.ToString("dd/MM/yyyy")</strong></span>
+            <span><i class="bi bi-calendar-x"></i> Hạn nộp: <strong>@Model.Deadline.Value.ToString("dd/MM/yyyy")</strong></span>
         }
-        <span><i class="bi bi-eye me-1"></i>Lượt xem: <strong>@Model.ViewCount.ToString("N0")</strong></span>
     </div>
 
-    <div class="d-flex justify-content-end gap-2 mt-4 pt-3" style="border-top:1px solid #e8e0d0;">
-        <button type="button" class="btn-court-secondary" data-bs-dismiss="modal">Đóng</button>
-        <button type="button" class="btn-court-primary" onclick="openEditFromDetails(@Model.JobId)">
-            <i class="bi bi-pencil-fill"></i> Chỉnh Sửa
+</div>
+
+<div class="footer-bar">
+    <button type="button" class="btn-s" data-bs-dismiss="modal">Đóng</button>
+    @if (appCount > 0)
+    {
+        <button type="button" class="btn-outline"
+                onclick="viewJobApps(@Model.JobId,'@Model.JobTitle');bootstrap.Modal.getInstance(document.getElementById('modalJob')).hide();">
+            <i class="bi bi-file-earmark-person"></i> @appCount Hồ Sơ
         </button>
-    </div>
+    }
+    <button type="button" class="btn-p" onclick="openEditFromDetails(@Model.JobId)">
+        <i class="bi bi-pencil-fill"></i> Chỉnh Sửa
+    </button>
 </div>
 
 <script>
     function openEditFromDetails(id) {
-        const currentModal = bootstrap.Modal.getInstance(document.getElementById('modalJob'));
-        if (currentModal) currentModal.hide();
-        setTimeout(() => { openEditModal(id); }, 300);
+        const m = bootstrap.Modal.getInstance(document.getElementById('modalJob'));
+        if(m) m.hide();
+        setTimeout(() => openEditModal(id), 300);
     }
 </script>

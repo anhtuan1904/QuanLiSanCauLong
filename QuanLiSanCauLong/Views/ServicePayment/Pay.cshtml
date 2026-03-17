@@ -1,0 +1,595 @@
+﻿@{
+    ViewData["Title"] = "Thanh Toán Đơn Đăng Ký";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var order = ViewBag.Order as QuanLiSanCauLong.Models.Order;
+    var enrollment = ViewBag.Enrollment as QuanLiSanCauLong.Models.ServiceEnrollment;
+    var qrUrl = ViewBag.QrUrl as string ?? "";
+    var bankId = ViewBag.BankId as string ?? "";
+    var accountNo = ViewBag.AccountNo as string ?? "";
+    var accountName = ViewBag.AccountName as string ?? "";
+    var amount = (decimal)(ViewBag.Amount ?? 0m);
+    var orderCode = ViewBag.OrderCode as string ?? "";
+    var expiresAt = (DateTime)(ViewBag.ExpiresAt ?? DateTime.Now.AddMinutes(30));
+
+    var serviceName = enrollment?.ServiceType switch
+    {
+        "Course" => enrollment.Course?.CourseName,
+        "Stringing" => enrollment.StringingService?.ServiceName,
+        "Tournament" => enrollment.Tournament?.TournamentName,
+        _ => "Dịch vụ"
+    } ?? "Dịch vụ";
+
+    var serviceIcon = enrollment?.ServiceType switch
+    {
+        "Course" => "bi-mortarboard-fill",
+        "Stringing" => "bi-tools",
+        "Tournament" => "bi-trophy-fill",
+        _ => "bi-star-fill"
+    };
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --gold: #d4a017;
+        --gold2: #f5c842;
+        --deep: #1a1209;
+        --cream: #fdf8f0;
+        --warm: #f5efe0;
+        --muted: #8a7560;
+        --border: #e8ddc8;
+        --green: #16a34a;
+        --red: #dc2626;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Outfit',sans-serif;
+        background: var(--cream);
+        color: var(--deep);
+    }
+
+    .pay-page {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+    }
+
+    .pay-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 40px rgba(26,18,9,.08);
+        width: 100%;
+        max-width: 560px;
+        overflow: hidden;
+    }
+
+    /* HEADER */
+    .pay-header {
+        background: var(--deep);
+        padding: 1.75rem 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .pay-header-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgba(212,160,23,.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gold);
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+
+    .pay-header-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .pay-header-sub {
+        font-size: .8rem;
+        color: rgba(255,255,255,.5);
+        margin-top: .15rem;
+    }
+
+    /* COUNTDOWN */
+    .pay-countdown {
+        background: rgba(212,160,23,.1);
+        border-bottom: 1px solid rgba(212,160,23,.2);
+        padding: .75rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .pay-countdown-label {
+        font-size: .75rem;
+        color: var(--muted);
+    }
+
+    .pay-countdown-time {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--gold);
+    }
+
+        .pay-countdown-time.urgent {
+            color: var(--red);
+            animation: blink .8s step-start infinite;
+        }
+
+    @@keyframes blink {
+        50% {
+            opacity: .4;
+        }
+    }
+
+    /* BODY */
+    .pay-body {
+        padding: 2rem;
+    }
+
+    /* QR SECTION */
+    .qr-section {
+        text-align: center;
+        margin-bottom: 1.75rem;
+    }
+
+    .qr-img-wrap {
+        display: inline-block;
+        padding: .75rem;
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        background: #fff;
+        margin-bottom: .85rem;
+        position: relative;
+    }
+
+        .qr-img-wrap img {
+            width: 200px;
+            height: 200px;
+            display: block;
+        }
+
+    .qr-paid-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(22,163,74,.92);
+        border-radius: 10px;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        gap: .5rem;
+    }
+
+        .qr-paid-overlay.show {
+            display: flex;
+        }
+
+    .qr-bank-label {
+        font-size: .72rem;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: .25rem;
+    }
+
+    .qr-bank-name {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--deep);
+    }
+
+    .qr-scan-hint {
+        font-size: .8rem;
+        color: var(--muted);
+    }
+
+    /* AMOUNT */
+    .pay-amount-box {
+        background: var(--warm);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .pay-amount-label {
+        font-size: .7rem;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--muted);
+    }
+
+    .pay-amount-val {
+        font-family: 'Playfair Display',serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--gold);
+        line-height: 1;
+    }
+
+    /* TRANSFER INFO */
+    .pay-info-list {
+        display: flex;
+        flex-direction: column;
+        gap: .6rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .pay-info-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: .5rem;
+        padding: .65rem .9rem;
+        background: var(--warm);
+        border-radius: 7px;
+    }
+
+    .pay-info-key {
+        font-size: .72rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        flex-shrink: 0;
+    }
+
+    .pay-info-val {
+        font-size: .88rem;
+        font-weight: 700;
+        color: var(--deep);
+        text-align: right;
+        word-break: break-all;
+    }
+
+        .pay-info-val.important {
+            color: var(--gold);
+            font-size: 1rem;
+        }
+
+    .copy-btn {
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: .2rem .55rem;
+        cursor: pointer;
+        font-size: .7rem;
+        color: var(--muted);
+        transition: all .2s;
+        flex-shrink: 0;
+        margin-left: .4rem;
+        white-space: nowrap;
+    }
+
+        .copy-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .copy-btn.copied {
+            background: var(--green);
+            border-color: var(--green);
+            color: #fff;
+        }
+
+    /* STATUS BANNER */
+    .pay-status {
+        border-radius: 8px;
+        padding: .9rem 1.1rem;
+        font-size: .86rem;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        margin-bottom: 1.5rem;
+    }
+
+        .pay-status.pending {
+            background: #fef9c3;
+            border: 1px solid #fde047;
+            color: #854d0e;
+        }
+
+        .pay-status.paid {
+            background: #dcfce7;
+            border: 1px solid #86efac;
+            color: var(--green);
+        }
+
+        .pay-status.loading {
+            background: var(--warm);
+            border: 1px solid var(--border);
+            color: var(--muted);
+        }
+
+    .spin-sm {
+        width: 16px;
+        height: 16px;
+        border: 2px solid currentColor;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spn .7s linear infinite;
+        flex-shrink: 0;
+    }
+
+    @@keyframes spn {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* ACTIONS */
+    .pay-actions {
+        display: flex;
+        gap: .75rem;
+    }
+
+    .btn-cancel {
+        flex: 1;
+        padding: .75rem;
+        border: 1.5px solid var(--border);
+        background: #fff;
+        border-radius: 8px;
+        font-size: .84rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--muted);
+        transition: all .2s;
+        font-family: 'Outfit',sans-serif;
+    }
+
+        .btn-cancel:hover {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+    .btn-done {
+        flex: 2;
+        padding: .75rem;
+        background: linear-gradient(135deg,var(--gold),var(--gold2));
+        border: none;
+        border-radius: 8px;
+        font-size: .86rem;
+        font-weight: 700;
+        cursor: pointer;
+        color: var(--deep);
+        transition: all .2s;
+        font-family: 'Outfit',sans-serif;
+        display: none;
+    }
+
+        .btn-done:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 16px rgba(212,160,23,.35);
+        }
+
+        .btn-done.show {
+            display: block;
+        }
+
+    /* DIVIDER */
+    .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 1.25rem 0;
+    }
+
+    /* NOTE */
+    .pay-note {
+        font-size: .76rem;
+        color: var(--muted);
+        line-height: 1.6;
+    }
+
+        .pay-note strong {
+            color: var(--deep);
+        }
+</style>
+
+<div class="pay-page">
+    <div class="pay-card">
+
+        <!-- Header -->
+        <div class="pay-header">
+            <div class="pay-header-icon"><i class="bi @serviceIcon"></i></div>
+            <div>
+                <div class="pay-header-title">Thanh Toán Đăng Ký</div>
+                <div class="pay-header-sub">@serviceName</div>
+            </div>
+        </div>
+
+        <!-- Countdown -->
+        <div class="pay-countdown">
+            <span class="pay-countdown-label"><i class="bi bi-clock me-1"></i>Đơn hết hạn sau</span>
+            <span class="pay-countdown-time" id="countdownTimer">30:00</span>
+        </div>
+
+        <div class="pay-body">
+
+            <!-- QR Code -->
+            <div class="qr-section">
+                <div class="qr-img-wrap">
+                    <img src="@qrUrl" alt="QR Thanh Toán" id="qrImage" onerror="this.src='/img/qr-fallback.png'" />
+                    <div class="qr-paid-overlay" id="qrPaidOverlay">
+                        <i class="bi bi-check-circle-fill" style="font-size:2.5rem;"></i>
+                        <div style="font-weight:700;font-size:1rem;">Đã thanh toán!</div>
+                    </div>
+                </div>
+                <div class="qr-bank-label">Ngân hàng nhận tiền</div>
+                <div class="qr-bank-name"><i class="bi bi-bank me-1"></i>@bankId</div>
+                <div class="qr-scan-hint" style="margin-top:.3rem;">Quét mã bằng app ngân hàng hoặc ví điện tử</div>
+            </div>
+
+            <!-- Số tiền -->
+            <div class="pay-amount-box">
+                <div>
+                    <div class="pay-amount-label">Số tiền cần chuyển</div>
+                    <div class="pay-amount-val">@amount.ToString("N0")đ</div>
+                </div>
+                <i class="bi bi-cash-coin" style="font-size:2rem;color:var(--gold);opacity:.4;"></i>
+            </div>
+
+            <!-- Thông tin chuyển khoản -->
+            <div class="pay-info-list">
+                <div class="pay-info-row">
+                    <span class="pay-info-key">Ngân hàng</span>
+                    <span class="pay-info-val">@bankId</span>
+                </div>
+                <div class="pay-info-row">
+                    <span class="pay-info-key">Số tài khoản</span>
+                    <div style="display:flex;align-items:center;gap:.3rem;">
+                        <span class="pay-info-val important" id="accNo">@accountNo</span>
+                        <button class="copy-btn" onclick="copyText('accNo',this)"><i class="bi bi-copy"></i></button>
+                    </div>
+                </div>
+                <div class="pay-info-row">
+                    <span class="pay-info-key">Tên tài khoản</span>
+                    <span class="pay-info-val">@accountName</span>
+                </div>
+                <div class="pay-info-row" style="background:rgba(212,160,23,.08);border:1px solid rgba(212,160,23,.2);">
+                    <span class="pay-info-key" style="color:var(--gold);">Nội dung CK <span style="color:var(--red);">*</span></span>
+                    <div style="display:flex;align-items:center;gap:.3rem;">
+                        <span class="pay-info-val important" id="ckContent">@orderCode</span>
+                        <button class="copy-btn" onclick="copyText('ckContent',this)"><i class="bi bi-copy"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trạng thái -->
+            <div class="pay-status pending" id="payStatus">
+                <div class="spin-sm" id="spinIcon"></div>
+                <span id="statusText">Đang chờ thanh toán — hệ thống tự động xác nhận...</span>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Ghi chú -->
+            <div class="pay-note">
+                <strong>⚠️ Lưu ý quan trọng:</strong> Vui lòng nhập <strong>đúng nội dung chuyển khoản "@orderCode"</strong>
+                để hệ thống tự xác nhận. Sau khi chuyển thành công, trang sẽ tự cập nhật trong vài giây.
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Actions -->
+            <div class="pay-actions">
+                <button class="btn-cancel" onclick="cancelOrder()">
+                    <i class="bi bi-x-circle me-1"></i> Hủy đơn
+                </button>
+                <button class="btn-done show" id="btnDone" style="display:none;"
+                        onclick="location.href='/ServicePayment/Success/@order?.OrderId'">
+                    <i class="bi bi-check-circle me-1"></i> Xem hóa đơn
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function(){
+            var orderId  = @(order?.OrderId ?? 0);
+            var expireMs = new Date('@expiresAt.ToString("o")').getTime();
+            var pollInterval = null;
+            var paid = false;
+
+            // ── COUNTDOWN ──────────────────────────────────────────────────
+            function updateCountdown(){
+                var left = expireMs - Date.now();
+                if(left <= 0){
+                    document.getElementById('countdownTimer').textContent = '00:00';
+                    if(!paid) showExpired();
+                    return;
+                }
+                var m = Math.floor(left/60000), s = Math.floor((left%60000)/1000);
+                var txt = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+                var el = document.getElementById('countdownTimer');
+                el.textContent = txt;
+                el.className = 'pay-countdown-time'+(left < 180000 ? ' urgent' : '');
+            }
+            setInterval(updateCountdown, 1000);
+            updateCountdown();
+
+            // ── POLLING ─────────────────────────────────────────────────────
+            function startPolling(){
+                pollInterval = setInterval(checkStatus, 4000); // kiểm tra mỗi 4 giây
+            }
+            function stopPolling(){ if(pollInterval) clearInterval(pollInterval); }
+
+            function checkStatus(){
+                if(paid) return;
+                fetch('/ServicePayment/Status/'+orderId)
+                    .then(function(r){return r.json();})
+                    .then(function(data){
+                        if(data.paid){
+                            stopPolling();
+                            paid = true;
+                            showPaid();
+                        }
+                    })
+                    .catch(function(){/* silent fail — keep polling */});
+            }
+            startPolling();
+
+            // ── PAID UI ──────────────────────────────────────────────────────
+            function showPaid(){
+                // QR overlay
+                document.getElementById('qrPaidOverlay').classList.add('show');
+                // Status banner
+                var st = document.getElementById('payStatus');
+                st.className = 'pay-status paid';
+                st.innerHTML = '<i class="bi bi-check-circle-fill"></i> <strong>Thanh toán thành công!</strong> Đang chuyển đến hóa đơn...';
+                // Buttons
+                document.getElementById('btnDone').style.display = 'block';
+                // Auto redirect sau 3s
+                setTimeout(function(){
+                    window.location.href = '/ServicePayment/Success/'+orderId;
+                }, 3000);
+            }
+
+            function showExpired(){
+                var st = document.getElementById('payStatus');
+                st.className = 'pay-status pending';
+                st.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i> Đơn hàng đã hết hạn. Vui lòng đặt lại.';
+                stopPolling();
+            }
+
+            // ── COPY ──────────────────────────────────────────────────────────
+            window.copyText = function(elId, btn){
+                var text = document.getElementById(elId).textContent.trim();
+                navigator.clipboard.writeText(text).then(function(){
+                    btn.classList.add('copied');
+                    btn.innerHTML = '<i class="bi bi-check2"></i>';
+                    setTimeout(function(){ btn.classList.remove('copied'); btn.innerHTML='<i class="bi bi-copy"></i>'; }, 2000);
+                });
+            };
+
+            // ── CANCEL ────────────────────────────────────────────────────────
+            window.cancelOrder = function(){
+                if(!confirm('Bạn có chắc muốn hủy đơn đăng ký này không?')) return;
+                window.location.href = '/ServicePayment/Cancel/'+orderId;
+            };
+        })();
+    </script>
+}

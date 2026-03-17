@@ -1,0 +1,706 @@
+﻿@* Views/Job/Detail.cshtml – Chi tiết tin + Form ứng tuyển (trang công khai) *@
+@model QuanLiSanCauLong.Models.JobPosting
+@{
+    ViewData["Title"] = "Ứng tuyển – " + Model.JobTitle;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    bool expired = Model.Deadline.HasValue && Model.Deadline.Value.Date < DateTime.Today;
+}
+
+<style>
+    :root {
+        --dark: #1a1a2e;
+        --gold: #e8c840;
+        --gold-h: #d4b320;
+        --bg: #f4f6f9;
+        --border: #e4e7ec;
+        --muted: #667085;
+        --text: #1d2739;
+        --green: #12b76a;
+    }
+
+    .job-wrap {
+        max-width: 960px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    /* Job Header Card */
+    .job-head {
+        background: var(--dark);
+        border-radius: 16px;
+        padding: 2rem;
+        color: #fff;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .job-head::before {
+            content: '🏸';
+            position: absolute;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 6rem;
+            opacity: .06;
+        }
+
+    .job-head-title {
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin-bottom: .5rem;
+    }
+
+    .job-head-sub {
+        color: rgba(255,255,255,.7);
+        font-size: .9rem;
+        margin-bottom: 1rem;
+    }
+
+    .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: .75rem;
+        font-weight: 700;
+    }
+
+    .tag-open {
+        background: rgba(18,183,106,.2);
+        color: #6ce9a6;
+        border: 1px solid rgba(18,183,106,.3);
+    }
+
+    .tag-urgent {
+        background: rgba(240,68,56,.25);
+        color: #fda29b;
+        border: 1px solid rgba(240,68,56,.3);
+    }
+
+    .tag-feat {
+        background: rgba(232,200,64,.2);
+        color: var(--gold);
+        border: 1px solid rgba(232,200,64,.3);
+    }
+
+    .job-meta-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .6rem;
+        margin-top: 1rem;
+    }
+
+    .jmp {
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.15);
+        border-radius: 8px;
+        padding: .35rem .8rem;
+        font-size: .82rem;
+        color: rgba(255,255,255,.85);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .salary-hero {
+        background: rgba(18,183,106,.15);
+        border: 1px solid rgba(18,183,106,.3);
+        border-radius: 10px;
+        padding: .7rem 1.1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #6ce9a6;
+        margin-top: .75rem;
+    }
+
+    /* Two-col layout */
+    .layout {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 1.5rem;
+        align-items: start;
+    }
+    @@media(max - width:768px) {
+        .layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Content sections */
+    .section-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1.5rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .sec {
+        font-size: .72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--dark);
+        padding-bottom: .35rem;
+        border-bottom: 2.5px solid var(--gold);
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+
+    .prose {
+        font-size: .9rem;
+        color: #4a4a5a;
+        line-height: 1.8;
+        white-space: pre-wrap;
+    }
+
+    /* Apply Form Card */
+    .apply-card {
+        background: #fff;
+        border: 2px solid var(--gold);
+        border-radius: 16px;
+        padding: 1.5rem;
+        position: sticky;
+        top: 1rem;
+        box-shadow: 0 8px 32px rgba(232,200,64,.15);
+    }
+
+    .apply-card-title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--dark);
+        margin-bottom: 1.25rem;
+        padding-bottom: .75rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .fl {
+        font-size: .75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: var(--muted);
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .fi, .fs, .ft {
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg);
+        color: var(--text);
+        font-size: .875rem;
+        padding: .5rem .75rem;
+        width: 100%;
+        transition: .2s;
+    }
+
+        .fi:focus, .fs:focus, .ft:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(232,200,64,.18);
+        }
+
+    .ft {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .step-label {
+        background: var(--gold);
+        color: var(--dark);
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .7rem;
+        font-weight: 800;
+        margin-right: 6px;
+        flex-shrink: 0;
+    }
+
+    .step-title {
+        font-size: .78rem;
+        font-weight: 800;
+        color: var(--dark);
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        margin: 1rem 0 .6rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .btn-apply {
+        width: 100%;
+        background: var(--gold);
+        color: var(--dark);
+        border: none;
+        border-radius: 10px;
+        padding: .85rem;
+        font-weight: 800;
+        font-size: .95rem;
+        cursor: pointer;
+        transition: .2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        margin-top: .75rem;
+    }
+
+        .btn-apply:hover {
+            background: var(--gold-h);
+            box-shadow: 0 4px 16px rgba(232,200,64,.5);
+            transform: translateY(-1px);
+        }
+
+        .btn-apply:disabled {
+            background: #e4e7ec;
+            color: var(--muted);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+    .file-drop {
+        border: 2px dashed var(--border);
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: .2s;
+        background: var(--bg);
+    }
+
+        .file-drop:hover {
+            border-color: var(--gold);
+            background: #fffdf0;
+        }
+
+        .file-drop input {
+            display: none;
+        }
+
+        .file-drop i {
+            font-size: 1.5rem;
+            color: var(--muted);
+        }
+
+        .file-drop p {
+            font-size: .78rem;
+            color: var(--muted);
+            margin: 4px 0 0;
+        }
+
+    .file-name {
+        font-size: .78rem;
+        color: var(--green);
+        font-weight: 600;
+        margin-top: 4px;
+        display: none;
+    }
+
+    .tip {
+        font-size: .7rem;
+        color: var(--muted);
+        margin-top: 3px;
+    }
+
+    .required-note {
+        font-size: .72rem;
+        color: var(--muted);
+        margin-bottom: .75rem;
+    }
+
+    /* Success banner */
+    .success-banner {
+        background: #ecfdf3;
+        border: 1px solid #6ce9a6;
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        margin-bottom: 1.25rem;
+    }
+
+        .success-banner i {
+            font-size: 1.25rem;
+            color: var(--green);
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .success-banner h6 {
+            font-weight: 800;
+            color: #027a48;
+            margin: 0 0 2px;
+        }
+
+        .success-banner p {
+            font-size: .82rem;
+            color: #065f46;
+            margin: 0;
+        }
+
+    /* Expired notice */
+    .expired-box {
+        background: #fee4e2;
+        border: 1px solid #fda29b;
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        text-align: center;
+    }
+
+        .expired-box i {
+            font-size: 1.5rem;
+            color: #f04438;
+        }
+
+        .expired-box p {
+            color: #b42318;
+            font-weight: 600;
+            font-size: .875rem;
+            margin: .5rem 0 0;
+        }
+</style>
+
+<div class="job-wrap">
+
+    @if (TempData["ApplySuccess"] != null)
+    {
+        <div class="success-banner">
+            <i class="bi bi-check-circle-fill"></i>
+            <div>
+                <h6>Nộp hồ sơ thành công!</h6>
+                <p>@TempData["ApplySuccess"]</p>
+            </div>
+        </div>
+    }
+
+    <!-- Job Header -->
+    <div class="job-head">
+        <div class="d-flex flex-wrap gap-2 mb-2">
+            <span class="tag tag-open">● Đang tuyển</span>
+            @if (Model.IsFeatured)
+            {
+                <span class="tag tag-feat">⭐ Nổi bật</span>
+            }
+            @if (Model.IsUrgent)
+            {
+                <span class="tag tag-urgent">🔥 Tuyển gấp</span>
+            }
+        </div>
+        <div class="job-head-title">@Model.JobTitle</div>
+        <div class="job-head-sub">
+            @if (!string.IsNullOrEmpty(Model.Department))
+            {
+                <span>@Model.Department</span>
+            }
+            @if (!string.IsNullOrEmpty(Model.Location))
+            {
+                <span class="ms-2"><i class="bi bi-geo-alt me-1"></i>@Model.Location</span>
+            }
+        </div>
+        <div class="job-meta-pills">
+            @if (!string.IsNullOrEmpty(Model.JobType))
+            {
+                <span class="jmp"><i class="bi bi-briefcase"></i>@Model.JobType</span>
+            }
+            @if (!string.IsNullOrEmpty(Model.Level))
+            {
+                <span class="jmp"><i class="bi bi-diagram-3"></i>@Model.Level</span>
+            }
+            <span class="jmp"><i class="bi bi-people"></i>@Model.VacancyCount vị trí</span>
+            @if (Model.Deadline.HasValue)
+            {
+                <span class="jmp"><i class="bi bi-calendar-x"></i>Hạn: @Model.Deadline.Value.ToString("dd/MM/yyyy")</span>
+            }
+        </div>
+        @if (Model.SalaryMin.HasValue || Model.SalaryMax.HasValue || Model.SalaryType != "Fixed")
+        {
+            <div class="salary-hero">
+                <i class="bi bi-cash-coin"></i>
+                @if (Model.SalaryType == "Negotiable")
+                {
+                    <span>Lương thương lượng</span>
+                }
+                else if (Model.SalaryType == "Competitive")
+                {
+
+                    <span>Lương cạnh tranh</span>
+                }
+                else if (Model.SalaryMin.HasValue && Model.SalaryMax.HasValue)
+                {
+
+                    <span>@Model.SalaryMin.Value.ToString("N0")đ – @Model.SalaryMax.Value.ToString("N0")đ</span>
+                }
+                else if (Model.SalaryMin.HasValue)
+                {
+
+                    <span>Từ @Model.SalaryMin.Value.ToString("N0")đ</span>
+                }
+                else
+                {
+
+                    <span>Đến @Model.SalaryMax!.Value.ToString("N0")đ</span>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="layout">
+        <!-- Left: Job Info -->
+        <div>
+            <div class="section-card">
+                <span class="sec">📝 Mô Tả Công Việc</span>
+                <div class="prose">@Model.JobDescription</div>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.Requirements))
+            {
+                <div class="section-card">
+                    <span class="sec">✅ Yêu Cầu Ứng Viên</span>
+                    <div class="prose">@Model.Requirements</div>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.Benefits))
+            {
+                <div class="section-card">
+                    <span class="sec">🎁 Quyền Lợi</span>
+                    <div class="prose">@Model.Benefits</div>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.ContactEmail) || !string.IsNullOrEmpty(Model.ContactPhone))
+            {
+                <div class="section-card">
+                    <span class="sec">📞 Liên Hệ</span>
+                    <div class="row g-2 mt-1">
+                        @if (!string.IsNullOrEmpty(Model.ContactPerson))
+                        {
+                            <div class="col-auto"><span style="font-size:.875rem;"><i class="bi bi-person me-1 text-muted"></i>@Model.ContactPerson</span></div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.ContactEmail))
+                        {
+                            <div class="col-auto"><a href="mailto:@Model.ContactEmail" style="font-size:.875rem;color:var(--dark);"><i class="bi bi-envelope me-1 text-muted"></i>@Model.ContactEmail</a></div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.ContactPhone))
+                        {
+                            <div class="col-auto"><a href="tel:@Model.ContactPhone" style="font-size:.875rem;color:var(--dark);"><i class="bi bi-telephone me-1 text-muted"></i>@Model.ContactPhone</a></div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Right: Apply Form -->
+        <div>
+            <div class="apply-card">
+                @if (expired)
+                {
+                    <div class="expired-box">
+                        <i class="bi bi-calendar-x-fill"></i>
+                        <p>Tin tuyển dụng này đã hết hạn nộp hồ sơ</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="apply-card-title">
+                        <i class="bi bi-send-fill me-2" style="color:var(--gold);"></i>Nộp Hồ Sơ Ứng Tuyển
+                    </div>
+                    <p class="required-note"><span class="text-danger">*</span> Trường bắt buộc</p>
+
+                    <form asp-controller="Job" asp-action="Apply" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="JobId" value="@Model.JobId" />
+                        <div class="row g-2">
+
+                            <!-- STEP 1: Cá nhân -->
+                            <div class="col-12">
+                                <div class="step-title">
+                                    <span class="step-label">1</span> Thông Tin Cá Nhân
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="fl">Họ và tên <span class="text-danger">*</span></label>
+                                <input name="FullName" class="fi" placeholder="Nguyễn Văn A" required />
+                            </div>
+                            <div class="col-12">
+                                <label class="fl">Email <span class="text-danger">*</span></label>
+                                <input name="Email" type="email" class="fi" placeholder="email@example.com" required />
+                            </div>
+                            <div class="col-12">
+                                <label class="fl">Số điện thoại <span class="text-danger">*</span></label>
+                                <input name="Phone" class="fi" placeholder="0912 345 678" required />
+                            </div>
+                            <div class="col-6">
+                                <label class="fl">Ngày sinh</label>
+                                <input name="DateOfBirth" type="date" class="fi" max="@DateTime.Today.AddYears(-16).ToString("yyyy-MM-dd")" />
+                            </div>
+                            <div class="col-6">
+                                <label class="fl">Giới tính</label>
+                                <select name="Gender" class="fs">
+                                    <option value="">-- Chọn --</option>
+                                    <option>Nam</option>
+                                    <option>Nữ</option>
+                                    <option>Khác</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="fl">Địa chỉ / Thành phố</label>
+                                <input name="City" class="fi" placeholder="TP.HCM, Hà Nội..." />
+                            </div>
+
+                            <!-- STEP 2: Học vấn -->
+                            <div class="col-12">
+                                <div class="step-title"><span class="step-label">2</span> Học Vấn</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="fl">Trình độ học vấn</label>
+                                <select name="EducationLevel" class="fs">
+                                    <option value="">-- Chọn --</option>
+                                    <option>THPT</option>
+                                    <option>Cao đẳng</option>
+                                    <option>Đại học</option>
+                                    <option>Thạc sĩ</option>
+                                    <option>Tiến sĩ</option>
+                                    <option>Khác</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="fl">Trường học</label>
+                                <input name="University" class="fi" placeholder="Tên trường đại học / cao đẳng" />
+                            </div>
+                            <div class="col-8">
+                                <label class="fl">Chuyên ngành</label>
+                                <input name="Major" class="fi" placeholder="VD: Quản trị kinh doanh" />
+                            </div>
+                            <div class="col-4">
+                                <label class="fl">Năm tốt nghiệp</label>
+                                <input name="GraduationYear" type="number" class="fi" placeholder="2022" min="1990" max="2030" />
+                            </div>
+
+                            <!-- STEP 3: Kinh nghiệm -->
+                            <div class="col-12">
+                                <div class="step-title"><span class="step-label">3</span> Kinh Nghiệm</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="fl">Năm kinh nghiệm</label>
+                                <select name="YearsOfExperience" class="fs">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="0">Chưa có kinh nghiệm</option>
+                                    <option value="1">Dưới 1 năm</option>
+                                    <option value="2">1–2 năm</option>
+                                    <option value="3">2–3 năm</option>
+                                    <option value="5">3–5 năm</option>
+                                    <option value="7">5–7 năm</option>
+                                    <option value="10">7–10 năm</option>
+                                    <option value="11">Trên 10 năm</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="fl">Vị trí hiện tại</label>
+                                <input name="CurrentPosition" class="fi" placeholder="VD: Nhân viên..." />
+                            </div>
+                            <div class="col-12">
+                                <label class="fl">Công ty hiện tại (nếu có)</label>
+                                <input name="CurrentCompany" class="fi" placeholder="Tên công ty" />
+                            </div>
+
+                            <!-- STEP 4: Kỹ năng -->
+                            <div class="col-12">
+                                <div class="step-title"><span class="step-label">4</span> Kỹ Năng & Chứng Chỉ</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="fl">Kỹ năng chuyên môn</label>
+                                <textarea name="TechnicalSkills" class="ft" rows="2"
+                                      placeholder="VD: Microsoft Office, quản lý vận hành, chăm sóc khách hàng..."></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="fl">Ngoại ngữ</label>
+                                <input name="Languages" class="fi" placeholder="VD: Tiếng Anh – Giao tiếp tốt, Tiếng Nhật – Cơ bản" />
+                            </div>
+                            <div class="col-12">
+                                <label class="fl">Chứng chỉ / Giải thưởng</label>
+                                <input name="Certificates" class="fi" placeholder="VD: TOEIC 700, chứng chỉ nghiệp vụ..." />
+                            </div>
+
+                            <!-- STEP 5: Hồ sơ & Kỳ vọng -->
+                            <div class="col-12">
+                                <div class="step-title"><span class="step-label">5</span> Hồ Sơ & Kỳ Vọng</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="fl">Tải CV <span class="text-danger">*</span></label>
+                                <div class="file-drop" onclick="document.getElementById('cvFile').click()">
+                                    <input type="file" id="cvFile" name="cvFile" accept=".pdf,.doc,.docx" required onchange="showFileName(this)" />
+                                    <i class="bi bi-cloud-upload"></i>
+                                    <p>Click để tải CV lên</p>
+                                    <p>PDF, DOC, DOCX – tối đa 5MB</p>
+                                    <div class="file-name" id="fileNameDisplay"></div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="fl">Link Portfolio / GitHub</label>
+                                <input name="PortfolioUrl" type="url" class="fi" placeholder="https://" />
+                            </div>
+                            <div class="col-12">
+                                <label class="fl">LinkedIn</label>
+                                <input name="LinkedInUrl" type="url" class="fi" placeholder="https://linkedin.com/in/..." />
+                            </div>
+                            <div class="col-8">
+                                <label class="fl">Mức lương kỳ vọng (VNĐ)</label>
+                                <input name="ExpectedSalary" type="number" class="fi" placeholder="VD: 12000000" step="500000" />
+                            </div>
+                            <div class="col-4">
+                                <label class="fl">Có thể bắt đầu</label>
+                                <input name="AvailableDate" type="date" class="fi" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                            </div>
+                            <div class="col-12">
+                                <label class="fl">Biết đến tin từ đâu?</label>
+                                <select name="ReferralSource" class="fs">
+                                    <option value="">-- Chọn --</option>
+                                    <option>Website công ty</option>
+                                    <option>Facebook</option>
+                                    <option>LinkedIn</option>
+                                    <option>Người quen giới thiệu</option>
+                                    <option>Tìm kiếm Google</option>
+                                    <option>Khác</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="fl">Thư xin việc / Giới thiệu bản thân</label>
+                                <textarea name="CoverLetter" class="ft" rows="4"
+                                      placeholder="Giới thiệu ngắn gọn về bản thân, lý do ứng tuyển và điểm mạnh phù hợp với vị trí này..."></textarea>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-apply">
+                            <i class="bi bi-send-fill"></i> Nộp Hồ Sơ Ứng Tuyển
+                        </button>
+                        <div class="tip text-center mt-2">
+                            <i class="bi bi-shield-check me-1"></i>
+                            Thông tin của bạn được bảo mật tuyệt đối
+                        </div>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showFileName(input) {
+        const disp = document.getElementById('fileNameDisplay');
+        if (input.files && input.files[0]) {
+            disp.textContent = '✓ ' + input.files[0].name;
+            disp.style.display = 'block';
+        }
+    }
+</script>

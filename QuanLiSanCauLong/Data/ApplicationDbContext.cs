@@ -74,6 +74,7 @@ namespace QuanLiSanCauLong.Data
         public DbSet<ReviewReply> ReviewReplies { get; set; }
         public DbSet<ReviewLike> ReviewLikes { get; set; }
         public DbSet<ReviewImage> ReviewImages { get; set; }
+        public DbSet<ServiceEnrollment> ServiceEnrollments { get; set; }
 
         public static ApplicationDbContext Create(DbContextOptions<ApplicationDbContext> options)
             => new ApplicationDbContext(options);

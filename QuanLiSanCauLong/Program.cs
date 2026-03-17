@@ -50,7 +50,7 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IVoucherService, VoucherService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
-builder.Services.AddScoped<InventoryService>(); // Support for AdminInventoryController direct injection
+builder.Services.AddScoped<InventoryService>();
 
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
@@ -80,8 +80,7 @@ builder.Services.AddControllersWithViews()
     });
 
 builder.Services.AddRazorPages();
-// Đảm bảo hỗ trợ các Controller API cho Webhook
-builder.Services.AddControllers();
+builder.Services.AddControllers(); // Cần thiết cho ApiController
 
 // ===================================
 // 5. BUILD
@@ -120,12 +119,18 @@ app.UseAuthorization();
 // 7. ROUTING
 // ===================================
 
-// Route cho MVC truyền thống
+// Route riêng cho SePay Webhook (Ưu tiên đặt trước Default Route)
+app.MapControllerRoute(
+    name: "sepay-webhook",
+    pattern: "ServicePayment/SePayWebhook",
+    defaults: new { controller = "ServicePayment", action = "SePayWebhook" });
+
+// Route mặc định cho MVC
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// FIX: Thêm dòng này để các ApiController (như SePay Webhook) hoạt động
+// Hỗ trợ Attribute Routing cho các Controller có [Route("api/[controller]")]
 app.MapControllers();
 
 app.MapRazorPages();
@@ -149,7 +154,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Tạo thư mục nếu chưa tồn tại
 var avatarDir = Path.Combine(app.Environment.WebRootPath, "uploads", "avatars");
 if (!Directory.Exists(avatarDir)) Directory.CreateDirectory(avatarDir);
 

@@ -33,6 +33,10 @@ namespace QuanLiSanCauLong.Controllers
                 .Include(o => o.Booking).ThenInclude(b => b!.User)
                 .Include(o => o.User)
                 .Include(o => o.OrderDetails).ThenInclude(od => od.Product)
+                // ── MỚI: Include ServiceEnrollments cho đơn dịch vụ ──
+                .Include(o => o.ServiceEnrollments!).ThenInclude(e => e.Course)
+                .Include(o => o.ServiceEnrollments!).ThenInclude(e => e.StringingService)
+                .Include(o => o.ServiceEnrollments!).ThenInclude(e => e.Tournament)
                 .AsQueryable();
 
             if (fromDate.HasValue)
@@ -41,15 +45,24 @@ namespace QuanLiSanCauLong.Controllers
                 query = query.Where(o => o.CreatedAt < toDate.Value.Date.AddDays(1));
             if (!string.IsNullOrEmpty(status))
                 query = query.Where(o => o.OrderStatus == status);
+
+            // orderType filter mở rộng: product | booking | service
             if (orderType == "booking")
                 query = query.Where(o => o.BookingId != null);
             else if (orderType == "product")
-                query = query.Where(o => o.BookingId == null);
+                query = query.Where(o => o.OrderType == "Product");
+            else if (orderType == "service")
+                query = query.Where(o => o.OrderType.StartsWith("Service_"));
+
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var s = search.Trim().ToLower();
-                query = query.Where(o => o.OrderCode.ToLower().Contains(s) ||
-                    (o.User != null && o.User.FullName.ToLower().Contains(s)));
+                query = query.Where(o =>
+                    o.OrderCode.ToLower().Contains(s) ||
+                    (o.User != null && o.User.FullName.ToLower().Contains(s)) ||
+                    (o.ServiceEnrollments!.Any(e =>
+                        e.CustomerName.ToLower().Contains(s) ||
+                        e.Phone.Contains(s))));
             }
 
             int total = await query.CountAsync();
@@ -59,7 +72,7 @@ namespace QuanLiSanCauLong.Controllers
                 .Take(pageSize)
                 .ToListAsync();
 
-            // Badge counts — 1 query
+            // Badge counts
             var counts = await _context.Orders
                 .GroupBy(_ => 1)
                 .Select(g => new
@@ -69,7 +82,9 @@ namespace QuanLiSanCauLong.Controllers
                     Confirmed = g.Count(o => o.OrderStatus == "Confirmed"),
                     Shipping = g.Count(o => o.OrderStatus == "Shipping"),
                     Completed = g.Count(o => o.OrderStatus == "Completed"),
-                    Revenue = g.Where(o => o.OrderStatus == "Completed").Sum(o => o.TotalAmount)
+                    Revenue = g.Where(o => o.OrderStatus == "Completed" || o.PaymentStatus == "Paid")
+                                 .Sum(o => o.TotalAmount),
+                    ServiceOrders = g.Count(o => o.OrderType.StartsWith("Service_"))
                 })
                 .FirstOrDefaultAsync();
 
@@ -78,6 +93,7 @@ namespace QuanLiSanCauLong.Controllers
             ViewBag.ShippingOrders = counts?.Shipping ?? 0;
             ViewBag.CompletedOrders = counts?.Completed ?? 0;
             ViewBag.TotalRevenue = counts?.Revenue ?? 0m;
+            ViewBag.ServiceOrders = counts?.ServiceOrders ?? 0;
             ViewBag.Page = page;
             ViewBag.TotalPage = (int)Math.Ceiling((double)total / pageSize);
             ViewBag.Search = search;
@@ -97,14 +113,7 @@ namespace QuanLiSanCauLong.Controllers
         }
 
         // ═════════════════════════════════════════════════════════════════════
-        // SET STATUS  ← gộp Confirm + Complete + Cancel
-        //
-        //  newStatus  | Hành động kho
-        // ────────────┼────────────────────────────────────────────────────────
-        //  Confirmed  | Reserve tồn kho (kiểm tra đủ hàng trước)
-        //  Completed  | Trừ thật StockQty + giải phóng Reserved + Paid
-        //  Cancelled  | Giải phóng Reserved nếu đang Confirmed
-        //  Shipping   | Chỉ đổi status (pick-up / giao ngoài)
+        // SET STATUS
         // ═════════════════════════════════════════════════════════════════════
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -119,73 +128,68 @@ namespace QuanLiSanCauLong.Controllers
                 return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
 
             if (order.OrderStatus is "Cancelled" or "Completed")
-                return Json(new
-                {
-                    success = false,
-                    message = $"Không thể thay đổi đơn đã {order.OrderStatus}!"
-                });
+                return Json(new { success = false, message = $"Không thể thay đổi đơn đã {order.OrderStatus}!" });
 
             string old = order.OrderStatus;
 
             switch (newStatus)
             {
-                // ── Xác nhận: Pending → Confirmed, reserve kho ──
                 case "Confirmed":
                     if (old != "Pending")
-                        return Json(new
-                        {
-                            success = false,
-                            message = "Chỉ xác nhận được đơn đang Chờ xử lý!"
-                        });
-
-                    var stockErr = CheckAndReserve(order.OrderDetails, dryRun: true);
-                    if (stockErr != null)
-                        return Json(new { success = false, message = stockErr });
-
-                    CheckAndReserve(order.OrderDetails, dryRun: false); // thực hiện reserve
+                        return Json(new { success = false, message = "Chỉ xác nhận được đơn đang Chờ xử lý!" });
+                    // Đơn sản phẩm → kiểm tra kho
+                    if (!order.IsServiceOrder)
+                    {
+                        var stockErr = CheckAndReserve(order.OrderDetails, dryRun: true);
+                        if (stockErr != null) return Json(new { success = false, message = stockErr });
+                        CheckAndReserve(order.OrderDetails, dryRun: false);
+                    }
                     order.OrderStatus = "Confirmed";
                     break;
 
-                // ── Đang giao (không thay đổi kho) ──
                 case "Shipping":
                     if (old != "Confirmed")
-                        return Json(new
-                        {
-                            success = false,
-                            message = "Chỉ chuyển sang Đang giao từ Đã xác nhận!"
-                        });
+                        return Json(new { success = false, message = "Chỉ chuyển sang Đang giao từ Đã xác nhận!" });
                     order.OrderStatus = "Shipping";
                     break;
 
-                // ── Hoàn thành: trừ kho thật + giải Reserved ──
                 case "Completed":
                     if (old is not ("Confirmed" or "Shipping"))
-                        return Json(new
-                        {
-                            success = false,
-                            message = "Chỉ hoàn thành được đơn đã Xác nhận hoặc Đang giao!"
-                        });
-
-                    DeductStock(order.OrderDetails);
+                        return Json(new { success = false, message = "Chỉ hoàn thành được đơn đã Xác nhận hoặc Đang giao!" });
+                    if (!order.IsServiceOrder)
+                        DeductStock(order.OrderDetails);
                     order.OrderStatus = "Completed";
                     order.PaymentStatus = "Paid";
                     order.CompletedAt = DateTime.Now;
+
+                    // Xác nhận enrollment nếu là đơn dịch vụ
+                    if (order.ServiceEnrollments != null)
+                    {
+                        foreach (var e in order.ServiceEnrollments)
+                        {
+                            e.Status = "Confirmed";
+                            e.UpdatedAt = DateTime.Now;
+                        }
+                    }
                     break;
 
-                // ── Hủy: giải Reserved nếu đang Confirmed/Shipping ──
                 case "Cancelled":
                     if (string.IsNullOrWhiteSpace(reason))
-                        return Json(new
-                        {
-                            success = false,
-                            message = "Vui lòng nhập lý do hủy!"
-                        });
-
-                    if (old is "Confirmed" or "Shipping")
+                        return Json(new { success = false, message = "Vui lòng nhập lý do hủy!" });
+                    if (old is "Confirmed" or "Shipping" && !order.IsServiceOrder)
                         ReleaseReserved(order.OrderDetails);
-
+                    if (order.ServiceEnrollments != null)
+                    {
+                        foreach (var e in order.ServiceEnrollments)
+                        {
+                            e.Status = "Cancelled";
+                            e.UpdatedAt = DateTime.Now;
+                        }
+                    }
                     order.OrderStatus = "Cancelled";
-                    order.Note = reason.Trim();
+                    order.Note = string.IsNullOrEmpty(order.Note)
+                        ? $"Lý do hủy: {reason}"
+                        : order.Note + $" | Hủy: {reason}";
                     break;
             }
 
@@ -201,15 +205,11 @@ namespace QuanLiSanCauLong.Controllers
                 _ => newStatus
             };
 
-            return Json(new
-            {
-                success = true,
-                message = $"Đơn {order.OrderCode} → {label}."
-            });
+            return Json(new { success = true, message = $"Đơn {order.OrderCode} → {label}." });
         }
 
         // ═════════════════════════════════════════════════════════════════════
-        // API: Lấy variants của 1 product (cho dropdown tạo đơn)
+        // API: Variants của product
         // ═════════════════════════════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> GetVariants(int productId)
@@ -227,18 +227,13 @@ namespace QuanLiSanCauLong.Controllers
                     v.ReservedQuantity
                 })
                 .ToListAsync();
-
             return Json(variants);
         }
 
         // ─────────────────────────────────────────────────────────────────────
-        // INVENTORY HELPERS (tách ra để SetStatus không bị lồng nhau)
+        // INVENTORY HELPERS
         // ─────────────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Kiểm tra đủ hàng. dryRun=true → chỉ validate, trả về error string hoặc null.
-        /// dryRun=false → thực hiện reserve luôn.
-        /// </summary>
         private static string? CheckAndReserve(IEnumerable<OrderDetail> details, bool dryRun)
         {
             foreach (var od in details)
@@ -248,7 +243,6 @@ namespace QuanLiSanCauLong.Controllers
                     if (od.Variant.AvailableQuantity < od.Quantity)
                         return $"'{od.Product.ProductName}' ({od.Variant.DisplayName}) " +
                                $"không đủ hàng. Khả dụng: {od.Variant.AvailableQuantity}, cần: {od.Quantity}";
-
                     if (!dryRun)
                     {
                         od.Variant.ReservedQuantity += od.Quantity;
@@ -261,9 +255,7 @@ namespace QuanLiSanCauLong.Controllers
                 {
                     int avail = od.Product.StockQuantity - od.Product.ReservedQuantity;
                     if (avail < od.Quantity)
-                        return $"'{od.Product.ProductName}' không đủ hàng. " +
-                               $"Khả dụng: {avail}, cần: {od.Quantity}";
-
+                        return $"'{od.Product.ProductName}' không đủ hàng. Khả dụng: {avail}, cần: {od.Quantity}";
                     if (!dryRun)
                     {
                         od.Product.ReservedQuantity += od.Quantity;
@@ -274,7 +266,6 @@ namespace QuanLiSanCauLong.Controllers
             return null;
         }
 
-        /// <summary>Trừ StockQuantity thật + giải phóng ReservedQuantity sau khi hoàn thành.</summary>
         private static void DeductStock(IEnumerable<OrderDetail> details)
         {
             foreach (var od in details)
@@ -296,7 +287,6 @@ namespace QuanLiSanCauLong.Controllers
             }
         }
 
-        /// <summary>Giải phóng ReservedQuantity khi hủy đơn đang Confirmed/Shipping.</summary>
         private static void ReleaseReserved(IEnumerable<OrderDetail> details)
         {
             foreach (var od in details)
@@ -308,9 +298,7 @@ namespace QuanLiSanCauLong.Controllers
                     od.Product.ReservedQuantity = Math.Max(0, od.Product.ReservedQuantity - od.Quantity);
                 }
                 else
-                {
                     od.Product.ReservedQuantity = Math.Max(0, od.Product.ReservedQuantity - od.Quantity);
-                }
                 od.Product.UpdatedAt = DateTime.Now;
             }
         }
@@ -323,46 +311,66 @@ namespace QuanLiSanCauLong.Controllers
             _context.Orders
                 .Include(o => o.Facility)
                 .Include(o => o.User)
-                .Include(o => o.Booking)
-                    .ThenInclude(b => b!.User)
-                .Include(o => o.Booking)
-                    .ThenInclude(b => b!.Court)
-                .Include(o => o.OrderDetails)
-                    .ThenInclude(od => od.Product)
-                .Include(o => o.OrderDetails)
-                    .ThenInclude(od => od.Variant)
+                .Include(o => o.Booking).ThenInclude(b => b!.User)
+                .Include(o => o.Booking).ThenInclude(b => b!.Court)
+                .Include(o => o.OrderDetails).ThenInclude(od => od.Product)
+                .Include(o => o.OrderDetails).ThenInclude(od => od.Variant)
+                .Include(o => o.ServiceEnrollments!).ThenInclude(e => e.Course)
+                .Include(o => o.ServiceEnrollments!).ThenInclude(e => e.StringingService)
+                .Include(o => o.ServiceEnrollments!).ThenInclude(e => e.Tournament)
                 .FirstOrDefaultAsync(o => o.OrderId == id);
 
         private static OrderViewModel Map(Order o)
         {
-            // Khách hàng: ưu tiên User trực tiếp, fallback User từ Booking
             var user = o.User ?? o.Booking?.User;
+            var enrollment = o.ServiceEnrollments?.FirstOrDefault();
+
+            // Với đơn dịch vụ: lấy tên khách từ enrollment
+            var customerName = enrollment?.CustomerName
+                ?? user?.FullName
+                ?? "Khách vãng lai";
+            var customerPhone = enrollment?.Phone ?? user?.Phone ?? "";
+            var customerEmail = enrollment?.Email ?? user?.Email ?? "";
+
+            // Tên dịch vụ cho display
+            string serviceInfo = "";
+            if (enrollment != null)
+            {
+                serviceInfo = enrollment.ServiceType switch
+                {
+                    "Course" => enrollment.Course?.CourseName ?? "Khóa học",
+                    "Stringing" => enrollment.StringingService?.ServiceName ?? "Căng vợt",
+                    "Tournament" => enrollment.Tournament?.TournamentName ?? "Giải đấu",
+                    _ => ""
+                };
+            }
 
             return new OrderViewModel
             {
                 OrderId = o.OrderId,
                 OrderCode = o.OrderCode,
                 Note = o.Note,
-                // Loại đơn: liên kết booking hay đơn sản phẩm độc lập
-                OrderType = o.BookingId.HasValue ? "booking" : "product",
+                OrderType = o.IsServiceOrder ? "service" : (o.BookingId.HasValue ? "booking" : "product"),
+                ServiceType = o.ServiceTypeLabel,
+                ServiceInfo = serviceInfo,
                 BookingId = o.BookingId,
                 BookingCode = o.Booking?.BookingCode,
-                FacilityName = o.Facility?.FacilityName ?? o.Booking?.Court?.Facility?.FacilityName,
-                // Thông tin khách hàng
-                CustomerName = user?.FullName ?? "Khách vãng lai",
-                CustomerPhone = user?.Phone ?? "",
-                CustomerEmail = user?.Email ?? "",
+                FacilityName = o.Facility?.FacilityName,
+                CustomerName = customerName,
+                CustomerPhone = customerPhone,
+                CustomerEmail = customerEmail,
                 SubTotal = o.SubTotal,
                 DiscountAmount = o.DiscountAmount,
                 TotalAmount = o.TotalAmount,
                 OrderStatus = o.OrderStatus,
                 PaymentStatus = o.PaymentStatus,
+                PaymentMethod = o.PaymentMethod,
                 CreatedAt = o.CreatedAt,
                 UpdatedAt = o.UpdatedAt,
                 CompletedAt = o.CompletedAt,
                 OrderDetails = o.OrderDetails.Select(od => new OrderDetailViewModel
                 {
-                    ProductName = od.Product?.ProductName ?? "Sản phẩm không xác định",
+                    ProductName = od.Product?.ProductName ?? "—",
                     VariantDisplay = od.Variant?.DisplayName,
                     Quantity = od.Quantity,
                     Unit = od.Product?.Unit ?? "",

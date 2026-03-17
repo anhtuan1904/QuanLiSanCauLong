@@ -1,0 +1,233 @@
+﻿@model QuanLiSanCauLong.Models.Order
+@{
+    ViewData["Title"] = "Thanh Toán Thành Công";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var enrollment = Model.ServiceEnrollments?.FirstOrDefault();
+
+    var serviceName = enrollment?.ServiceType switch {
+        "Course"     => enrollment.Course?.CourseName,
+        "Stringing"  => enrollment.StringingService?.ServiceName,
+        "Tournament" => enrollment.Tournament?.TournamentName,
+        _            => "Dịch vụ"
+    } ?? "Dịch vụ";
+
+    var serviceIcon = enrollment?.ServiceType switch {
+        "Course"     => "bi-mortarboard-fill",
+        "Stringing"  => "bi-tools",
+        "Tournament" => "bi-trophy-fill",
+        _            => "bi-star-fill"
+    };
+
+    var serviceDetails = new System.Collections.Generic.List<(string label, string value)>();
+    if (enrollment?.ServiceType == "Course" && enrollment.Course != null) {
+        var c = enrollment.Course;
+        if (!string.IsNullOrEmpty(c.Level))       serviceDetails.Add(("Trình độ",   c.Level switch {"Beginner"=>"Cơ bản","Intermediate"=>"Trung cấp","Advanced"=>"Nâng cao",_=>c.Level}));
+        if (!string.IsNullOrEmpty(c.Schedule))    serviceDetails.Add(("Lịch học",   c.Schedule));
+        if (c.DurationWeeks.HasValue)              serviceDetails.Add(("Thời lượng", c.DurationWeeks + " tuần"));
+        if (!string.IsNullOrEmpty(c.Instructor))  serviceDetails.Add(("HLV",        c.Instructor));
+    } else if (enrollment?.ServiceType == "Stringing" && enrollment.StringingService != null) {
+        var s = enrollment.StringingService;
+        if (!string.IsNullOrEmpty(s.Brand))        serviceDetails.Add(("Thương hiệu", s.Brand));
+        if (!string.IsNullOrEmpty(s.StringModel))  serviceDetails.Add(("Model dây",   s.StringModel));
+        if (s.WarrantyDays.HasValue)               serviceDetails.Add(("Bảo hành",    s.WarrantyDays + " ngày"));
+    } else if (enrollment?.ServiceType == "Tournament" && enrollment.Tournament != null) {
+        var t = enrollment.Tournament;
+        if (!string.IsNullOrEmpty(t.TournamentType)) serviceDetails.Add(("Thể thức", t.TournamentType));
+        if (!string.IsNullOrEmpty(t.Venue))           serviceDetails.Add(("Địa điểm", t.Venue));
+        if (t.StartDate.HasValue)                     serviceDetails.Add(("Bắt đầu",  t.StartDate.Value.ToString("dd/MM/yyyy")));
+    }
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root{--gold:#d4a017;--gold2:#f5c842;--deep:#1a1209;--cream:#fdf8f0;--warm:#f5efe0;--muted:#8a7560;--border:#e8ddc8;--green:#16a34a;}
+    *{box-sizing:border-box;}
+    body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--deep);}
+    .inv-page{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:3rem 1rem;}
+    .inv-card{background:#fff;border-radius:16px;box-shadow:0 4px 40px rgba(26,18,9,.08);width:100%;max-width:620px;overflow:hidden;}
+
+    /* SUCCESS HEADER */
+    .inv-success-head{background:linear-gradient(135deg,#16a34a,#15803d);padding:2.5rem 2rem;text-align:center;}
+    .inv-check{width:72px;height:72px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:2rem;color:#fff;animation:popIn .5s cubic-bezier(.25,.46,.45,.94);}
+    @@keyframes popIn{from{opacity:0;transform:scale(.5);}to{opacity:1;transform:scale(1);}}
+    .inv-success-title{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:#fff;margin-bottom:.35rem;}
+    .inv-success-sub{font-size:.88rem;color:rgba(255,255,255,.75);}
+
+    /* INVOICE BODY */
+    .inv-body{padding:2rem;}
+
+    /* ORDER CODE BANNER */
+    .inv-code-banner{background:var(--warm);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.75rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;}
+    .inv-code-label{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem;}
+    .inv-code-val{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--deep);}
+    .inv-paid-badge{background:#dcfce7;border:1px solid #86efac;color:var(--green);font-size:.72rem;font-weight:700;padding:.35rem .85rem;border-radius:20px;display:flex;align-items:center;gap:.35rem;}
+
+    /* SERVICE INFO */
+    .inv-service-card{background:var(--deep);border-radius:10px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;}
+    .inv-service-icon{width:48px;height:48px;background:rgba(212,160,23,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:1.25rem;flex-shrink:0;}
+    .inv-service-name{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:#fff;}
+    .inv-service-type{font-size:.75rem;color:rgba(255,255,255,.5);margin-top:.15rem;}
+
+    /* SECTION TITLE */
+    .inv-sec{font-weight:700;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem;padding-bottom:.45rem;border-bottom:1px solid var(--border);}
+
+    /* INFO ROWS */
+    .inv-rows{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.5rem;}
+    .inv-row{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;padding:.55rem .9rem;background:var(--warm);border-radius:6px;}
+    .inv-row-key{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+    .inv-row-val{font-size:.88rem;font-weight:600;color:var(--deep);text-align:right;}
+
+    /* AMOUNT */
+    .inv-amount-row{background:rgba(212,160,23,.08);border:1px solid rgba(212,160,23,.25);border-radius:8px;padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
+    .inv-amount-label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+    .inv-amount-big{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:var(--gold);line-height:1;}
+
+    /* DIVIDER */
+    .divider{height:1px;background:var(--border);margin:1.25rem 0;}
+
+    /* ACTIONS */
+    .inv-actions{display:flex;gap:.75rem;flex-wrap:wrap;}
+    .btn-print{flex:1;padding:.75rem;border:1.5px solid var(--border);background:#fff;border-radius:8px;font-size:.84rem;font-weight:600;cursor:pointer;color:var(--muted);transition:all .2s;font-family:'Outfit',sans-serif;min-width:120px;}
+    .btn-print:hover{border-color:var(--deep);color:var(--deep);}
+    .btn-home{flex:2;padding:.75rem;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:8px;font-size:.86rem;font-weight:700;cursor:pointer;color:var(--deep);transition:all .2s;font-family:'Outfit',sans-serif;min-width:150px;}
+    .btn-home:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(212,160,23,.35);}
+
+    /* THANK YOU */
+    .inv-thankyou{text-align:center;padding:1rem 0;color:var(--muted);font-size:.82rem;}
+
+    @@media print{
+        .inv-actions,.inv-thankyou{display:none!important;}
+        body{background:#fff;}
+        .inv-card{box-shadow:none;border-radius:0;}
+    }
+    @@media(max-width:480px){
+        .inv-page{padding:1rem .5rem;}
+        .inv-body{padding:1.25rem;}
+        .inv-code-banner{flex-direction:column;}
+        .inv-amount-big{font-size:1.5rem;}
+    }
+</style>
+
+<div class="inv-page">
+    <div class="inv-card" id="invoiceCard">
+
+        <!-- Success header -->
+        <div class="inv-success-head">
+            <div class="inv-check"><i class="bi bi-check-lg"></i></div>
+            <div class="inv-success-title">Thanh Toán Thành Công!</div>
+            <div class="inv-success-sub">Cảm ơn bạn đã đăng ký dịch vụ. Chúng tôi sẽ liên hệ xác nhận sớm nhất.</div>
+        </div>
+
+        <div class="inv-body">
+
+            <!-- Order code + paid badge -->
+            <div class="inv-code-banner">
+                <div>
+                    <div class="inv-code-label">Mã đơn hàng</div>
+                    <div class="inv-code-val">#@Model.OrderCode</div>
+                </div>
+                <div class="inv-paid-badge"><i class="bi bi-shield-check-fill"></i> ĐÃ THANH TOÁN</div>
+            </div>
+
+            <!-- Service card -->
+            <div class="inv-service-card">
+                <div class="inv-service-icon"><i class="bi @serviceIcon"></i></div>
+                <div>
+                    <div class="inv-service-name">@serviceName</div>
+                    <div class="inv-service-type">
+                        @(enrollment?.ServiceType switch {
+                            "Course"     => "Khóa Học Cầu Lông",
+                            "Stringing"  => "Dịch Vụ Căng Vợt",
+                            "Tournament" => "Giải Đấu",
+                            _            => "Dịch Vụ"
+                        })
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thông tin người đăng ký -->
+            <div class="inv-sec"><i class="bi bi-person-fill" style="color:var(--gold);"></i>Thông Tin Đăng Ký</div>
+            <div class="inv-rows">
+                <div class="inv-row">
+                    <span class="inv-row-key">Họ tên</span>
+                    <span class="inv-row-val">@(enrollment?.CustomerName ?? "—")</span>
+                </div>
+                <div class="inv-row">
+                    <span class="inv-row-key">Số điện thoại</span>
+                    <span class="inv-row-val">@(enrollment?.Phone ?? "—")</span>
+                </div>
+                @if (!string.IsNullOrEmpty(enrollment?.Email)) {
+                    <div class="inv-row">
+                        <span class="inv-row-key">Email</span>
+                        <span class="inv-row-val">@enrollment.Email</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(enrollment?.Note)) {
+                    <div class="inv-row">
+                        <span class="inv-row-key">Ghi chú</span>
+                        <span class="inv-row-val">@enrollment.Note</span>
+                    </div>
+                }
+            </div>
+
+            <!-- Chi tiết dịch vụ -->
+            @if (serviceDetails.Any()) {
+                <div class="inv-sec"><i class="bi bi-info-circle-fill" style="color:var(--gold);"></i>Chi Tiết Dịch Vụ</div>
+                <div class="inv-rows" style="margin-bottom:1.5rem;">
+                    @foreach (var d in serviceDetails) {
+                        <div class="inv-row">
+                            <span class="inv-row-key">@d.label</span>
+                            <span class="inv-row-val">@d.value</span>
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- Thông tin thanh toán -->
+            <div class="inv-sec"><i class="bi bi-receipt" style="color:var(--gold);"></i>Thông Tin Thanh Toán</div>
+            <div class="inv-rows">
+                <div class="inv-row">
+                    <span class="inv-row-key">Phương thức</span>
+                    <span class="inv-row-val">Chuyển khoản ngân hàng</span>
+                </div>
+                <div class="inv-row">
+                    <span class="inv-row-key">Trạng thái</span>
+                    <span class="inv-row-val" style="color:var(--green);">✓ Đã thanh toán</span>
+                </div>
+                <div class="inv-row">
+                    <span class="inv-row-key">Thời gian</span>
+                    <span class="inv-row-val">@(Model.CompletedAt?.ToString("HH:mm dd/MM/yyyy") ?? Model.UpdatedAt.ToString("HH:mm dd/MM/yyyy"))</span>
+                </div>
+            </div>
+
+            <!-- Số tiền -->
+            <div class="inv-amount-row">
+                <div>
+                    <div class="inv-amount-label">Tổng thanh toán</div>
+                    <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem;">Đã bao gồm tất cả phí</div>
+                </div>
+                <div class="inv-amount-big">@Model.TotalAmount.ToString("N0")đ</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Buttons -->
+            <div class="inv-actions">
+                <button class="btn-print" onclick="window.print()">
+                    <i class="bi bi-printer me-1"></i> In hóa đơn
+                </button>
+                <button class="btn-home" onclick="location.href='/'">
+                    <i class="bi bi-house me-1"></i> Về trang chủ
+                </button>
+            </div>
+
+            <div class="inv-thankyou">
+                <i class="bi bi-heart-fill" style="color:var(--gold);margin-right:.35rem;"></i>
+                Cảm ơn bạn! Chúng tôi sẽ liên hệ xác nhận qua <strong>@(enrollment?.Phone ?? "số điện thoại")</strong> sớm nhất.
+            </div>
+
+        </div>
+    </div>
+</div>

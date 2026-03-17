@@ -422,6 +422,28 @@ namespace QuanLiSanCauLong.Data
                 e.HasOne(al => al.User).WithMany()
                     .HasForeignKey(al => al.UserId).OnDelete(DeleteBehavior.NoAction);
             });
+            mb.Entity<ServiceEnrollment>(e =>
+            {
+                e.HasKey(x => x.EnrollmentId);
+                e.Property(x => x.Status).HasDefaultValue("Pending");
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
+                e.HasOne(x => x.Order)
+                    .WithMany(o => o.ServiceEnrollments)
+                    .HasForeignKey(x => x.OrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(x => x.Course).WithMany()
+                    .HasForeignKey(x => x.CourseId)
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired(false);
+                e.HasOne(x => x.StringingService).WithMany()
+                    .HasForeignKey(x => x.StringingId)
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired(false);
+                e.HasOne(x => x.Tournament).WithMany()
+                    .HasForeignKey(x => x.TournamentId)
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired(false);
+            });
         }
 
         // ════════════════════════════════════════════════════════════════

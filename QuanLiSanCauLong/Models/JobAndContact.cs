@@ -11,28 +11,33 @@ namespace QuanLiSanCauLong.Models
         [Key]
         public int JobId { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Vui lòng nhập tên vị trí")]
         [StringLength(200)]
         public string JobTitle { get; set; } = string.Empty;
 
-        [Required]
         [StringLength(250)]
         public string Slug { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "Vui lòng nhập mô tả công việc")]
         public string JobDescription { get; set; } = string.Empty;
 
         public string? Requirements { get; set; }
         public string? Benefits { get; set; }
 
-        [StringLength(100)]
+        [StringLength(150)]
         public string? Location { get; set; }
 
+        /// <summary>Full-time | Part-time | Contract | Internship | Remote | Hybrid</summary>
         [StringLength(50)]
-        public string? JobType { get; set; } // Full-time, Part-time, Contract
+        public string? JobType { get; set; }
 
+        /// <summary>Intern | Junior | Middle | Senior | Lead | Manager | Director</summary>
         [StringLength(50)]
-        public string? Level { get; set; } // Intern, Junior, Senior, Manager
+        public string? Level { get; set; }
+
+        /// <summary>Bộ phận: Vận hành, Kỹ thuật, Marketing, Kế toán, IT, Khác</summary>
+        [StringLength(100)]
+        public string? Department { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal? SalaryMin { get; set; }
@@ -40,24 +45,31 @@ namespace QuanLiSanCauLong.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal? SalaryMax { get; set; }
 
-        public int VacancyCount { get; set; } = 1;
+        /// <summary>Fixed | Negotiable | Competitive</summary>
+        [StringLength(30)]
+        public string SalaryType { get; set; } = "Fixed";
 
+        public int VacancyCount { get; set; } = 1;
         public DateTime? Deadline { get; set; }
 
+        /// <summary>Open | Closed | Filled | Draft</summary>
         [StringLength(20)]
-        public string Status { get; set; } = "Open"; // Open, Closed, Filled
+        public string Status { get; set; } = "Open";
 
         public int ViewCount { get; set; } = 0;
         public bool IsFeatured { get; set; } = false;
+        public bool IsUrgent { get; set; } = false;
 
         public string? ContactPerson { get; set; }
         public string? ContactEmail { get; set; }
         public string? ContactPhone { get; set; }
 
+        [StringLength(500)]
+        public string? MetaDescription { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
-        // Navigation
         public virtual ICollection<JobApplication>? Applications { get; set; }
     }
 
@@ -72,72 +84,119 @@ namespace QuanLiSanCauLong.Models
         [Required]
         public int JobId { get; set; }
 
-        [Required]
+        // ===== Thông tin cá nhân =====
+        [Required(ErrorMessage = "Vui lòng nhập họ tên")]
         [StringLength(100)]
         public string FullName { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "Vui lòng nhập email")]
         [StringLength(100)]
-        [EmailAddress]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
         public string Email { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "Vui lòng nhập số điện thoại")]
         [StringLength(15)]
         public string Phone { get; set; } = string.Empty;
 
         public DateTime? DateOfBirth { get; set; }
 
+        /// <summary>Nam | Nữ | Khác</summary>
+        [StringLength(10)]
+        public string? Gender { get; set; }
+
         [StringLength(200)]
         public string? Address { get; set; }
 
         [StringLength(100)]
-        public string? CurrentPosition { get; set; }
+        public string? City { get; set; }
 
-        public int? YearsOfExperience { get; set; }
+        // ===== Học vấn =====
+        /// <summary>THPT | Cao đẳng | Đại học | Thạc sĩ | Tiến sĩ | Khác</summary>
+        [StringLength(50)]
+        public string? EducationLevel { get; set; }
+
+        [StringLength(200)]
+        public string? University { get; set; }
 
         [StringLength(100)]
-        public string? Education { get; set; }
+        public string? Major { get; set; }
 
-        public string? Skills { get; set; }
+        /// <summary>Xuất sắc | Giỏi | Khá | Trung bình</summary>
+        [StringLength(30)]
+        public string? GraduationRank { get; set; }
 
-        public string? CoverLetter { get; set; }
+        public int? GraduationYear { get; set; }
 
+        // ===== Kinh nghiệm =====
+        public int? YearsOfExperience { get; set; }
+
+        [StringLength(150)]
+        public string? CurrentPosition { get; set; }
+
+        [StringLength(150)]
+        public string? CurrentCompany { get; set; }
+
+        // ===== Kỹ năng =====
+        public string? TechnicalSkills { get; set; }  // Kỹ năng chuyên môn
+        public string? SoftSkills { get; set; }        // Kỹ năng mềm
+        public string? Languages { get; set; }         // Ngoại ngữ
+        public string? Certificates { get; set; }      // Chứng chỉ
+
+        // ===== Hồ sơ =====
         public string? CVFilePath { get; set; }
+        public string? CVFileName { get; set; }
+
+        [StringLength(300)]
+        public string? PortfolioUrl { get; set; }
+
+        [StringLength(300)]
+        public string? LinkedInUrl { get; set; }
+
+        // ===== Kỳ vọng =====
+        public string? CoverLetter { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal? ExpectedSalary { get; set; }
 
         public DateTime? AvailableDate { get; set; }
 
+        /// <summary>Website | Facebook | LinkedIn | Giới thiệu | Khác</summary>
+        [StringLength(50)]
+        public string? ReferralSource { get; set; }
+
+        public string? AdditionalInfo { get; set; }
+
+        // ===== Admin =====
+        /// <summary>New | Reviewing | Shortlisted | Interview | Rejected | Accepted</summary>
         [StringLength(20)]
-        public string Status { get; set; } = "New"; // New, Reviewing, Shortlisted, Interview, Rejected, Accepted
+        public string Status { get; set; } = "New";
 
         public string? ReviewNotes { get; set; }
         public string? ReviewedBy { get; set; }
         public DateTime? ReviewedAt { get; set; }
-
-        public int Rating { get; set; } = 0; // 0-5 stars
+        public int Rating { get; set; } = 0;
+        public string? InterviewDate { get; set; }
+        public string? InterviewNote { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
-        // Navigation
         public virtual JobPosting? Job { get; set; }
     }
 
     /// <summary>
-    /// Liên hệ/Hỗ trợ
+    /// Liên hệ / Hỗ trợ
     /// </summary>
     public class ContactMessage
     {
         [Key]
         public int MessageId { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Vui lòng nhập họ tên")]
         [StringLength(100)]
         public string FullName { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "Vui lòng nhập email")]
         [StringLength(100)]
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
@@ -145,21 +204,24 @@ namespace QuanLiSanCauLong.Models
         [StringLength(15)]
         public string? Phone { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Vui lòng nhập tiêu đề")]
         [StringLength(200)]
         public string Subject { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "Vui lòng nhập nội dung")]
         public string Message { get; set; } = string.Empty;
 
+        /// <summary>Support | Feedback | Question | Complaint | Booking | Other</summary>
         [StringLength(50)]
-        public string? Category { get; set; } // Support, Feedback, Question, Complaint, Other
+        public string? Category { get; set; }
 
+        /// <summary>New | InProgress | Resolved | Closed</summary>
         [StringLength(20)]
-        public string Status { get; set; } = "New"; // New, InProgress, Resolved, Closed
+        public string Status { get; set; } = "New";
 
+        /// <summary>Low | Normal | High | Urgent</summary>
         [StringLength(10)]
-        public string Priority { get; set; } = "Normal"; // Low, Normal, High, Urgent
+        public string Priority { get; set; } = "Normal";
 
         public string? ResponseMessage { get; set; }
         public string? AssignedTo { get; set; }

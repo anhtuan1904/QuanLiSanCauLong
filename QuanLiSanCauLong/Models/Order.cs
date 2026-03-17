@@ -11,7 +11,7 @@ namespace QuanLiSanCauLong.Models
 
         [Required]
         [StringLength(20)]
-        public string OrderCode { get; set; }
+        public string OrderCode { get; set; } = string.Empty;
 
         public int? BookingId { get; set; }
 
@@ -21,6 +21,9 @@ namespace QuanLiSanCauLong.Models
         [Required]
         public int FacilityId { get; set; }
 
+        /// <summary>
+        /// Product | Service_Course | Service_Stringing | Service_Tournament
+        /// </summary>
         public string OrderType { get; set; } = "Product";
 
         [Required]
@@ -35,11 +38,11 @@ namespace QuanLiSanCauLong.Models
         public decimal TotalAmount { get; set; }
 
         public string OrderStatus { get; set; } = "Pending";
-        public string PaymentMethod { get; set; }
+        public string PaymentMethod { get; set; } = "Cash";
         public string PaymentStatus { get; set; } = "Unpaid";
 
         [StringLength(500)]
-        public string Note { get; set; }
+        public string? Note { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
@@ -47,18 +50,36 @@ namespace QuanLiSanCauLong.Models
         public int? CreatedBy { get; set; }
 
         [ForeignKey("BookingId")]
-        public virtual Booking Booking { get; set; }
+        public virtual Booking? Booking { get; set; }
 
         [ForeignKey("UserId")]
-        public virtual User User { get; set; }
+        public virtual User User { get; set; } = null!;
 
         [ForeignKey("FacilityId")]
-        public virtual Facility Facility { get; set; }
+        public virtual Facility Facility { get; set; } = null!;
 
         [ForeignKey("CreatedBy")]
-        public virtual User Creator { get; set; }
+        public virtual User? Creator { get; set; }
 
-        public virtual ICollection<OrderDetail> OrderDetails { get; set; }
-        public virtual ICollection<VoucherUsage> VoucherUsages { get; set; }
+        public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+        public virtual ICollection<VoucherUsage>? VoucherUsages { get; set; }
+
+        // ── Dịch vụ đăng ký (Course / Stringing / Tournament) ───────
+        public virtual ICollection<ServiceEnrollment>? ServiceEnrollments { get; set; }
+
+        // ── Helpers ──────────────────────────────────────────────────
+        [NotMapped]
+        public bool IsServiceOrder =>
+            OrderType.StartsWith("Service_", StringComparison.OrdinalIgnoreCase);
+
+        [NotMapped]
+        public string ServiceTypeLabel => OrderType switch
+        {
+            "Service_Course" => "Khóa học",
+            "Service_Stringing" => "Căng vợt",
+            "Service_Tournament" => "Giải đấu",
+            "Product" => "Sản phẩm",
+            _ => OrderType
+        };
     }
 }
